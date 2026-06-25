@@ -1,0 +1,71 @@
+Prompt 8: further improvements for boards and diagrams
+======================================================
+
+We have to improve board and diagram layout a bit further.
+
+1) Board: on-Square labeling
+The characters in the on-square labeling need to be moved
+away from the corner a little bit more (should be done
+for both file characters "a" to "h" and rank numbers "1" to "8").
+Especially the "g" currently is too low. I suggest also make the
+font even a bit smaller.
+
+To avoid colliding the label chars with the pieces, I would suggest
+to shrink the pieces to 95% of their current size.
+
+Note: the other labeling modes are OK and should be kept unchanged.
+
+2) Board: adaptable grid line
+Boards should have the option of a grid line between the squares (1 pt
+for all sizes). The default is "false". This should be an adaptable
+option (add test!).
+
+3) Border for "on-border" mode for labeling:
+The border around the board for the "on-boarder" labeling mode
+should revert back to be the same color as the dark square color.
+But the border should always be separated from the actual board by
+a thin black line (if not already done so). No test needed for that.
+
+4) Adapt Auto-Labeling above diagrams
+Auto-labeling currently happens only if both names of players _and_
+year are known. We should just demand, that player names are present.
+The year should be added as " (<YEAR>)", if present, otherwise omitted.
+Auto-Labels above should be in bold by default. If auto-labels above
+are on (default), but there are no player names, we should not use any
+additional space above the diagram.
+
+5) Separate board and diagram styling
+I suggest we split pure board styling options from diagram styling
+options. There should be factory default as well as settable defaults
+for future boards and diagrams. Adapt tests accordingly!
+
+6) Arrows
+We should support arrows (color, from square, to-square). An array
+of arrows should be supported. Make arrow color a settable option.
+Adapt tests!
+
+
+7) Support highlight color as settable option
+Support highlight color as settable option if not done so already 
+and add appropriate tests and test folders.
+
+8) Support highlighting and arrows in PGN
+There is the "[%cal Gf3e5,Bc6e5]" syntax for arrows within PGN
+(here: green arrow from f3 to e5 and blue arrow from c6 to e5).
+There is also the "[%csl Re5,Yc6]" syntax for hightlighting
+within PGN (here: red hightlight on e5, yellow highlight on c6).
+
+In both arrow and hightlight case, multiple statements are
+separated by "," and the [...] part appears between commend
+symbols ("{" and "}"), so a full example would be
+
+{[%cal Gf3e5,Bc6e5]}
+
+and
+
+{[%csl Re5,Yc6]}
+
+Such PGN based arrow and highlight statements may not be
+backed by stylable settings. Alternatively, we could define
+by stylable options, what "red", "green", "blue" and "yellow"
+are actually supposed to mean by style options. Please discuss.

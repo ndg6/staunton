@@ -1,0 +1,7 @@
+Read in prompt_1_staunton_task_n_subtask.txt in "prompts" again, but focus now
+on subtask 3.4 (drawing improvements). You already implemented subtasks
+3.1 to 3.3. I moved old 3.4 and 3.5 to 3.5 and 3.6 and inserted drawing improvements
+as the  new "3.4" subtask.
+
+Don't code yet, just discuss design suggestions. What would be needed to 
+adapt drawing code and support new style setting options?

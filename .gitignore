@@ -1,0 +1,11 @@
+# Generated render / test artifacts (the test runner recreates tests/out on demand)
+tests/out/
+out/
+*.pdf
+# but keep any sample PDFs we intentionally track (none today)
+
+# OS / editor cruft
+.DS_Store
+Thumbs.db
+*~
+.vscode/

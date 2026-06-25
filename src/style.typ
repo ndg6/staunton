@@ -1,0 +1,119 @@
+// ===========================================================================
+// Styling: presentation config, kept separate from game/position data.
+//
+// There are now TWO style buckets (prompt 8, item 5):
+//   * BOARD style   -- everything the board renderer draws: square colors,
+//     labels, piece set, highlights, grid, arrows, ...  Consumed by `board()` /
+//     `render-board`.
+//   * DIAGRAM style -- the #figure wrapper around a board: the above game-info
+//     line (bold? gap?) and the figure supplement. Consumed by `chess-diagram`.
+//
+// Each bucket has a factory default dict, a document-order state, and a setter.
+// Resolution merges three layers (later wins):
+//   factory default  ⊕  document default (state)  ⊕  per-call override
+//
+// NOTE: board flipping is intentionally NOT a style field. It is a per-diagram
+// decision (pass `flip: true`), so it cannot be set as a document default.
+// ===========================================================================
+
+#import "pieces.typ": default-white-fill, default-black-fill, default-piece-fonts, default-piece-set
+
+// ---- board style ----------------------------------------------------------
+#let default-board-style = (
+  size: auto,                 // auto | length | ratio
+  light: rgb("#f0d9b5"),
+  dark: rgb("#b58863"),
+  labels: true,
+  label-mode: "on-square",    // "on-square" | "outside" | "border"
+  file-side: bottom,          // bottom | top
+  rank-side: right,           // right | left
+  border: 0.5pt + luma(40),   // thin board outline (none to drop)
+  grid: false,                // 1pt grid lines between squares (item 2)
+  piece-set: default-piece-set, // SVG set name, or "unicode" for the glyph fallback
+  piece-scale: 0.95,          // fraction of a square the piece occupies (item 1)
+  baseline-inset: 0.20,       // glyph fallback only: baseline lift (fraction of a square)
+  label-color: luma(90),      // "outside" mode strip labels
+  label-border-ratio: 0.07,   // "border" mode band width as a fraction of the board
+  white-fill: default-white-fill, // glyph fallback only
+  black-fill: default-black-fill, // glyph fallback only
+  piece-font: default-piece-fonts, // glyph fallback only
+  highlight: (),              // array of square names, e.g. ("e2", "e4")
+  highlight-fill: rgb(60, 130, 90, 110),
+  arrows: (),                 // array of arrows (item 6); see lib `_to-arrow`
+  arrow-color: rgb(21, 120, 27, 200), // default arrow color when none is given
+  // Mapping from PGN %cal/%csl color letters to colors (item 8, decision 8a).
+  annotation-colors: (
+    G: rgb(21, 120, 27, 200),   // green
+    R: rgb(136, 32, 32, 200),   // red
+    Y: rgb(224, 160, 0, 200),   // yellow
+    B: rgb(0, 70, 160, 200),    // blue
+    O: rgb(224, 110, 0, 200),   // orange
+  ),
+)
+
+// ---- diagram style --------------------------------------------------------
+#let default-diagram-style = (
+  info-bold: true,            // bold the auto game-info line (item 4)
+  info-gap: 0.6em,            // space between the game-info line and the board
+  supplement: [Diagram],      // figure supplement
+)
+
+// Document-wide overrides (document-order state, like Typst's own #set).
+#let board-style-state = state("staunton-board-style", (:))
+#let diagram-style-state = state("staunton-diagram-style", (:))
+
+#let board-style-keys = default-board-style.keys()
+#let diagram-style-keys = default-diagram-style.keys()
+
+// ---- setters --------------------------------------------------------------
+#let _reject-flip(f) = assert(
+  not ("flip" in f) and not ("orientation" in f),
+  message: "board flipping is per-diagram only; pass `flip: true` to a diagram, not to a defaults setter",
+)
+
+/// Set default BOARD style fields for all subsequent boards/diagrams.
+#let set-board-defaults(..fields) = {
+  let f = fields.named()
+  _reject-flip(f)
+  for k in f.keys() {
+    assert(board-style-keys.contains(k), message: "unknown board style option: " + k)
+  }
+  board-style-state.update(s => s + f)
+}
+
+/// Set default DIAGRAM style fields (the #figure wrapper) for subsequent diagrams.
+#let set-diagram-defaults(..fields) = {
+  let f = fields.named()
+  for k in f.keys() {
+    assert(diagram-style-keys.contains(k), message: "unknown diagram style option: " + k)
+  }
+  diagram-style-state.update(s => s + f)
+}
+
+/// Umbrella setter (back-compat): route each field to the board or diagram
+/// bucket. `flip` / `orientation` are rejected.
+#let set-chess-defaults(..fields) = {
+  let f = fields.named()
+  _reject-flip(f)
+  let bd = (:)
+  let dg = (:)
+  for (k, v) in f {
+    if board-style-keys.contains(k) { bd.insert(k, v) }
+    else if diagram-style-keys.contains(k) { dg.insert(k, v) }
+    else { panic("unknown style option: " + k) }
+  }
+  if bd.len() > 0 { board-style-state.update(s => s + bd) }
+  if dg.len() > 0 { diagram-style-state.update(s => s + dg) }
+}
+
+/// Convenience: set the default piece set for subsequent diagrams.
+#let set-piece-set(name) = board-style-state.update(s => s + (piece-set: name))
+
+/// Build a style-overrides dict (just sugar around named arguments).
+#let chess-style(..fields) = fields.named()
+
+// ---- back-compat aliases --------------------------------------------------
+// Pre-split names kept so existing importers (board.typ) and tests keep working.
+#let default-style = default-board-style
+#let style-state = board-style-state
+#let style-keys = board-style-keys + diagram-style-keys

@@ -1,0 +1,13 @@
+[package]
+name = "staunton"
+version = "0.1.0"
+entrypoint = "lib.typ"
+authors = ["Frank Lippert <frank.lippert@gmail.com>"]
+license = "MIT"
+description = "Chess diagrams for Typst: render boards and pieces, and build diagrams from FEN strings."
+keywords = ["chess", "fen", "diagram", "board", "game"]
+categories = ["visualization"]
+repository = ""
+
+# Excluded from the published archive.
+exclude = ["examples", "tests", "out", "docs", "prompts"]

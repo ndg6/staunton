@@ -1,0 +1,10 @@
+Subtask 3.3
+I fully support your final design decisions. You can now go
+ahead and amend (and refactor) the existing code.
+
+Note: Existing functionality of subtask 3.1 and 3.2 still must
+work, adapt tests accordingly. 
+Introduce tests for PGN parsing. Also add test for malformed
+PGN (both for roster and move text), which must lead to errors.
+Add also tests for (possibly nested) variations. I want all
+functions of the public API tested.

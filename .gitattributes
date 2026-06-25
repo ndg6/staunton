@@ -1,0 +1,15 @@
+# Normalize line endings: store text as LF in the repo.
+* text=auto eol=lf
+
+# Shell scripts must stay LF even on Windows checkouts (CRLF breaks bash).
+*.sh text eol=lf
+
+# Typst sources and data are text.
+*.typ text
+*.toml text
+*.pgn text
+
+# Binary assets.
+*.svg text
+*.png binary
+*.pdf binary
