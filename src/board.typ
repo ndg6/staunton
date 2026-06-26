@@ -122,8 +122,8 @@
 
 /// Render a board (square name -> (kind, color)) to content. `flip: true` puts
 /// black at the bottom. Accepts style fields as named overrides (see style.typ).
-#let render-board(board, flip: false, ..overrides) = {
-  assert(type(board) == dictionary, message: "render-board expects a board dict; got " + repr(type(board)))
+#let render-board(squares, flip: false, ..overrides) = {
+  assert(type(squares) == dictionary, message: "render-board expects a squares dict (square -> (kind, color)); got " + repr(type(squares)))
 
   context {
     let st = default-style + style-state.get() + overrides.named()
@@ -189,7 +189,7 @@
         }
         // pieces -- the renderer no longer knows about baselines: square-piece
         // returns a square-sized cell positioned correctly for its piece set.
-        for (name, piece) in board {
+        for (name, piece) in squares {
           let p = parse-square(name)
           let o = _screen(p.col, p.row, sq, orient)
           place(dx: o.dx, dy: o.dy, square-piece(

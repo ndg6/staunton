@@ -41,7 +41,7 @@ The main entry point. Returns a `#figure` with `kind: "chess"`.
 
 * a **FEN string**, e.g. `"8/8/8/8/8/8/8/8"`;
 * a **position** dict from `position(..)` or `parse-fen(..)`;
-* a bare **board** dict (square name → `(kind, color)`).
+* a bare **squares** dict (square name → `(kind, color)`).
 
 ### Labeling
 
@@ -120,6 +120,52 @@ honored in every mode.
 Reach for `board` when you want a board inline in text, inside your own layout,
 or anywhere a `#figure` would be in the way. Use `chess-diagram` when you want
 the captioned, cross-referenceable figure.
+
+`chess-board` is an alias for `board` reading as "standard chess board"
+(variant-specific aliases such as `xiangqi-board` are reserved for when those
+variants land).
+
+## `position(..)`
+
+`position` builds a position object — the data model for "which piece stands on
+which square." It accepts several input forms:
+
+```typ
+// array of (kind, color, square) tuples (or dicts):
+#position((("king", "white", "e1"), ("queen", "black", "d8")))
+
+// a bare squares dict:
+#position(("e4": (kind: "pawn", color: "white")))
+
+// the "string" form — first line is the TOP rank, "." is empty,
+// UPPER = white, lower = black:
+#position(```
+  ....r...
+  ........
+  ..p..PPk
+  .p.r....
+  pP..p.R.
+  P.B.....
+  ..P..K..
+  ........
+```)
+// ...or as several row strings: position("....r...", "........", ...)
+```
+
+It returns a dict `(variant, cols, rows, squares, turn, castling, en-passant,
+halfmove, fullmove)`:
+
+* `variant` — `"standard"` (the only one implemented; the registry in
+  `src/variants.typ` is the seam for future variants like Xiangqi);
+* `cols` / `rows` — board geometry (counted from the string form, otherwise the
+  variant default of 8×8);
+* `squares` — the canonical square → `(kind, color)` map (this is the field
+  formerly called `board`).
+
+Named options `turn`, `castling`, `en-passant`, `halfmove`, `fullmove`, and
+explicit `cols`/`rows` are accepted too. `parse-fen` returns the same shape.
+The string form is rectangular-only (every row must have the same width) and
+rejects characters that aren't a valid piece abbreviation or `.`.
 
 ## Games (PGN)
 
@@ -254,7 +300,8 @@ order. Ship one of these if you rely on the fallback for portable output.
 ```
 typst.toml          package manifest
 lib.typ             public API + figure wrapper
-src/coords.typ      square addressing (col,row <-> "e4")
+src/coords.typ      square addressing (col,row <-> "e4"), geometry-aware
+src/variants.typ    chess-variant registry (piece vocab + geometry; standard only)
 src/pieces.typ      piece model + glyph rendering
 src/fen.typ         FEN parsing -> position dict
 src/engine.typ      legal-move engine (pseudo-legal -> legality filter)
@@ -269,6 +316,7 @@ tests/board/        §2 board: size, colors, labeling, orientation, piece_sets, 
 tests/diagram/      §3 figures: auto_captions, free_captions, outlines
 tests/fen/          §4 FEN: good / malformed / inconsistent
 tests/pgn/          §5 PGN: good / roster / san / moves / realworld
+tests/position/     position object: string form, object shape, malformed
 tests/out/          kept render artifacts (mirrors the tests/ tree)
 examples/showcase.typ   capability tour using the example games
 examples/pgn/           sample PGN files

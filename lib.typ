@@ -12,8 +12,9 @@
 // renderer + one #figure wrapper.
 // ===========================================================================
 
-#import "src/coords.typ": parse-square, square-name, file-letters, is-dark-square
+#import "src/coords.typ": parse-square, square-name, file-letter, file-letters, is-dark-square
 #import "src/pieces.typ": piece-content, fen-piece, piece-kinds, piece-colors, default-piece-set, known-piece-sets
+#import "src/variants.typ": variants, variant-spec, char-to-piece
 #import "src/fen.typ": parse-fen, starting-fen
 #import "src/engine.typ": legal-moves, apply, in-check
 #import "src/san.typ": san-to-move, play-san
@@ -35,43 +36,114 @@
 // collected with  #outline(target: figure.where(kind: "chess")).
 #let chess-kind = "chess"
 
-/// Build a position dict from an explicit list of pieces (manual placement).
-///
-/// `pieces` is an array of (kind, color, square), e.g.
-///   (("king", "white", "e1"), ("queen", "black", "d8"))
-/// or a dict already in board form (square -> (kind, color)).
-#let position(pieces, turn: "w", castling: (:), en-passant: none, halfmove: 0, fullmove: 1) = {
-  let board = (:)
-  if type(pieces) == dictionary {
-    board = pieces
-  } else if type(pieces) == array {
-    for p in pieces {
-      let (kind, color, square) = if type(p) == array { (p.at(0), p.at(1), p.at(2)) } else { (p.kind, p.color, p.square) }
-      let _ = parse-square(square) // validate
-      board.insert(lower(square), (kind: kind, color: color))
+// Parse the "string" position form into (squares, cols, rows). Accepts a single
+// multi-line string, a raw block (```...```), or an array of row strings. The
+// FIRST line is the TOP rank (read top-down, like FEN); "." is an empty square;
+// upper case = white, lower case = black (resolved via the variant). All
+// non-blank rows must have the same length (rectangular boards only).
+#let _parse-position-string(input, variant) = {
+  let lines = if type(input) == array { input }
+    else if type(input) == str { input.split("\n") }
+    else if type(input) == content and input.func() == raw { input.text.split("\n") }
+    else { panic("position(): string form expects a string, a raw block, or row strings") }
+  lines = lines.map(l => l.trim()).filter(l => l != "")
+  assert(lines.len() > 0, message: "position(): empty position string")
+  let rows = lines.len()
+  let cols = lines.first().clusters().len()
+  let squares = (:)
+  for (i, ln) in lines.enumerate() {
+    let cells = ln.clusters()
+    assert(cells.len() == cols, message: "position(): row " + str(i + 1) + " has " + str(cells.len()) + " columns, expected " + str(cols) + " (board must be rectangular)")
+    let row = rows - 1 - i   // first line is the top rank
+    for (col, ch) in cells.enumerate() {
+      if ch == "." { continue }
+      squares.insert(square-name(col, row), char-to-piece(ch, variant: variant))
     }
-  } else {
-    panic("position(): `pieces` must be an array or a board dict; got " + repr(type(pieces)))
   }
-  (board: board, turn: turn, castling: castling, en-passant: en-passant, halfmove: halfmove, fullmove: fullmove)
+  (squares: squares, cols: cols, rows: rows)
 }
 
-// Normalise the many accepted `source` forms into a board dict.
-#let _to-board(source) = {
-  if type(source) == str { parse-fen(source).board }
-  else if type(source) == dictionary and "board" in source { source.board }
+/// Build a position from one of several forms (manual placement and friends):
+///   * an array of (kind, color, square) tuples or dicts;
+///   * a squares dict already in (square -> (kind, color)) form;
+///   * the "string" form: a multi-line string, a raw block, or several row
+///     strings -- e.g. position("....r...", "p.......", ...) or
+///     position(```  ....r... \n ... ```).
+/// Named options: `variant` (default "standard"), `turn`, `castling`,
+/// `en-passant`, `halfmove`, `fullmove`, and `cols`/`rows` (default: derived
+/// from the variant for non-string forms, counted for the string form).
+/// Returns a position dict: (variant, cols, rows, squares, turn, castling,
+/// en-passant, halfmove, fullmove).
+#let position(..args) = {
+  let opts = args.named()
+  let variant = opts.at("variant", default: "standard")
+  let spec = variant-spec(variant)
+  let pos = args.pos()
+  assert(pos.len() >= 1, message: "position(): expected at least one positional argument")
+
+  let squares = (:)
+  let cols = opts.at("cols", default: auto)
+  let rows = opts.at("rows", default: auto)
+
+  // string form: either several positional row strings, or one string/raw/
+  // array-of-strings positional.
+  let str-input = if pos.len() > 1 { pos }
+    else if type(pos.first()) == str or (type(pos.first()) == content and pos.first().func() == raw) { pos.first() }
+    else if type(pos.first()) == array and pos.first().len() > 0 and type(pos.first().first()) == str { pos.first() }
+    else { none }
+
+  if str-input != none {
+    let r = _parse-position-string(str-input, variant)
+    squares = r.squares
+    if cols == auto { cols = r.cols }
+    if rows == auto { rows = r.rows }
+  } else {
+    let p = pos.first()
+    if type(p) == array {
+      for entry in p {
+        let (kind, color, square) = if type(entry) == array { (entry.at(0), entry.at(1), entry.at(2)) } else { (entry.kind, entry.color, entry.square) }
+        let _ = parse-square(square, cols: spec.cols, rows: spec.rows) // validate
+        squares.insert(lower(square), (kind: kind, color: color))
+      }
+    } else if type(p) == dictionary {
+      squares = if "squares" in p { p.squares } else { p }
+    } else {
+      panic("position(): expected an array, a squares dict, a string, a raw block, or row strings; got " + repr(type(p)))
+    }
+    if cols == auto { cols = spec.cols }
+    if rows == auto { rows = spec.rows }
+  }
+
+  (
+    variant: variant, cols: cols, rows: rows, squares: squares,
+    turn: opts.at("turn", default: "w"),
+    castling: opts.at("castling", default: (:)),
+    en-passant: opts.at("en-passant", default: none),
+    halfmove: opts.at("halfmove", default: 0),
+    fullmove: opts.at("fullmove", default: 1),
+  )
+}
+
+// Normalise the many accepted `source` forms into a squares dict for rendering.
+#let _to-squares(source) = {
+  if type(source) == str { parse-fen(source).squares }
+  else if type(source) == dictionary and "squares" in source { source.squares }
   else if type(source) == dictionary { source }
-  else { panic("board(): source must be a FEN string, a position, or a board dict") }
+  else { panic("board(): source must be a FEN string, a position, or a squares dict") }
 }
 
 /// Draw a bare chess board (no figure, no caption). `source` is a FEN string, a
-/// position dict, or a board dict. `flip: true` shows it from Black's side.
+/// position dict, or a squares dict. `flip: true` shows it from Black's side.
 /// Named style overrides (size, light, dark, labels, label-mode, file-side,
 /// rank-side, piece-set, highlight, ...) behave exactly as for `chess-diagram`.
 /// This is the drawing primitive that `chess-diagram` / `fen-diagram` wrap.
 #let board(source, flip: false, ..overrides) = render-board(
-  _to-board(source), flip: flip, ..overrides.named(),
+  _to-squares(source), flip: flip, ..overrides.named(),
 )
+
+/// Alias for `board` reading as "standard chess board". (Variant-specific board
+/// aliases like `xiangqi-board` are reserved for when those variants land.)
+#let chess-board = board
 
 // Above-diagram "game info" line: "<White> – <Black> (<Year>)". Drawn only when
 // BOTH players are known; the year is appended in parentheses when present. The

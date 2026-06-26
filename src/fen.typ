@@ -70,7 +70,10 @@
   let fullmove = if parts.len() > 5 { int(parts.at(5)) } else { 1 }
 
   (
-    board: board,
+    variant: "standard",
+    cols: 8,
+    rows: 8,
+    squares: board,
     turn: turn,
     castling: castling,
     en-passant: ep,

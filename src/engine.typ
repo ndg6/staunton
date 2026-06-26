@@ -102,14 +102,14 @@
 
 /// Is `color`'s king currently in check?
 #let in-check(position, color) = {
-  let k = _find-king(position.board, color)
+  let k = _find-king(position.squares, color)
   if k == none { return false }
-  is-square-attacked(position.board, k.at(0), k.at(1), _other(color))
+  is-square-attacked(position.squares, k.at(0), k.at(1), _other(color))
 }
 
 // Pseudo-legal moves (no king-safety check), excluding castling.
 #let _pseudo-moves(position) = {
-  let board = position.board
+  let board = position.squares
   let color = if position.turn == "w" { "white" } else { "black" }
   let opp = _other(color)
   let moves = ()
@@ -211,7 +211,7 @@
 
 // Castling moves, fully validated (rights, empty squares, not through/into check).
 #let _castling-moves(position) = {
-  let board = position.board
+  let board = position.squares
   let color = if position.turn == "w" { "white" } else { "black" }
   let opp = _other(color)
   let rank = if color == "white" { 0 } else { 7 }
@@ -247,7 +247,7 @@
 /// of the input). Handles captures, en passant, castling (rook too),
 /// promotion, castling-rights, en-passant target, and the move clocks.
 #let apply(position, move) = {
-  let board = position.board
+  let board = position.squares
   let color = move.color
   let (fc, fr) = move.from
   let (tc, tr) = move.to
@@ -294,7 +294,13 @@
   let full = if color == "black" { position.fullmove + 1 } else { position.fullmove }
   let turn = if position.turn == "w" { "b" } else { "w" }
 
-  (board: board, turn: turn, castling: cr, en-passant: ep, halfmove: half, fullmove: full)
+  (
+    variant: position.at("variant", default: "standard"),
+    cols: position.at("cols", default: 8),
+    rows: position.at("rows", default: 8),
+    squares: board,
+    turn: turn, castling: cr, en-passant: ep, halfmove: half, fullmove: full,
+  )
 }
 
 /// All fully-legal moves for the side to move.
@@ -305,9 +311,9 @@
   let legal = ()
   for m in pseudo {
     let after = apply(position, m)
-    let k = _find-king(after.board, color)
+    let k = _find-king(after.squares, color)
     if k == none { continue }
-    if not is-square-attacked(after.board, k.at(0), k.at(1), opp) {
+    if not is-square-attacked(after.squares, k.at(0), k.at(1), opp) {
       legal.push(m)
     }
   }
