@@ -37,6 +37,10 @@
 )
 #import "src/board.typ": render-board, default-light, default-dark, default-board-size
 #import "src/annotations.typ": interpret-comment
+#import "src/tournament.typ": (
+  games-by-event, standings, standings-table,
+  crosstable, crosstable-table, progress, progress-table,
+)
 
 // Distinct figure kind so chess diagrams get their own counter and can be
 // collected with  #outline(target: figure.where(kind: "chess")).

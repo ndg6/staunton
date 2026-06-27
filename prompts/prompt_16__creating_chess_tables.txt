@@ -1,0 +1,29 @@
+Generating Chess Tables
+============================
+
+Creating tables for chess matches and tournaments
+is an important part of chess publishing. 
+
+Often, complete tournament results (games with
+results and movetext) are contained within a
+single tournament.
+
+We already have the capabilities to parse the roster
+of all games with a PGN. This makes it it easy to
+calculate the end results of all participants
+and present a table in descending order with the
+first mentioned player on top.
+
+This should be enough to create a end score table
+for both open and round-robin tournaments. We can
+also create progress tables the record the progress
+from round to round
+
+Cross-Tables maybe be a bigger problem for open
+tournaments, but should be fine for round-robin
+tournaments. 
+
+In "real_tournament.pgn" I have a complete real
+tournament. You can parse and try to create some
+of the tables mentioned above. But please discuss
+first options and design choices.

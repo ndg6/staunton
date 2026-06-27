@@ -382,6 +382,42 @@ broken tag syntax and stray variation parens fail at parse time; illegal,
 ambiguous, or unparseable moves fail when the position is navigated. Missing
 Seven-Tag-Roster tags are tolerated (they default).
 
+## Tournament tables
+
+Built from a parsed PGN's roster + results (no engine). Compute functions return
+plain data; the `*-table` renderers produce a `#table`. Each works on a list of
+games (filter a multi-division file first with `games-by-event`), with
+`by: "player"` or `by: "team"`:
+
+```typ
+#import "@preview/staunton:0.1.0": parse-pgn, games-by-event, standings-table, crosstable-table, progress-table
+
+#let games = parse-pgn(read("event.pgn"))
+#standings-table(games, by: "player")        // end-score table, sorted best-first
+#crosstable-table(games, by: "team")          // round-robin cross-table
+#progress-table(games, by: "team")            // round-by-round running score
+```
+
+- **`standings`** sorts by score desc, then tie-breaks, then first appearance
+  ("first mentioned on top"). Tie-breaks: `buchholz`, `sonneborn-berger`, and
+  (team) `board-points`; override with `tiebreaks: (..)`.
+- **Team** mode groups games in the same major round (`Round = "round.board"`)
+  between the same two teams into a **match**: board points are summed and match
+  points (`2/1/0`, settable via `match-points`) decide the match.
+- **`crosstable`** requires a round-robin (every pair met) — it errors otherwise
+  (use standings + progress for Swiss/league). Teams in a division typically form
+  a round-robin; individual players in a Swiss/league do not.
+- **`progress`** needs the `Round` tag; columns are the rounds with a running
+  total.
+- The compute functions (`standings`, `crosstable`, `progress`) are also public,
+  returning data for custom layouts.
+
+> Team tables assume the standard `Round = "round.board"` convention. A file
+> whose round numbering doesn't follow it (some real exports don't) will produce
+> unreliable *team* grouping — *player* standings only sum per player and are
+> robust regardless. Very large PGNs can exceed Typst's loop limit during
+> parsing; split or trim the input if so.
+
 ## Document-wide style
 
 Styling is split into two buckets: **board** style (everything the board draws —
@@ -473,6 +509,7 @@ src/game.typ        navigation: mainline, locators
 src/notation.typ    human-readable notation (figurine / i18n / NAGs / comments)
 src/i18n.typ        language registry (loads assets/i18n/*.typ)
 src/annotations.typ PGN comment interpreter (%cal/%csl, diagram markers) + NAG symbols
+src/tournament.typ  tournament tables: standings / crosstable / progress (player & team)
 src/style.typ       diagram-style dict + document defaults
 src/board.typ       canvas renderer + sizing + flip + label modes
 assets/piece_sets/  SVG piece sets (cburnett default, + 5 more)
