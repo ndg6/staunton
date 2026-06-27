@@ -50,9 +50,38 @@
   p
 }
 
+// All mainline positions: (start, after ply 1, after ply 2, ...). Each SAN is
+// resolved once, so the move generator runs N times TOTAL here. Typst memoises a
+// pure call by its arguments, so repeated `position-after` / `board-after` on the
+// SAME game reuse this list instead of re-walking from the start every time --
+// the "fast-track": O(N) once, then O(1) per mainline locator, rather than
+// O(N*K) generator runs for K diagrams. (Legality is still proven the first time
+// the list is built; PGN parsing itself never runs the engine.)
+#let _mainline-positions(game) = {
+  let pos = game-start(game)
+  let out = (pos,)
+  for node in game.movetext {
+    pos = apply(pos, san-to-move(pos, node.san))
+    out.push(pos)
+  }
+  out
+}
+
 /// The position at a locator. Handles mainline and (nested) variations.
 #let position-after(game, locator) = {
   let loc = if type(locator) == str { (line: (), at: locator) } else { locator }
+
+  // Fast path: a pure mainline locator just indexes into the (memoised) mainline
+  // positions -- no re-walking, no extra generator runs across diagrams.
+  if loc.at("line", default: ()).len() == 0 {
+    let all = _mainline-positions(game)
+    let target = _ply-of(loc.at("at"))
+    assert(target >= 0 and target < all.len(), message: "locator out of range: addressed move past end of line")
+    return all.at(target)
+  }
+
+  // Variations: walk the (nested) sub-lines. Not fast-tracked, but the common
+  // mainline case above is.
   let line = game.movetext
   let branch-ply = 1
   let pos = game-start(game)

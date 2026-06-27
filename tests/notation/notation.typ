@@ -19,9 +19,12 @@
 #let ru = notation(g, lang: "ru")
 #assert(ru != notation(g) and ru.contains("f3") and not ru.contains("Nf3"), message: "ru localizes piece letters, keeps coords")
 
-// --- figurines: piece letters become glyphs; no Latin piece letters remain ---
+// --- figurines: colour-aware. White's Nf3 -> outline knight U+2658, Black's
+// Nc6 -> solid knight U+265E; no Latin piece letters remain. ---
 #let fig = notation(g, figurine: true)
-#assert(fig.contains("\u{265E}") and not fig.contains("N") and not fig.contains("B"), message: "figurine glyphs")
+#assert(fig.contains("\u{2658}"), message: "white knight figurine (outline) for White's move")
+#assert(fig.contains("\u{265E}"), message: "black knight figurine (solid) for Black's move")
+#assert(fig.contains("\u{2657}") and not fig.contains("N") and not fig.contains("B"), message: "white bishop figurine; no Latin piece letters")
 
 // --- ranges (inclusive, board-after locators) ---
 #assert(notation(g, to: "2b") == "1. e4 e5 2. Nf3 Nc6", message: "start -> 2b")

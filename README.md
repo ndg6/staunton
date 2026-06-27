@@ -304,7 +304,7 @@ Options:
 | option | default | meaning |
 |---|---|---|
 | `from` / `to` | `none` | inclusive mainline locators (`"12w"`/`"12b"`); omit for the whole line |
-| `figurine` | `false` | render piece letters as figurine glyphs (♔♕♖♗♘) |
+| `figurine` | `false` | render piece letters as figurine glyphs, colour-aware: White's moves use outline symbols (♔♕♖♗♘), Black's the solid ones (♚♛♜♝♞) |
 | `lang` | `"en"` | piece-letter language: `"en"`, a code (`"de"`, `"ru"`, …), or `"auto"` (follows `#set text(lang: ..)`; unknown → English) |
 | `move-numbers` | `true` | prefix move numbers (`1.`, `1...`) |
 | `result` | `false` | append the game result (a `*` is never shown) |

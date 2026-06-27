@@ -19,7 +19,6 @@
 // defaults are first/last move. (Variation-line ranges are not supported yet.)
 // ===========================================================================
 
-#import "pieces.typ": piece-glyphs
 #import "san.typ": _split-movetext
 #import "game.typ": mainline, game-result
 #import "i18n.typ": notation-langs
@@ -27,6 +26,13 @@
 // The only uppercase letters that denote a piece in SAN -> kind. Files (a-h),
 // ranks, "x", "+", "#", "O-O" and NAGs are never piece letters and pass through.
 #let _letter-to-kind = (K: "king", Q: "queen", R: "rook", B: "bishop", N: "knight")
+
+// Figurine glyphs are colour-aware: White's moves use the OUTLINE ("white")
+// chess symbols U+2654..2658, Black's the SOLID ("black") ones U+265A..265E, so
+// the side to move reads off the figurine itself (not just the move number).
+// (Some fonts render the outline glyphs lighter than the solid ones.)
+#let _fig-white = (king: "\u{2654}", queen: "\u{2655}", rook: "\u{2656}", bishop: "\u{2657}", knight: "\u{2658}")
+#let _fig-black = (king: "\u{265A}", queen: "\u{265B}", rook: "\u{265C}", bishop: "\u{265D}", knight: "\u{265E}")
 
 // "12w" -> ply 23 ; "12b" -> ply 24 (same convention as game.typ locators).
 #let _ply-of(loc) = {
@@ -37,27 +43,30 @@
   else { panic("notation: move locator must end in 'w' or 'b': " + loc) }
 }
 
-// One piece letter rendered as the language letter, or the figurine glyph.
-#let _piece-out(letter, chars, figurine) = {
+// One piece letter rendered as the language letter, or the colour-aware figurine
+// glyph (`white` selects the outline vs solid set).
+#let _piece-out(letter, chars, figurine, white) = {
   let kind = _letter-to-kind.at(letter)
-  if figurine { piece-glyphs.at(kind) } else { chars.at(kind) }
+  if figurine { (if white { _fig-white } else { _fig-black }).at(kind) }
+  else { chars.at(kind) }
 }
 
 // Transform one canonical (English) SAN token: substitute the leading piece
 // letter and any promotion letter (after "="); leave everything else untouched.
-#let _localize-san(san, chars, figurine) = {
+// `white` is the side that played the move (for colour-aware figurines).
+#let _localize-san(san, chars, figurine, white) = {
   if san == "" { return "" }
   let cs = san.clusters()
   let out = ""
   let i = 0
   if _letter-to-kind.keys().contains(cs.at(0)) {
-    out += _piece-out(cs.at(0), chars, figurine)
+    out += _piece-out(cs.at(0), chars, figurine, white)
     i = 1
   }
   while i < cs.len() {
     let ch = cs.at(i)
     if ch == "=" and i + 1 < cs.len() and _letter-to-kind.keys().contains(cs.at(i + 1)) {
-      out += "=" + _piece-out(cs.at(i + 1), chars, figurine)
+      out += "=" + _piece-out(cs.at(i + 1), chars, figurine, white)
       i += 2
     } else {
       out += ch
@@ -99,7 +108,7 @@
     let ply = idx + 1
     let white = calc.odd(ply)
     let movenum = int((ply + 1) / 2)
-    let tok = _localize-san(sans.at(idx), chars, figurine)
+    let tok = _localize-san(sans.at(idx), chars, figurine, white)
     let s = ""
     if move-numbers {
       if white { s = str(movenum) + ". " }

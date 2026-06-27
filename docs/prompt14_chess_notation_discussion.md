@@ -81,9 +81,10 @@ Standard SAN uses uppercase piece letters `K Q R B N`; files are lowercase
 
 Multi-char targets (Russian `K → "Кр"`, `N → "К"`) are safe because we map by
 *meaning*, not by character — no `K`/`N` collision. **Figurines** are the same
-substitution into the solid Unicode glyphs already in `src/pieces.typ`
-(`piece-glyphs`, ♔♕♖♗♘…); figurine notation is colour-neutral (one symbol per
-kind) and pawns have no symbol.
+substitution into Unicode chess glyphs, **colour-aware**: White's moves use the
+outline symbols (♔♕♖♗♘, U+2654–2658), Black's the solid ones (♚♛♜♝♞,
+U+265A–265E) — so the side reads off the figurine, not just the move number.
+Pawns have no symbol.
 
 This is correct precisely because PGN SAN is canonical English; the transform
 never needs the engine.
@@ -136,8 +137,8 @@ Shipped as designed:
   the string form reuses `_split-movetext` from `play-moves`.
 - **Localization by letter substitution** (`_letter-to-kind`: K Q R B N → kind →
   `lang.piece-chars`), incl. promotion after `=`; files/ranks/`x`/`+`/`#`/`O-O`
-  untouched. Multi-char (Russian `Кр`/`К`) handled. **Figurines** reuse
-  `pieces.piece-glyphs` (solid ♔–♟).
+  untouched. Multi-char (Russian `Кр`/`К`) handled. **Figurines** are
+  colour-aware: White → outline glyphs (U+2654–2658), Black → solid (U+265A–265E).
 - **i18n registry** `src/i18n.typ` statically imports the seven `assets/i18n`
   files into `notation-langs`; `lang: "auto"` reads `text.lang` in `context`,
   unknown → `en`.
