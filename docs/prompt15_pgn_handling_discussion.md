@@ -128,8 +128,12 @@ stays off.
 
 ## Open / deferred
 
-- inline diagram embedding (consumes `diagrams`) — likely just a `diagrams: true`
-  branch inside `notation`, no new renderer (see the clarification above).
+- ~~inline diagram embedding (consumes `diagrams`)~~ — **DONE** (follow-up round):
+  a `diagrams: true` branch in the lib-level `notation` splices `chess-diagram`s
+  into the flow at markers. No new renderer; the text core stays in
+  `src/notation.typ` and the embed wrapper lives in `lib.typ` (where
+  `chess-diagram` is available). Embedded figures are created in a context, so
+  they are not individually referenceable. Tests: `tests/notation/embed_diagrams.typ`.
 - Configurable marker set / localized NAG text — fixed for now.
 - Comments/variations in notation beyond mainline prose — out of scope.
 

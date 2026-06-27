@@ -312,9 +312,24 @@ Options:
 | `comments` | `auto` | append comment prose (game source only); `auto` → the pgn default (off) |
 
 `nags`/`comments` apply to a **game** source (a SAN string/array carries none).
-With an explicit `lang` and explicit `nags`/`comments`, `notation` returns a
-plain string; when any is `auto` (consulting the document default) or `lang` is
-`"auto"`, it returns content.
+With an explicit `lang` and explicit `nags`/`comments`/`diagrams`, `notation`
+returns a plain string; when any is `auto` (consulting the document default) or
+`lang` is `"auto"`, it returns content.
+
+**Embedded diagrams.** With `diagrams: true` (or `set-pgn-defaults(diagrams:
+true)`) over a *game*, `notation` flows the movetext as content and splices a
+`chess-diagram` after each move whose comment holds a diagram marker — using that
+move's caption (from `{#[caption]}`) and, when `annotations` is on, its
+`%cal`/`%csl`:
+
+```typ
+// 2. Nf3 {[%cal Gf1c4] #[After 2.Nf3]} Nc6 3. Bb5 {[d]} a6 ...
+#chess-notation(game, diagrams: true, annotations: true)
+// -> "1. e4 e5 2. Nf3" [board] "2... Nc6 3. Bb5" [board] "3... a6 ..."
+```
+
+The spliced diagrams are created in a `context`, so they are not individually
+referenceable (use `board-after` with a label when you need a reference).
 
 Localization substitutes only the piece letters (`K Q R B N` and the promotion
 letter after `=`); files, ranks, captures, check marks, and `O-O` are untouched.
@@ -401,7 +416,7 @@ gives plain movetext unless you opt in:
 | `annotations` | `false` | `%cal`/`%csl` → arrows/highlights on `board-after` |
 | `nags` | `false` | render NAGs (`Nf3!`, `d4⩲`) in `notation` |
 | `comments` | `false` | include comment prose in `notation` |
-| `diagrams` | `false` | recognise embedded diagram markers (`{#}`, `{[d]}`, `{\diagram}`, `{%%diagram}`) — inline rendering is a future step |
+| `diagrams` | `false` | embed a board in `notation` output after each move whose comment carries a diagram marker (`{#}`/`{#[caption]}`, `{[d]}`/`{[D]}`, `{\diagram}`, `{%%diagram}`) |
 
 `set-chess-defaults` routes these keys too; each is also a per-call argument
 (`auto` → the document default) on `notation` / `board-after`.

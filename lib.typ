@@ -20,7 +20,10 @@
 #import "src/san.typ": san-to-move, play-san, play-moves
 #import "src/pgn.typ": parse-pgn
 #import "src/game.typ": mainline, position-after, game-result, game-start, move-san, move-node
-#import "src/notation.typ": notation, chess-notation
+// The text core lives in src/notation.typ; lib defines `notation` /
+// `chess-notation` on top so they can also embed diagrams (which needs the
+// lib-level `chess-diagram`).
+#import "src/notation.typ": notation as _notation-text
 
 // NOTE on reading external files: there is intentionally no `read-pgn(path)`
 // wrapper. Typst's `read` resolves paths relative to the file the call appears
@@ -376,6 +379,96 @@
     board(pos, flip: flip, arrows: arr, highlight: hl, ..base-ov)
   }
   _assemble(drawn, w, b, y, game-info, cap, diagram-ov, fig-args)
+}
+
+// Mainline locator "12w"/"12b" <-> 0-based ply index (ply = index+1; White's
+// move m is ply 2m-1). Used to slice the movetext into text runs for embedding.
+#let _index-of-loc(loc) = {
+  let color = loc.slice(loc.len() - 1)
+  let num = int(loc.slice(0, loc.len() - 1))
+  (if color == "w" { 2 * num - 1 } else { 2 * num }) - 1
+}
+#let _loc-of-index(i) = {
+  let ply = i + 1
+  str(int((ply + 1) / 2)) + (if calc.odd(ply) { "w" } else { "b" })
+}
+
+// The text-only options forwarded to the notation core (i.e. minus the embedding
+// switches `diagrams` / `annotations`, handled here).
+#let _text-opts(named, keys) = {
+  let o = (:)
+  for k in keys { if k in named { o.insert(k, named.at(k)) } }
+  o
+}
+
+/// Render move notation (text), and -- when `diagrams` is on and the source is a
+/// game -- splice a `chess-diagram` into the flow after each move whose comment
+/// carries a diagram marker (ChessBase `#`/`#[caption]`, Scid `[d]`/`[D]`,
+/// `\diagram`, `%%diagram`). The embedded board uses that move's caption and, when
+/// `annotations` is on, its `%cal`/`%csl`. `diagrams` / `annotations` default to
+/// `auto` (the `set-pgn-defaults` document defaults, both off). All other options
+/// (`from`/`to`, `figurine`, `lang`, `nags`, `comments`, `move-numbers`,
+/// `result`) behave as for the text notation. Embedded diagrams are created in a
+/// context, so they are not individually referenceable.
+#let notation(source, ..args) = {
+  let named = args.named()
+  // Validate range locators eagerly (not deferred behind the context below), so
+  // a misuse errors even when the result is discarded.
+  for loc in (named.at("from", default: none), named.at("to", default: none)) {
+    if loc != none and type(loc) != str {
+      panic("notation: variation-line ranges are not supported yet; use mainline locators like \"12w\"")
+    }
+  }
+  let diag = named.at("diagrams", default: auto)
+  let is-game = type(source) == dictionary and "movetext" in source
+  let all-opts = ("from", "to", "figurine", "lang", "nags", "comments", "move-numbers", "result")
+
+  // No embedding possible/requested -> hand straight to the text core.
+  if diag == false or not is-game {
+    return _notation-text(source, .._text-opts(named, all-opts))
+  }
+
+  context {
+    let pg = default-pgn-style + pgn-style-state.get()
+    let do-diag = if diag != auto { diag } else { pg.diagrams }
+    if not do-diag {
+      _notation-text(source, .._text-opts(named, all-opts))
+    } else {
+      let nodes = source.movetext
+      let lo = if named.at("from", default: none) != none { _index-of-loc(named.from) } else { 0 }
+      let hi = if named.at("to", default: none) != none { _index-of-loc(named.to) } else { nodes.len() - 1 }
+      let process-anno = if named.at("annotations", default: auto) != auto { named.annotations } else { pg.annotations }
+      let run-opts = _text-opts(named, ("figurine", "lang", "nags", "comments", "move-numbers"))
+
+      let parts = ()
+      let run-start = lo
+      for idx in range(lo, hi + 1) {
+        let info = interpret-comment(nodes.at(idx).at("comment-after", default: none))
+        if info.diagram != none {
+          parts.push(_notation-text(source, from: _loc-of-index(run-start), to: _loc-of-index(idx), result: false, ..run-opts))
+          let cap = if info.diagram.caption == none { none } else { [#info.diagram.caption] }
+          let arr = if process-anno { info.arrows } else { () }
+          let hl = if process-anno { info.highlights } else { () }
+          parts.push(chess-diagram(position-after(source, _loc-of-index(idx)), caption: cap, arrows: arr, highlight: hl))
+          run-start = idx + 1
+        }
+      }
+      if run-start <= hi {
+        parts.push(_notation-text(source, from: _loc-of-index(run-start), to: _loc-of-index(hi), result: false, ..run-opts))
+      }
+      let body = parts.map(c => [#c]).join()
+      if named.at("result", default: false) { body = [#body #game-result(source)] }
+      body
+    }
+  }
+}
+
+/// Standard western chess notation (the variant-named sugar over `notation`).
+#let chess-notation(source, ..args) = {
+  if type(source) == dictionary and source.at("variant", default: "standard") != "standard" {
+    panic("chess-notation: expected standard chess; got variant " + repr(source.variant))
+  }
+  notation(source, ..args)
 }
 
 /// An outline listing only chess diagrams (figures with `kind: chess-kind`).

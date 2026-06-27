@@ -10,9 +10,10 @@
 #let g = parse-pgn("[White \"A\"][Black \"B\"][Result \"1-0\"]
 1. e4 e5 2. Nf3 Nc6 3. Bb5 a6 4. Ba4 Nf6 5. O-O 1-0").first()
 
-// String-returning fast path needs explicit nags/comments (defaults are `auto`,
-// which consults the document bucket and yields content). Helper for clarity:
-#let s(src, ..a) = notation(src, ..a.named(), nags: false, comments: false)
+// String-returning fast path: nags/comments/diagrams must be explicit (their
+// `auto` defaults consult the document bucket -> content). Helper defaults them
+// off but lets a test override (e.g. nags: true); the override wins.
+#let s(src, ..a) = notation(src, ..((diagrams: false, nags: false, comments: false) + a.named()))
 
 // --- English (default) ---
 #assert(s(g) == "1. e4 e5 2. Nf3 Nc6 3. Bb5 a6 4. Ba4 Nf6 5. O-O", message: "en mainline")
@@ -47,13 +48,13 @@
 // --- prompt 15: NAGs and comments (opt-in) ---
 #let gn = parse-pgn("[White \"A\"][Black \"B\"] 1. e4 $1 e5 $6 2. Nf3 {develops the knight} Nc6 *").first()
 // default off: plain movetext, no NAG glyphs, no prose
-#assert(notation(gn, nags: false, comments: false) == "1. e4 e5 2. Nf3 Nc6", message: "nags/comments off")
+#assert(s(gn) == "1. e4 e5 2. Nf3 Nc6", message: "nags/comments off")
 // nags on: $1 -> "!", $6 -> "?!"
-#assert(notation(gn, nags: true, comments: false) == "1. e4! e5?! 2. Nf3 Nc6", message: "nags rendered")
+#assert(s(gn, nags: true) == "1. e4! e5?! 2. Nf3 Nc6", message: "nags rendered")
 // comments on: residual prose appended
-#assert(notation(gn, nags: false, comments: true) == "1. e4 e5 2. Nf3 develops the knight Nc6", message: "comments rendered")
+#assert(s(gn, comments: true) == "1. e4 e5 2. Nf3 develops the knight Nc6", message: "comments rendered")
 // SAN sources never carry nags/comments
-#assert(notation("e4 e5", nags: true, comments: true) == "1. e4 e5", message: "SAN source has no nags/comments")
+#assert(s("e4 e5", nags: true, comments: true) == "1. e4 e5", message: "SAN source has no nags/comments")
 
 = Notation output
 
