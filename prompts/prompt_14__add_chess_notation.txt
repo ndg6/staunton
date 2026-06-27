@@ -1,0 +1,36 @@
+Add Chess Notation Output
+=========================
+
+So far, the only output of the move text of a PGN
+is a board / diagram at some position in the
+move list of a game.
+
+I want you to at a #chess-notation(<GAME>, <LOCATOR>)
+to output notation in human-readable form. 
+
+For <LOCATOR> we could reuse the #board-after syntax.
+
+We should offer
+- option to use chess symbols / figurines for output
+- internanalized output regarding the piece letters with
+    English as the default. As you may have noticed, I 
+    created under folder "assets/i18n" files with 
+    various language files like "de.typ" etc. Here I 
+    create "piece-chars" dictionaries for language-aware
+    first characters for piece kinds. At the moment this
+    is for standard chess only, not sure, whether we 
+    should extend that to other languages.
+
+Setting which language to use should be a settable option
+(with English as default). We should also offer an "auto"
+option that can inspect the currently set language
+(#set text(lang: "de") would switch to German for #chess-notation),
+if the "auto" option is used.
+
+I also wonder, whether we could offer chess-notation capabilities outside of a "game", but we cannot prove the legality of 
+chess moves until we use "engine" anyway.
+
+I also wonder, whether we should introduce a generic "#notation"
+for chess-variant-agnostic output and only use "#chess-notation" as syntactic sugar (adding #xiangqi-notation etc. later).
+
+Please discuss our options!

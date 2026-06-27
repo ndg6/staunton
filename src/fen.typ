@@ -19,7 +19,7 @@
 // ===========================================================================
 
 #import "coords.typ": square-name
-#import "pieces.typ": fen-piece
+#import "pieces.typ": fen-piece, kind-letters
 
 /// Parse a FEN string into a position dict:
 ///   (board, turn, castling, en-passant, halfmove, fullmove)
@@ -84,3 +84,57 @@
 
 /// The standard starting position, as a convenience.
 #let starting-fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
+
+// FEN letter for a piece: kind letter, upper for white, lower for black.
+#let _piece-fen-char(piece) = {
+  let l = kind-letters.at(piece.kind)
+  if piece.color == "white" { upper(l) } else { lower(l) }
+}
+
+/// Encode a position dict back into a FEN string (the inverse of `parse-fen`).
+/// Geometry-aware (uses the position's `cols`/`rows`, so it also serialises
+/// larger boards), and tolerant of a position built by `position()` (whose
+/// `castling` may be an empty dict and `en-passant` `none`). Standard 8x8
+/// positions round-trip exactly with `parse-fen`.
+#let position-fen(position) = {
+  assert(type(position) == dictionary and "squares" in position,
+    message: "position-fen: expected a position dict (with `squares`)")
+  let cols = position.at("cols", default: 8)
+  let rows = position.at("rows", default: 8)
+  let squares = position.squares
+
+  // field 1: piece placement, rank `rows` first (top) down to rank 1.
+  let rank-strs = ()
+  for row in range(rows - 1, -1, step: -1) {
+    let s = ""
+    let empty = 0
+    for col in range(cols) {
+      let name = square-name(col, row)
+      if name in squares {
+        if empty > 0 { s += str(empty); empty = 0 }
+        s += _piece-fen-char(squares.at(name))
+      } else {
+        empty += 1
+      }
+    }
+    if empty > 0 { s += str(empty) }
+    rank-strs.push(s)
+  }
+  let placement = rank-strs.join("/")
+
+  // fields 2-6
+  let turn = position.at("turn", default: "w")
+  let c = position.at("castling", default: (:))
+  let cstr = ""
+  if c.at("white-king", default: false) { cstr += "K" }
+  if c.at("white-queen", default: false) { cstr += "Q" }
+  if c.at("black-king", default: false) { cstr += "k" }
+  if c.at("black-queen", default: false) { cstr += "q" }
+  if cstr == "" { cstr = "-" }
+  let ep = position.at("en-passant", default: none)
+  let epstr = if ep == none { "-" } else { ep }
+  let half = position.at("halfmove", default: 0)
+  let full = position.at("fullmove", default: 1)
+
+  placement + " " + turn + " " + cstr + " " + epstr + " " + str(half) + " " + str(full)
+}

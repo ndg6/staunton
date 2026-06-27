@@ -281,6 +281,60 @@ The variant is taken from the position; the engine analyses **standard chess
 only** for now (a non-standard position errors). Comments, NAGs and variations
 in the text are rejected — use `parse-pgn` for full PGN movetext.
 
+### Notation output (`chess-notation`)
+
+`chess-notation(source, ..)` (and the variant-agnostic `notation`) renders move
+text in human-readable form. `source` is a parsed **game**, a **move-text
+string**, or a **SAN array** (the same forms `play-moves` takes). It formats SAN
+the game already holds — no engine needed.
+
+```typ
+#import "@preview/staunton:0.1.0": parse-pgn, chess-notation
+
+#let game = parse-pgn(read("game.pgn")).first()
+#chess-notation(game)                       // 1. e4 e5 2. Nf3 Nc6 ...
+#chess-notation(game, lang: "de")           // 1. e4 e5 2. Sf3 Sc6 ...
+#chess-notation(game, figurine: true)       // 1. e4 e5 2. ♘f3 ♞c6 ...
+#chess-notation(game, from: "8b", to: "12w")// an inclusive mainline slice
+#chess-notation("1. e4 e5 2. Nf3")          // format a bare move-text string
+```
+
+Options:
+
+| option | default | meaning |
+|---|---|---|
+| `from` / `to` | `none` | inclusive mainline locators (`"12w"`/`"12b"`); omit for the whole line |
+| `figurine` | `false` | render piece letters as figurine glyphs (♔♕♖♗♘) |
+| `lang` | `"en"` | piece-letter language: `"en"`, a code (`"de"`, `"ru"`, …), or `"auto"` (follows `#set text(lang: ..)`; unknown → English) |
+| `move-numbers` | `true` | prefix move numbers (`1.`, `1...`) |
+| `result` | `false` | append the game result (a `*` is never shown) |
+
+Localization substitutes only the piece letters (`K Q R B N` and the promotion
+letter after `=`); files, ranks, captures, check marks, and `O-O` are untouched.
+Language files live in `assets/i18n/<code>.typ` (a `piece-chars` dict per
+language); adding one is a no-code change. v1 ranges are **mainline-only**
+(variation-line ranges error) and exclude comments/variations.
+
+> Note: notation only *formats* SAN you already hold (a game or a SAN list). It
+> cannot yet *generate* SAN from arbitrary positions — that needs a move→SAN
+> encoder, which is future work.
+
+### Exporting FEN (`to-fen`)
+
+`to-fen` is the inverse of `parse-fen`. It serialises either a **position** or a
+**game at a locator**:
+
+```typ
+#import "@preview/staunton:0.1.0": to-fen, parse-fen, play-moves, parse-pgn
+
+#to-fen(play-moves(none, "1. e4 e5 2. Nf3"))   // "rnbqkbnr/... b KQkq - 1 2"
+#to-fen(game, locator: "12w")                  // FEN at that locator
+```
+
+Standard 8×8 positions round-trip exactly with `parse-fen`. It is geometry-aware
+(serialises larger boards too) and tolerant of positions built by `position()`
+(empty castling, no en-passant).
+
 ### Drawing annotations (`%cal` / `%csl`)
 
 `board-after` reads the standard PGN drawing annotations in a move's comment and
@@ -367,11 +421,13 @@ lib.typ             public API + figure wrapper
 src/coords.typ      square addressing (col,row <-> "e4"), geometry-aware
 src/variants.typ    chess-variant registry (piece vocab + geometry; standard only)
 src/pieces.typ      piece model + glyph rendering
-src/fen.typ         FEN parsing -> position dict
+src/fen.typ         FEN parsing -> position dict; position-fen (export)
 src/engine.typ      legal-move engine (pseudo-legal -> legality filter)
 src/san.typ         SAN parsing + resolution; play-san, play-moves
 src/pgn.typ         PGN tokenizer + movetext/variation tree
 src/game.typ        navigation: mainline, locators
+src/notation.typ    human-readable notation (figurine / i18n); chess-notation
+src/i18n.typ        language registry (loads assets/i18n/*.typ)
 src/style.typ       diagram-style dict + document defaults
 src/board.typ       canvas renderer + sizing + flip + label modes
 assets/piece_sets/  SVG piece sets (cburnett default, + 5 more)

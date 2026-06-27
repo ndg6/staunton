@@ -15,11 +15,12 @@
 #import "src/coords.typ": parse-square, square-name, file-letter, file-letters, is-dark-square
 #import "src/pieces.typ": piece-content, fen-piece, piece-kinds, piece-colors, default-piece-set, known-piece-sets
 #import "src/variants.typ": variants, variant-spec, char-to-piece
-#import "src/fen.typ": parse-fen, starting-fen
+#import "src/fen.typ": parse-fen, starting-fen, position-fen
 #import "src/engine.typ": legal-moves, apply, in-check
 #import "src/san.typ": san-to-move, play-san, play-moves
 #import "src/pgn.typ": parse-pgn
 #import "src/game.typ": mainline, position-after, game-result, game-start, move-san, move-node
+#import "src/notation.typ": notation, chess-notation
 
 // NOTE on reading external files: there is intentionally no `read-pgn(path)`
 // wrapper. Typst's `read` resolves paths relative to the file the call appears
@@ -206,6 +207,21 @@
 #let chess-board(source, flip: false, ..overrides) = {
   _assert-variant("chess-board", "standard", source)
   board(source, flip: flip, ..overrides.named())
+}
+
+/// Export a position as a FEN string (the inverse of `parse-fen`). Works for:
+///   * a **position** dict        -> `to-fen(pos)`;
+///   * a **game** + locator       -> `to-fen(game, locator: "12w")`, which
+///     serialises the position at that locator (board-after locator syntax).
+/// Standard 8x8 positions round-trip exactly with `parse-fen`.
+#let to-fen(source, locator: none) = {
+  assert(type(source) == dictionary, message: "to-fen: expected a position or a game dict")
+  if "squares" in source { return position-fen(source) }
+  if "movetext" in source {
+    assert(locator != none, message: "to-fen: a game needs a locator (e.g. locator: \"12w\")")
+    return position-fen(position-after(source, locator))
+  }
+  panic("to-fen: source must be a position (has `squares`) or a game (has `movetext`)")
 }
 
 // Above-diagram "game info" line: "<White> – <Black> (<Year>)". Drawn only when
