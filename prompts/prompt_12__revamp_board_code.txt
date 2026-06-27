@@ -1,0 +1,76 @@
+Revamping Board Drawing Code
+============================
+
+In "prompt_11__reshaping_board_code.txt" we prepared the
+position function for greater flexibility.
+
+Here now we want to revamp and extend the capabilities
+of board visualization itself. As always, discuss first.
+
+1) Draw non-standard boards
+Standard western chess always has a 8x8 layout for boards,
+but e.g. Xiangqi has a 9x9 layout. Chess variant 
+"Capablanca Chess" has a 10 col x 10 row or 10 col x 8 row
+layout.
+
+Our code must be able to parse and render the following
+9x9 position:
+
+#board(position(```
+  ....Q....
+  ......Q..
+  ........Q
+  ...Q.....
+  .Q.......
+  .......Q.
+  .....Q...
+  ..Q......
+  Q........
+```))
+
+Check for uneven columns (they must all the same)!
+
+
+2) Labeling modes
+The existing labeling modes stay the same, but we make some corrections:
+
+- the on-square labeling code will not change to on-boarder mode automatically.
+    We chose the standard font size, so that it doesn't overlap on a half-page-
+    width board, but it stays the way it is, even when board resizes. Remove
+    unneeded test cases.
+
+- The default placement for on-square labeling mode is lower-left corner for
+    file labeling and upper right corner for rank labeling. Allow also 
+    lower-right cordner for file labeling and upper-left corner for rank
+    labels. Introduce new tests. This must be settable option.
+
+- On-border labeling mode:
+    - provide two themes for the border itself
+        + border background: "dark" square color; label color: "light" square color
+            this is default
+        + border background: very dark brown; label color: creme-white 
+        + the themes must be a settable option
+
+3) Highlights
+Until now, we only provided highlights in forms of filled. I would like to
+introduce two more options: cross and circle
+Circles should have as radius half the square width. Crosses should be 
+cented in the mid of the square and should almost but not 100% stretch
+from lower-left to upper-right and from lower-right to the upper-left
+corner of a square and should have beveled ends.
+
+Color of cross and circle should be a settable option. By default use
+red for cross and green for circle. Circle and cross stroke width 
+should be settable and by default 4 pts.
+
+Highlight fill color and transparancy should be a settable option.
+By default, transparency is 75%.
+
+4) Arrows
+Arrow color and width should be settable options. Arrow color should
+have transparency of 75 percent. Select as default color the same color
+as default highlight.fill color.
+
+5) Highlights from PGNs should always be filled squares with same options
+as manually settable ones. I'm not aware of crosses and circle options in
+PGN embedded commands, but maybe I'm wrong?

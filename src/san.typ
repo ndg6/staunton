@@ -12,6 +12,7 @@
 
 #import "coords.typ": parse-square, file-letters, rank-digits
 #import "engine.typ": legal-moves, apply, in-check
+#import "fen.typ": parse-fen, starting-fen
 
 #let _promo-map = (Q: "queen", R: "rook", B: "bishop", N: "knight")
 #let _piece-map = (K: "king", Q: "queen", R: "rook", B: "bishop", N: "knight")
@@ -103,3 +104,53 @@
 
 /// Convenience: resolve a SAN and return the resulting position.
 #let play-san(position, san) = apply(position, san-to-move(position, san))
+
+// Tokenize free move text into a flat SAN list. Drops move numbers ("3." /
+// "3..." and glued "3.e4" / "3...Nf6") and result tokens ("1-0", "*", ...).
+// Comments {..}, NAGs ($n) and variations (..) are NOT supported here -- they
+// raise an error (use `parse-pgn` for full PGN movetext).
+#let _results = ("1-0", "0-1", "1/2-1/2", "*")
+#let _split-movetext(text) = {
+  let out = ()
+  for tok in text.split(regex("\s+")) {
+    let t = tok.trim()
+    if t == "" { continue }
+    assert(
+      not (t.contains("{") or t.contains("}") or t.contains("(") or t.contains(")") or t.starts-with(";") or t.starts-with("$")),
+      message: "play-moves: comments, NAGs and variations are not supported in move text (use parse-pgn); got " + repr(t),
+    )
+    if _results.contains(t) { continue }
+    if t.match(regex("^[0-9]+\.+$")) != none { continue }   // bare move number
+    let m = t.match(regex("^([0-9]+\.+)(.+)$"))               // glued "3.e4"/"3...Nf6"
+    if m != none {
+      let rest = m.captures.at(1)
+      if not _results.contains(rest) { out.push(rest) }
+    } else {
+      out.push(t)
+    }
+  }
+  out
+}
+
+/// Apply a run of moves to a position and return the FINAL position (renderable).
+///
+/// `source` is `none` (the standard starting position), a FEN string, or a
+/// position dict. `moves` is move text (a string or a ```` ``` ```` raw block --
+/// move numbers and a trailing result are tolerated and stripped) or an array of
+/// SAN tokens. Each move is resolved against the position's *legal* moves, so an
+/// illegal/ambiguous move is a hard error (with the offending SAN token). The
+/// variant is taken from `source`; non-standard variants error in the engine.
+#let play-moves(source, moves) = {
+  let pos = if source == none { parse-fen(starting-fen) }
+    else if type(source) == str { parse-fen(source) }
+    else if type(source) == dictionary and "squares" in source { source }
+    else { panic("play-moves: source must be none, a FEN string, or a position; got " + repr(type(source))) }
+  let sans = if type(moves) == array { moves }
+    else if type(moves) == str { _split-movetext(moves) }
+    else if type(moves) == content and moves.func() == raw { _split-movetext(moves.text) }
+    else { panic("play-moves: moves must be a SAN array, a move-text string, or a raw block; got " + repr(type(moves))) }
+  for s in sans {
+    pos = apply(pos, san-to-move(pos, s))
+  }
+  pos
+}

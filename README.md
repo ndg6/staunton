@@ -18,11 +18,12 @@ Typst legal-move engine) and draw any position — mainline, variation, or a
 // The starting position, with PGN-style metadata for the caption:
 #chess-diagram(starting-fen, white: [Carlsen], black: [Nepo], event: [Dubai], year: 2021)
 
-// Manual placement (capitalisation of squares does not matter):
+// Manual placement: a squares dict (square -> piece). Capitalisation of the
+// square names does not matter; pieces may be long names or bare letters.
 #chess-diagram(position((
-  ("king", "white", "e1"),
-  ("king", "black", "e8"),
-  ("pawn", "white", "e4"),
+  e1: (kind: "king", color: "white"),
+  e8: (kind: "king", color: "black"),
+  e4: "P",                                // bare letter: upper = white pawn
 )), labels: false)
 ```
 
@@ -35,7 +36,15 @@ typst compile --root . your-doc.typ
 
 ## `chess-diagram(source, ..)`
 
-The main entry point. Returns a `#figure` with `kind: "chess"`.
+The everyday entry point for **standard western chess**. Returns a `#figure`
+with `kind: "chess"`.
+
+The high-level API is **variant-forward**: `chess-board` / `chess-diagram` are
+standard chess; other variants get their own names (`xiangqi-board` /
+`xiangqi-diagram`, `shatar-board` / `shatar-diagram`, …) as their renderers and
+engines land. Each is thin sugar over the variant-agnostic primitives `board`
+and `diagram` (which take the variant from the `source`). `chess-diagram` simply
+documents the variant and rejects a non-standard position source.
 
 `source` is one of:
 
@@ -63,26 +72,58 @@ A diagram can carry two labels:
 | `game-info` | `auto` | content drawn above the board; overrides the auto line |
 | `caption` | `auto` | content drawn below; overrides the source-specific default |
 | `flip` | `false` | `true` shows the board from Black's side (**per-diagram only** — cannot be a document default) |
-| `size` | `auto` | board edge length: a `length`, a `ratio` (of available width), or `auto` for the default. `≤ 0` falls back to the default. Always clamped so the figure fits the available width **and** height. |
+| `size` | `auto` | board size: a `length`, a `ratio` (of available width), or `auto` for the default. `≤ 0` falls back to the default. `size` is the **longer** board dimension; cells stay square. Always clamped so the figure fits the available width **and** height. |
 | `light`, `dark` | tan theme | square fill colors |
 | `piece-set` | `"cburnett"` | SVG piece set, or `"unicode"` for the glyph fallback |
 | `labels` | `true` | show rank/file labels |
 | `label-mode` | `"on-square"` | `"on-square"`, `"outside"`, or `"border"` (see below) |
 | `file-side` | `bottom` | `bottom` or `top` |
 | `rank-side` | `right` | `right` or `left` |
+| `file-label-corner` | `left` | on-square file label corner: `left` (lower-left) or `right` (lower-right) |
+| `rank-label-corner` | `right` | on-square rank label corner: `right` (upper-right) or `left` (upper-left) |
+| `border-theme` | `"square"` | `"border"` band theme: `"square"` (dark band, light labels), `"brown"` (dark-brown band, creme labels), or `"dark"` (charcoal band, light-grey labels) |
 | `grid` | `false` | draw 1pt grid lines between squares (fixed at any size) |
-| `highlight` | `()` | squares to shade: names (`("e2","e4")`) and/or `(square, color)` pairs |
-| `highlight-fill` | green wash | fill for plain `highlight` squares (settable) |
+| `highlight` | `()` | squares to mark — see below |
+| `highlight-shape` | `"filled"` | default shape for plain string entries: `"filled"`, `"cross"`, or `"circle"` |
+| `highlight-fill` | green | fill for `"filled"` highlights (settable; combined with `highlight-transparency`) |
+| `highlight-transparency` | `75%` | transparency applied to `highlight-fill` |
+| `cross-color`, `circle-color` | red, green | stroke colors for cross / circle highlights |
+| `cross-width`, `circle-width` | `4pt` | stroke widths for cross / circle highlights |
 | `arrows` | `()` | array of arrows — see below |
-| `arrow-color` | green | default arrow color when an arrow gives none (settable) |
+| `arrow-color` | green | default arrow color (same base as `highlight-fill`); combined with `arrow-transparency` |
+| `arrow-transparency` | `75%` | transparency applied to the default `arrow-color` |
+| `arrow-width` | `auto` | arrow shaft width; `auto` scales with the square |
 
 Extra named arguments are forwarded to `figure` (e.g. `placement: top`).
+
+### Highlights
+
+`highlight` is an array; each entry is one of:
+
+* a square name `"e4"` — drawn with `highlight-shape` (default `"filled"`) in
+  `highlight-fill`;
+* a `(square, color)` pair — a **filled** square in an explicit color (this is
+  what PGN `%csl` annotations produce; the color may be a `%csl` letter);
+* a dict `(square: "e4", shape: "circle", color: green)` — full control;
+  `shape` is `"filled"`, `"cross"`, or `"circle"`, `color` optional.
+
+Filled squares use `highlight-fill` at `highlight-transparency`. Circles have a
+radius of half the square; crosses span (almost) corner-to-corner with round
+ends. Their stroke colors/widths are `cross-color`/`circle-color` and
+`cross-width`/`circle-width`. By convention a **cross marks an empty square**
+(it would clash with a piece) — this is a guideline, not enforced.
+
+```typ
+#board("...", highlight: ("e4", (square: "e5", shape: "circle")))
+```
 
 ### Arrows
 
 `arrows` is an array; each entry is a `(from, to)` or `(from, to, color)` tuple,
 or a dict `(from: "f3", to: "e5", color: red)`. A missing color uses
-`arrow-color`. Arrows scale with the board and flip with it:
+`arrow-color` (default: the highlight color at `arrow-transparency`). The shaft
+width is `arrow-width` (`auto` scales with the square). Arrows scale with the
+board and flip with it:
 
 ```typ
 #board("...", arrows: (("e2", "e4"), ("g1", "f3", blue)))
@@ -90,27 +131,31 @@ or a dict `(from: "f3", to: "e5", color: red)`. A missing color uses
 
 ### Board labels
 
-`label-mode` chooses how files (`a`–`h`) and ranks (`1`–`8`) are drawn, always
-in a fixed sans-serif font independent of the document:
+`label-mode` chooses how files and ranks are drawn (files run `a`… and ranks
+`1`… as far as the board geometry needs), always in a fixed sans-serif font
+independent of the document:
 
 * `"on-square"` (default) — small labels tucked into the corners of the edge
-  squares (file letters bottom-left of the file-side rank, rank digits top-right
-  of the rank-side file), each in the *opposite* color of its square. On small
-  boards, where these corner labels would drop to ≤ 4pt and become illegible,
-  the diagram **falls back to `"border"`** automatically.
+  squares (file letters on the file-side rank, rank digits on the rank-side
+  file), each in the *opposite* color of its square. The corners are settable
+  via `file-label-corner` / `rank-label-corner`. The size is a fixed fraction of
+  the square and does **not** change with the board size (no automatic switch to
+  another mode).
 * `"outside"` — label strips in a gutter outside the board (the classic look).
-* `"border"` — a band around the board in the dark square color, labels in the
-  light color.
+* `"border"` — a band around the board, themed by `border-theme`: `"square"`
+  (dark-square band, light-square labels), `"brown"` (dark-brown band, creme
+  labels), or `"dark"` (charcoal band, light-grey labels).
 
 `labels: false` suppresses all of them; `file-side`/`rank-side` and `flip` are
 honored in every mode.
 
-## `board(source, ..)`
+## `board(source, ..)` and `diagram(source, ..)`
 
-`board` draws just the board — no figure, no caption — and is the primitive that
-`chess-diagram` / `fen-diagram` wrap. It takes the same `source` forms, the same
-`flip`, and the same style overrides (`size`, `light`, `dark`, `piece-set`,
-`labels`, `label-mode`, `file-side`, `rank-side`, `highlight`, …):
+`board` draws just the board — no figure, no caption — and is the variant-agnostic
+primitive that the diagram wrappers build on. `diagram` is the matching generic
+`#figure` wrapper. Both take the same `source` forms, the same `flip`, and the
+same style overrides (`size`, `light`, `dark`, `piece-set`, `labels`,
+`label-mode`, `file-side`, `rank-side`, `highlight`, …):
 
 ```typ
 #import "@preview/staunton:0.1.0": board
@@ -118,24 +163,30 @@ honored in every mode.
 ```
 
 Reach for `board` when you want a board inline in text, inside your own layout,
-or anywhere a `#figure` would be in the way. Use `chess-diagram` when you want
-the captioned, cross-referenceable figure.
+or anywhere a `#figure` would be in the way. Use a `*-diagram` when you want the
+captioned, cross-referenceable figure.
 
-`chess-board` is an alias for `board` reading as "standard chess board"
-(variant-specific aliases such as `xiangqi-board` are reserved for when those
-variants land).
+`chess-board` / `chess-diagram` are the **standard-variant** sugar over
+`board` / `diagram`: same rendering, but they document the variant and reject a
+non-standard position source. Other variants get their own names
+(`xiangqi-board`, …) as they land.
 
 ## `position(..)`
 
 `position` builds a position object — the data model for "which piece stands on
-which square." It accepts several input forms:
+which square." It accepts a **FEN string** (auto-detected and delegated to
+`parse-fen`, so `position(fen)`, `board(fen)` and `play-moves(fen, …)` are
+consistent), or one of two hand-authoring forms:
 
 ```typ
-// array of (kind, color, square) tuples (or dicts):
-#position((("king", "white", "e1"), ("queen", "black", "d8")))
-
-// a bare squares dict:
-#position(("e4": (kind: "pawn", color: "white")))
+// a squares dict (square -> piece). The piece can be written three ways,
+// freely mixed: a long name, a kind abbreviation, or a bare letter
+// (UPPER = white, lower = black). Square-name capitalisation is ignored.
+#position((
+  e1: (kind: "king", color: "white"),   // long name
+  d8: (kind: "q", color: "black"),       // kind abbreviation
+  e4: "P",                                // bare letter
+))
 
 // the "string" form — first line is the TOP rank, "." is empty,
 // UPPER = white, lower = black:
@@ -156,7 +207,8 @@ It returns a dict `(variant, cols, rows, squares, turn, castling, en-passant,
 halfmove, fullmove)`:
 
 * `variant` — `"standard"` (the only one implemented; the registry in
-  `src/variants.typ` is the seam for future variants like Xiangqi);
+  `src/variants.typ` is the seam for future variants like Xiangqi). This is the
+  low-level field that records which variant a position belongs to;
 * `cols` / `rows` — board geometry (counted from the string form, otherwise the
   variant default of 8×8);
 * `squares` — the canonical square → `(kind, color)` map (this is the field
@@ -167,10 +219,13 @@ explicit `cols`/`rows` are accepted too. `parse-fen` returns the same shape.
 The string form is rectangular-only (every row must have the same width) and
 rejects characters that aren't a valid piece abbreviation or `.`.
 
+(The earlier array-of-`(kind, color, square)` form has been removed; use the
+squares dict or the string form.)
+
 ## Games (PGN)
 
 ```typ
-#import "@preview/staunton:0.1.0": parse-pgn, board-after, position-after, line, mainline
+#import "@preview/staunton:0.1.0": parse-pgn, board-after, position-after, play-moves, mainline
 
 // Read an external file IN YOUR OWN FILE (so `read` resolves relative to it):
 #let game = parse-pgn(read("morphy.pgn")).first()
@@ -204,18 +259,27 @@ file read only for `game.result` never invokes the engine.
   #board-after(game, (line: ((at: "2w", into: 0), (at: "2b", into: 0)), at: "3w"))
   ```
 
-### Variations without altering the source
+### Playing moves onto a position (`play-moves`)
 
 Variations recorded in the PGN (RAVs) are addressed by the path locator above.
-To explore a *new* line not in the file, use `line` — it starts from a position
-(or FEN) and applies SAN moves, returning the array of positions
-`(start, after 1, after 2, …)`. The source game is never mutated:
+To explore a *new* line not in the file, or to build a position from a FEN plus
+some moves, use **`play-moves(source, moves)`**. `source` is `none` (the standard
+starting position), a FEN string, or a position; `moves` is move **text** (a
+string or a ```` ``` ```` raw block — move numbers and a trailing result are
+tolerated) or an array of SAN tokens. It resolves each move against the
+position's legal moves (an illegal/ambiguous move is a hard error) and returns
+the **final** position. The source is never mutated:
 
 ```typ
 #let base = position-after(game, "5w")
-#let whatif = line(base, ("Be7", "Re1", "b5"))
-#chess-diagram(whatif.last())
+#chess-diagram(play-moves(base, "Be7 Re1 b5"))
+
+#chess-diagram(play-moves(none, "1. e4 e5 2. Nf3 Nc6 3. Bb5 a6"))   // none = start
 ```
+
+The variant is taken from the position; the engine analyses **standard chess
+only** for now (a non-standard position errors). Comments, NAGs and variations
+in the text are rejected — use `parse-pgn` for full PGN movetext.
 
 ### Drawing annotations (`%cal` / `%csl`)
 
@@ -305,9 +369,9 @@ src/variants.typ    chess-variant registry (piece vocab + geometry; standard onl
 src/pieces.typ      piece model + glyph rendering
 src/fen.typ         FEN parsing -> position dict
 src/engine.typ      legal-move engine (pseudo-legal -> legality filter)
-src/san.typ         SAN parsing + resolution
+src/san.typ         SAN parsing + resolution; play-san, play-moves
 src/pgn.typ         PGN tokenizer + movetext/variation tree
-src/game.typ        navigation: mainline, locators, line()
+src/game.typ        navigation: mainline, locators
 src/style.typ       diagram-style dict + document defaults
 src/board.typ       canvas renderer + sizing + flip + label modes
 assets/piece_sets/  SVG piece sets (cburnett default, + 5 more)

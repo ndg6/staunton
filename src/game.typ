@@ -113,15 +113,6 @@
   line.at(k)
 }
 
-/// A non-destructive "what-if" line: start from a position (or FEN string) and
-/// apply a sequence of SAN moves, returning the array of positions
-/// (start, after move 1, after move 2, ...). The source is never modified.
-#let line(start, moves) = {
-  let pos = if type(start) == str { parse-fen(start) } else { start }
-  let out = (pos,)
-  for s in moves {
-    pos = apply(pos, san-to-move(pos, s))
-    out.push(pos)
-  }
-  out
-}
+// NOTE: the old `line(start, moves)` (apply a SAN array, return every
+// intermediate position) was removed in the prompt-13 streamline. To play a run
+// of moves and get the FINAL position, use `play-moves` (src/san.typ).

@@ -7,6 +7,11 @@
 
 #assert(default-board-style.keys().contains("arrows"), message: "arrows is a board key")
 #assert(default-board-style.arrows == (), message: "no arrows by default")
+// prompt 12, item 4: width settable (auto -> proportional), transparency 75%,
+// and the default arrow colour is the same base as the default highlight fill.
+#assert(default-board-style.arrow-width == auto, message: "arrow-width auto by default")
+#assert(default-board-style.arrow-transparency == 85%, message: "arrow transparency 85%")
+#assert(default-board-style.arrow-color == default-board-style.highlight-fill, message: "arrow colour defaults to the highlight base")
 
 #set page(width: auto, height: auto, margin: 1cm)
 #set text(font: "Libertinus Serif", size: 9pt)
@@ -34,3 +39,11 @@ Document-default arrow color via `set-board-defaults`:
 
 #set-board-defaults(arrow-color: rgb(224, 110, 0, 220))
 #board(test-fen, size: 4cm, labels: false, arrows: (("d2", "d4"), ("c1", "g5")))
+
+#v(8pt)
+Settable shaft width (`arrow-width`): auto (proportional) vs a fixed 8pt:
+
+#grid(columns: 2, column-gutter: 16pt,
+  board(test-fen, size: 4cm, labels: false, arrows: (("e2", "e4"), ("g1", "f3"))),
+  board(test-fen, size: 4cm, labels: false, arrow-width: 8pt, arrows: (("e2", "e4"), ("g1", "f3"))),
+)

@@ -31,6 +31,14 @@ Decision: `pieces:` is a constructor **input**, not a persisted field. If needed
 expose a `pieces(position)` accessor that *derives* the array from the dict —
 never store both (they drift).
 
+**Update (resolved, implemented):** the array-of-`(kind,color,square)` *input*
+form was **removed** entirely — hand-input is now a **squares dict** (or the
+string form), keeping a single authoring shape. The dict's piece value may be
+written three ways, freely mixed: the long name `(kind: "king", color: "white")`,
+the abbreviation `(kind: "k", color: "white")`, or a bare letter `"K"`
+(upper = white, lower = black). All normalise to canonical `(kind, color)` via
+`_normalize-piece`. So: **yes to both** long form and abbreviations.
+
 ## 2. What the position is genuinely missing
 
 To be "prepared" for the mission, the object should carry:

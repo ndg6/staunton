@@ -18,6 +18,17 @@
 
 #import "pieces.typ": default-white-fill, default-black-fill, default-piece-fonts, default-piece-set
 
+// Shared base colour for the default highlight fill AND the default arrow colour
+// (prompt 12, item 4: arrows default to the highlight colour). The transparency
+// is applied separately by the renderer via `highlight-transparency` /
+// `arrow-transparency`, so this base is stored fully opaque.
+#let default-highlight-base = rgb(60, 130, 90)
+// "border" mode label themes (prompt 12, item 2): the "brown" and "dark" themes.
+#let border-brown = rgb("#2c1d0e")        // very dark brown band
+#let border-creme = rgb("#f3ecd8")        // creme-white labels (brown theme)
+#let border-dark = rgb("#2b2b2b")         // charcoal band (dark-mode theme)
+#let border-dark-label = rgb("#e8e8e8")   // light-grey labels (dark theme)
+
 // ---- board style ----------------------------------------------------------
 #let default-board-style = (
   size: auto,                 // auto | length | ratio
@@ -27,6 +38,16 @@
   label-mode: "on-square",    // "on-square" | "outside" | "border"
   file-side: bottom,          // bottom | top
   rank-side: right,           // right | left
+  // on-square label corner placement (prompt 12, item 2). Vertical edge is fixed
+  // (files at the bottom edge, ranks at the top edge); these pick the horizontal
+  // corner. file: lower-left (default) or lower-right; rank: upper-right
+  // (default) or upper-left.
+  file-label-corner: left,    // left | right
+  rank-label-corner: right,   // right | left
+  // "border" mode theme (prompt 12, item 2): "square" = dark-square band with
+  // light-square labels (default); "brown" = very-dark-brown band, creme labels;
+  // "dark" = charcoal band, light-grey labels (a neutral dark-mode look).
+  border-theme: "square",     // "square" | "brown" | "dark"
   border: 0.5pt + luma(40),   // thin board outline (none to drop)
   grid: false,                // 1pt grid lines between squares (item 2)
   piece-set: default-piece-set, // SVG set name, or "unicode" for the glyph fallback
@@ -37,10 +58,23 @@
   white-fill: default-white-fill, // glyph fallback only
   black-fill: default-black-fill, // glyph fallback only
   piece-font: default-piece-fonts, // glyph fallback only
-  highlight: (),              // array of square names, e.g. ("e2", "e4")
-  highlight-fill: rgb(60, 130, 90, 110),
+  // Highlights (prompt 12, item 3). Entries: a square name "e4" (uses
+  // highlight-shape + highlight-fill), a (square, color) pair (filled, explicit
+  // colour -- e.g. PGN %csl), or a dict (square:, shape:, color:) for full
+  // control. Shapes: "filled" | "cross" | "circle". By convention a "cross"
+  // marks an EMPTY square (it would clash with a piece); not enforced.
+  highlight: (),
+  highlight-shape: "filled",  // default shape for plain-string entries
+  highlight-fill: default-highlight-base,   // filled-highlight colour (opaque base)
+  highlight-transparency: 75%,              // applied to highlight-fill
+  cross-color: red,           // cross highlight stroke colour
+  circle-color: green,        // circle highlight stroke colour
+  cross-width: 4pt,           // cross stroke width
+  circle-width: 4pt,          // circle stroke width
   arrows: (),                 // array of arrows (item 6); see lib `_to-arrow`
-  arrow-color: rgb(21, 120, 27, 200), // default arrow color when none is given
+  arrow-color: default-highlight-base,  // default arrow colour (opaque base)
+  arrow-transparency: 85%,    // applied to the default arrow colour (more transparent than highlights)
+  arrow-width: auto,          // shaft width; auto -> proportional to the square
   // Mapping from PGN %cal/%csl color letters to colors (item 8, decision 8a).
   annotation-colors: (
     G: rgb(21, 120, 27, 200),   // green

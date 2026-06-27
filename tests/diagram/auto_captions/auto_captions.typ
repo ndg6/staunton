@@ -25,7 +25,7 @@
 
 == Manual position dict → no above line, no default caption
 #chess-diagram(position((
-  ("king", "white", "e1"), ("king", "black", "e8"), ("queen", "white", "d1"),
+  e1: (kind: "king", color: "white"), e8: (kind: "king", color: "black"), d1: "Q",
 )), size: 3.2cm)
 
 == PGN source via board-after → players/year/last-move pulled from the game

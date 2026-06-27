@@ -6,7 +6,7 @@
 // examples/. Compile with the package root:  typst compile --root . examples/showcase.typ
 #import "/lib.typ": (
   parse-pgn, board-after, board, chess-diagram, chess-outline,
-  mainline, game-result, position-after, line, set-chess-defaults, starting-fen,
+  mainline, game-result, position-after, play-moves, set-chess-defaults, starting-fen,
 )
 
 #set page(paper: "a4", margin: 2cm)
@@ -83,13 +83,13 @@ The same final position drawn three ways, plus flipped to Black's view.
 
 = A "what-if" line that does not exist in any file
 
-`line` plays SAN moves from a position (or FEN) without mutating anything.
+`play-moves` applies move text (or a SAN array) to a position (or FEN, or `none`
+for the start) and returns the resulting position, without mutating anything.
 
-#let whatif = line(starting-fen, ("e4", "e5", "Nf3", "Nc6", "Bc4", "Bc5", "b4"))
 #chess-diagram(
-  whatif.last(),
+  play-moves(starting-fen, "1. e4 e5 2. Nf3 Nc6 3. Bc4 Bc5 4. b4"),
   size: 5cm,
-  caption: [The Evans Gambit after 4.b4, built move-by-move with `line`.],
+  caption: [The Evans Gambit after 4.b4, built with `play-moves`.],
 )
 
 = Arrows, highlights and a grid

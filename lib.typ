@@ -17,9 +17,9 @@
 #import "src/variants.typ": variants, variant-spec, char-to-piece
 #import "src/fen.typ": parse-fen, starting-fen
 #import "src/engine.typ": legal-moves, apply, in-check
-#import "src/san.typ": san-to-move, play-san
+#import "src/san.typ": san-to-move, play-san, play-moves
 #import "src/pgn.typ": parse-pgn
-#import "src/game.typ": mainline, position-after, game-result, game-start, line, move-san, move-node
+#import "src/game.typ": mainline, position-after, game-result, game-start, move-san, move-node
 
 // NOTE on reading external files: there is intentionally no `read-pgn(path)`
 // wrapper. Typst's `read` resolves paths relative to the file the call appears
@@ -63,12 +63,35 @@
   (squares: squares, cols: cols, rows: rows)
 }
 
+// Normalise one square's piece value into canonical (kind, color). Accepts:
+//   * a piece letter   "K" / "k"          (case selects colour, variant abbrev)
+//   * (kind: .., color: ..) where `kind` is the long name ("king") OR the
+//     single-letter abbreviation ("k"), case-insensitive; `color` is
+//     "white"/"black" (case-insensitive).
+#let _normalize-piece(value, variant) = {
+  if type(value) == str { return char-to-piece(value, variant: variant) }
+  assert(
+    type(value) == dictionary and "kind" in value and "color" in value,
+    message: "position(): each piece must be a letter (\"K\") or (kind: .., color: ..); got " + repr(value),
+  )
+  let spec = variant-spec(variant)
+  let k = lower(value.kind)
+  let kind = if k in spec.abbr { spec.abbr.at(k) } else if spec.kinds.contains(k) { k } else {
+    panic("position(): unknown piece kind " + repr(value.kind) + " for variant \"" + variant + "\" (kinds: " + repr(spec.kinds) + ")")
+  }
+  let color = lower(value.color)
+  assert(color == "white" or color == "black", message: "position(): color must be \"white\" or \"black\", got " + repr(value.color))
+  (kind: kind, color: color)
+}
+
 /// Build a position from one of several forms (manual placement and friends):
-///   * an array of (kind, color, square) tuples or dicts;
-///   * a squares dict already in (square -> (kind, color)) form;
+///   * a squares dict (square -> piece): the piece may be the long form
+///     `(kind: "king", color: "white")`, the abbreviation `(kind: "k", color:
+///     "white")`, or a bare letter `"K"` (upper = white, lower = black);
 ///   * the "string" form: a multi-line string, a raw block, or several row
 ///     strings -- e.g. position("....r...", "p.......", ...) or
 ///     position(```  ....r... \n ... ```).
+/// (The old array-of-(kind,color,square) form was removed in favour of the dict.)
 /// Named options: `variant` (default "standard"), `turn`, `castling`,
 /// `en-passant`, `halfmove`, `fullmove`, and `cols`/`rows` (default: derived
 /// from the variant for non-string forms, counted for the string form).
@@ -80,6 +103,17 @@
   let spec = variant-spec(variant)
   let pos = args.pos()
   assert(pos.len() >= 1, message: "position(): expected at least one positional argument")
+
+  // FEN auto-detect: a single string/raw positional that contains "/" is a FEN
+  // (rank separators), so delegate to parse-fen. This keeps position(fen),
+  // board(fen) and play-moves(fen, ..) consistent. The string ROW form never
+  // uses "/", so there is no clash. (parse-fen sets turn/castling/etc itself.)
+  if pos.len() == 1 {
+    let p0 = pos.first()
+    let fen-text = if type(p0) == str { p0 }
+      else if type(p0) == content and p0.func() == raw { p0.text } else { none }
+    if fen-text != none and fen-text.contains("/") { return parse-fen(fen-text) }
+  }
 
   let squares = (:)
   let cols = opts.at("cols", default: auto)
@@ -99,19 +133,22 @@
     if rows == auto { rows = r.rows }
   } else {
     let p = pos.first()
-    if type(p) == array {
-      for entry in p {
-        let (kind, color, square) = if type(entry) == array { (entry.at(0), entry.at(1), entry.at(2)) } else { (entry.kind, entry.color, entry.square) }
-        let _ = parse-square(square, cols: spec.cols, rows: spec.rows) // validate
-        squares.insert(lower(square), (kind: kind, color: color))
-      }
-    } else if type(p) == dictionary {
-      squares = if "squares" in p { p.squares } else { p }
-    } else {
-      panic("position(): expected an array, a squares dict, a string, a raw block, or row strings; got " + repr(type(p)))
-    }
     if cols == auto { cols = spec.cols }
     if rows == auto { rows = spec.rows }
+    if type(p) == dictionary {
+      if "squares" in p {
+        squares = p.squares   // already a built position: take its canonical squares
+      } else {
+        for (sq, val) in p {
+          let _ = parse-square(sq, cols: cols, rows: rows) // validate the square name
+          squares.insert(lower(sq), _normalize-piece(val, variant))
+        }
+      }
+    } else if type(p) == array {
+      panic("position(): the array-of-(kind,color,square) form was removed; use a squares dict, e.g. (e1: (kind: \"king\", color: \"white\")) or (e1: \"K\"), or the string form")
+    } else {
+      panic("position(): expected a squares dict, a string, a raw block, or row strings; got " + repr(type(p)))
+    }
   }
 
   (
@@ -124,26 +161,52 @@
   )
 }
 
-// Normalise the many accepted `source` forms into a squares dict for rendering.
-#let _to-squares(source) = {
-  if type(source) == str { parse-fen(source).squares }
-  else if type(source) == dictionary and "squares" in source { source.squares }
-  else if type(source) == dictionary { source }
-  else { panic("board(): source must be a FEN string, a position, or a squares dict") }
+// Normalise the many accepted `source` forms into (squares, cols, rows) for
+// rendering. The geometry comes from the position model (prompt 11/12): a FEN
+// string is parsed for its geometry, a position dict carries `cols`/`rows`, and
+// a bare squares dict defaults to standard 8x8.
+#let _to-board(source) = {
+  if type(source) == str {
+    let p = parse-fen(source)
+    (squares: p.squares, cols: p.cols, rows: p.rows)
+  } else if type(source) == dictionary and "squares" in source {
+    (squares: source.squares, cols: source.at("cols", default: 8), rows: source.at("rows", default: 8))
+  } else if type(source) == dictionary {
+    (squares: source, cols: 8, rows: 8)
+  } else {
+    panic("board(): source must be a FEN string, a position, or a squares dict")
+  }
 }
 
-/// Draw a bare chess board (no figure, no caption). `source` is a FEN string, a
-/// position dict, or a squares dict. `flip: true` shows it from Black's side.
-/// Named style overrides (size, light, dark, labels, label-mode, file-side,
-/// rank-side, piece-set, highlight, ...) behave exactly as for `chess-diagram`.
-/// This is the drawing primitive that `chess-diagram` / `fen-diagram` wrap.
-#let board(source, flip: false, ..overrides) = render-board(
-  _to-squares(source), flip: flip, ..overrides.named(),
-)
+/// Draw a bare board (no figure, no caption) -- the variant-agnostic drawing
+/// primitive. `source` is a FEN string, a position dict, or a squares dict;
+/// `flip: true` shows it from Black's side. Named style overrides (size, light,
+/// dark, labels, label-mode, file-side, rank-side, piece-set, highlight, ...)
+/// behave exactly as for `diagram`. The variant (if any) is carried by `source`;
+/// the variant-named wrappers (`chess-board`, future `xiangqi-board`, ...) are
+/// thin sugar over this.
+#let board(source, flip: false, ..overrides) = {
+  let b = _to-board(source)
+  render-board(b.squares, flip: flip, cols: b.cols, rows: b.rows, ..overrides.named())
+}
 
-/// Alias for `board` reading as "standard chess board". (Variant-specific board
-/// aliases like `xiangqi-board` are reserved for when those variants land.)
-#let chess-board = board
+// Variant guard for the *-board / *-diagram wrappers: a position source must
+// already be of the expected variant (catches e.g. chess-board(xiangqi-pos)).
+#let _assert-variant(fname, variant, source) = {
+  if type(source) == dictionary and "variant" in source {
+    assert(source.variant == variant,
+      message: fname + ": expected a \"" + variant + "\" position, got \"" + source.variant + "\"")
+  }
+}
+
+/// Standard western chess board (the variant-named sugar over `board`). Identical
+/// rendering to `board`, but it documents the variant and rejects a non-standard
+/// position source. Other variants get their own entry (e.g. `xiangqi-board`)
+/// once their renderer/engine land.
+#let chess-board(source, flip: false, ..overrides) = {
+  _assert-variant("chess-board", "standard", source)
+  board(source, flip: flip, ..overrides.named())
+}
 
 // Above-diagram "game info" line: "<White> – <Black> (<Year>)". Drawn only when
 // BOTH players are known; the year is appended in parentheses when present. The
@@ -221,7 +284,9 @@
   (board-ov, diagram-ov, fig-args)
 }
 
-/// Main entry point: a chess diagram wrapped in a #figure.
+/// A board wrapped in a #figure -- the variant-agnostic diagram. This is the
+/// generic primitive; the variant-named `chess-diagram` (and future
+/// `xiangqi-diagram`, ...) are thin sugar over it.
 ///
 /// `source` may be a FEN string, a position dict (from `position`/`parse-fen`),
 /// or a bare board dict. Labeling (subtask 3.4):
@@ -234,7 +299,7 @@
 /// named arguments are split: style fields (size, light, dark, labels,
 /// label-mode, file-side, rank-side, piece-set, highlight, ...) go to the
 /// renderer; anything else is forwarded to `figure` (e.g. `placement: top`).
-#let chess-diagram(
+#let diagram(
   source,
   white: none,
   black: none,
@@ -260,8 +325,14 @@
   figure(body, kind: chess-kind, supplement: supp, caption: below, ..fig-args)
 }
 
-/// Convenience alias mirroring the FEN-centric workflow.
-#let fen-diagram(fen-string, ..args) = chess-diagram(fen-string, ..args)
+/// Standard western chess diagram (the variant-named sugar over `diagram`).
+/// Identical behaviour to `diagram`, but it documents the variant and rejects a
+/// non-standard position source. This is the everyday entry point for western
+/// chess; other variants get their own (e.g. `xiangqi-diagram`) as they land.
+#let chess-diagram(source, ..args) = {
+  _assert-variant("chess-diagram", "standard", source)
+  diagram(source, ..args)
+}
 
 /// A chess diagram for the position at `locator` within a parsed `game`
 /// (mainline "30w"/"30b" or a variation path). The players/year default to the
