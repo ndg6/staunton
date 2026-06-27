@@ -30,8 +30,10 @@
   default-style, style-keys, set-chess-defaults, set-piece-set, chess-style,
   default-board-style, default-diagram-style, board-style-keys, diagram-style-keys,
   diagram-style-state, set-board-defaults, set-diagram-defaults,
+  default-pgn-style, pgn-style-state, pgn-style-keys, set-pgn-defaults,
 )
 #import "src/board.typ": render-board, default-light, default-dark, default-board-size
+#import "src/annotations.typ": interpret-comment
 
 // Distinct figure kind so chess diagrams get their own counter and can be
 // collected with  #outline(target: figure.where(kind: "chess")).
@@ -258,32 +260,15 @@
   if m != none { m.captures.at(0) } else { none }
 }
 
-// Parse PGN drawing annotations out of a move comment (item 8):
+// PGN drawing annotations for a move's comment, via the shared comment
+// interpreter (src/annotations.typ):
 //   {[%cal Gf3e5,Bc6e5]}  -> arrows  (("f3","e5","G"), ("c6","e5","B"))
 //   {[%csl Re5,Yc6]}      -> highlights (("e5","R"), ("c6","Y"))
 // The colour letters resolve later through the board's `annotation-colors` map.
 // Returns (arrows, highlight).
 #let _pgn-annotations(game, locator) = {
-  let node = move-node(game, locator)
-  let c = node.at("comment-after", default: none)
-  if c == none { return ((), ()) }
-  let arrows = ()
-  let highlight = ()
-  let mcal = c.match(regex("\[%cal\s+([^\]]+)\]"))
-  if mcal != none {
-    for tok in mcal.captures.at(0).split(",") {
-      let t = tok.trim()
-      if t.len() >= 5 { arrows.push((t.slice(1, 3), t.slice(3, 5), t.slice(0, 1))) }
-    }
-  }
-  let mcsl = c.match(regex("\[%csl\s+([^\]]+)\]"))
-  if mcsl != none {
-    for tok in mcsl.captures.at(0).split(",") {
-      let t = tok.trim()
-      if t.len() >= 3 { highlight.push((t.slice(1, 3), t.slice(0, 1))) }
-    }
-  }
-  (arrows, highlight)
+  let r = interpret-comment(move-node(game, locator).at("comment-after", default: none))
+  (r.arrows, r.highlights)
 }
 
 // Split a mixed named-argument dict three ways: board-style overrides, diagram-
@@ -315,6 +300,20 @@
 /// named arguments are split: style fields (size, light, dark, labels,
 /// label-mode, file-side, rank-side, piece-set, highlight, ...) go to the
 /// renderer; anything else is forwarded to `figure` (e.g. `placement: top`).
+// Assemble a #figure around already-drawn board content `drawn`. The diagram
+// style is read inside the figure BODY (a context), so the #figure itself stays
+// a real, referenceable element. `drawn` may itself be context content (e.g. a
+// pgn-gated board), which composes fine. Shared by `diagram` and `board-after`.
+#let _assemble(drawn, white, black, year, game-info, below, diagram-ov, fig-args) = {
+  let body = context {
+    let dst = default-diagram-style + diagram-style-state.get() + diagram-ov
+    let above = if game-info != auto { game-info } else { _game-info-line(white, black, year, bold: dst.info-bold) }
+    if above != none { align(center, stack(dir: ttb, spacing: dst.info-gap, above, drawn)) } else { drawn }
+  }
+  let supp = context { (default-diagram-style + diagram-style-state.get() + diagram-ov).supplement }
+  figure(body, kind: chess-kind, supplement: supp, caption: below, ..fig-args)
+}
+
 #let diagram(
   source,
   white: none,
@@ -329,16 +328,7 @@
   let (board-ov, diagram-ov, fig-args) = _split-args(args.named())
   let below = if caption != auto { caption } else if type(source) == str { _fen-caption(parse-fen(source)) } else { none }
   let drawn = board(source, flip: flip, ..board-ov)
-  // The diagram-style state needs `context`, but the #figure itself must NOT be a
-  // context element (otherwise it cannot be referenced). So we read the state
-  // inside the figure body and supplement, leaving the figure a real element.
-  let body = context {
-    let dst = default-diagram-style + diagram-style-state.get() + diagram-ov
-    let above = if game-info != auto { game-info } else { _game-info-line(white, black, year, bold: dst.info-bold) }
-    if above != none { align(center, stack(dir: ttb, spacing: dst.info-gap, above, drawn)) } else { drawn }
-  }
-  let supp = context { (default-diagram-style + diagram-style-state.get() + diagram-ov).supplement }
-  figure(body, kind: chess-kind, supplement: supp, caption: below, ..fig-args)
+  _assemble(drawn, white, black, year, game-info, below, diagram-ov, fig-args)
 }
 
 /// Standard western chess diagram (the variant-named sugar over `diagram`).
@@ -356,28 +346,36 @@
 /// defaults to "Position after move <last move>". Override any of them, or pass
 /// `flip` / style fields, exactly as in `chess-diagram`.
 ///
-/// When `pgn-annotations` is true (default), `%cal` / `%csl` drawing annotations
-/// in the move's comment are turned into arrows / highlights and MERGED with any
-/// `arrows` / `highlight` passed explicitly. Their colour letters resolve through
-/// the board's `annotation-colors` map.
-#let board-after(game, locator, white: auto, black: auto, year: auto, caption: auto, pgn-annotations: true, ..args) = {
+/// When the resolved PGN-handling `annotations` switch is on, `%cal` / `%csl`
+/// drawing annotations in the move's comment become arrows / highlights, MERGED
+/// with any `arrows` / `highlight` passed explicitly (their colour letters
+/// resolve through the board's `annotation-colors` map). `annotations` defaults
+/// to `auto`, which consults `set-pgn-defaults` (off by default); pass
+/// `annotations: true`/`false` to override per call.
+#let board-after(game, locator, white: auto, black: auto, year: auto, caption: auto, annotations: auto, flip: false, game-info: auto, ..args) = {
   let pos = position-after(game, locator)
   let cap = if caption != auto { caption } else { _pgn-caption(game, locator) }
   let w = if white != auto { white } else { game.tags.at("White", default: none) }
   let b = if black != auto { black } else { game.tags.at("Black", default: none) }
   let y = if year != auto { year } else { _year-of(game) }
 
-  let named = args.named()
-  let (anno-arrows, anno-highlight) = if pgn-annotations { _pgn-annotations(game, locator) } else { ((), ()) }
-  let merged-arrows = named.at("arrows", default: ()) + anno-arrows
-  let merged-highlight = named.at("highlight", default: ()) + anno-highlight
-  let rest = (:)
-  for (k, v) in named { if k != "arrows" and k != "highlight" { rest.insert(k, v) } }
+  let (board-ov, diagram-ov, fig-args) = _split-args(args.named())
+  let explicit-arrows = board-ov.at("arrows", default: ())
+  let explicit-highlight = board-ov.at("highlight", default: ())
+  let base-ov = (:)
+  for (k, v) in board-ov { if k != "arrows" and k != "highlight" { base-ov.insert(k, v) } }
+  let (anno-arrows, anno-highlight) = _pgn-annotations(game, locator)
 
-  chess-diagram(
-    pos, white: w, black: b, year: y, caption: cap,
-    arrows: merged-arrows, highlight: merged-highlight, ..rest,
-  )
+  // Draw the board inside a context so the `annotations` switch can read the
+  // pgn-handling document default -- while the #figure (built by `_assemble`)
+  // stays a real, referenceable element.
+  let drawn = context {
+    let process = if annotations != auto { annotations } else { (default-pgn-style + pgn-style-state.get()).annotations }
+    let arr = explicit-arrows + (if process { anno-arrows } else { () })
+    let hl = explicit-highlight + (if process { anno-highlight } else { () })
+    board(pos, flip: flip, arrows: arr, highlight: hl, ..base-ov)
+  }
+  _assemble(drawn, w, b, y, game-info, cap, diagram-ov, fig-args)
 }
 
 /// An outline listing only chess diagrams (figures with `kind: chess-kind`).

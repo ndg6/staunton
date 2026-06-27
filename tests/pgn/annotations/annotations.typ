@@ -1,8 +1,9 @@
-// §item 8 - PGN drawing annotations. `{[%cal ...]}` becomes arrows and
-// `{[%csl ...]}` becomes highlights on the diagram for that move; the color
+// §item 8 / prompt 15 - PGN drawing annotations. `{[%cal ...]}` becomes arrows
+// and `{[%csl ...]}` becomes highlights on the diagram for that move; the color
 // letters (G/R/Y/B/O) resolve through the board's stylable `annotation-colors`.
-// board-after applies them automatically (pgn-annotations: true by default).
-#import "/lib.typ": parse-pgn, board-after, move-node, set-board-defaults
+// Processing is OFF by default (prompt 15): opt in with `annotations: true` per
+// call or `set-pgn-defaults(annotations: true)` document-wide.
+#import "/lib.typ": parse-pgn, board-after, move-node, set-board-defaults, set-pgn-defaults
 
 #set page(width: 13cm, height: auto, margin: 1.2cm)
 #set text(font: "Libertinus Serif", size: 10pt)
@@ -19,15 +20,18 @@
 
 = PGN annotations
 
-Auto-applied `%cal` (green f3→e5, blue f1→c4) and `%csl` (red e5, yellow c6):
+Default (annotations OFF): no arrows/highlights even though the comment has them:
+#board-after(game, "2w", size: 6cm) <plain>
+
+Opt in per call with `annotations: true` — green f3→e5, blue f1→c4; red e5,
+yellow c6:
+#board-after(game, "2w", size: 6cm, annotations: true)
+
+Document-wide via `set-pgn-defaults(annotations: true)`; re-themed via
+`set-board-defaults(annotation-colors: ...)` so "G" renders purple:
+#set-pgn-defaults(annotations: true)
+#set-board-defaults(annotation-colors: (G: purple, R: red, Y: olive, B: blue, O: orange))
 #board-after(game, "2w", size: 6cm)
 
-Suppressed with `pgn-annotations: false`:
-#board-after(game, "2w", size: 6cm, pgn-annotations: false)
-
-Re-themed via `set-board-defaults(annotation-colors: ...)` — "G" now renders
-purple, so the green arrow becomes purple:
-#set-board-defaults(annotation-colors: (
-  G: purple, R: red, Y: olive, B: blue, O: orange,
-))
-#board-after(game, "2w", size: 6cm)
+// board-after figures stay referenceable (the pgn gate lives in the figure body):
+See @plain.

@@ -1,0 +1,33 @@
+Settable options for game parsing
+=================================
+
+I want you to create another bucket for settable options
+for PGN move text parsing or handling, but I'm not sure
+whether it should be on the parsing stage or only on
+the visualization stage (after a game's move text has been
+parsed):
+
+when I read in a PGN, that has embedded hightlights, arrows and 
+diagram commands, more often than not I don't want these
+commands (within comments) to be processed. It's likely I want
+just output the movetext, then print a board with some hightlights
+and arrows perhaps, then move on with another portion of the movetext
+and so on to the end.
+
+We should have settable options for
+- processing NAGs
+- processing embedded options
+
+On the other hand, I _do want_ process everything sometimes.
+
+BTW: we should add an option / options to process diagram / board
+instructions from within PGN.
+
+{#} or {#[<CAPTION>]}   ChessBase
+{[d]} oder {[D]}        Scid
+{\diagram}              LaTeX-based printing
+{%%diagram}             some modern Markdown- and HTML chess converter
+
+I don't want process "{D}" or "{d}" which is older and too ambiguous.
+
+Please discuss what to do here.

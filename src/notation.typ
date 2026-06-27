@@ -22,6 +22,8 @@
 #import "san.typ": _split-movetext
 #import "game.typ": mainline, game-result
 #import "i18n.typ": notation-langs
+#import "annotations.typ": interpret-comment, nag-symbol
+#import "style.typ": default-pgn-style, pgn-style-state
 
 // The only uppercase letters that denote a piece in SAN -> kind. Files (a-h),
 // ranks, "x", "+", "#", "O-O" and NAGs are never piece letters and pass through.
@@ -76,39 +78,53 @@
   out
 }
 
-// Resolve a source + from/to into (sans, lo, hi) inclusive node indices.
+// Wrap a SAN string into a minimal move node (no nags/comments).
+#let _bare-node(san) = (san: san, nags: (), comment-after: none)
+
+// Resolve a source + from/to into (nodes, lo, hi) inclusive node indices. A game
+// yields its real move nodes (carrying nags/comments); a SAN string/array yields
+// bare nodes (so nags/comments are simply empty there).
 #let _resolve-line(source, from, to) = {
   for loc in (from, to) {
     if loc != none and type(loc) != str {
       panic("notation: variation-line ranges are not supported yet; use mainline locators like \"12w\"")
     }
   }
-  let sans = if type(source) == str { _split-movetext(source) }
-    else if type(source) == array { source }
-    else if type(source) == content and source.func() == raw { _split-movetext(source.text) }
-    else if type(source) == dictionary and "movetext" in source { mainline(source) }
+  let nodes = if type(source) == str { _split-movetext(source).map(_bare-node) }
+    else if type(source) == array { source.map(_bare-node) }
+    else if type(source) == content and source.func() == raw { _split-movetext(source.text).map(_bare-node) }
+    else if type(source) == dictionary and "movetext" in source { source.movetext }
     else if type(source) == dictionary and "squares" in source {
       panic("notation: a position has no move history; pass a game or a SAN source (string/array)")
     } else {
       panic("notation: source must be a game, a SAN move-text string, or a SAN array")
     }
-  if sans.len() == 0 { return (sans: (), lo: 0, hi: -1) }
+  if nodes.len() == 0 { return (nodes: (), lo: 0, hi: -1) }
   let lo = if from == none { 0 } else { _ply-of(from) - 1 }
-  let hi = if to == none { sans.len() - 1 } else { _ply-of(to) - 1 }
-  assert(lo >= 0 and lo < sans.len(), message: "notation: `from` locator out of range")
-  assert(hi >= lo and hi < sans.len(), message: "notation: `to` locator out of range, or before `from`")
-  (sans: sans, lo: lo, hi: hi)
+  let hi = if to == none { nodes.len() - 1 } else { _ply-of(to) - 1 }
+  assert(lo >= 0 and lo < nodes.len(), message: "notation: `from` locator out of range")
+  assert(hi >= lo and hi < nodes.len(), message: "notation: `to` locator out of range, or before `from`")
+  (nodes: nodes, lo: lo, hi: hi)
 }
 
-// Render indices [lo, hi] of `sans` with move numbers and the resolved letters.
-#let _render(sans, lo, hi, figurine, chars, move-numbers, tail) = {
+// Render indices [lo, hi] of `nodes`: move numbers, resolved piece letters, and
+// (when on) NAG symbols and the residual comment prose.
+#let _render(nodes, lo, hi, figurine, chars, move-numbers, nags, comments, tail) = {
   let parts = ()
   let first = true
   for idx in range(lo, hi + 1) {
+    let node = nodes.at(idx)
     let ply = idx + 1
     let white = calc.odd(ply)
     let movenum = int((ply + 1) / 2)
-    let tok = _localize-san(sans.at(idx), chars, figurine, white)
+    let tok = _localize-san(node.san, chars, figurine, white)
+    if nags {
+      for ng in node.at("nags", default: ()) { tok += nag-symbol(ng) }
+    }
+    if comments {
+      let t = interpret-comment(node.at("comment-after", default: none)).text
+      if t != "" { tok += " " + t }
+    }
     let s = ""
     if move-numbers {
       if white { s = str(movenum) + ". " }
@@ -126,18 +142,25 @@
 /// array. `from`/`to` are inclusive mainline locators ("12w"/"12b"); omit for the
 /// whole line. Options: `figurine` (glyphs instead of letters), `lang`
 /// ("en" | "auto" | code; "auto" follows `#set text(lang: ..)`, unknown -> en),
-/// `move-numbers`, `result` (append the game result, for a game source).
-#let notation(source, from: none, to: none, figurine: false, lang: "en", move-numbers: true, result: false) = {
+/// `move-numbers`, `result` (append the game result). `nags` / `comments`
+/// (default `auto`) render move NAGs / comment prose; `auto` consults the
+/// document `set-pgn-defaults` (both off by default). When everything resolves
+/// without document state the result is a plain string; otherwise it is content.
+#let notation(source, from: none, to: none, figurine: false, lang: "en", nags: auto, comments: auto, move-numbers: true, result: false) = {
   let r = _resolve-line(source, from, to)
   let tail = if result and type(source) == dictionary and "movetext" in source { game-result(source) } else { none }
-  if lang == "auto" {
+  let needs-state = lang == "auto" or nags == auto or comments == auto
+  if needs-state {
     context {
-      let chars = notation-langs.at(text.lang, default: notation-langs.en)
-      _render(r.sans, r.lo, r.hi, figurine, chars, move-numbers, tail)
+      let pg = default-pgn-style + pgn-style-state.get()
+      let rn = if nags != auto { nags } else { pg.nags }
+      let rc = if comments != auto { comments } else { pg.comments }
+      let chars = if lang == "auto" { notation-langs.at(text.lang, default: notation-langs.en) } else { notation-langs.at(lang, default: notation-langs.en) }
+      _render(r.nodes, r.lo, r.hi, figurine, chars, move-numbers, rn, rc, tail)
     }
   } else {
     let chars = notation-langs.at(lang, default: notation-langs.en)
-    _render(r.sans, r.lo, r.hi, figurine, chars, move-numbers, tail)
+    _render(r.nodes, r.lo, r.hi, figurine, chars, move-numbers, nags, comments, tail)
   }
 }
 

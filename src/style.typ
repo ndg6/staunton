@@ -92,12 +92,25 @@
   supplement: [Diagram],      // figure supplement
 )
 
+// ---- PGN handling (prompt 15) ---------------------------------------------
+// How PGN-embedded extras are HANDLED at render time. Parsing stays lossless;
+// these switches only decide what gets *interpreted/shown*. All default OFF:
+// reading a PGN yields plain movetext unless you opt in.
+#let default-pgn-style = (
+  annotations: false,  // process %cal/%csl comment commands -> arrows/highlights
+  nags:        false,  // render NAGs ("Nf3!", "d4⩲") in notation
+  comments:    false,  // include comment prose in notation
+  diagrams:    false,  // act on embedded diagram markers (consumer: inline embed, deferred)
+)
+
 // Document-wide overrides (document-order state, like Typst's own #set).
 #let board-style-state = state("staunton-board-style", (:))
 #let diagram-style-state = state("staunton-diagram-style", (:))
+#let pgn-style-state = state("staunton-pgn-style", (:))
 
 #let board-style-keys = default-board-style.keys()
 #let diagram-style-keys = default-diagram-style.keys()
+#let pgn-style-keys = default-pgn-style.keys()
 
 // ---- setters --------------------------------------------------------------
 #let _reject-flip(f) = assert(
@@ -124,20 +137,33 @@
   diagram-style-state.update(s => s + f)
 }
 
-/// Umbrella setter (back-compat): route each field to the board or diagram
-/// bucket. `flip` / `orientation` are rejected.
+/// Set default PGN-handling fields (annotations / nags / comments / diagrams)
+/// for subsequent notation / diagram output.
+#let set-pgn-defaults(..fields) = {
+  let f = fields.named()
+  for k in f.keys() {
+    assert(pgn-style-keys.contains(k), message: "unknown pgn handling option: " + k)
+  }
+  pgn-style-state.update(s => s + f)
+}
+
+/// Umbrella setter (back-compat): route each field to the board, diagram, or
+/// PGN-handling bucket. `flip` / `orientation` are rejected.
 #let set-chess-defaults(..fields) = {
   let f = fields.named()
   _reject-flip(f)
   let bd = (:)
   let dg = (:)
+  let pg = (:)
   for (k, v) in f {
     if board-style-keys.contains(k) { bd.insert(k, v) }
     else if diagram-style-keys.contains(k) { dg.insert(k, v) }
+    else if pgn-style-keys.contains(k) { pg.insert(k, v) }
     else { panic("unknown style option: " + k) }
   }
   if bd.len() > 0 { board-style-state.update(s => s + bd) }
   if dg.len() > 0 { diagram-style-state.update(s => s + dg) }
+  if pg.len() > 0 { pgn-style-state.update(s => s + pg) }
 }
 
 /// Convenience: set the default piece set for subsequent diagrams.

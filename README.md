@@ -308,6 +308,13 @@ Options:
 | `lang` | `"en"` | piece-letter language: `"en"`, a code (`"de"`, `"ru"`, …), or `"auto"` (follows `#set text(lang: ..)`; unknown → English) |
 | `move-numbers` | `true` | prefix move numbers (`1.`, `1...`) |
 | `result` | `false` | append the game result (a `*` is never shown) |
+| `nags` | `auto` | render NAGs as glyphs (`$1`→`!`, `$6`→`?!`, `$14`→`⩲`, …); `auto` → the `set-pgn-defaults` default (off) |
+| `comments` | `auto` | append comment prose (game source only); `auto` → the pgn default (off) |
+
+`nags`/`comments` apply to a **game** source (a SAN string/array carries none).
+With an explicit `lang` and explicit `nags`/`comments`, `notation` returns a
+plain string; when any is `auto` (consulting the document default) or `lang` is
+`"auto"`, it returns content.
 
 Localization substitutes only the piece letters (`K Q R B N` and the promotion
 letter after `=`); files, ranks, captures, check marks, and `O-O` are untouched.
@@ -337,19 +344,21 @@ Standard 8×8 positions round-trip exactly with `parse-fen`. It is geometry-awar
 
 ### Drawing annotations (`%cal` / `%csl`)
 
-`board-after` reads the standard PGN drawing annotations in a move's comment and
-turns them into arrows and highlights automatically:
+PGN comments can carry drawing annotations. Processing is **off by default**
+(prompt 15) — reading a PGN gives plain output unless you opt in:
 
 ```typ
 // 2. Nf3 {[%cal Gf3e5,Bf1c4] [%csl Re5,Yc6]} ...
-#board-after(game, "2w")   // green/blue arrows + red/yellow square highlights
+#board-after(game, "2w", annotations: true)   // green/blue arrows + red/yellow highlights
+#set-pgn-defaults(annotations: true)           // ...or turn it on document-wide
 ```
 
 `[%cal <c><from><to>,…]` becomes arrows; `[%csl <c><square>,…]` becomes
 highlights. The color letters (`G` `R` `Y` `B` `O`) resolve through the
 `annotation-colors` board-style map, so a document can re-theme what each letter
-means. PGN annotations merge with any `arrows` / `highlight` you pass explicitly;
-set `pgn-annotations: false` to ignore them.
+means. They merge with any `arrows` / `highlight` you pass explicitly. The
+per-call `annotations:` argument (`auto` by default → the document default)
+overrides per diagram.
 
 ### Errors
 
@@ -376,6 +385,26 @@ setter; `set-chess-defaults` is an umbrella that routes each key to the right on
 
 `flip` is the one setting that is **not** allowed in any defaults setter — board
 orientation is a per-diagram choice, so `set-chess-defaults(flip: ..)` is an error.
+
+There is also a third **PGN-handling** bucket: how much of a parsed game's
+embedded extras get *processed at render time*. Parsing stays lossless; these
+switches only decide what is interpreted. **All default off** — reading a PGN
+gives plain movetext unless you opt in:
+
+```typ
+#import "@preview/staunton:0.1.0": set-pgn-defaults
+#set-pgn-defaults(annotations: true, nags: true, comments: true)
+```
+
+| key | default | effect |
+|---|---|---|
+| `annotations` | `false` | `%cal`/`%csl` → arrows/highlights on `board-after` |
+| `nags` | `false` | render NAGs (`Nf3!`, `d4⩲`) in `notation` |
+| `comments` | `false` | include comment prose in `notation` |
+| `diagrams` | `false` | recognise embedded diagram markers (`{#}`, `{[d]}`, `{\diagram}`, `{%%diagram}`) — inline rendering is a future step |
+
+`set-chess-defaults` routes these keys too; each is also a per-call argument
+(`auto` → the document default) on `notation` / `board-after`.
 
 ## Coordinates
 
@@ -426,8 +455,9 @@ src/engine.typ      legal-move engine (pseudo-legal -> legality filter)
 src/san.typ         SAN parsing + resolution; play-san, play-moves
 src/pgn.typ         PGN tokenizer + movetext/variation tree
 src/game.typ        navigation: mainline, locators
-src/notation.typ    human-readable notation (figurine / i18n); chess-notation
+src/notation.typ    human-readable notation (figurine / i18n / NAGs / comments)
 src/i18n.typ        language registry (loads assets/i18n/*.typ)
+src/annotations.typ PGN comment interpreter (%cal/%csl, diagram markers) + NAG symbols
 src/style.typ       diagram-style dict + document defaults
 src/board.typ       canvas renderer + sizing + flip + label modes
 assets/piece_sets/  SVG piece sets (cburnett default, + 5 more)
