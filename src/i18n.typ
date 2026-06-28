@@ -1,5 +1,5 @@
 // ===========================================================================
-// Language registry (prompt 14 notation; prompt 18 UI strings).
+// Language registry: SAN piece letters + UI strings.
 //
 // Each `src/assets/i18n/<code>.typ` exports:
 //   * `piece-chars` -- piece KIND -> SAN letter(s) (German knight "S", ...);

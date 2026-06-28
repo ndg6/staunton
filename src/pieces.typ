@@ -5,7 +5,7 @@
 // Unicode chess glyphs as a fallback when the set is "unicode"/none. The
 // public seam callers use is `square-piece(kind, color, sq, set: ..)`, which
 // returns content already sized to a `sq`-side square and hides the SVG-vs-glyph
-// difference (subtask 3.4).
+// difference.
 //
 // SVG path (default): the bundled SVGs already carry the correct baseline, so we
 // just centre them in the square -- no baseline lifting, no per-kind correction.

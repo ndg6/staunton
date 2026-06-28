@@ -175,7 +175,7 @@
 }
 
 // Normalise the many accepted `source` forms into (squares, cols, rows) for
-// rendering. The geometry comes from the position model (prompt 11/12): a FEN
+// rendering. The geometry comes from the position model: a FEN
 // string is parsed for its geometry, a position dict carries `cols`/`rows`, and
 // a bare squares dict defaults to standard 8x8.
 #let _to-board(source) = {
@@ -300,7 +300,7 @@
 /// `xiangqi-diagram`, ...) are thin sugar over it.
 ///
 /// `source` may be a FEN string, a position dict (from `position`/`parse-fen`),
-/// or a bare board dict. Labeling (subtask 3.4):
+/// or a bare board dict. Labeling:
 ///   * ABOVE the board: if both players are known, an automatic
 ///     "<White> – <Black> (<Year>)" line; override with `game-info`.
 ///   * BELOW the board (the figure caption): for a FEN string source, a default
@@ -499,7 +499,7 @@
 /// `title` defaults to the language-aware "List of Diagrams" (override per call,
 /// or document-wide via `set-diagram-defaults(outline-title: ..)`); `lang`
 /// defaults to the document language. Extra named arguments are forwarded to
-/// `outline` (e.g. `depth`, `indent`). (Renamed from `chess-outline` in prompt 17.)
+/// `outline` (e.g. `depth`, `indent`).
 #let chess-diagram-outline(title: auto, lang: auto, ..args) = context {
   let doc = (default-diagram-style + diagram-style-state.get()).outline-title
   outline(

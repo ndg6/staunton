@@ -1,12 +1,16 @@
 // ===========================================================================
 // Styling: presentation config, kept separate from game/position data.
 //
-// There are now TWO style buckets (prompt 8, item 5):
+// There are five style buckets:
 //   * BOARD style   -- everything the board renderer draws: square colors,
 //     labels, piece set, highlights, grid, arrows, ...  Consumed by `board()` /
 //     `render-board`.
 //   * DIAGRAM style -- the #figure wrapper around a board: the above game-info
 //     line (bold? gap?) and the figure supplement. Consumed by `chess-diagram`.
+//   * TABLE style   -- the #figure wrapper around a tournament table (supplement,
+//     outline title, title gap). Consumed by the `*-table` renderers.
+//   * I18N          -- the document language for all language-aware strings.
+//   * PGN handling  -- which embedded PGN extras are interpreted at render time.
 //
 // Each bucket has a factory default dict, a document-order state, and a setter.
 // Resolution merges three layers (later wins):
@@ -19,11 +23,11 @@
 #import "pieces.typ": default-white-fill, default-black-fill, default-piece-fonts, default-piece-set
 
 // Shared base colour for the default highlight fill AND the default arrow colour
-// (prompt 12, item 4: arrows default to the highlight colour). The transparency
+// (arrows default to the highlight colour). The transparency
 // is applied separately by the renderer via `highlight-transparency` /
 // `arrow-transparency`, so this base is stored fully opaque.
 #let default-highlight-base = rgb(60, 130, 90)
-// "border" mode label themes (prompt 12, item 2): the "brown" and "dark" themes.
+// "border" mode label themes: the "brown" and "dark" themes.
 #let border-brown = rgb("#2c1d0e")        // very dark brown band
 #let border-creme = rgb("#f3ecd8")        // creme-white labels (brown theme)
 #let border-dark = rgb("#2b2b2b")         // charcoal band (dark-mode theme)
@@ -38,13 +42,13 @@
   label-mode: "on-square",    // "on-square" | "outside" | "border"
   file-side: bottom,          // bottom | top
   rank-side: right,           // right | left
-  // on-square label corner placement (prompt 12, item 2). Vertical edge is fixed
+  // on-square label corner placement. Vertical edge is fixed
   // (files at the bottom edge, ranks at the top edge); these pick the horizontal
   // corner. file: lower-left (default) or lower-right; rank: upper-right
   // (default) or upper-left.
   file-label-corner: left,    // left | right
   rank-label-corner: right,   // right | left
-  // "border" mode theme (prompt 12, item 2): "square" = dark-square band with
+  // "border" mode theme: "square" = dark-square band with
   // light-square labels (default); "brown" = very-dark-brown band, creme labels;
   // "dark" = charcoal band, light-grey labels (a neutral dark-mode look).
   border-theme: "square",     // "square" | "brown" | "dark"
@@ -58,7 +62,7 @@
   white-fill: default-white-fill, // glyph fallback only
   black-fill: default-black-fill, // glyph fallback only
   piece-font: default-piece-fonts, // glyph fallback only
-  // Highlights (prompt 12, item 3). Entries: a square name "e4" (uses
+  // Highlights. Entries: a square name "e4" (uses
   // highlight-shape + highlight-fill), a (square, color) pair (filled, explicit
   // colour -- e.g. PGN %csl), or a dict (square:, shape:, color:) for full
   // control. Shapes: "filled" | "cross" | "circle". By convention a "cross"
@@ -85,7 +89,7 @@
   ),
 )
 
-// ---- i18n (prompt 18) -----------------------------------------------------
+// ---- i18n -----------------------------------------------------
 // One document-wide language setting drives every language-aware string
 // (diagram / table supplements, outline titles, and notation piece letters).
 //   * a code ("en", "de", ...) -> that language;
@@ -107,7 +111,7 @@
   outline-title: auto,        // chess-diagram-outline title (auto -> "List of Diagrams")
 )
 
-// ---- table style (prompt 17) ----------------------------------------------
+// ---- table style ----------------------------------------------
 // The #figure wrapper around a tournament table (standings / cross-table /
 // progress). Tables are figures of `kind: "chess-table"` so they get their own
 // counter, can be referenced (@label -> "Table 3") and listed by
@@ -119,7 +123,7 @@
   title-gap: 0.6em,           // gap between an above-table `title` and the table
 )
 
-// ---- PGN handling (prompt 15) ---------------------------------------------
+// ---- PGN handling ---------------------------------------------
 // How PGN-embedded extras are HANDLED at render time. Parsing stays lossless;
 // these switches only decide what gets *interpreted/shown*. All default OFF:
 // reading a PGN yields plain movetext unless you opt in.

@@ -1,7 +1,7 @@
 // ===========================================================================
 // Move generator & rules engine (pure Typst).
 //
-// Two-stage legal move generation (subtask 3.3 design):
+// Two-stage legal move generation:
 //   1. `_pseudo-moves` + `_castling-moves` produce moves that respect piece
 //      geometry, blockers, captures and the en-passant/castling preconditions,
 //      but do NOT check whether the mover's own king is left in check.

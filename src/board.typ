@@ -9,7 +9,7 @@
 // `render-board(board, flip: false, cols: 8, rows: 8, ..overrides)` resolves a
 // diagram-style (built-in ⊕ document state ⊕ per-call overrides) and draws it.
 // The geometry (`cols` x `rows`) is NOT 8x8-only: it is threaded through from the
-// position model (prompt 11/12), so the same renderer serves standard chess
+// position model, so the same renderer serves standard chess
 // (8x8), Xiangqi (9x9/9x10), Capablanca (10x8/10x10), etc. Orientation is NOT a
 // style field: it is decided by the per-call `flip` argument.
 //

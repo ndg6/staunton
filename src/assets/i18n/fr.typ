@@ -7,7 +7,7 @@
 	knight: "C",
 )
 
-// UI strings (prompt 18): language-aware supplements / outline titles.
+// UI strings: language-aware supplements / outline titles.
 #let strings = (
 	diagram-supplement: "Diagramme",
 	table-supplement: "Tableau",

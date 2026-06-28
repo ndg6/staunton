@@ -1,5 +1,5 @@
 // ===========================================================================
-// Human-readable move notation (prompt 14).
+// Human-readable move notation.
 //
 // Games carry SAN strings verbatim from the PGN (canonical English: "Nf3",
 // "O-O", "exd5", "e8=Q+"). So figurine output and language-aware piece letters
@@ -142,7 +142,8 @@
 /// Render move notation from a game (mainline), a move-text string, or a SAN
 /// array. `from`/`to` are inclusive mainline locators ("12w"/"12b"); omit for the
 /// whole line. Options: `figurine` (glyphs instead of letters), `lang`
-/// ("en" | "auto" | code; "auto" follows `#set text(lang: ..)`, unknown -> en),
+/// (`auto` -> the document language via `set-lang`; a code like "de"; or the
+/// string "auto" to follow `#set text(lang: ..)`; unknown -> en),
 /// `move-numbers`, `result` (append the game result). `nags` / `comments`
 /// (default `auto`) render move NAGs / comment prose; `auto` consults the
 /// document `set-pgn-defaults` (both off by default). When everything resolves

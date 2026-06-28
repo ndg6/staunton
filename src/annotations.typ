@@ -1,5 +1,5 @@
 // ===========================================================================
-// PGN comment interpretation + NAG symbols (prompt 15).
+// PGN comment interpretation + NAG symbols.
 //
 // Parsing stays lossless (pgn.typ stores comments verbatim and NAGs as raw
 // values). This module INTERPRETS that stored data at render time, gated by the
@@ -10,7 +10,7 @@
 //       %cal arrows, %csl highlights, and the residual prose.
 //   * NAG symbols: map the numeric NAG value to its conventional glyph.
 //
-// Recognised diagram markers (prompt 15) -- NOTE: the ambiguous "{d}"/"{D}"
+// Recognised diagram markers -- NOTE: the ambiguous "{d}"/"{D}"
 // (no brackets) are deliberately NOT recognised:
 //   #  /  #[<caption>]   ChessBase (caption optional)
 //   [d] / [D]            Scid

@@ -1,5 +1,5 @@
 // ===========================================================================
-// Tournament tables (prompt 16) -- built from a parsed PGN's roster + results,
+// Tournament tables -- built from a parsed PGN's roster + results,
 // no engine needed. Compute functions return plain data (testable); the
 // `*-table` renderers turn that data into Typst `#table` content.
 //
