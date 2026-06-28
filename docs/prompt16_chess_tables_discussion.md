@@ -154,8 +154,22 @@ game's moves. Fix:
   *accessor* + new `game.movetext-raw` string. Internal callers (game / notation /
   to-fen) and `tests/pgn/realworld/parse_full.typ` updated; suite 67/67 green.
 
+### Follow-up 2: where the ~75 s actually went (commit Phase 3)
+
+The earlier guess — "the tree-builder's per-node work is the ~75 s" — was **wrong**.
+The real cause was the *old eager* `parse-pgn` passing the **whole-file token
+array (~300k elements)** into the recursive `_parse-movetext`: Typst's
+memoisation layer (comemo) **hashes a function's arguments on every call**, so it
+re-hashed that giant array on every recursive descent → O(n²). The lazy commit
+(`a9988e4`) incidentally fixed it by tokenising each game's small substring
+separately (tiny arrays, cheap to hash): parsing **all** 375 games' movetext
+(27 433 mainline nodes + variations) dropped to **~4 s**.
+
+Phase 3 then rewrote `_parse-movetext` to assemble each move in a local `cur` and
+push it once (instead of read-modify-write on `nodes.last()`): a clean ~15 %
+further win on "parse every game" (~4 s → ~3.5 s), no behaviour change. Tree
+structure pinned by `tests/pgn/good/movetext_tree.typ`.
+
 ### Deferred / notes
 
 - Direct-encounter tie-break; localized headers; forfeit/bye handling — later.
-- Tree-builder constant-factor speedup (avoid the `nodes.last()` write-back
-  pattern) — would speed up "parse every game"; separate session.

@@ -81,11 +81,18 @@
 // ---- recursive movetext parser -------------------------------------------
 // Returns (nodes, next, result). `top` = top level (stop at result/next-tag/EOF);
 // otherwise a variation (stop at the matching close paren).
+//
+// The move currently being assembled is held in the local `cur` and pushed to
+// `nodes` only once it is complete (at the next move / close / result / EOF).
+// Comments, NAGs and variations are therefore attached by mutating `cur` in
+// place, instead of the old read-modify-write on `nodes.last()` (copy the dict
+// out, edit it, write it back) -- fewer dict copies per token.
 #let _parse-movetext(toks, start, n, top) = {
   let nodes = ()
   let i = start
   let result = none
-  let pending-comment = none
+  let pending-comment = none   // comment(s) before the FIRST move of this line
+  let cur = none               // the move being assembled, or none before the first
 
   while i < n {
     let t = toks.at(i)
@@ -96,51 +103,41 @@
     } else if t.type == "num" {
       i += 1
     } else if t.type == "comment" {
-      if nodes.len() > 0 {
-        let last = nodes.last()
-        let prev = last.at("comment-after", default: none)
-        last.insert("comment-after", if prev == none { t.value } else { prev + " " + t.value })
-        nodes.at(nodes.len() - 1) = last
+      if cur != none {
+        cur.comment-after = if cur.comment-after == none { t.value } else { cur.comment-after + " " + t.value }
       } else {
         pending-comment = t.value
       }
       i += 1
     } else if t.type == "nag" {
-      if nodes.len() > 0 {
-        let last = nodes.last()
-        let ns = last.at("nags", default: ())
-        ns.push(t.value)
-        last.insert("nags", ns)
-        nodes.at(nodes.len() - 1) = last
-      }
+      if cur != none { cur.nags.push(t.value) }
       i += 1
     } else if t.type == "open" {
-      assert(nodes.len() > 0, message: "malformed PGN: variation '(' without a preceding move")
+      assert(cur != none, message: "malformed PGN: variation '(' without a preceding move")
       let sub = _parse-movetext(toks, i + 1, n, false)
-      let last = nodes.last()
-      let vars = last.at("variations", default: ())
-      vars.push(sub.nodes)
-      last.insert("variations", vars)
-      nodes.at(nodes.len() - 1) = last
+      cur.variations.push(sub.nodes)
       i = sub.next
     } else if t.type == "close" {
       assert(not top, message: "malformed PGN: unexpected ')' outside a variation")
       i += 1
       break
     } else if t.type == "san" {
-      nodes.push((
+      if cur != none { nodes.push(cur) }
+      cur = (
         san: t.value,
         nags: (),
         comment-before: pending-comment,
         comment-after: none,
         variations: (),
-      ))
+      )
       pending-comment = none
       i += 1
     } else {
       i += 1
     }
   }
+  // Flush the last move being assembled (covers every exit: result, close, EOF).
+  if cur != none { nodes.push(cur) }
   (nodes: nodes, next: i, result: result)
 }
 
