@@ -123,7 +123,7 @@ done < <(find tests -name '*.typ' | sort)
 
 # Examples are showcases, not tests, but they must still compile.
 echo "== examples (must compile) =="
-for f in examples/*.typ; do
+for f in docs/examples/*.typ; do
   [ -e "$f" ] || continue
   ok "$f"
 done
