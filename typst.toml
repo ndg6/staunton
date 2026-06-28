@@ -3,11 +3,22 @@ name = "staunton"
 version = "0.1.0"
 entrypoint = "lib.typ"
 authors = ["Frank Lippert <frank.lippert@gmail.com>"]
-license = "MIT"
-description = "Chess diagrams for Typst: render boards and pieces, and build diagrams from FEN strings."
-keywords = ["chess", "fen", "diagram", "board", "game"]
+license = "MIT AND GPL-2.0-or-later"
+description = "Chess boards, FEN/PGN diagrams, and tournament tables."
+repository = "https://github.com/ndg6/staunton"
+keywords = ["chess", "fen", "pgn", "diagram", "board"]
 categories = ["visualization"]
-repository = ""
+compiler = "0.15.0"
 
-# Excluded from the published archive.
-exclude = ["examples", "tests", "out", "docs", "prompts"]
+# Files kept in the repo but NOT shipped in the published bundle. (`prompts`,
+# `CLAUDE.md`, and the non-shipped piece sets are also gitignored, so they are
+# absent from a clean checkout; they are listed here too as belt-and-suspenders.)
+exclude = [
+  "tests",
+  "docs",
+  "scripts",
+  "prompts",
+  "CLAUDE.md",
+  ".github",
+  "src/assets/piece_sets/_incomplete",
+]
