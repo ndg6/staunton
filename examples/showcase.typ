@@ -1,9 +1,10 @@
-// staunton showcase - a single document touring the plugin's capabilities using
-// the three real PGNs under examples/pgn/. This is an example, not a test (the
-// runner compiles it to ensure it does not break, but keeps no assertions).
+// staunton showcase - a single document touring the plugin's capabilities. All
+// games here are SYNTHETIC: inline PGN with made-up players and textbook opening
+// lines, so the example is self-contained (no bundled PGN files to ship). This is
+// an example, not a test (the runner compiles it to ensure it does not break, but
+// keeps no assertions).
 //
-// `read` resolves relative to THIS file, so the PGN paths are relative to
-// examples/. Compile with the package root:  typst compile --root . examples/showcase.typ
+// Compile with the package root:  typst compile --root . examples/showcase.typ
 #import "/lib.typ": (
   parse-pgn, board-after, board, chess-diagram, chess-diagram-outline,
   mainline, game-result, position-after, play-moves, set-chess-defaults, starting-fen,
@@ -19,10 +20,21 @@
 ]
 #v(6pt)
 
-// The three bundled example games.
-#let g-blitz    = parse-pgn(read("pgn/game_1044723.pgn")).first()
-#let g-analysis = parse-pgn(read("pgn/game_1044723_analysis.pgn")).first()
-#let g-classic  = parse-pgn(read("pgn/game_1860342.pgn")).first()
+// --- synthetic games (inline; legal textbook lines, fictional players) ---
+
+// A complete Giuoco Piano (~29 plies), used for most of the position diagrams.
+#let g-main = parse-pgn(```
+[White "Alice"] [Black "Bob"] [Event "Synthetic Open"] [Result "1/2-1/2"]
+1. e4 e5 2. Nf3 Nc6 3. Bc4 Bc5 4. c3 Nf6 5. d4 exd4 6. cxd4 Bb4+
+7. Bd2 Bxd2+ 8. Nbxd2 d5 9. exd5 Nxd5 10. Qb3 Nce7 11. O-O O-O
+12. Rfe1 c6 13. a4 Qb6 14. Qxb6 Nxb6 15. Bb3 1/2-1/2
+```).first()
+
+// A 7-ply miniature ("Scholar's mate") - short, decisive, ends in checkmate.
+#let g-mate = parse-pgn(```
+[White "Carol"] [Black "Dan"] [Event "Synthetic Blitz"] [Result "1-0"]
+1. e4 e5 2. Bc4 Bc5 3. Qh5 Nf6 4. Qxf7# 1-0
+```).first()
 
 // Locator for the final mainline position of a game (move number + side).
 #let final-locator(game) = {
@@ -34,19 +46,15 @@
 
 #chess-diagram-outline(title: [List of diagrams in this showcase])
 
-= The three example games at a glance
+= The synthetic games at a glance
 
 #table(
-  columns: (auto, 1fr, 1fr, auto, auto),
+  columns: (1fr, 1fr, 1fr, auto, auto),
   inset: 6pt,
   align: (left, left, left, center, center),
-  table.header([*file*], [*White*], [*Black*], [*plies*], [*result*]),
-  ..(
-    ("game_1044723.pgn", g-blitz),
-    ("game_1044723_analysis.pgn", g-analysis),
-    ("game_1860342.pgn", g-classic),
-  ).map(((name, g)) => (
-    raw(name),
+  table.header([*Event*], [*White*], [*Black*], [*plies*], [*result*]),
+  ..(g-main, g-mate).map(g => (
+    g.tags.at("Event", default: "?"),
     g.tags.at("White", default: "?"),
     g.tags.at("Black", default: "?"),
     str(mainline(g).len()),
@@ -54,7 +62,7 @@
   )).flatten(),
 )
 
-= Diagrams from a real game (auto captions, different piece sets)
+= Diagrams from a game (auto captions, different piece sets)
 
 `board-after` pulls the roster and the last move into the labels automatically.
 Each diagram below uses a different bundled piece set.
@@ -62,8 +70,8 @@ Each diagram below uses a different bundled piece set.
 #grid(
   columns: 2,
   gutter: 14pt,
-  board-after(g-blitz, "8w", size: 5cm, piece-set: "merida"),
-  board-after(g-blitz, final-locator(g-blitz), size: 5cm, piece-set: "alpha"),
+  board-after(g-main, "8w", size: 5cm, piece-set: "merida"),
+  board-after(g-main, final-locator(g-main), size: 5cm, piece-set: "alpha"),
 )
 
 = Label modes and orientation
@@ -74,14 +82,25 @@ The same final position drawn three ways, plus flipped to Black's view.
   columns: 4,
   gutter: 8pt,
   align: bottom + center,
-  board(position-after(g-classic, final-locator(g-classic)), size: 3.2cm, label-mode: "on-square"),
-  board(position-after(g-classic, final-locator(g-classic)), size: 3.2cm, label-mode: "outside"),
-  board(position-after(g-classic, final-locator(g-classic)), size: 3.2cm, label-mode: "border"),
-  board(position-after(g-classic, final-locator(g-classic)), size: 3.2cm, label-mode: "border", flip: true),
+  board(position-after(g-main, final-locator(g-main)), size: 3.2cm, label-mode: "on-square"),
+  board(position-after(g-main, final-locator(g-main)), size: 3.2cm, label-mode: "outside"),
+  board(position-after(g-main, final-locator(g-main)), size: 3.2cm, label-mode: "border"),
+  board(position-after(g-main, final-locator(g-main)), size: 3.2cm, label-mode: "border", flip: true),
   [on-square], [outside], [border], [border, flipped],
 )
 
-= A "what-if" line that does not exist in any file
+= A short, decisive miniature
+
+The position right before the final blow, and the checkmate itself:
+
+#grid(
+  columns: 2,
+  gutter: 14pt,
+  board-after(g-mate, "3b", size: 5cm),
+  board-after(g-mate, final-locator(g-mate), size: 5cm, piece-set: "staunty"),
+)
+
+= A "what-if" line that does not exist in any game
 
 `play-moves` applies move text (or a SAN array) to a position (or FEN, or `none`
 for the start) and returns the resulting position, without mutating anything.
@@ -97,7 +116,7 @@ for the start) and returns the resulting position, without mutating anything.
 Explicit arrows (tuple / dict forms), square highlights, and the optional grid:
 
 #board(
-  position-after(g-blitz, "6w"),
+  position-after(g-main, "6w"),
   size: 6cm,
   grid: true,
   highlight: ("e4", "e5"),
@@ -118,6 +137,6 @@ PGN `{[%cal …]}` / `{[%csl …]}` annotations are picked up automatically:
 After `set-chess-defaults`, subsequent diagrams inherit the green theme:
 
 #grid(columns: 2, gutter: 14pt,
-  board-after(g-analysis, "12w", size: 4.5cm),
-  board-after(g-analysis, "20w", size: 4.5cm),
+  board-after(g-main, "10w", size: 4.5cm),
+  board-after(g-main, "14w", size: 4.5cm),
 )

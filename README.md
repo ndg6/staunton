@@ -583,8 +583,7 @@ tests/fen/          §4 FEN: good / malformed / inconsistent
 tests/pgn/          §5 PGN: good / roster / san / moves / realworld
 tests/position/     position object: string form, object shape, malformed
 tests/out/          kept render artifacts (mirrors the tests/ tree)
-examples/showcase.typ   capability tour using the example games
-examples/pgn/           sample PGN files
+examples/showcase.typ   capability tour using self-contained synthetic games
 ```
 
 PGN input is robust to CRLF and LF line endings and to `{…}` comments
