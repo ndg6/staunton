@@ -13,16 +13,18 @@
 1. e4 e5 2. Nf3 {[%cal Gf1c4] #[After 2.Nf3]} Nc6 3. Bb5 {[d]} a6 4. Ba4 Nf6 *
 ```).first()
 
-// diagrams OFF -> plain text string (no embedding), unchanged behaviour
+// diagrams OFF -> plain text string (no embedding), unchanged behaviour. lang is
+// explicit so the string fast-path applies (lang: auto would consult the document
+// and yield content).
 #assert(
-  notation(g, diagrams: false, nags: false, comments: false)
+  notation(g, diagrams: false, nags: false, comments: false, lang: "en")
     == "1. e4 e5 2. Nf3 Nc6 3. Bb5 a6 4. Ba4 Nf6",
   message: "diagrams off -> plain text",
 )
 
 // a non-game source never embeds, even with diagrams: true
 #assert(
-  notation("1. e4 e5", diagrams: true, nags: false, comments: false) == "1. e4 e5",
+  notation("1. e4 e5", diagrams: true, nags: false, comments: false, lang: "en") == "1. e4 e5",
   message: "SAN source ignores diagrams",
 )
 

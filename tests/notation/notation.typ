@@ -10,10 +10,11 @@
 #let g = parse-pgn("[White \"A\"][Black \"B\"][Result \"1-0\"]
 1. e4 e5 2. Nf3 Nc6 3. Bb5 a6 4. Ba4 Nf6 5. O-O 1-0").first()
 
-// String-returning fast path: nags/comments/diagrams must be explicit (their
-// `auto` defaults consult the document bucket -> content). Helper defaults them
-// off but lets a test override (e.g. nags: true); the override wins.
-#let s(src, ..a) = notation(src, ..((diagrams: false, nags: false, comments: false) + a.named()))
+// String-returning fast path: lang AND nags/comments/diagrams must be explicit
+// (their `auto`/auto-value defaults consult the document buckets -> content).
+// Helper defaults them off / to English but lets a test override (e.g. nags: true,
+// lang: "de"); the override wins.
+#let s(src, ..a) = notation(src, ..((diagrams: false, nags: false, comments: false, lang: "en") + a.named()))
 
 // --- English (default) ---
 #assert(s(g) == "1. e4 e5 2. Nf3 Nc6 3. Bb5 a6 4. Ba4 Nf6 5. O-O", message: "en mainline")

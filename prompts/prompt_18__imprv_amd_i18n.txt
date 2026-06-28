@@ -1,0 +1,30 @@
+Improved / Amend Internatiolization
+===================================
+
+We already use files under src/assets/i18n for notation output
+in different languages. We need to improve / amend internationalization
+even further, though.
+
+- we reuse and amend the files under "src/assets/i18"
+- For all eleements (diagrams, tables, outlines) we have default language: english
+- there should be a settable option "auto" for all language-aware strings, that
+    sets the output to the currently used language.
+- all other languages ("de", "es", etc.) must be settable as option
+- Diagrams should have a default language-aware supplement of
+    "Diagram", "Diagramm" etc.
+- Suppplement for diagrams must be settable by option
+- Suppplement for diagrams must settable / overridable one call-by-call base
+- Tables should have a default language-aware supplement of
+    "Table", "Tabelle" etc.
+- Suppplement for tables must be settable by option
+- Suppplement for tables must settable / overridable one call-by-call base
+- Diagram outlines should have a default language-aware supplement of
+    "List of Diagrams", "Diagrammverzeichnis" etc.
+- Suppplement for diagram outlines must be settable by option
+- Suppplement for diagram outlines must settable / overridable one call-by-call base
+- Table outlines should have a default language-aware supplement of
+    "List of Tables", "Tabellenverzeichnis" etc.
+- Suppplement for table outlines must be settable by option
+- Suppplement for table outlines must settable / overridable one call-by-call base
+
+Please discuss design options!

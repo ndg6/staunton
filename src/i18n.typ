@@ -1,16 +1,19 @@
 // ===========================================================================
-// Language registry for notation output (prompt 14).
+// Language registry (prompt 14 notation; prompt 18 UI strings).
 //
-// Each `src/assets/i18n/<code>.typ` exports a `piece-chars` dict mapping a piece
-// KIND (king/queen/rook/bishop/knight; pawns have no SAN letter) to that
-// language's first letter(s) -- e.g. German knight "S", Russian king "Кр".
+// Each `src/assets/i18n/<code>.typ` exports:
+//   * `piece-chars` -- piece KIND -> SAN letter(s) (German knight "S", ...);
+//   * `strings`     -- UI strings: diagram/table supplement + outline titles.
 // They are imported statically here (Typst cannot import by a runtime string)
-// into one `notation-langs` map keyed by language code. `notation` looks a code
-// up here; an unknown code falls back to English.
+// into `notation-langs` (piece-chars) and `ui-strings` (UI strings), keyed by
+// language code; an unknown code falls back to English.
 //
-// Adding a language is a no-code change: drop `src/assets/i18n/<code>.typ`
-// exporting `piece-chars`, then add one line to `notation-langs` below.
+// Adding a language is a no-code change beyond this file: drop
+// `src/assets/i18n/<code>.typ` exporting `piece-chars` + `strings`, then add one
+// line to each map below.
 // ===========================================================================
+
+#import "style.typ": default-i18n-style, i18n-style-state
 
 #import "assets/i18n/en.typ"
 #import "assets/i18n/de.typ"
@@ -29,3 +32,36 @@
   pt: pt.piece-chars,
   ru: ru.piece-chars,
 )
+
+#let ui-strings = (
+  en: en.strings,
+  de: de.strings,
+  es: es.strings,
+  fr: fr.strings,
+  it: it.strings,
+  pt: pt.strings,
+  ru: ru.strings,
+)
+
+// Resolve an effective language CODE. MUST be called inside a `context` (it may
+// read `text.lang` and the document i18n state).
+//   * call-lang == auto (the VALUE) -> the document `lang` setting;
+//   * that setting (or an explicit call-lang) == "auto" -> follow `text.lang`;
+//   * otherwise the code as given.
+#let resolve-lang(call-lang) = {
+  let setting = if call-lang != auto { call-lang } else { (default-i18n-style + i18n-style-state.get()).lang }
+  if setting == "auto" { text.lang } else { setting }
+}
+
+// Look up one localized UI string (English fallback for unknown code/key). MUST
+// be called inside a `context`.
+#let ui-string(call-lang, key) = {
+  let code = resolve-lang(call-lang)
+  let tbl = ui-strings.at(code, default: ui-strings.en)
+  tbl.at(key, default: ui-strings.en.at(key))
+}
+
+// Resolve piece-chars for a call-lang (context). English fallback.
+#let lang-piece-chars(call-lang) = {
+  notation-langs.at(resolve-lang(call-lang), default: notation-langs.en)
+}

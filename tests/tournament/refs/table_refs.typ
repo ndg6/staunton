@@ -1,12 +1,11 @@
 // §prompt 17 - REFERENCING chess tables, plus the chess outlines. Tournament
-// tables are now #figure(kind: "chess-table"), so they can be referenced (@label)
-// and listed by chess-table-outline / chess-outlines, with their OWN counter
-// separate from diagrams. Also exercises the table `supplement`: default "Table",
-// document-settable (set-table-defaults), and per-call overridable.
+// tables are #figure(kind: "chess-table"), so they can be referenced (@label) and
+// listed by chess-table-outline / chess-outlines, with their OWN counter separate
+// from diagrams. The per-call `supplement` override is checked here; the
+// language-aware default + settability live in tests/i18n/i18n.typ.
 #import "/lib.typ": (
   parse-pgn, standings-table, crosstable-table, chess-diagram, starting-fen,
-  chess-table-outline, chess-outlines, set-table-defaults,
-  default-table-style, table-style-state,
+  chess-table-outline, chess-outlines,
 )
 
 // Fixed-height, numbered pages so the outline shows page numbers and the page
@@ -14,11 +13,6 @@
 #set page(width: 12cm, height: 10cm, margin: 1.2cm, numbering: "1")
 #set text(font: "Libertinus Serif", size: 10pt)
 #set heading(numbering: "1.")
-
-// Default table supplement is "Table".
-#context {
-  assert((default-table-style + table-style-state.get()).supplement == [Table], message: "default table supplement is Table")
-}
 
 #let rr = parse-pgn(```
 [White "A"][Black "B"][Result "1-0"] 1-0
@@ -52,10 +46,4 @@ The references jump across pages: @st gives the standings (on its own page);
   assert(query(figure.where(kind: "chess")).len() == 1, message: "one diagram, separate counter")
   // The per-call supplement override reached the figure.
   assert(tables.map(t => t.supplement).contains([Crosstab]), message: "per-call supplement override applied")
-}
-
-// The default supplement is document-settable.
-#set-table-defaults(supplement: [Tabelle])
-#context {
-  assert((default-table-style + table-style-state.get()).supplement == [Tabelle], message: "table supplement is document-settable")
 }

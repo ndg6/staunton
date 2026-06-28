@@ -34,8 +34,10 @@
   default-board-style, default-diagram-style, board-style-keys, diagram-style-keys,
   diagram-style-state, set-board-defaults, set-diagram-defaults,
   default-table-style, table-style-state, table-style-keys, set-table-defaults,
+  default-i18n-style, i18n-style-state, i18n-style-keys, set-lang, set-i18n-defaults,
   default-pgn-style, pgn-style-state, pgn-style-keys, set-pgn-defaults,
 )
+#import "src/i18n.typ": ui-string, resolve-lang
 #import "src/board.typ": render-board, default-light, default-dark, default-board-size
 #import "src/annotations.typ": interpret-comment
 #import "src/tournament.typ": (
@@ -312,13 +314,21 @@
 // style is read inside the figure BODY (a context), so the #figure itself stays
 // a real, referenceable element. `drawn` may itself be context content (e.g. a
 // pgn-gated board), which composes fine. Shared by `diagram` and `board-after`.
-#let _assemble(drawn, white, black, year, game-info, below, diagram-ov, fig-args) = {
+#let _assemble(drawn, white, black, year, game-info, below, diagram-ov, lang, fig-args) = {
   let body = context {
     let dst = default-diagram-style + diagram-style-state.get() + diagram-ov
     let above = if game-info != auto { game-info } else { _game-info-line(white, black, year, bold: dst.info-bold) }
     if above != none { align(center, stack(dir: ttb, spacing: dst.info-gap, above, drawn)) } else { drawn }
   }
-  let supp = context { (default-diagram-style + diagram-style-state.get() + diagram-ov).supplement }
+  // Supplement: a per-call override is used verbatim (no context needed); else
+  // resolve the document default in a context, where `auto` -> the language-aware
+  // default ("Diagram"/"Diagramm"/...).
+  let supp = if "supplement" in diagram-ov { diagram-ov.supplement } else {
+    context {
+      let s = (default-diagram-style + diagram-style-state.get()).supplement
+      if s == auto { ui-string(lang, "diagram-supplement") } else { s }
+    }
+  }
   figure(body, kind: chess-kind, supplement: supp, caption: below, ..fig-args)
 }
 
@@ -331,12 +341,13 @@
   caption: auto,
   game-info: auto,
   flip: false,
+  lang: auto,
   ..args,
 ) = {
   let (board-ov, diagram-ov, fig-args) = _split-args(args.named())
   let below = if caption != auto { caption } else if type(source) == str { _fen-caption(parse-fen(source)) } else { none }
   let drawn = board(source, flip: flip, ..board-ov)
-  _assemble(drawn, white, black, year, game-info, below, diagram-ov, fig-args)
+  _assemble(drawn, white, black, year, game-info, below, diagram-ov, lang, fig-args)
 }
 
 /// Standard western chess diagram (the variant-named sugar over `diagram`).
@@ -360,7 +371,7 @@
 /// resolve through the board's `annotation-colors` map). `annotations` defaults
 /// to `auto`, which consults `set-pgn-defaults` (off by default); pass
 /// `annotations: true`/`false` to override per call.
-#let board-after(game, locator, white: auto, black: auto, year: auto, caption: auto, annotations: auto, flip: false, game-info: auto, ..args) = {
+#let board-after(game, locator, white: auto, black: auto, year: auto, caption: auto, annotations: auto, flip: false, game-info: auto, lang: auto, ..args) = {
   let pos = position-after(game, locator)
   let cap = if caption != auto { caption } else { _pgn-caption(game, locator) }
   let w = if white != auto { white } else { game.tags.at("White", default: none) }
@@ -383,7 +394,7 @@
     let hl = explicit-highlight + (if process { anno-highlight } else { () })
     board(pos, flip: flip, arrows: arr, highlight: hl, ..base-ov)
   }
-  _assemble(drawn, w, b, y, game-info, cap, diagram-ov, fig-args)
+  _assemble(drawn, w, b, y, game-info, cap, diagram-ov, lang, fig-args)
 }
 
 // Mainline locator "12w"/"12b" <-> 0-based ply index (ply = index+1; White's
@@ -476,33 +487,49 @@
   notation(source, ..args)
 }
 
+// Resolve an outline title: explicit per-call `title` wins; else the document
+// `outline-title` (from the given style bucket); else the language-aware default.
+// `title`/the document value may be `auto` (use localized) or any content/none.
+#let _outline-title(title, doc-default, lang, key) = context {
+  let t = if title != auto { title } else { doc-default }
+  if t == auto { ui-string(lang, key) } else { t }
+}
+
 /// An outline listing only chess DIAGRAMS (figures with `kind: chess-kind`).
-/// Extra named arguments are forwarded to `outline` (e.g. `depth`, `indent`).
-/// (Renamed from `chess-outline` in prompt 17.)
-#let chess-diagram-outline(title: [List of Chess Diagrams], ..args) = outline(
-  title: title,
-  target: figure.where(kind: chess-kind),
-  ..args,
-)
+/// `title` defaults to the language-aware "List of Diagrams" (override per call,
+/// or document-wide via `set-diagram-defaults(outline-title: ..)`); `lang`
+/// defaults to the document language. Extra named arguments are forwarded to
+/// `outline` (e.g. `depth`, `indent`). (Renamed from `chess-outline` in prompt 17.)
+#let chess-diagram-outline(title: auto, lang: auto, ..args) = context {
+  let doc = (default-diagram-style + diagram-style-state.get()).outline-title
+  outline(
+    title: _outline-title(title, doc, lang, "diagram-outline-title"),
+    target: figure.where(kind: chess-kind),
+    ..args,
+  )
+}
 
 /// An outline listing only chess TABLES (figures with `kind: chess-table-kind`,
 /// i.e. standings / cross-table / progress tables). Only tables that carry a
 /// `caption` appear (an uncaptioned figure is not listed by Typst's `outline`).
-/// Extra named arguments are forwarded to `outline`.
-#let chess-table-outline(title: [List of Chess Tables], ..args) = outline(
-  title: title,
-  target: figure.where(kind: chess-table-kind),
-  ..args,
-)
+/// `title` defaults to the language-aware "List of Tables" (override per call, or
+/// document-wide via `set-table-defaults(outline-title: ..)`). Extra named
+/// arguments are forwarded to `outline`.
+#let chess-table-outline(title: auto, lang: auto, ..args) = context {
+  let doc = (default-table-style + table-style-state.get()).outline-title
+  outline(
+    title: _outline-title(title, doc, lang, "table-outline-title"),
+    target: figure.where(kind: chess-table-kind),
+    ..args,
+  )
+}
 
 /// Print BOTH chess outlines back to back: diagrams first, then tables. The two
-/// section titles are settable (`diagram-title` / `table-title`); pass `none` to
-/// drop a title. Extra named arguments are forwarded to both `outline`s.
-#let chess-outlines(
-  diagram-title: [List of Chess Diagrams],
-  table-title: [List of Chess Tables],
-  ..args,
-) = {
-  chess-diagram-outline(title: diagram-title, ..args)
-  chess-table-outline(title: table-title, ..args)
+/// section titles default to their language-aware values (override with
+/// `diagram-title` / `table-title`; pass `none` to drop a title). `lang` defaults
+/// to the document language. Extra named arguments are forwarded to both
+/// `outline`s.
+#let chess-outlines(diagram-title: auto, table-title: auto, lang: auto, ..args) = {
+  chess-diagram-outline(title: diagram-title, lang: lang, ..args)
+  chess-table-outline(title: table-title, lang: lang, ..args)
 }

@@ -20,6 +20,7 @@
 // ===========================================================================
 
 #import "style.typ": default-table-style, table-style-state
+#import "i18n.typ": ui-string
 
 // The figure `kind` for tournament tables. Distinct from diagrams' "chess" so the
 // two get separate counters and separate outlines. Public (re-exported by lib).
@@ -27,10 +28,12 @@
 
 // Wrap a rendered `#table` in a referenceable / outlineable #figure. `title` (a
 // heading drawn ABOVE the table, inside the figure body) and `caption` (the
-// figure caption, shown below and used by refs + outline) are both optional;
-// `supplement` is `auto` -> the document `set-table-defaults` value (default
-// "Table"), else a per-call override. The figure carries `kind: chess-table-kind`.
-#let _table-figure(tbl, title, caption, supplement) = {
+// figure caption, shown below and used by refs + outline) are both optional.
+// `supplement` resolution: a per-call value wins; else the document
+// `set-table-defaults` value; else (auto) the language-aware default
+// ("Table"/"Tabelle"/...). `lang` (default auto -> document language) selects
+// that localized default. The figure carries `kind: chess-table-kind`.
+#let _table-figure(tbl, title, caption, supplement, lang) = {
   let body = if title == none { tbl } else {
     context {
       let gap = (default-table-style + table-style-state.get()).title-gap
@@ -38,7 +41,10 @@
     }
   }
   let supp = if supplement != auto { supplement } else {
-    context { (default-table-style + table-style-state.get()).supplement }
+    context {
+      let s = (default-table-style + table-style-state.get()).supplement
+      if s == auto { ui-string(lang, "table-supplement") } else { s }
+    }
   }
   figure(body, kind: chess-table-kind, supplement: supp, caption: caption)
 }
@@ -217,7 +223,7 @@
 
 /// Render a standings table (a Typst `#table`). Options as for `standings`, plus
 /// a `title` (content above the table) and extra args forwarded to `#table`.
-#let standings-table(games, by: "player", tiebreaks: auto, match-points: (win: 2, draw: 1, loss: 0), title: none, caption: none, supplement: auto, ..table-args) = {
+#let standings-table(games, by: "player", tiebreaks: auto, match-points: (win: 2, draw: 1, loss: 0), title: none, caption: none, supplement: auto, lang: auto, ..table-args) = {
   let tbs = if tiebreaks != auto { tiebreaks } else { _default-tiebreaks(by) }
   let rows = standings(games, by: by, tiebreaks: tiebreaks, match-points: match-points)
   let name-h = if by == "team" { "Team" } else { "Player" }
@@ -240,7 +246,7 @@
     ..body,
     ..table-args.named(),
   )
-  _table-figure(tbl, title, caption, supplement)
+  _table-figure(tbl, title, caption, supplement, lang)
 }
 
 // ---- cross-table (round-robin only) ---------------------------------------
@@ -281,7 +287,7 @@
 /// Render a round-robin cross-table (a Typst `#table`). Columns are numbered to
 /// match the row order; the diagonal is shaded. `title` and extra `#table` args
 /// as for `standings-table`.
-#let crosstable-table(games, by: "player", match-points: (win: 2, draw: 1, loss: 0), title: none, caption: none, supplement: auto, ..table-args) = {
+#let crosstable-table(games, by: "player", match-points: (win: 2, draw: 1, loss: 0), title: none, caption: none, supplement: auto, lang: auto, ..table-args) = {
   let ct = crosstable(games, by: by, match-points: match-points)
   let n = ct.names.len()
   let name-h = if by == "team" { "Team" } else { "Player" }
@@ -305,7 +311,7 @@
     ..body,
     ..table-args.named(),
   )
-  _table-figure(tbl, title, caption, supplement)
+  _table-figure(tbl, title, caption, supplement, lang)
 }
 
 // ---- progress (round by round) --------------------------------------------
@@ -368,7 +374,7 @@
 /// Render a progress table: a column per round showing that round's result and
 /// the running total, plus a final total. `title` and extra `#table` args as for
 /// `standings-table`.
-#let progress-table(games, by: "player", match-points: (win: 2, draw: 1, loss: 0), title: none, caption: none, supplement: auto, ..table-args) = {
+#let progress-table(games, by: "player", match-points: (win: 2, draw: 1, loss: 0), title: none, caption: none, supplement: auto, lang: auto, ..table-args) = {
   let pg = progress(games, by: by, match-points: match-points)
   let name-h = if by == "team" { "Team" } else { "Player" }
 
@@ -392,5 +398,5 @@
     ..body,
     ..table-args.named(),
   )
-  _table-figure(tbl, title, caption, supplement)
+  _table-figure(tbl, title, caption, supplement, lang)
 }

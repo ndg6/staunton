@@ -85,21 +85,37 @@
   ),
 )
 
+// ---- i18n (prompt 18) -----------------------------------------------------
+// One document-wide language setting drives every language-aware string
+// (diagram / table supplements, outline titles, and notation piece letters).
+//   * a code ("en", "de", ...) -> that language;
+//   * "auto"                    -> follow `#set text(lang: ..)`.
+// Default "en". Per-call `lang:` arguments override this; they default to the
+// `auto` VALUE meaning "consult this document setting".
+#let default-i18n-style = (
+  lang: "en",
+)
+
 // ---- diagram style --------------------------------------------------------
+// `supplement` / `outline-title` default to the `auto` VALUE = "use the
+// language-aware string"; set a literal (content) to override, per document or
+// per call.
 #let default-diagram-style = (
   info-bold: true,            // bold the auto game-info line (item 4)
   info-gap: 0.6em,            // space between the game-info line and the board
-  supplement: [Diagram],      // figure supplement
+  supplement: auto,           // figure supplement (auto -> localized "Diagram")
+  outline-title: auto,        // chess-diagram-outline title (auto -> "List of Diagrams")
 )
 
 // ---- table style (prompt 17) ----------------------------------------------
 // The #figure wrapper around a tournament table (standings / cross-table /
 // progress). Tables are figures of `kind: "chess-table"` so they get their own
 // counter, can be referenced (@label -> "Table 3") and listed by
-// `chess-table-outline`. The supplement is the only field for now; it has its own
-// bucket (distinct from diagram `supplement`) so each can default differently.
+// `chess-table-outline`. `supplement` / `outline-title` are language-aware
+// (auto -> localized), with their own bucket so each defaults independently.
 #let default-table-style = (
-  supplement: [Table],        // figure supplement for tournament tables
+  supplement: auto,           // figure supplement (auto -> localized "Table")
+  outline-title: auto,        // chess-table-outline title (auto -> "List of Tables")
   title-gap: 0.6em,           // gap between an above-table `title` and the table
 )
 
@@ -118,11 +134,13 @@
 #let board-style-state = state("staunton-board-style", (:))
 #let diagram-style-state = state("staunton-diagram-style", (:))
 #let table-style-state = state("staunton-table-style", (:))
+#let i18n-style-state = state("staunton-i18n-style", (:))
 #let pgn-style-state = state("staunton-pgn-style", (:))
 
 #let board-style-keys = default-board-style.keys()
 #let diagram-style-keys = default-diagram-style.keys()
 #let table-style-keys = default-table-style.keys()
+#let i18n-style-keys = default-i18n-style.keys()
 #let pgn-style-keys = default-pgn-style.keys()
 
 // ---- setters --------------------------------------------------------------
@@ -161,6 +179,20 @@
   table-style-state.update(s => s + f)
 }
 
+/// Set the document language for all language-aware strings (supplements,
+/// outline titles, notation piece letters). `code` is a language code ("en",
+/// "de", ...) or "auto" (follow `#set text(lang: ..)`).
+#let set-lang(code) = i18n-style-state.update(s => s + (lang: code))
+
+/// Set default i18n fields (currently just `lang`) for subsequent output.
+#let set-i18n-defaults(..fields) = {
+  let f = fields.named()
+  for k in f.keys() {
+    assert(i18n-style-keys.contains(k), message: "unknown i18n option: " + k)
+  }
+  i18n-style-state.update(s => s + f)
+}
+
 /// Set default PGN-handling fields (annotations / nags / comments / diagrams)
 /// for subsequent notation / diagram output.
 #let set-pgn-defaults(..fields) = {
@@ -179,19 +211,23 @@
   let bd = (:)
   let dg = (:)
   let tb = (:)
+  let ig = (:)
   let pg = (:)
   for (k, v) in f {
-    // `supplement` is in BOTH diagram and table buckets; the umbrella routes it to
-    // DIAGRAM (back-compat). Set a table supplement with `set-table-defaults`.
+    // `supplement` / `outline-title` are in BOTH diagram and table buckets; the
+    // umbrella routes them to DIAGRAM (back-compat). Use set-table-defaults for
+    // the table ones.
     if board-style-keys.contains(k) { bd.insert(k, v) }
     else if diagram-style-keys.contains(k) { dg.insert(k, v) }
     else if table-style-keys.contains(k) { tb.insert(k, v) }
+    else if i18n-style-keys.contains(k) { ig.insert(k, v) }
     else if pgn-style-keys.contains(k) { pg.insert(k, v) }
     else { panic("unknown style option: " + k) }
   }
   if bd.len() > 0 { board-style-state.update(s => s + bd) }
   if dg.len() > 0 { diagram-style-state.update(s => s + dg) }
   if tb.len() > 0 { table-style-state.update(s => s + tb) }
+  if ig.len() > 0 { i18n-style-state.update(s => s + ig) }
   if pg.len() > 0 { pgn-style-state.update(s => s + pg) }
 }
 

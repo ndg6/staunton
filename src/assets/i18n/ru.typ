@@ -7,3 +7,11 @@
 	bishop: "С",
 	knight: "К",
 )
+
+// UI strings (prompt 18): language-aware supplements / outline titles.
+#let strings = (
+	diagram-supplement: "Диаграмма",
+	table-supplement: "Таблица",
+	diagram-outline-title: "Список диаграмм",
+	table-outline-title: "Список таблиц",
+)

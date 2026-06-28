@@ -21,8 +21,8 @@
 
 #import "san.typ": _split-movetext
 #import "pgn.typ": movetext
+#import "i18n.typ": notation-langs, lang-piece-chars
 #import "game.typ": mainline, game-result
-#import "i18n.typ": notation-langs
 #import "annotations.typ": interpret-comment, nag-symbol
 #import "style.typ": default-pgn-style, pgn-style-state
 
@@ -147,16 +147,19 @@
 /// (default `auto`) render move NAGs / comment prose; `auto` consults the
 /// document `set-pgn-defaults` (both off by default). When everything resolves
 /// without document state the result is a plain string; otherwise it is content.
-#let notation(source, from: none, to: none, figurine: false, lang: "en", nags: auto, comments: auto, move-numbers: true, result: false) = {
+#let notation(source, from: none, to: none, figurine: false, lang: auto, nags: auto, comments: auto, move-numbers: true, result: false) = {
   let r = _resolve-line(source, from, to)
   let tail = if result and type(source) == dictionary and "movetext-raw" in source { game-result(source) } else { none }
-  let needs-state = lang == "auto" or nags == auto or comments == auto
+  // `lang: auto` (the VALUE) consults the document `set-lang` setting; `lang:
+  // "auto"` follows `#set text(lang:)`; an explicit code needs no document state.
+  let lang-needs-state = lang == auto or lang == "auto"
+  let needs-state = lang-needs-state or nags == auto or comments == auto
   if needs-state {
     context {
       let pg = default-pgn-style + pgn-style-state.get()
       let rn = if nags != auto { nags } else { pg.nags }
       let rc = if comments != auto { comments } else { pg.comments }
-      let chars = if lang == "auto" { notation-langs.at(text.lang, default: notation-langs.en) } else { notation-langs.at(lang, default: notation-langs.en) }
+      let chars = lang-piece-chars(lang)
       _render(r.nodes, r.lo, r.hi, figurine, chars, move-numbers, rn, rc, tail)
     }
   } else {

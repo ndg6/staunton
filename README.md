@@ -325,16 +325,16 @@ Options:
 |---|---|---|
 | `from` / `to` | `none` | inclusive mainline locators (`"12w"`/`"12b"`); omit for the whole line |
 | `figurine` | `false` | render piece letters as figurine glyphs, colour-aware: White's moves use outline symbols (♔♕♖♗♘), Black's the solid ones (♚♛♜♝♞) |
-| `lang` | `"en"` | piece-letter language: `"en"`, a code (`"de"`, `"ru"`, …), or `"auto"` (follows `#set text(lang: ..)`; unknown → English) |
+| `lang` | `auto` | piece-letter language. `auto` (the value) follows the document language (`set-lang`, default English); a code (`"de"`, `"ru"`, …) forces a language; the string `"auto"` follows `#set text(lang: ..)`; unknown → English |
 | `move-numbers` | `true` | prefix move numbers (`1.`, `1...`) |
 | `result` | `false` | append the game result (a `*` is never shown) |
 | `nags` | `auto` | render NAGs as glyphs (`$1`→`!`, `$6`→`?!`, `$14`→`⩲`, …); `auto` → the `set-pgn-defaults` default (off) |
 | `comments` | `auto` | append comment prose (game source only); `auto` → the pgn default (off) |
 
 `nags`/`comments` apply to a **game** source (a SAN string/array carries none).
-With an explicit `lang` and explicit `nags`/`comments`/`diagrams`, `notation`
-returns a plain string; when any is `auto` (consulting the document default) or
-`lang` is `"auto"`, it returns content.
+With an **explicit** `lang` (a code) and explicit `nags`/`comments`/`diagrams`,
+`notation` returns a plain string; when any of those is `auto` (consulting a
+document default) — including the default `lang: auto` — it returns content.
 
 **Embedded diagrams.** With `diagrams: true` (or `set-pgn-defaults(diagrams:
 true)`) over a *game*, `notation` flows the movetext as content and splices a
@@ -424,9 +424,10 @@ file first with `games-by-event`), with `by: "player"` or `by: "team"`:
 ```
 
 Each renderer takes `caption` (figure caption, shown below; used by refs and the
-outline), `title` (a heading stacked above the table), and `supplement` (`auto` →
-the document default "Table", or a per-call override). Extra named arguments are
-still forwarded to the inner `#table`.
+outline), `title` (a heading stacked above the table), `supplement` (`auto` → the
+language-aware default "Table"/"Tabelle"/…, or an explicit per-call override), and
+`lang` (`auto` → the document language). Extra named arguments are still forwarded
+to the inner `#table`.
 
 - **`standings`** sorts by score desc, then tie-breaks, then first appearance
   ("first mentioned on top"). Tie-breaks: `buchholz`, `sonneborn-berger`, and
@@ -471,6 +472,31 @@ orientation is a per-diagram choice, so `set-chess-defaults(flip: ..)` is an err
 (Note: `supplement` lives in both the diagram and table buckets; the umbrella
 `set-chess-defaults(supplement: ..)` routes it to **diagrams** — set a table's
 supplement with `set-table-defaults`, or per call via the table's `supplement:`.)
+
+### Language
+
+A single document **language** drives every language-aware string — diagram and
+table supplements, outline titles, and notation piece letters. Default is
+English; `"auto"` follows `#set text(lang: ..)`; or pick a code (`"de"`, `"es"`,
+`"fr"`, `"it"`, `"pt"`, `"ru"`, …):
+
+```typ
+#import "@preview/staunton:0.1.0": set-lang
+#set-lang("de")     // diagrams -> "Diagramm", tables -> "Tabelle",
+                     // outlines -> "Diagrammverzeichnis" / "Tabellenverzeichnis",
+                     // notation -> Sf3, Lb5, ...
+#set-lang("auto")   // follow #set text(lang: ..)
+```
+
+`set-chess-defaults(lang: ..)` does the same. Every localizable string is also
+**per-call overridable**: diagrams/tables/outlines take a `lang:` argument
+(default `auto` = the document language), and an explicit `supplement:` / `title:`
+(content) overrides the localized default entirely. Each supplement is
+additionally document-settable (`set-diagram-defaults` / `set-table-defaults`).
+Supplements default to the `auto` value meaning "use the localized string"; set a
+literal to override. Adding a language is a no-code change: drop a
+`src/assets/i18n/<code>.typ` exporting `piece-chars` + `strings` and register it
+in `src/i18n.typ`.
 
 There is also a third **PGN-handling** bucket: how much of a parsed game's
 embedded extras get *processed at render time*. Parsing stays lossless; these
@@ -519,8 +545,11 @@ be **listed separately**:
 #chess-table-outline()            // list of tournament tables
 #chess-outlines()                  // both, diagrams then tables
 
-// titles are settable; extra args (depth, indent, ...) are forwarded to `outline`
-#chess-diagram-outline(title: [Figures])
+// titles are LANGUAGE-AWARE by default ("List of Diagrams" / "Diagrammverzeichnis"
+// / ...), but settable per call or document-wide; extra args (depth, indent, ...)
+// are forwarded to `outline`
+#chess-diagram-outline(title: [Figures])           // explicit title
+#chess-diagram-outline(lang: "de")                  // "Diagrammverzeichnis"
 #chess-outlines(diagram-title: [Diagrams], table-title: [Tables])
 ```
 
@@ -539,6 +568,8 @@ also target the kinds directly with a plain `#outline(target: figure.where(kind:
 
 > The outline helper was renamed in prompt 17: `chess-outline` →
 > `chess-diagram-outline` (and `chess-table-outline` / `chess-outlines` are new).
+> The default titles are localized (prompt 18) — set `outline-title` document-wide
+> (`set-diagram-defaults` / `set-table-defaults`) or pass `title:` per call.
 
 ## Pieces & fonts
 
@@ -614,7 +645,6 @@ typst compile --root . examples/showcase.typ out/showcase.pdf
 
 Designed so these are additive, not rewrites:
 
-* **Internationalization** of chess terms via `#set text(lang: ..)`.
 * **Customization**: more board themes and square patterns (piece sets, colors,
   flip and label modes already plug into the `(kind, color) → content` seam).
 * Engine performance: the `legal-moves`/`apply` interface is narrow enough to
