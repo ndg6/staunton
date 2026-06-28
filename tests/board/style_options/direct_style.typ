@@ -21,7 +21,7 @@
   light: rgb("#f2e9d0"),
   dark: rgb("#8a6d4f"),
   label-mode: "outside",
-  piece-set: "staunty",
+  piece-set: "merida",
 )
 
 A board rendered by spreading a `chess-style(..)` dict:

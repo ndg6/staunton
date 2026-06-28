@@ -9,3 +9,11 @@ out/
 Thumbs.db
 *~
 .vscode/
+
+# Non-shipped piece sets: kept locally for personal use, NOT redistributed.
+# alpha is "free for personal non-commercial use"; california/maestro/staunty are
+# CC BY-NC-SA 4.0. Only the GPLv2+ sets (cburnett, merida) ship. See LICENSE-PIECES.
+src/assets/piece_sets/alpha/
+src/assets/piece_sets/california/
+src/assets/piece_sets/maestro/
+src/assets/piece_sets/staunty/

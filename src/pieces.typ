@@ -29,7 +29,10 @@
 // dropping a folder under src/assets/piece_sets/<name>/ with no code change. A name
 // that has no matching SVG simply fails to load the image (Typst's own error).
 #let default-piece-set = "cburnett"
-#let known-piece-sets = ("cburnett", "merida", "alpha", "california", "maestro", "staunty")
+// Sets bundled with the package (advisory list only -- NOT a guard; any name is
+// accepted, see square-piece). Only the GPLv2+ sets ship; the other lichess sets
+// are non-commercial-licensed and are not redistributed here.
+#let known-piece-sets = ("cburnett", "merida")
 
 // piece kind -> file letter used in the SVG file names ("wK.svg", "bN.svg", ...).
 #let kind-letters = (king: "K", queen: "Q", rook: "R", bishop: "B", knight: "N", pawn: "P")

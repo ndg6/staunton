@@ -71,7 +71,7 @@ Each diagram below uses a different bundled piece set.
   columns: 2,
   gutter: 14pt,
   board-after(g-main, "8w", size: 5cm, piece-set: "merida"),
-  board-after(g-main, final-locator(g-main), size: 5cm, piece-set: "alpha"),
+  board-after(g-main, final-locator(g-main), size: 5cm, piece-set: "cburnett"),
 )
 
 = Label modes and orientation
@@ -97,7 +97,7 @@ The position right before the final blow, and the checkmate itself:
   columns: 2,
   gutter: 14pt,
   board-after(g-mate, "3b", size: 5cm),
-  board-after(g-mate, final-locator(g-mate), size: 5cm, piece-set: "staunty"),
+  board-after(g-mate, final-locator(g-mate), size: 5cm, piece-set: "merida"),
 )
 
 = A "what-if" line that does not exist in any game

@@ -24,10 +24,10 @@ later diagram inherits, with no per-call style:
   board(test-fen, size: 3.6cm, flip: true),
 )
 
-A per-call override still wins over the document default (here: back to alpha
+A per-call override still wins over the document default (here: back to cburnett
 pieces and on-square labels for this one diagram only):
 
-#board(test-fen, size: 3.6cm, piece-set: "alpha", label-mode: "on-square")
+#board(test-fen, size: 3.6cm, piece-set: "cburnett", label-mode: "on-square")
 
 …and the diagram after it falls back to the inherited defaults again:
 
