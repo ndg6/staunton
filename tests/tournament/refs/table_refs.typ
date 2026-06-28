@@ -9,7 +9,9 @@
   default-table-style, table-style-state,
 )
 
-#set page(width: 16cm, height: auto, margin: 1.2cm)
+// Fixed-height, numbered pages so the outline shows page numbers and the page
+// jumps from @ref are visible (one figure per page below).
+#set page(width: 12cm, height: 10cm, margin: 1.2cm, numbering: "1")
 #set text(font: "Libertinus Serif", size: 10pt)
 #set heading(numbering: "1.")
 
@@ -24,15 +26,24 @@
 [White "B"][Black "C"][Result "1-0"] 1-0
 ```)
 
-// Both outlines, back to back (diagrams then tables).
+// --- page 1: both outlines + the references (forward jumps to later pages) ---
 #chess-outlines()
 
-= Tables and a diagram
-#standings-table(rr, by: "player", caption: [Final standings]) <st>
-#crosstable-table(rr, by: "player", caption: [Cross-table], supplement: [Crosstab]) <ct>
-#chess-diagram(starting-fen, size: 2.5cm, caption: [A position]) <pos>
+The references jump across pages: @st gives the standings (on its own page);
+@ct the cross-table; and the board is @pos.
 
-@st gives the standings; @ct the cross-table; the board is @pos.
+// --- one figure per page, so each lands on a different page ---
+#pagebreak()
+= Standings
+#standings-table(rr, by: "player", caption: [Final standings]) <st>
+
+#pagebreak()
+= Cross-table
+#crosstable-table(rr, by: "player", caption: [Cross-table], supplement: [Crosstab]) <ct>
+
+#pagebreak()
+= A position
+#chess-diagram(starting-fen, size: 2.5cm, caption: [A position]) <pos>
 
 #context {
   // Separate counters: two chess-tables, one chess diagram.
