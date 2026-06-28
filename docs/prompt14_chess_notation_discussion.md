@@ -91,7 +91,7 @@ never needs the engine.
 
 ## i18n registry & `auto`
 
-- `assets/i18n/{en,de,es,fr,it,pt,ru}.typ` each export `piece-chars` (keyed by
+- `src/assets/i18n/{en,de,es,fr,it,pt,ru}.typ` each export `piece-chars` (keyed by
   kind; pawn absent — correct). A new `src/i18n.typ` statically imports all seven
   into `notation-langs = (en: .., de: .., …)` (Typst can't import by a runtime
   string).
@@ -139,7 +139,7 @@ Shipped as designed:
   `lang.piece-chars`), incl. promotion after `=`; files/ranks/`x`/`+`/`#`/`O-O`
   untouched. Multi-char (Russian `Кр`/`К`) handled. **Figurines** are
   colour-aware: White → outline glyphs (U+2654–2658), Black → solid (U+265A–265E).
-- **i18n registry** `src/i18n.typ` statically imports the seven `assets/i18n`
+- **i18n registry** `src/i18n.typ` statically imports the seven `src/assets/i18n`
   files into `notation-langs`; `lang: "auto"` reads `text.lang` in `context`,
   unknown → `en`.
 - **Ranges** `from`/`to` are inclusive mainline locators; a Black-leading slice

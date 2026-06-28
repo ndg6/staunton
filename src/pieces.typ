@@ -1,7 +1,7 @@
 // ===========================================================================
 // Piece model & rendering.
 //
-// Pieces are drawn from SVG piece sets (assets/piece_sets/<set>/), with the
+// Pieces are drawn from SVG piece sets (src/assets/piece_sets/<set>/), with the
 // Unicode chess glyphs as a fallback when the set is "unicode"/none. The
 // public seam callers use is `square-piece(kind, color, sq, set: ..)`, which
 // returns content already sized to a `sq`-side square and hides the SVG-vs-glyph
@@ -22,11 +22,11 @@
 #let piece-kinds = ("king", "queen", "rook", "bishop", "knight", "pawn")
 #let piece-colors = ("white", "black")
 
-// SVG piece sets bundled under assets/piece_sets/. `default-piece-set` is the
+// SVG piece sets bundled under src/assets/piece_sets/. `default-piece-set` is the
 // factory default; `"unicode"` (or `none`) selects the glyph fallback.
 // `known-piece-sets` is the list of sets we SHIP (used by docs/examples); it is
 // NOT a guard -- any set name is accepted so users can add their own set by
-// dropping a folder under assets/piece_sets/<name>/ with no code change. A name
+// dropping a folder under src/assets/piece_sets/<name>/ with no code change. A name
 // that has no matching SVG simply fails to load the image (Typst's own error).
 #let default-piece-set = "cburnett"
 #let known-piece-sets = ("cburnett", "merida", "alpha", "california", "maestro", "staunty")
@@ -109,7 +109,7 @@
 /// the square's screen origin. This is the seam the board renderer uses.
 ///
 ///   * any other `piece-set` name -> the matching SVG under
-///     assets/piece_sets/<name>/, centred in the square. The SVGs carry the
+///     src/assets/piece_sets/<name>/, centred in the square. The SVGs carry the
 ///     correct baseline, so no baseline adjustment is done; `piece-scale` (1.0
 ///     fills the square) just scales the image. The name is NOT checked against a
 ///     list -- a missing/misnamed file fails to load (Typst's own error), which
@@ -143,7 +143,7 @@
     let c = if color == "white" { "w" } else { "b" }
     // Path resolves relative to THIS file (src/pieces.typ), so it is independent
     // of the compile root and survives packaging.
-    let path = "../assets/piece_sets/" + piece-set + "/" + c + kind-letters.at(kind) + ".svg"
+    let path = "assets/piece_sets/" + piece-set + "/" + c + kind-letters.at(kind) + ".svg"
     box(width: sq, height: sq, align(center + horizon, image(path, width: sq * piece-scale)))
   }
 }

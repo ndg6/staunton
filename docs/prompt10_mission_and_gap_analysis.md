@@ -27,7 +27,7 @@ source PGN** — use functions instead.
 | Pillar | State | Notes |
 |--------|-------|-------|
 | 1. Visual / diagrams | **Mature** | `board` / `chess-diagram` / `fen-diagram` / `board-after`; 3 label modes; piece sets + glyph fallback; flip; arrows; highlights; provenance-aware captions; `kind: "chess"` figures + `chess-outline`. Current centre of gravity. |
-| 2. Move text printing | **Barely started — biggest gap** | Only `mainline` (raw SAN array) and `move-san` exist. No numbered movetext, no variation/NAG/comment rendering, no localized notation, no figurine option, no "emit diagram here" directive. `assets/i18n/piece-chars` is the seed; nothing consumes it yet. |
+| 2. Move text printing | **Barely started — biggest gap** | Only `mainline` (raw SAN array) and `move-san` exist. No numbered movetext, no variation/NAG/comment rendering, no localized notation, no figurine option, no "emit diagram here" directive. `src/assets/i18n/piece-chars` is the seed; nothing consumes it yet. |
 | 3. Multi-game tables | **Not started** | `parse-pgn` returns an array of games (tags + result + lazy engine) — the right substrate. Needs a new layer: collection/tournament model, player-identity normalization, scoring, tie-breaks, results matrix. |
 | 4. Chess-aware outlines | **Half-built** | `chess-outline` covers diagrams via the distinct figure kind. Tables need their own kind (or wrapper) to be separately outline-able; outline titles/terms need i18n. |
 

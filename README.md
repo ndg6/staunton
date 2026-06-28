@@ -353,7 +353,7 @@ referenceable (use `board-after` with a label when you need a reference).
 
 Localization substitutes only the piece letters (`K Q R B N` and the promotion
 letter after `=`); files, ranks, captures, check marks, and `O-O` are untouched.
-Language files live in `assets/i18n/<code>.typ` (a `piece-chars` dict per
+Language files live in `src/assets/i18n/<code>.typ` (a `piece-chars` dict per
 language); adding one is a no-code change. v1 ranges are **mainline-only**
 (variation-line ranges error) and exclude comments/variations.
 
@@ -542,7 +542,7 @@ also target the kinds directly with a plain `#outline(target: figure.where(kind:
 
 ## Pieces & fonts
 
-Pieces are drawn from bundled **SVG piece sets** under `assets/piece_sets/`:
+Pieces are drawn from bundled **SVG piece sets** under `src/assets/piece_sets/`:
 `cburnett` (default), `merida`, `alpha`, `california`, `maestro`, `staunty`.
 Choose one per diagram with `piece-set:` or document-wide with `set-piece-set`.
 The SVGs carry their own baseline and colors, so the board renderer just centers
@@ -569,12 +569,13 @@ src/san.typ         SAN parsing + resolution; play-san, play-moves
 src/pgn.typ         PGN parse: eager roster/result split + lazy movetext tree
 src/game.typ        navigation: mainline, locators
 src/notation.typ    human-readable notation (figurine / i18n / NAGs / comments)
-src/i18n.typ        language registry (loads assets/i18n/*.typ)
+src/i18n.typ        language registry (loads src/assets/i18n/*.typ)
 src/annotations.typ PGN comment interpreter (%cal/%csl, diagram markers) + NAG symbols
 src/tournament.typ  tournament tables: standings / crosstable / progress (player & team)
 src/style.typ       diagram-style dict + document defaults
 src/board.typ       canvas renderer + sizing + flip + label modes
-assets/piece_sets/  SVG piece sets (cburnett default, + 5 more)
+src/assets/i18n/      language files (piece-chars per language)
+src/assets/piece_sets/  SVG piece sets (cburnett default, + 5 more)
 tests/run.sh        test runner (walks tests/**, // EXPECT:-classified)
 tests/board/        §2 board: size, colors, labeling, orientation, piece_sets, style_options
 tests/diagram/      §3 figures: auto_captions, free_captions, outlines

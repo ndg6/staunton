@@ -16,15 +16,15 @@
    sequencing (ii).)*
 3. **Remove the unknown-piece-set guard.** The name check in `square-piece()`
    is dropped so users (and tests) can add new sets by dropping a folder under
-   `assets/piece_sets/`; `image()` becomes the validator (a missing/misnamed
+   `src/assets/piece_sets/`; `image()` becomes the validator (a missing/misnamed
    file → Typst's own load error). Resolves tension E1 via option (b).
    **Consequence:** the existing expected-fail test
    `tests/board/piece_sets/bad_piece_sets/piece_set_unknown.typ`
    (`// EXPECT: unknown piece set`) is now **obsolete** and must be retired /
    repurposed — that message no longer exists. The §2.4 "missing / misnamed
    piece" tests replace it, using deliberately broken fixture folders under
-   `assets/piece_sets/` (they must live there because the SVG path is resolved
-   relative to `src/pieces.typ` as `../assets/piece_sets/<name>/`).
+   `src/assets/piece_sets/` (they must live there because the SVG path is resolved
+   relative to `src/pieces.typ` as `assets/piece_sets/<name>/`).
 4. **Sequencing: option (ii).** Ship a fully green suite now; code-gated
    fail-tests (the "yes" rows in §F, plus the FEN rule in decision 2) land
    alongside their code change, per CLAUDE.md.
@@ -40,7 +40,7 @@ A fully green suite (33 cases) plus the runner and the showcase:
   and compiles `examples/*.typ` as must-compile showcases.
 - **Fixture:** `tests/board/_fixture.typ` (`test-fen`, the shared §2 position).
 - **Decision-3 code slice:** guard removed from `src/pieces.typ`; obsolete
-  `piece_set_unknown.typ` retired; `assets/piece_sets/_incomplete/` fixture
+  `piece_set_unknown.typ` retired; `src/assets/piece_sets/_incomplete/` fixture
   (ships only `bK.svg`) drives both the positive "user-added set" test and the
   negative "missing piece file" test.
 - **§2 board:** `size/sizes`, `colors/colors`, `labeling/{label_modes,
