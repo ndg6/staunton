@@ -92,6 +92,17 @@
   supplement: [Diagram],      // figure supplement
 )
 
+// ---- table style (prompt 17) ----------------------------------------------
+// The #figure wrapper around a tournament table (standings / cross-table /
+// progress). Tables are figures of `kind: "chess-table"` so they get their own
+// counter, can be referenced (@label -> "Table 3") and listed by
+// `chess-table-outline`. The supplement is the only field for now; it has its own
+// bucket (distinct from diagram `supplement`) so each can default differently.
+#let default-table-style = (
+  supplement: [Table],        // figure supplement for tournament tables
+  title-gap: 0.6em,           // gap between an above-table `title` and the table
+)
+
 // ---- PGN handling (prompt 15) ---------------------------------------------
 // How PGN-embedded extras are HANDLED at render time. Parsing stays lossless;
 // these switches only decide what gets *interpreted/shown*. All default OFF:
@@ -106,10 +117,12 @@
 // Document-wide overrides (document-order state, like Typst's own #set).
 #let board-style-state = state("staunton-board-style", (:))
 #let diagram-style-state = state("staunton-diagram-style", (:))
+#let table-style-state = state("staunton-table-style", (:))
 #let pgn-style-state = state("staunton-pgn-style", (:))
 
 #let board-style-keys = default-board-style.keys()
 #let diagram-style-keys = default-diagram-style.keys()
+#let table-style-keys = default-table-style.keys()
 #let pgn-style-keys = default-pgn-style.keys()
 
 // ---- setters --------------------------------------------------------------
@@ -137,6 +150,17 @@
   diagram-style-state.update(s => s + f)
 }
 
+/// Set default TABLE style fields (the #figure wrapper around tournament tables)
+/// for subsequent `*-table` renderers. Currently: `supplement` (default "Table"),
+/// `title-gap`.
+#let set-table-defaults(..fields) = {
+  let f = fields.named()
+  for k in f.keys() {
+    assert(table-style-keys.contains(k), message: "unknown table style option: " + k)
+  }
+  table-style-state.update(s => s + f)
+}
+
 /// Set default PGN-handling fields (annotations / nags / comments / diagrams)
 /// for subsequent notation / diagram output.
 #let set-pgn-defaults(..fields) = {
@@ -154,15 +178,20 @@
   _reject-flip(f)
   let bd = (:)
   let dg = (:)
+  let tb = (:)
   let pg = (:)
   for (k, v) in f {
+    // `supplement` is in BOTH diagram and table buckets; the umbrella routes it to
+    // DIAGRAM (back-compat). Set a table supplement with `set-table-defaults`.
     if board-style-keys.contains(k) { bd.insert(k, v) }
     else if diagram-style-keys.contains(k) { dg.insert(k, v) }
+    else if table-style-keys.contains(k) { tb.insert(k, v) }
     else if pgn-style-keys.contains(k) { pg.insert(k, v) }
     else { panic("unknown style option: " + k) }
   }
   if bd.len() > 0 { board-style-state.update(s => s + bd) }
   if dg.len() > 0 { diagram-style-state.update(s => s + dg) }
+  if tb.len() > 0 { table-style-state.update(s => s + tb) }
   if pg.len() > 0 { pgn-style-state.update(s => s + pg) }
 }
 

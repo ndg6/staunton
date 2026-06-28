@@ -33,13 +33,14 @@
   default-style, style-keys, set-chess-defaults, set-piece-set, chess-style,
   default-board-style, default-diagram-style, board-style-keys, diagram-style-keys,
   diagram-style-state, set-board-defaults, set-diagram-defaults,
+  default-table-style, table-style-state, table-style-keys, set-table-defaults,
   default-pgn-style, pgn-style-state, pgn-style-keys, set-pgn-defaults,
 )
 #import "src/board.typ": render-board, default-light, default-dark, default-board-size
 #import "src/annotations.typ": interpret-comment
 #import "src/tournament.typ": (
   games-by-event, standings, standings-table,
-  crosstable, crosstable-table, progress, progress-table,
+  crosstable, crosstable-table, progress, progress-table, chess-table-kind,
 )
 
 // Distinct figure kind so chess diagrams get their own counter and can be
@@ -475,10 +476,33 @@
   notation(source, ..args)
 }
 
-/// An outline listing only chess diagrams (figures with `kind: chess-kind`).
+/// An outline listing only chess DIAGRAMS (figures with `kind: chess-kind`).
 /// Extra named arguments are forwarded to `outline` (e.g. `depth`, `indent`).
-#let chess-outline(title: [List of Chess Diagrams], ..args) = outline(
+/// (Renamed from `chess-outline` in prompt 17.)
+#let chess-diagram-outline(title: [List of Chess Diagrams], ..args) = outline(
   title: title,
   target: figure.where(kind: chess-kind),
   ..args,
 )
+
+/// An outline listing only chess TABLES (figures with `kind: chess-table-kind`,
+/// i.e. standings / cross-table / progress tables). Only tables that carry a
+/// `caption` appear (an uncaptioned figure is not listed by Typst's `outline`).
+/// Extra named arguments are forwarded to `outline`.
+#let chess-table-outline(title: [List of Chess Tables], ..args) = outline(
+  title: title,
+  target: figure.where(kind: chess-table-kind),
+  ..args,
+)
+
+/// Print BOTH chess outlines back to back: diagrams first, then tables. The two
+/// section titles are settable (`diagram-title` / `table-title`); pass `none` to
+/// drop a title. Extra named arguments are forwarded to both `outline`s.
+#let chess-outlines(
+  diagram-title: [List of Chess Diagrams],
+  table-title: [List of Chess Tables],
+  ..args,
+) = {
+  chess-diagram-outline(title: diagram-title, ..args)
+  chess-table-outline(title: table-title, ..args)
+}

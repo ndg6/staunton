@@ -1,12 +1,13 @@
 // §3 Diagrams - the chess-diagram outline. chess-diagram emits figures with a
-// distinct kind ("chess"), so chess-outline lists ONLY those, separately from
-// any other figures (here a non-chess figure is included to prove it is skipped).
-#import "/lib.typ": chess-diagram, chess-outline, starting-fen
+// distinct kind ("chess"), so chess-diagram-outline lists ONLY those, separately
+// from any other figures (here a non-chess figure is included to prove it is
+// skipped).
+#import "/lib.typ": chess-diagram, chess-diagram-outline, starting-fen
 
 #set page(width: 13cm, height: auto, margin: 1.2cm)
 #set text(font: "Libertinus Serif", size: 10pt)
 
-#chess-outline()
+#chess-diagram-outline()
 
 = Diagrams
 #chess-diagram(starting-fen, size: 3cm, caption: [First diagram])

@@ -5,7 +5,7 @@
 // `read` resolves relative to THIS file, so the PGN paths are relative to
 // examples/. Compile with the package root:  typst compile --root . examples/showcase.typ
 #import "/lib.typ": (
-  parse-pgn, board-after, board, chess-diagram, chess-outline,
+  parse-pgn, board-after, board, chess-diagram, chess-diagram-outline,
   mainline, game-result, position-after, play-moves, set-chess-defaults, starting-fen,
 )
 
@@ -32,7 +32,7 @@
   str(movenum) + color
 }
 
-#chess-outline(title: [List of diagrams in this showcase])
+#chess-diagram-outline(title: [List of diagrams in this showcase])
 
 = The three example games at a glance
 

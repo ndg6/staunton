@@ -405,9 +405,10 @@ Seven-Tag-Roster tags are tolerated (they default).
 ## Tournament tables
 
 Built from a parsed PGN's roster + results (no engine). Compute functions return
-plain data; the `*-table` renderers produce a `#table`. Each works on a list of
-games (filter a multi-division file first with `games-by-event`), with
-`by: "player"` or `by: "team"`:
+plain data; the `*-table` renderers produce a `#figure` (kind `"chess-table"`)
+wrapping a `#table`, so a table can be captioned, referenced (`@label`) and listed
+by `chess-table-outline`. Each works on a list of games (filter a multi-division
+file first with `games-by-event`), with `by: "player"` or `by: "team"`:
 
 ```typ
 #import "@preview/staunton:0.1.0": parse-pgn, games-by-event, standings-table, crosstable-table, progress-table
@@ -416,7 +417,16 @@ games (filter a multi-division file first with `games-by-event`), with
 #standings-table(games, by: "player")        // end-score table, sorted best-first
 #crosstable-table(games, by: "team")          // round-robin cross-table
 #progress-table(games, by: "team")            // round-by-round running score
+
+// captioned + referenceable; `title` is a heading drawn ABOVE the table
+#standings-table(games, caption: [Final standings], title: [Division A]) <a>
+// ...later:  see @a
 ```
+
+Each renderer takes `caption` (figure caption, shown below; used by refs and the
+outline), `title` (a heading stacked above the table), and `supplement` (`auto` →
+the document default "Table", or a per-call override). Extra named arguments are
+still forwarded to the inner `#table`.
 
 - **`standings`** sorts by score desc, then tie-breaks, then first appearance
   ("first mentioned on top"). Tie-breaks: `buchholz`, `sonneborn-berger`, and
@@ -439,22 +449,28 @@ games (filter a multi-division file first with `games-by-event`), with
 
 ## Document-wide style
 
-Styling is split into two buckets: **board** style (everything the board draws —
-colors, labels, piece set, grid, highlight, arrows, …) and **diagram** style (the
-`#figure` wrapper — `info-bold`, `info-gap`, `supplement`). Each has its own
-setter; `set-chess-defaults` is an umbrella that routes each key to the right one.
+Styling is split into buckets: **board** style (everything the board draws —
+colors, labels, piece set, grid, highlight, arrows, …), **diagram** style (the
+diagram `#figure` wrapper — `info-bold`, `info-gap`, `supplement`), and **table**
+style (the tournament-table `#figure` — `supplement`, `title-gap`). Each has its
+own setter; `set-chess-defaults` is an umbrella that routes each key to the right
+one.
 
 ```typ
-#import "@preview/staunton:0.1.0": set-board-defaults, set-diagram-defaults, set-chess-defaults, set-piece-set
+#import "@preview/staunton:0.1.0": set-board-defaults, set-diagram-defaults, set-table-defaults, set-chess-defaults, set-piece-set
 #set-board-defaults(light: rgb("#eeeed2"), dark: rgb("#769656"), size: 5cm)
 #set-diagram-defaults(info-bold: false, supplement: [Position])
+#set-table-defaults(supplement: [Tabelle])   // tournament tables -> "Tabelle 1", ...
 #set-piece-set("merida")          // sugar for set-board-defaults(piece-set: "merida")
-#set-chess-defaults(dark: blue, info-gap: 1em)  // umbrella: routes to both buckets
-// every subsequent diagram inherits these; per-call arguments still override.
+#set-chess-defaults(dark: blue, info-gap: 1em)  // umbrella: routes to the right buckets
+// every subsequent diagram/table inherits these; per-call arguments still override.
 ```
 
 `flip` is the one setting that is **not** allowed in any defaults setter — board
 orientation is a per-diagram choice, so `set-chess-defaults(flip: ..)` is an error.
+(Note: `supplement` lives in both the diagram and table buckets; the umbrella
+`set-chess-defaults(supplement: ..)` routes it to **diagrams** — set a table's
+supplement with `set-table-defaults`, or per call via the table's `supplement:`.)
 
 There is also a third **PGN-handling** bucket: how much of a parsed game's
 embedded extras get *processed at render time*. Parsing stays lossless; these
@@ -489,13 +505,40 @@ its insertion point via `layout`, so it adapts to one- or two-column layouts and
 any page size without being told the geometry, and shrinks to fit if asked for
 more than fits.
 
-## Custom outline
+## Outlines & references
 
-Because diagrams use a distinct `figure` kind, you can list them separately:
+Diagrams and tournament tables are each wrapped in a `#figure` with a distinct
+`kind` — `"chess"` for diagrams, `"chess-table"` for tables — so they get their
+own counters, can be **referenced** (`@label` → "Diagram 3" / "Table 2"), and can
+be **listed separately**:
 
 ```typ
-#outline(title: [List of Diagrams], target: figure.where(kind: "chess"))
+#import "@preview/staunton:0.1.0": chess-diagram-outline, chess-table-outline, chess-outlines
+
+#chess-diagram-outline()          // list of chess diagrams
+#chess-table-outline()            // list of tournament tables
+#chess-outlines()                  // both, diagrams then tables
+
+// titles are settable; extra args (depth, indent, ...) are forwarded to `outline`
+#chess-diagram-outline(title: [Figures])
+#chess-outlines(diagram-title: [Diagrams], table-title: [Tables])
 ```
+
+Referencing works because the label attaches to the figure:
+
+```typ
+#chess-diagram(starting-fen, caption: [Start]) <start>
+#standings-table(games, caption: [Final standings]) <final>
+As shown in @start and @final, ...
+```
+
+Only figures that carry a **caption** appear in an outline (a caption-less figure
+is still referenceable but unlisted, matching Typst's own behaviour). You can
+also target the kinds directly with a plain `#outline(target: figure.where(kind:
+"chess-table"))`.
+
+> The outline helper was renamed in prompt 17: `chess-outline` →
+> `chess-diagram-outline` (and `chess-table-outline` / `chess-outlines` are new).
 
 ## Pieces & fonts
 

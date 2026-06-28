@@ -19,6 +19,30 @@
 // (standings); cross-table and progress come next.
 // ===========================================================================
 
+#import "style.typ": default-table-style, table-style-state
+
+// The figure `kind` for tournament tables. Distinct from diagrams' "chess" so the
+// two get separate counters and separate outlines. Public (re-exported by lib).
+#let chess-table-kind = "chess-table"
+
+// Wrap a rendered `#table` in a referenceable / outlineable #figure. `title` (a
+// heading drawn ABOVE the table, inside the figure body) and `caption` (the
+// figure caption, shown below and used by refs + outline) are both optional;
+// `supplement` is `auto` -> the document `set-table-defaults` value (default
+// "Table"), else a per-call override. The figure carries `kind: chess-table-kind`.
+#let _table-figure(tbl, title, caption, supplement) = {
+  let body = if title == none { tbl } else {
+    context {
+      let gap = (default-table-style + table-style-state.get()).title-gap
+      stack(dir: ttb, spacing: gap, title, tbl)
+    }
+  }
+  let supp = if supplement != auto { supplement } else {
+    context { (default-table-style + table-style-state.get()).supplement }
+  }
+  figure(body, kind: chess-table-kind, supplement: supp, caption: caption)
+}
+
 // "1-0"/"0-1"/"1/2-1/2" -> (white, black) scores; anything else (e.g. "*") -> none.
 #let _result-scores(r) = {
   if r == "1-0" { (1.0, 0.0) }
@@ -193,7 +217,7 @@
 
 /// Render a standings table (a Typst `#table`). Options as for `standings`, plus
 /// a `title` (content above the table) and extra args forwarded to `#table`.
-#let standings-table(games, by: "player", tiebreaks: auto, match-points: (win: 2, draw: 1, loss: 0), title: none, ..table-args) = {
+#let standings-table(games, by: "player", tiebreaks: auto, match-points: (win: 2, draw: 1, loss: 0), title: none, caption: none, supplement: auto, ..table-args) = {
   let tbs = if tiebreaks != auto { tiebreaks } else { _default-tiebreaks(by) }
   let rows = standings(games, by: by, tiebreaks: tiebreaks, match-points: match-points)
   let name-h = if by == "team" { "Team" } else { "Player" }
@@ -216,7 +240,7 @@
     ..body,
     ..table-args.named(),
   )
-  if title != none { stack(dir: ttb, spacing: 0.6em, title, tbl) } else { tbl }
+  _table-figure(tbl, title, caption, supplement)
 }
 
 // ---- cross-table (round-robin only) ---------------------------------------
@@ -257,7 +281,7 @@
 /// Render a round-robin cross-table (a Typst `#table`). Columns are numbered to
 /// match the row order; the diagonal is shaded. `title` and extra `#table` args
 /// as for `standings-table`.
-#let crosstable-table(games, by: "player", match-points: (win: 2, draw: 1, loss: 0), title: none, ..table-args) = {
+#let crosstable-table(games, by: "player", match-points: (win: 2, draw: 1, loss: 0), title: none, caption: none, supplement: auto, ..table-args) = {
   let ct = crosstable(games, by: by, match-points: match-points)
   let n = ct.names.len()
   let name-h = if by == "team" { "Team" } else { "Player" }
@@ -281,7 +305,7 @@
     ..body,
     ..table-args.named(),
   )
-  if title != none { stack(dir: ttb, spacing: 0.6em, title, tbl) } else { tbl }
+  _table-figure(tbl, title, caption, supplement)
 }
 
 // ---- progress (round by round) --------------------------------------------
@@ -344,7 +368,7 @@
 /// Render a progress table: a column per round showing that round's result and
 /// the running total, plus a final total. `title` and extra `#table` args as for
 /// `standings-table`.
-#let progress-table(games, by: "player", match-points: (win: 2, draw: 1, loss: 0), title: none, ..table-args) = {
+#let progress-table(games, by: "player", match-points: (win: 2, draw: 1, loss: 0), title: none, caption: none, supplement: auto, ..table-args) = {
   let pg = progress(games, by: by, match-points: match-points)
   let name-h = if by == "team" { "Team" } else { "Player" }
 
@@ -368,5 +392,5 @@
     ..body,
     ..table-args.named(),
   )
-  if title != none { stack(dir: ttb, spacing: 0.6em, title, tbl) } else { tbl }
+  _table-figure(tbl, title, caption, supplement)
 }
