@@ -415,8 +415,7 @@ games (filter a multi-division file first with `games-by-event`), with
 > Team tables assume the standard `Round = "round.board"` convention. A file
 > whose round numbering doesn't follow it (some real exports don't) will produce
 > unreliable *team* grouping — *player* standings only sum per player and are
-> robust regardless. Very large PGNs can exceed Typst's loop limit during
-> parsing; split or trim the input if so.
+> robust regardless.
 
 ## Document-wide style
 

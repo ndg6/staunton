@@ -128,9 +128,12 @@ Two concrete consequences, both handled:
 1. **Player standings are robust** (they only sum per player) — used for the
    real-data smoke test on a roster-only **M1 subset** (`tests/pgn/realworld/
    M1_roster.pgn`, 87 games).
-2. **The full 848 KB file exceeds Typst's loop-iteration limit** in `parse-pgn`'s
-   char tokenizer — even a 140 KB roster-only form does. The M1 subset (~30 KB)
-   parses. (Tokenizer scaling is a separate, future optimisation.)
+2. ~~The full 848 KB file exceeds Typst's loop-iteration limit~~ — **fixed in a
+   follow-up**: `parse-pgn`'s tokenizer was rewritten to scan with one native
+   regex (`str.matches`) instead of a char-by-char loop with O(n²) string
+   building. The full file now parses (375 games, 4 divisions, full movetext);
+   see `tests/pgn/realworld/parse_full.typ`. The M1 roster subset is still used
+   for the standings smoke test (faster).
 
 Team tables are validated on **synthetic** clean `round.board` fixtures.
 

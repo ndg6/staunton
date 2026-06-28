@@ -17,82 +17,61 @@
 //    variations: array<array<node>>)
 // ===========================================================================
 
-#let _is-space(ch) = ch == " " or ch == "\n" or ch == "\t" or ch == "\r"
-#let _specials = ("[", "]", "{", "}", "(", ")", ";")
 #let _results = ("1-0", "0-1", "1/2-1/2", "*")
 
 // ---- tokenizer ------------------------------------------------------------
+// One native regex scan segments the input into tokens; classification then
+// gives them the same shapes the parser consumes. This avoids the old
+// char-by-char loop and its O(n^2) string building (which made large files --
+// e.g. games with long {[%evp ...]} eval profiles -- blow Typst's loop limit).
+//
+// Master pattern alternatives (leftmost match wins, so a comment swallows any
+// brackets it contains):
+//   \[[^\]]*\]   tag      \{[^}]*\}   brace comment    ;[^\n]*   line comment
+//   [()]         paren    [^\s()\[\]{};]+   word (san / nag / move number / result)
+#let _token-re = regex("\[[^\]]*\]|\{[^}]*\}|;[^\n]*|[()]|[^\s()\[\]{};]+")
+
 #let _tokenize(input) = {
-  // Normalise line endings first: Unicode grapheme segmentation groups CRLF
-  // into a single "\r\n" cluster, which would otherwise read as a stray token.
-  let cs = input.replace("\r\n", "\n").replace("\r", "\n").clusters()
-  let n = cs.len()
-  let i = 0
+  // Normalise line endings; drop a leading BOM so it isn't read as a token.
+  let s = input.replace("\r\n", "\n").replace("\r", "\n").replace("\u{feff}", "")
+
+  // Unterminated tag / comment: an opener with no closer before end-of-input.
+  // (End-anchored, so a `[`/`{` that IS closed later never matches.)
+  assert(s.match(regex("\{[^}]*$")) == none, message: "malformed PGN: unterminated comment (missing '}')")
+  assert(s.match(regex("\[[^\]]*$")) == none, message: "malformed PGN: unterminated tag (missing ']')")
+
   let toks = ()
-  while i < n {
-    let ch = cs.at(i)
-    if _is-space(ch) {
-      i += 1
-    } else if ch == "[" {
-      let j = i + 1
-      let buf = ""
-      while j < n and cs.at(j) != "]" { buf += cs.at(j); j += 1 }
-      assert(j < n, message: "malformed PGN: unterminated tag (missing ']')")
-      let m = buf.match(regex("^\s*([A-Za-z0-9_]+)\s+\"(.*)\"\s*$"))
-      assert(m != none, message: "malformed PGN tag pair: [" + buf + "]")
-      toks.push((type: "tag", key: m.captures.at(0), value: m.captures.at(1)))
-      i = j + 1
-    } else if ch == "{" {
-      let j = i + 1
-      let buf = ""
-      while j < n and cs.at(j) != "}" { buf += cs.at(j); j += 1 }
-      assert(j < n, message: "malformed PGN: unterminated comment (missing '}')")
-      toks.push((type: "comment", value: buf))
-      i = j + 1
-    } else if ch == ";" {
-      let j = i + 1
-      let buf = ""
-      while j < n and cs.at(j) != "\n" { buf += cs.at(j); j += 1 }
-      toks.push((type: "comment", value: buf.trim()))
-      i = j
-    } else if ch == "(" {
+  for m in s.matches(_token-re) {
+    let t = m.text
+    if t.starts-with("[") {
+      let inner = t.slice(1, t.len() - 1)   // "[" and "]" are 1 byte each
+      let tm = inner.match(regex("^\s*([A-Za-z0-9_]+)\s+\"(.*)\"\s*$"))
+      assert(tm != none, message: "malformed PGN tag pair: [" + inner + "]")
+      toks.push((type: "tag", key: tm.captures.at(0), value: tm.captures.at(1)))
+    } else if t.starts-with("{") {
+      toks.push((type: "comment", value: t.slice(1, t.len() - 1)))
+    } else if t.starts-with(";") {
+      toks.push((type: "comment", value: t.slice(1).trim()))
+    } else if t == "(" {
       toks.push((type: "open"))
-      i += 1
-    } else if ch == ")" {
+    } else if t == ")" {
       toks.push((type: "close"))
-      i += 1
-    } else if ch == "$" {
-      let j = i + 1
-      let buf = ""
-      while j < n and not _is-space(cs.at(j)) and not _specials.contains(cs.at(j)) { buf += cs.at(j); j += 1 }
-      toks.push((type: "nag", value: buf))
-      i = j
+    } else if t.starts-with("$") {
+      toks.push((type: "nag", value: t.slice(1)))
+    } else if _results.contains(t) {
+      toks.push((type: "result", value: t))
+    } else if t.match(regex("^[0-9]+\.+$")) != none {
+      toks.push((type: "num", value: t))
     } else {
-      let j = i
-      let buf = ""
-      while j < n and not _is-space(cs.at(j)) and not _specials.contains(cs.at(j)) {
-        buf += cs.at(j)
-        j += 1
-      }
-      i = j
-      if buf == "" {
-        // a lone special already handled; guard against no progress
-        i += 1
-      } else if _results.contains(buf) {
-        toks.push((type: "result", value: buf))
-      } else if buf.match(regex("^[0-9]+\.+$")) != none {
-        toks.push((type: "num", value: buf))
+      // possibly a move number glued to a move, e.g. "12.e4" or "12...Nf6"
+      let g = t.match(regex("^([0-9]+\.+)(.+)$"))
+      if g != none {
+        toks.push((type: "num", value: g.captures.at(0)))
+        let rest = g.captures.at(1)
+        if _results.contains(rest) { toks.push((type: "result", value: rest)) }
+        else { toks.push((type: "san", value: rest)) }
       } else {
-        // possibly a move number glued to a move, e.g. "12.e4" or "12...Nf6"
-        let m = buf.match(regex("^([0-9]+\.+)(.+)$"))
-        if m != none {
-          toks.push((type: "num", value: m.captures.at(0)))
-          let rest = m.captures.at(1)
-          if _results.contains(rest) { toks.push((type: "result", value: rest)) }
-          else { toks.push((type: "san", value: rest)) }
-        } else {
-          toks.push((type: "san", value: buf))
-        }
+        toks.push((type: "san", value: t))
       }
     }
   }
