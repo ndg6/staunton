@@ -1,9 +1,10 @@
 # staunton
 
-Chess for [Typst](https://typst.app): render boards and pieces, build diagrams
-from **FEN** or **PGN** (with a pure-Typst legal-move engine), write localized
-move **notation**, and generate **tournament tables** — all as referenceable,
-outlineable `#figure`s.
+A **chess publishing** toolkit for [Typst](https://typst.app): render boards and
+pieces, build diagrams from **FEN** or **PGN** (with a pure-Typst legal-move
+engine), write localized move **notation**, and generate **tournament tables** —
+all as referenceable `#figure`s, with ready-made **outlines** (lists of diagrams
+and tables).
 
 ![gallery](docs/img/gallery.png)
 
@@ -92,7 +93,7 @@ and [LICENSE-PIECES](LICENSE-PIECES). The package manifest declares
 `MIT AND GPL-2.0-or-later`.
 
 A `"unicode"` glyph fallback needs no SVGs. The renderer accepts any set name, so
-you can add your own piece set — see the [manual](docs/manual.md#pieces--fonts).
+you can add your own piece set — see the [manual](docs/manual.md#pieces-and-fonts).
 (Other popular lichess sets carry non-commercial licenses and are not bundled.)
 
 ## Repository layout

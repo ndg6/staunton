@@ -12,24 +12,24 @@ All examples assume:
 
 ## Contents
 
-- [Diagrams: `chess-diagram`](#chess-diagramsource-)
+- [chess-diagram](#chess-diagram)
   - [Labeling](#labeling) · [Highlights](#highlights) · [Arrows](#arrows) · [Board labels](#board-labels)
-- [`board` and `diagram`](#boardsource--and-diagramsource-)
-- [`position`](#position)
+- [board and diagram](#board-and-diagram)
+- [position](#position)
 - [Games (PGN)](#games-pgn)
-  - [Locators](#locators) · [`play-moves`](#playing-moves-onto-a-position-play-moves) · [`chess-notation`](#notation-output-chess-notation) · [`to-fen`](#exporting-fen-to-fen) · [Annotations](#drawing-annotations-cal--csl) · [Errors](#errors)
+  - [Locators](#locators) · [Playing moves](#playing-moves-onto-a-position) · [Notation output](#notation-output) · [Exporting FEN](#exporting-fen) · [Drawing annotations](#drawing-annotations) · [Errors](#errors)
 - [Tournament tables](#tournament-tables)
 - [Document-wide style](#document-wide-style) · [Language](#language) · [PGN handling](#pgn-handling)
-- [Outlines & references](#outlines--references)
-- [Pieces & fonts](#pieces--fonts)
+- [Outlines and references](#outlines-and-references)
+- [Pieces and fonts](#pieces-and-fonts)
 - [Coordinates](#coordinates) · [Sizing](#sizing)
 
 ---
 
-## `chess-diagram(source, ..)`
+## chess-diagram
 
-The everyday entry point for **standard western chess**. Returns a `#figure`
-with `kind: "chess"`.
+`chess-diagram(source, ..)` is the everyday entry point for **standard western
+chess**. Returns a `#figure` with `kind: "chess"`.
 
 The high-level API is **variant-forward**: `chess-board` / `chess-diagram` are
 standard chess; other variants get their own names (`xiangqi-board` /
@@ -134,9 +134,9 @@ independent of the document:
 `labels: false` suppresses all of them; `file-side`/`rank-side` and `flip` are
 honored in every mode.
 
-## `board(source, ..)` and `diagram(source, ..)`
+## board and diagram
 
-`board` draws just the board — no figure, no caption — and is the
+`board(source, ..)` draws just the board — no figure, no caption — and is the
 variant-agnostic primitive that the diagram wrappers build on. `diagram` is the
 matching generic `#figure` wrapper. Both take the same `source` forms, the same
 `flip`, and the same style overrides:
@@ -152,9 +152,9 @@ use a `*-diagram` when you want the captioned, cross-referenceable figure.
 `board` / `diagram`: same rendering, but they document the variant and reject a
 non-standard position source.
 
-## `position(..)`
+## position
 
-`position` builds a position object — the data model for "which piece stands on
+`position(..)` builds a position object — the data model for "which piece stands on
 which square." It accepts a **FEN string** (auto-detected and delegated to
 `parse-fen`), or one of two hand-authoring forms:
 
@@ -247,7 +247,7 @@ only that game.
   #board-after(game, (line: ((at: "2w", into: 0), (at: "2b", into: 0)), at: "3w"))
   ```
 
-### Playing moves onto a position (`play-moves`)
+### Playing moves onto a position
 
 Variations recorded in the PGN (RAVs) are addressed by the path locator above.
 To explore a *new* line, or to build a position from a FEN plus some moves, use
@@ -266,7 +266,7 @@ and returns the **final** position; the source is never mutated:
 The engine analyses **standard chess only** for now. Comments, NAGs and
 variations in the text are rejected — use `parse-pgn` for full PGN movetext.
 
-### Notation output (`chess-notation`)
+### Notation output
 
 `chess-notation(source, ..)` (and the variant-agnostic `notation`) renders move
 text in human-readable form. `source` is a parsed **game**, a **move-text
@@ -316,7 +316,7 @@ Ranges are **mainline-only** and exclude comments/variations.
 > `notation` only *formats* SAN you already hold. It cannot yet *generate* SAN
 > from arbitrary positions — that needs a move→SAN encoder (future work).
 
-### Exporting FEN (`to-fen`)
+### Exporting FEN
 
 `to-fen` is the inverse of `parse-fen`. It serialises either a **position** or a
 **game at a locator**:
@@ -329,7 +329,7 @@ Ranges are **mainline-only** and exclude comments/variations.
 Standard 8×8 positions round-trip exactly with `parse-fen`. It is geometry-aware
 (serialises larger boards too) and tolerant of positions built by `position()`.
 
-### Drawing annotations (`%cal` / `%csl`)
+### Drawing annotations
 
 PGN comments can carry drawing annotations. Processing is **off by default** —
 reading a PGN gives plain output unless you opt in:
@@ -460,7 +460,7 @@ what is interpreted. **All default off**:
 `set-chess-defaults` routes these keys too; each is also a per-call argument
 (`auto` → the document default) on `notation` / `board-after`.
 
-## Outlines & references
+## Outlines and references
 
 Diagrams and tournament tables are each wrapped in a `#figure` with a distinct
 `kind` — `"chess"` for diagrams, `"chess-table"` for tables — so they get their
@@ -493,7 +493,7 @@ also target the kinds directly with `#outline(target: figure.where(kind:
 "chess-table"))`. Document-wide default titles: `set-diagram-defaults(outline-title:
 ..)` / `set-table-defaults(outline-title: ..)`.
 
-## Pieces & fonts
+## Pieces and fonts
 
 Pieces are drawn from bundled **SVG piece sets** under `src/assets/piece_sets/`.
 Two sets ship with the package, both licensed **GPLv2+** (see
