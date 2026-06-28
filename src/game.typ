@@ -19,6 +19,7 @@
 #import "fen.typ": parse-fen, starting-fen
 #import "san.typ": san-to-move
 #import "engine.typ": apply
+#import "pgn.typ": movetext
 
 // "30w" -> 59 ; "30b" -> 60
 #let _ply-of(loc) = {
@@ -36,7 +37,7 @@
 }
 
 /// The mainline as an array of SAN strings (the game as played).
-#let mainline(game) = game.movetext.map(n => n.san)
+#let mainline(game) = movetext(game).map(n => n.san)
 
 /// The game result string ("1-0" / "0-1" / "1/2-1/2" / "*").
 #let game-result(game) = game.result
@@ -60,7 +61,7 @@
 #let _mainline-positions(game) = {
   let pos = game-start(game)
   let out = (pos,)
-  for node in game.movetext {
+  for node in movetext(game) {
     pos = apply(pos, san-to-move(pos, node.san))
     out.push(pos)
   }
@@ -82,7 +83,7 @@
 
   // Variations: walk the (nested) sub-lines. Not fast-tracked, but the common
   // mainline case above is.
-  let line = game.movetext
+  let line = movetext(game)
   let branch-ply = 1
   let pos = game-start(game)
 
@@ -109,7 +110,7 @@
 /// variation path), e.g. "O-O-O". Used to build PGN-diagram captions.
 #let move-san(game, locator) = {
   let loc = if type(locator) == str { (line: (), at: locator) } else { locator }
-  let line = game.movetext
+  let line = movetext(game)
   let branch-ply = 1
   for hop in loc.at("line", default: ()) {
     let target = _ply-of(hop.at("at"))
@@ -128,7 +129,7 @@
 /// variations. Used to recover PGN `%cal` / `%csl` annotations for a diagram.
 #let move-node(game, locator) = {
   let loc = if type(locator) == str { (line: (), at: locator) } else { locator }
-  let line = game.movetext
+  let line = movetext(game)
   let branch-ply = 1
   for hop in loc.at("line", default: ()) {
     let target = _ply-of(hop.at("at"))

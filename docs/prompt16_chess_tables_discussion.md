@@ -128,16 +128,34 @@ Two concrete consequences, both handled:
 1. **Player standings are robust** (they only sum per player) — used for the
    real-data smoke test on a roster-only **M1 subset** (`tests/pgn/realworld/
    M1_roster.pgn`, 87 games).
-2. ~~The full 848 KB file exceeds Typst's loop-iteration limit~~ — **fixed in a
-   follow-up**: `parse-pgn`'s tokenizer was rewritten to scan with one native
+2. ~~The full 848 KB file exceeds Typst's loop-iteration limit~~ — **fixed in two
+   steps**: (a) `parse-pgn`'s tokenizer was rewritten to scan with one native
    regex (`str.matches`) instead of a char-by-char loop with O(n²) string
-   building. The full file now parses (375 games, 4 divisions, full movetext);
-   see `tests/pgn/realworld/parse_full.typ`. The M1 roster subset is still used
-   for the standings smoke test (faster).
+   building; (b) movetext parsing was made **lazy** (see below). The full file
+   now parses in ~2 s; see `tests/pgn/realworld/parse_full.typ`.
 
 Team tables are validated on **synthetic** clean `round.board` fixtures.
+
+### Follow-up: lazy movetext (PGN parse performance)
+
+Profiling the 848 KB file showed the tokenizer was *not* the bottleneck (~2 s);
+the ~75 s cost was building the move TREE for **all 375 games' movetext** —
+wasted whenever a caller only wants the roster (standings/cross-tables) or one
+game's moves. Fix:
+
+- `parse-pgn` now extracts only the **roster** (`tags`), the `result`, and each
+  game's **verbatim movetext substring** (`movetext-raw`) eagerly, using one
+  master-regex scan with token *positions* to split games (comment-safe).
+- The move tree is built on demand by **`movetext(game)`** (memoised). Roster-only
+  consumers never trigger it; a single game out of a big file parses only itself.
+- Eager validations kept at parse time: malformed/unterminated tags and a stray
+  top-level `)`. Deeper movetext-structure errors surface on first `movetext()`.
+- **Data-model change:** the eager `game.movetext` *field* → lazy `movetext(game)`
+  *accessor* + new `game.movetext-raw` string. Internal callers (game / notation /
+  to-fen) and `tests/pgn/realworld/parse_full.typ` updated; suite 67/67 green.
 
 ### Deferred / notes
 
 - Direct-encounter tie-break; localized headers; forfeit/bye handling — later.
-- Faster PGN tokenizer for very large files — separate concern.
+- Tree-builder constant-factor speedup (avoid the `nodes.last()` write-back
+  pattern) — would speed up "parse every game"; separate session.

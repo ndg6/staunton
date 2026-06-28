@@ -20,6 +20,7 @@
 // ===========================================================================
 
 #import "san.typ": _split-movetext
+#import "pgn.typ": movetext
 #import "game.typ": mainline, game-result
 #import "i18n.typ": notation-langs
 #import "annotations.typ": interpret-comment, nag-symbol
@@ -93,7 +94,7 @@
   let nodes = if type(source) == str { _split-movetext(source).map(_bare-node) }
     else if type(source) == array { source.map(_bare-node) }
     else if type(source) == content and source.func() == raw { _split-movetext(source.text).map(_bare-node) }
-    else if type(source) == dictionary and "movetext" in source { source.movetext }
+    else if type(source) == dictionary and "movetext-raw" in source { movetext(source) }
     else if type(source) == dictionary and "squares" in source {
       panic("notation: a position has no move history; pass a game or a SAN source (string/array)")
     } else {
@@ -148,7 +149,7 @@
 /// without document state the result is a plain string; otherwise it is content.
 #let notation(source, from: none, to: none, figurine: false, lang: "en", nags: auto, comments: auto, move-numbers: true, result: false) = {
   let r = _resolve-line(source, from, to)
-  let tail = if result and type(source) == dictionary and "movetext" in source { game-result(source) } else { none }
+  let tail = if result and type(source) == dictionary and "movetext-raw" in source { game-result(source) } else { none }
   let needs-state = lang == "auto" or nags == auto or comments == auto
   if needs-state {
     context {

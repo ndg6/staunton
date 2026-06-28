@@ -225,7 +225,7 @@ squares dict or the string form.)
 ## Games (PGN)
 
 ```typ
-#import "@preview/staunton:0.1.0": parse-pgn, board-after, position-after, play-moves, mainline
+#import "@preview/staunton:0.1.0": parse-pgn, movetext, board-after, position-after, play-moves, mainline
 
 // Read an external file IN YOUR OWN FILE (so `read` resolves relative to it):
 #let game = parse-pgn(read("morphy.pgn")).first()
@@ -240,10 +240,30 @@ squares dict or the string form.)
 #board-after(game, "3w")   // a diagram of the position after White's 3rd move
 ```
 
-`parse-pgn` returns an **array of games** (a PGN file may hold many). Parsing is
-two-phase: tags and the movetext tree are read eagerly and cheaply, while the
-move **engine** runs lazily — only when you ask for a position. So a tournament
-file read only for `game.result` never invokes the engine.
+`parse-pgn` returns an **array of games** (a PGN file may hold many). A game is
+`(tags, movetext-raw, result)`. Parsing is **lazy** to stay fast on large,
+multi-game files:
+
+* the **roster** (`tags`), the `result`, and each game's **verbatim movetext**
+  (`movetext-raw`, a string) are extracted eagerly and cheaply;
+* the movetext **tree** (move nodes with NAGs / comments / variations) is built
+  on demand by **`movetext(game)`**, and memoised;
+* the move **engine** runs later still — only when you ask for a position.
+
+So a tournament file read only for `game.result` (e.g. for standings) never
+tokenises movetext at all, and pulling one game's moves out of a 400-game file
+parses only that game. `movetext(game)` returns the same node array the old
+`game.movetext` field held:
+
+```typ
+#let game = parse-pgn(read("game.pgn")).first()
+#game.movetext-raw        // "1. e4 e5 2. Nf3 ..." (verbatim, always present)
+#movetext(game)           // parsed nodes: (san, nags, comment-before, ...)
+#mainline(game)           // ("e4", "e5", "Nf3", ...) — uses movetext() under the hood
+```
+
+> **Note (data-model change):** the eager `game.movetext` *field* was replaced by
+> the lazy `movetext(game)` *accessor* (plus the new `game.movetext-raw` string).
 
 ### Locators
 
@@ -503,7 +523,7 @@ src/pieces.typ      piece model + glyph rendering
 src/fen.typ         FEN parsing -> position dict; position-fen (export)
 src/engine.typ      legal-move engine (pseudo-legal -> legality filter)
 src/san.typ         SAN parsing + resolution; play-san, play-moves
-src/pgn.typ         PGN tokenizer + movetext/variation tree
+src/pgn.typ         PGN parse: eager roster/result split + lazy movetext tree
 src/game.typ        navigation: mainline, locators
 src/notation.typ    human-readable notation (figurine / i18n / NAGs / comments)
 src/i18n.typ        language registry (loads assets/i18n/*.typ)

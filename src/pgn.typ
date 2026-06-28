@@ -2,53 +2,53 @@
 // PGN parsing (Phase A: cheap, eager, no engine).
 //
 // `parse-pgn(input)` -> array of `game` dicts. One PGN string may contain many
-// games. Movetext is parsed into a TREE of move nodes (mainline spine plus
-// recursive `variations`); only the `san` strings are recorded here. Engine
-// resolution (resolved moves + positions) happens later, on demand, in game.typ
-// -- so a tournament file read only for results never invokes the engine.
+// games. Parsing is LAZY in the movetext: `parse-pgn` eagerly extracts the
+// roster (tags) and the verbatim movetext SUBSTRING per game, but does NOT build
+// the move TREE. The tree (mainline spine plus recursive `variations`) is parsed
+// on demand by `movetext(game)` -- memoised -- so:
+//   * a tournament file read only for results/standings never tokenises movetext
+//     (just the cheap roster scan), and
+//   * extracting ONE game's moves out of a multi-game file parses only that
+//     game's substring, not all of them.
+// Engine resolution (resolved moves + positions) happens later still, in game.typ.
 //
-// Errors are HARD: malformed tag pairs, unterminated comments/tags, and stray
-// variation parens all panic with a message. (We are lenient about *missing*
-// roster tags, but strict about malformed *syntax*.)
+// Errors are HARD. Roster errors (malformed tag pairs, unterminated comments/
+// tags) and a stray top-level ')' are caught EAGERLY at parse time. Deeper
+// movetext-structure errors surface when `movetext(game)` is first called.
 //
-// A `game` is: (tags: dict, movetext: array<node>, result: str)
-// A move `node` is:
+// A `game` is: (tags: dict, movetext-raw: str, result: str)
+//   - movetext-raw: the game's movetext verbatim (comments/variations/NAGs and
+//     all), available for direct inspection without parsing.
+// A move `node` (from `movetext(game)`) is:
 //   (san, nags: array, comment-before: none|str, comment-after: none|str,
 //    variations: array<array<node>>)
 // ===========================================================================
 
 #let _results = ("1-0", "0-1", "1/2-1/2", "*")
 
-// ---- tokenizer ------------------------------------------------------------
-// One native regex scan segments the input into tokens; classification then
-// gives them the same shapes the parser consumes. This avoids the old
-// char-by-char loop and its O(n^2) string building (which made large files --
-// e.g. games with long {[%evp ...]} eval profiles -- blow Typst's loop limit).
-//
+// ---- token regexes (compiled ONCE, module level) --------------------------
 // Master pattern alternatives (leftmost match wins, so a comment swallows any
 // brackets it contains):
 //   \[[^\]]*\]   tag      \{[^}]*\}   brace comment    ;[^\n]*   line comment
 //   [()]         paren    [^\s()\[\]{};]+   word (san / nag / move number / result)
 #let _token-re = regex("\[[^\]]*\]|\{[^}]*\}|;[^\n]*|[()]|[^\s()\[\]{};]+")
+// Per-word classifiers, hoisted out of the tokenise loop (compiling these once
+// instead of per token is a large win on big files).
+#let _num-re = regex("^[0-9]+\.+$")
+#let _glue-re = regex("^([0-9]+\.+)(.+)$")
+#let _tag-re = regex("^\s*([A-Za-z0-9_]+)\s+\"(.*)\"\s*$")
 
-#let _tokenize(input) = {
-  // Normalise line endings; drop a leading BOM so it isn't read as a token.
-  let s = input.replace("\r\n", "\n").replace("\r", "\n").replace("\u{feff}", "")
+// Normalise line endings; drop a leading BOM so it isn't read as a token.
+#let _normalise(input) = input.replace("\r\n", "\n").replace("\r", "\n").replace("\u{feff}", "")
 
-  // Unterminated tag / comment: an opener with no closer before end-of-input.
-  // (End-anchored, so a `[`/`{` that IS closed later never matches.)
-  assert(s.match(regex("\{[^}]*$")) == none, message: "malformed PGN: unterminated comment (missing '}')")
-  assert(s.match(regex("\[[^\]]*$")) == none, message: "malformed PGN: unterminated tag (missing ']')")
-
+// ---- movetext tokeniser (per game, used lazily) ---------------------------
+// Turns a movetext SUBSTRING into the token stream the tree parser consumes.
+// (Tags never appear here -- they are split off eagerly in parse-pgn.)
+#let _tokenize(s) = {
   let toks = ()
   for m in s.matches(_token-re) {
     let t = m.text
-    if t.starts-with("[") {
-      let inner = t.slice(1, t.len() - 1)   // "[" and "]" are 1 byte each
-      let tm = inner.match(regex("^\s*([A-Za-z0-9_]+)\s+\"(.*)\"\s*$"))
-      assert(tm != none, message: "malformed PGN tag pair: [" + inner + "]")
-      toks.push((type: "tag", key: tm.captures.at(0), value: tm.captures.at(1)))
-    } else if t.starts-with("{") {
+    if t.starts-with("{") {
       toks.push((type: "comment", value: t.slice(1, t.len() - 1)))
     } else if t.starts-with(";") {
       toks.push((type: "comment", value: t.slice(1).trim()))
@@ -60,11 +60,11 @@
       toks.push((type: "nag", value: t.slice(1)))
     } else if _results.contains(t) {
       toks.push((type: "result", value: t))
-    } else if t.match(regex("^[0-9]+\.+$")) != none {
+    } else if t.match(_num-re) != none {
       toks.push((type: "num", value: t))
     } else {
       // possibly a move number glued to a move, e.g. "12.e4" or "12...Nf6"
-      let g = t.match(regex("^([0-9]+\.+)(.+)$"))
+      let g = t.match(_glue-re)
       if g != none {
         toks.push((type: "num", value: g.captures.at(0)))
         let rest = g.captures.at(1)
@@ -89,9 +89,7 @@
 
   while i < n {
     let t = toks.at(i)
-    if t.type == "tag" {
-      break // start of the next game
-    } else if t.type == "result" {
+    if t.type == "result" {
       result = t.value
       i += 1
       break
@@ -146,6 +144,20 @@
   (nodes: nodes, next: i, result: result)
 }
 
+// ---- lazy movetext accessor ----------------------------------------------
+// Parse a game's verbatim movetext substring into the move-node tree. Pure, so
+// Typst memoises it: repeated calls for the same game (same raw string) reuse the
+// result, and a game whose movetext is never touched is never parsed.
+#let _movetext-tree(raw) = {
+  let toks = _tokenize(raw)
+  _parse-movetext(toks, 0, toks.len(), true).nodes
+}
+
+/// The parsed movetext tree (array of move nodes) of a `game`. Built on demand
+/// from `game.movetext-raw` and memoised. This is where deeper movetext-structure
+/// errors (e.g. a variation '(' without a preceding move) surface.
+#let movetext(game) = _movetext-tree(game.movetext-raw)
+
 // ---- normalise input (string or raw block) -------------------------------
 #let _as-text(input) = {
   if type(input) == str { input }
@@ -153,30 +165,69 @@
   else { panic("parse-pgn: expected a string or a raw block (`#raw(..)` or ```...```), got " + repr(type(input))) }
 }
 
-/// Parse PGN text (string or raw block) into an array of games.
+/// Parse PGN text (string or raw block) into an array of games. Roster (tags),
+/// result, and the verbatim movetext substring are extracted eagerly; the move
+/// tree is parsed lazily via `movetext(game)`.
 #let parse-pgn(input) = {
-  let toks = _tokenize(_as-text(input))
+  let s = _normalise(_as-text(input))
+
+  // Unterminated tag / comment: an opener with no closer before end-of-input.
+  // (End-anchored, so a `[`/`{` that IS closed later never matches.)
+  assert(s.match(regex("\{[^}]*$")) == none, message: "malformed PGN: unterminated comment (missing '}')")
+  assert(s.match(regex("\[[^\]]*$")) == none, message: "malformed PGN: unterminated tag (missing ']')")
+
+  // One master-regex scan over the whole file, WITH positions. We use it only to
+  // split games (roster vs movetext spans); movetext is sliced out verbatim and
+  // parsed later. Comment-safe: a `{...}` or `[%evp ...]` inside movetext is one
+  // token, so it can never be mistaken for a roster tag.
+  let ms = s.matches(_token-re)
+  let n = ms.len()
   let games = ()
   let i = 0
-  let n = toks.len()
+
   while i < n {
+    // --- roster: a leading run of tag tokens ---
     let tags = (:)
-    while i < n and toks.at(i).type == "tag" {
-      tags.insert(toks.at(i).key, toks.at(i).value)
+    while i < n and ms.at(i).text.starts-with("[") {
+      let full = ms.at(i).text
+      let inner = full.slice(1, full.len() - 1)   // "[" and "]" are 1 byte each
+      let tm = inner.match(_tag-re)
+      assert(tm != none, message: "malformed PGN tag pair: [" + inner + "]")
+      tags.insert(tm.captures.at(0), tm.captures.at(1))
       i += 1
     }
-    let parsed = _parse-movetext(toks, i, n, true)
-    if tags.len() == 0 and parsed.nodes.len() == 0 and parsed.next == i {
-      i += 1 // no progress (stray token); avoid an infinite loop
-      continue
+
+    // --- movetext: tokens up to the next roster tag (or EOF) ---
+    // We do not build the tree here; we only need the verbatim span, the result,
+    // and an eager top-level paren-balance check (so a stray ')' fails at parse
+    // time, matching the documented contract).
+    let mv-start = if i < n { ms.at(i).start } else { 0 }
+    let mv-end = s.len()
+    let last-end = none
+    let depth = 0
+    let result = none
+    while i < n and not ms.at(i).text.starts-with("[") {
+      let t = ms.at(i).text
+      if t == "(" { depth += 1 }
+      else if t == ")" {
+        assert(depth > 0, message: "malformed PGN: unexpected ')' outside a variation")
+        depth -= 1
+      } else if _results.contains(t) { result = t }
+      last-end = ms.at(i).end
+      i += 1
     }
-    i = parsed.next
+    if i < n { mv-end = ms.at(i).start }
+    else if last-end != none { mv-end = last-end }
+
+    let raw = if last-end == none { "" } else { s.slice(mv-start, mv-end).trim() }
+
     games.push((
       tags: tags,
-      movetext: parsed.nodes,
-      result: if parsed.result != none { parsed.result } else { tags.at("Result", default: "*") },
+      movetext-raw: raw,
+      result: if result != none { result } else { tags.at("Result", default: "*") },
     ))
   }
+
   assert(games.len() > 0, message: "no games found in PGN input")
   games
 }

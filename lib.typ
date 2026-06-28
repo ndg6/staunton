@@ -18,7 +18,7 @@
 #import "src/fen.typ": parse-fen, starting-fen, position-fen
 #import "src/engine.typ": legal-moves, apply, in-check
 #import "src/san.typ": san-to-move, play-san, play-moves
-#import "src/pgn.typ": parse-pgn
+#import "src/pgn.typ": parse-pgn, movetext
 #import "src/game.typ": mainline, position-after, game-result, game-start, move-san, move-node
 // The text core lives in src/notation.typ; lib defines `notation` /
 // `chess-notation` on top so they can also embed diagrams (which needs the
@@ -226,11 +226,11 @@
 #let to-fen(source, locator: none) = {
   assert(type(source) == dictionary, message: "to-fen: expected a position or a game dict")
   if "squares" in source { return position-fen(source) }
-  if "movetext" in source {
+  if "movetext-raw" in source {
     assert(locator != none, message: "to-fen: a game needs a locator (e.g. locator: \"12w\")")
     return position-fen(position-after(source, locator))
   }
-  panic("to-fen: source must be a position (has `squares`) or a game (has `movetext`)")
+  panic("to-fen: source must be a position (has `squares`) or a game (has `movetext-raw`)")
 }
 
 // Above-diagram "game info" line: "<White> – <Black> (<Year>)". Drawn only when
@@ -424,7 +424,7 @@
     }
   }
   let diag = named.at("diagrams", default: auto)
-  let is-game = type(source) == dictionary and "movetext" in source
+  let is-game = type(source) == dictionary and "movetext-raw" in source
   let all-opts = ("from", "to", "figurine", "lang", "nags", "comments", "move-numbers", "result")
 
   // No embedding possible/requested -> hand straight to the text core.
@@ -438,7 +438,7 @@
     if not do-diag {
       _notation-text(source, .._text-opts(named, all-opts))
     } else {
-      let nodes = source.movetext
+      let nodes = movetext(source)
       let lo = if named.at("from", default: none) != none { _index-of-loc(named.from) } else { 0 }
       let hi = if named.at("to", default: none) != none { _index-of-loc(named.to) } else { nodes.len() - 1 }
       let process-anno = if named.at("annotations", default: auto) != auto { named.annotations } else { pg.annotations }
