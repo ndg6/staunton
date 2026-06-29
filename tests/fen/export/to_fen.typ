@@ -1,4 +1,4 @@
-// §prompt 14 - to-fen: export a position OR a game-at-locator back to a FEN
+// to-fen: export a position OR a game-at-locator back to a FEN
 // string (inverse of parse-fen). Standard positions round-trip exactly.
 #import "/lib.typ": to-fen, parse-fen, position, play-moves, parse-pgn, starting-fen
 

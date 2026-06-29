@@ -1,7 +1,7 @@
-// §item 8 / prompt 15 - PGN drawing annotations. `{[%cal ...]}` becomes arrows
+// PGN drawing annotations. `{[%cal ...]}` becomes arrows
 // and `{[%csl ...]}` becomes highlights on the diagram for that move; the color
 // letters (G/R/Y/B/O) resolve through the board's stylable `annotation-colors`.
-// Processing is OFF by default (prompt 15): opt in with `annotations: true` per
+// Processing is OFF by default: opt in with `annotations: true` per
 // call or `set-pgn-defaults(annotations: true)` document-wide.
 #import "/lib.typ": parse-pgn, board-after, move-node, set-board-defaults, set-pgn-defaults
 

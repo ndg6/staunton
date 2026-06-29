@@ -1,4 +1,4 @@
-// §5 PGN (good) - a board for a position inside a NESTED variation (a variation
+// PGN (good) - a board for a position inside a NESTED variation (a variation
 // within a variation), addressed by a two-step path locator.
 #import "/lib.typ": parse-pgn, board-after
 

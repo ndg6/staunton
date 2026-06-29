@@ -1,4 +1,4 @@
-// §2.4 (positive side of decision 3) - a user can add their OWN piece set by
+// a user can add their OWN piece set by
 // just dropping a folder under src/assets/piece_sets/, with no plugin code change.
 // The "_incomplete" fixture set ships only bK.svg; a position that needs only
 // the black king therefore renders fine through that custom set name. This is

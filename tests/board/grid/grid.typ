@@ -1,4 +1,4 @@
-// §item 2 - the optional grid line between squares. `grid: false` by default;
+// the optional grid line between squares. `grid: false` by default;
 // when true, a fixed 1pt black line sits on every internal square boundary, at
 // any board size. Compare on/off, and check the default is off.
 #import "/lib.typ": board, default-board-style

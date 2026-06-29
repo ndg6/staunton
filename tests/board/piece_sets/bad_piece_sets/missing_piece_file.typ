@@ -1,6 +1,6 @@
 // EXPECT: wK.svg
-// §2.4 - a piece set that is MISSING (or has badly named) a piece file.
-// After the unknown-set guard was removed (decision 3), an unrecognised set name
+// 2.4 - a piece set that is MISSING (or has badly named) a piece file.
+// After the unknown-set guard was removed (), an unrecognised set name
 // is no longer a hard error -- instead the SVG is loaded on demand, so a missing
 // or misnamed piece file surfaces as Typst's own "file not found" error naming
 // the exact file. Here the "_incomplete" fixture set ships only bK.svg, so a

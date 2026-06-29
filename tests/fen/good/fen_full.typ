@@ -1,4 +1,4 @@
-// §4 FEN (good) - a complete, valid six-field FEN parses and renders.
+// FEN (good) - a complete, valid six-field FEN parses and renders.
 #import "/lib.typ": board, parse-fen
 
 #set page(width: auto, height: auto, margin: 1cm)

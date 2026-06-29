@@ -1,4 +1,4 @@
-// §3 Diagrams - free (manual) captions, overriding the automatic ones in both
+// Diagrams - free (manual) captions, overriding the automatic ones in both
 // slots: `game-info:` replaces the above line, `caption:` replaces the below
 // line, and either can be set to `none` to suppress it entirely.
 #import "/lib.typ": chess-diagram, starting-fen

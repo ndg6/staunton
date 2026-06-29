@@ -1,4 +1,4 @@
-// §faster tokenizer - the full real-world tournament PGN (848 KB, with complete
+// the full real-world tournament PGN (848 KB, with complete
 // movetext incl. long {[%evp ...]} eval profiles).
 //
 // parse-pgn is now LAZY in the movetext: it eagerly extracts the roster + each

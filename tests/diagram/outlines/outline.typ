@@ -1,4 +1,4 @@
-// §3 Diagrams - the chess-diagram outline. chess-diagram emits figures with a
+// Diagrams - the chess-diagram outline. chess-diagram emits figures with a
 // distinct kind ("chess"), so chess-diagram-outline lists ONLY those, separately
 // from any other figures (here a non-chess figure is included to prove it is
 // skipped).

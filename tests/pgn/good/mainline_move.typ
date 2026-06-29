@@ -1,4 +1,4 @@
-// §5 PGN (good) - a board for a position at an arbitrary MAINLINE move, from a
+// PGN (good) - a board for a position at an arbitrary MAINLINE move, from a
 // real game. board-after pulls the roster (White/Black/Date) into the labels and
 // the last move into the caption automatically.
 #import "/lib.typ": parse-pgn, board-after, mainline

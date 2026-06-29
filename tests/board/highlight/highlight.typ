@@ -1,4 +1,4 @@
-// §prompt 12, item 3 - highlights. Three shapes: "filled" (default), "cross",
+// highlights. Three shapes: "filled" (default), "cross",
 // "circle". Entry forms: a square name (uses highlight-shape + highlight-fill);
 // a (square, color) pair (filled, explicit colour, e.g. PGN %csl); a dict
 // (square:, shape:, color:) for full control. Settable options: highlight-fill +

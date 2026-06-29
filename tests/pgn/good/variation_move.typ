@@ -1,4 +1,4 @@
-// §5 PGN (good) - a board for a position inside a VARIATION (RAV), addressed by
+// PGN (good) - a board for a position inside a VARIATION (RAV), addressed by
 // a path locator. The inline game records one variation at White's 1st move.
 #import "/lib.typ": parse-pgn, board-after
 

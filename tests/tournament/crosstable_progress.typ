@@ -1,4 +1,4 @@
-// §prompt 16 (Stage 2/3) - cross-table (round-robin only) and progress (round by
+// cross-table (round-robin only) and progress (round by
 // round), for player and team entities.
 #import "/lib.typ": parse-pgn, crosstable, crosstable-table, progress, progress-table
 

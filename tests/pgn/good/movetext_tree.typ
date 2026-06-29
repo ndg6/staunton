@@ -1,11 +1,11 @@
-// §5 PGN (good) - the movetext TREE built by movetext(game). Pins down the
+// PGN (good) - the movetext TREE built by movetext(game). Pins down the
 // attachment rules the lazy/`cur`-accumulator parser implements:
-//   * a leading comment -> the FIRST move's comment-before (and only the first);
-//   * multiple comments after a move -> comment-after, joined by a single space;
-//   * NAGs attach to the move they follow;
-//   * a variation attaches to its move, and a comment after the ')' attaches to
-//     that same (pre-variation) move;
-//   * the final move is flushed even with NO trailing result token.
+//  * a leading comment -> the FIRST move's comment-before (and only the first);
+//  * multiple comments after a move -> comment-after, joined by a single space;
+//  * NAGs attach to the move they follow;
+//  * a variation attaches to its move, and a comment after the ')' attaches to
+//  that same (pre-variation) move;
+//  * the final move is flushed even with NO trailing result token.
 #import "/lib.typ": parse-pgn, movetext, mainline
 
 #set page(width: auto, height: auto, margin: 1cm)

@@ -1,4 +1,4 @@
-// §item 5 - board vs diagram styling are split into two buckets, each with a
+// board vs diagram styling are split into two buckets, each with a
 // factory default, a document-order default (setter), and a key set. This test
 // covers the contract + the two explicit setters and the umbrella.
 #import "/lib.typ": (
@@ -14,7 +14,7 @@
 #assert(not board-style-keys.contains("info-bold"), message: "info-bold is NOT a board key")
 #assert(not diagram-style-keys.contains("light"), message: "light is NOT a diagram key")
 #assert(default-diagram-style.info-bold == true, message: "auto game-info is bold by default")
-#assert(default-board-style.piece-scale == 0.95, message: "pieces shrunk to 95% (item 1)")
+#assert(default-board-style.piece-scale == 0.95, message: "pieces shrunk to 95%")
 
 #set page(width: 13cm, height: auto, margin: 1.2cm)
 #set text(font: "Libertinus Serif", size: 10pt)

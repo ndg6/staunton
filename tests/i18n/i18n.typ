@@ -1,4 +1,4 @@
-// §prompt 18 - internationalization of UI strings. One document `lang` setting
+// internationalization of UI strings. One document `lang` setting
 // (default "en", "auto" = follow #set text(lang:), or a code) drives the
 // language-aware supplements (diagrams, tables) and outline titles; each is also
 // document-settable and per-call overridable. notation's piece letters follow the

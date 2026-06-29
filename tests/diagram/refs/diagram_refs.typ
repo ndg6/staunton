@@ -1,4 +1,4 @@
-// §3 Diagrams - REFERENCING chess diagrams. A chess-diagram is a #figure with
+// Diagrams - REFERENCING chess diagrams. A chess-diagram is a #figure with
 // kind "chess", so a label attaches to it and @label resolves. A dangling
 // reference is a hard error in Typst, so a clean compile already proves the
 // references work; the query asserts the diagram counter is independent (only

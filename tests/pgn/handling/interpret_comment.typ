@@ -1,4 +1,4 @@
-// §prompt 15 - the comment interpreter: split a PGN comment into a diagram
+// the comment interpreter: split a PGN comment into a diagram
 // marker (+caption), %cal arrows, %csl highlights, and residual prose.
 #import "/src/annotations.typ": interpret-comment, nag-symbol
 

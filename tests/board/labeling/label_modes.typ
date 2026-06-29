@@ -1,6 +1,6 @@
-// §2.3 Labeling - all three modes, each at a few file-side / rank-side positions
+// Labeling - all three modes, each at a few file-side / rank-side positions
 // so the labels move to the requested edges. On-square labels keep a fixed font
-// fraction at every size (prompt 12, item 2: no automatic switch to "border").
+// fraction at every size (no automatic switch to "border").
 #import "/lib.typ": board
 #import "/tests/board/_fixture.typ": test-fen
 

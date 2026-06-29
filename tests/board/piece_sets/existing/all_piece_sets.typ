@@ -1,4 +1,4 @@
-// §2.4 - every bundled piece set, same position, side by side, so the sets can
+// every bundled piece set, same position, side by side, so the sets can
 // be compared and a broken/missing piece in any of them would show up.
 #import "/lib.typ": board, known-piece-sets
 #import "/tests/board/_fixture.typ": test-fen

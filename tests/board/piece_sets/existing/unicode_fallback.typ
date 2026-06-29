@@ -1,4 +1,4 @@
-// §2.4 - the Unicode glyph fallback (piece-set: "unicode" or none). The solid
+// the Unicode glyph fallback (piece-set: "unicode" or none). The solid
 // glyphs are used for both colours, distinguished by fill + a contrasting
 // stroke; the white-fill / black-fill style fields apply ONLY to this fallback.
 #import "/lib.typ": board

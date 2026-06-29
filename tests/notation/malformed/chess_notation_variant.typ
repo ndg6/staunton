@@ -1,5 +1,5 @@
 // EXPECT: expected standard chess
-// §prompt 14 - chess-notation is the standard-variant sugar; a non-standard
+// chess-notation is the standard-variant sugar; a non-standard
 // source is rejected before formatting.
 #import "/lib.typ": chess-notation, position
 #let pos = position((e1: "K", e8: "k")) + (variant: "xiangqi")

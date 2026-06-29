@@ -1,4 +1,4 @@
-// §prompt 15 #1 - inline diagram embedding. When `diagrams` is on and the source
+// inline diagram embedding. When `diagrams` is on and the source
 // is a game, `notation` / `chess-notation` flow the movetext and splice a
 // chess-diagram after each move whose comment carries a diagram marker (ChessBase
 // #/#[caption], Scid [d]/[D], \diagram, %%diagram), using that move's caption and

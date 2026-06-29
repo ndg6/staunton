@@ -1,4 +1,4 @@
-// §2.5 Style options - set defaults once and confirm SUBSEQUENT diagrams inherit
+// Style options - set defaults once and confirm SUBSEQUENT diagrams inherit
 // them, while a per-call argument still overrides. Reading order matters here
 // (set-chess-defaults is document-order state, like Typst's own #set).
 #import "/lib.typ": board, set-chess-defaults, set-piece-set

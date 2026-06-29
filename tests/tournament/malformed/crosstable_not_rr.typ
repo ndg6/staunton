@@ -1,5 +1,5 @@
 // EXPECT: do not form a round-robin
-// §prompt 16 - cross-table requires a round-robin; in a Swiss/league where some
+// cross-table requires a round-robin; in a Swiss/league where some
 // pair never met it errors (use standings + progress instead).
 #import "/lib.typ": parse-pgn, crosstable
 #let g = parse-pgn(```

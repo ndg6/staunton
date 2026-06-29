@@ -1,4 +1,4 @@
-// §prompt 12, item 2 - on-square label CORNER placement. Vertical edge is fixed
+// on-square label CORNER placement. Vertical edge is fixed
 // (files on the bottom edge, ranks on the top edge); `file-label-corner` and
 // `rank-label-corner` pick the horizontal corner. Defaults: file lower-left,
 // rank upper-right.

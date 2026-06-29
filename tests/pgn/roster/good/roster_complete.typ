@@ -1,4 +1,4 @@
-// §5 PGN (good) - a complete Seven-Tag-Roster parses and the tags are readable.
+// PGN (good) - a complete Seven-Tag-Roster parses and the tags are readable.
 // (Missing roster tags are tolerated and default; that lenient path is exercised
 // elsewhere. Here we confirm a well-formed roster round-trips.)
 #import "/lib.typ": parse-pgn, mainline

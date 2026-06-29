@@ -1,4 +1,4 @@
-// §position - the position object shape after reshaping: it now carries
+// the position object shape after reshaping: it now carries
 // `variant`, `cols`, `rows`, and a `squares` dict (renamed from `board`). All
 // constructors (array, squares dict, FEN) yield the same shape; `chess-board`
 // is an alias for `board`.

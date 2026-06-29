@@ -1,4 +1,4 @@
-// §5 PGN/SAN (good) - the counterpart to the ambiguous-SAN failure: when two
+// PGN/SAN (good) - the counterpart to the ambiguous-SAN failure: when two
 // pieces can reach the same square, a DISAMBIGUATED SAN resolves cleanly. Here
 // both knights (b1, f3) can go to d2; "Nbd2" (file hint) picks the b1 knight.
 #import "/lib.typ": parse-fen, san-to-move, square-name

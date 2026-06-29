@@ -1,4 +1,4 @@
-// §2 (board flipping) - flip is a per-diagram argument (never a document
+// (board flipping) - flip is a per-diagram argument (never a document
 // default; see failed_options/flip_as_default.typ). White at the bottom by
 // default; flip: true puts Black at the bottom, and labels/pieces move with it.
 #import "/lib.typ": board

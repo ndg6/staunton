@@ -1,4 +1,4 @@
-// §item 6 - arrows. `arrows` is a board-style key; each entry is a dict
+// arrows. `arrows` is a board-style key; each entry is a dict
 // (from:, to:, color:) or a tuple ("from","to") / ("from","to", color). A
 // missing color uses the settable `arrow-color` default. Arrows flip with the
 // board and scale with the square.
@@ -7,7 +7,7 @@
 
 #assert(default-board-style.keys().contains("arrows"), message: "arrows is a board key")
 #assert(default-board-style.arrows == (), message: "no arrows by default")
-// prompt 12, item 4: width settable (auto -> proportional), transparency 75%,
+// width settable (auto -> proportional), transparency 75%,
 // and the default arrow colour is the same base as the default highlight fill.
 #assert(default-board-style.arrow-width == auto, message: "arrow-width auto by default")
 #assert(default-board-style.arrow-transparency == 85%, message: "arrow transparency 85%")

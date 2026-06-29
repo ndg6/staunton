@@ -1,4 +1,4 @@
-// §prompt 15 - the PGN-handling bucket: settable defaults for how embedded
+// the PGN-handling bucket: settable defaults for how embedded
 // extras are processed. All OFF by default; set-pgn-defaults / set-chess-defaults
 // update the document state.
 #import "/lib.typ": default-pgn-style, pgn-style-keys, pgn-style-state, set-pgn-defaults, set-chess-defaults

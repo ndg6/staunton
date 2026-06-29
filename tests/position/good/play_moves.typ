@@ -1,4 +1,4 @@
-// §prompt 13 - play-moves(source, moves): apply a run of moves to a position
+// play-moves(source, moves): apply a run of moves to a position
 // (or FEN, or none=start) and return the FINAL position, renderable. The variant
 // is carried by the source; move text tolerates move numbers and a result token.
 #import "/lib.typ": play-moves, parse-fen, position, chess-diagram, starting-fen
@@ -6,7 +6,7 @@
 #set page(width: auto, height: auto, margin: 1cm)
 #set text(font: "Libertinus Serif", size: 9pt)
 
-// --- the prompt's Ruy Lopez example: FEN + move text -> target FEN ---
+// --- a Ruy Lopez example: FEN + move text -> target FEN ---
 #let start = "r1bqkbnr/pppp1ppp/2n5/4p3/4P3/5N2/PPPP1PPP/RNBQKB1R w KQkq - 2 3"
 #let target = parse-fen("r1bqkb1r/1ppp1ppp/p1n2n2/4p3/B3P3/5N2/PPPP1PPP/RNBQK2R w KQkq - 2 5")
 

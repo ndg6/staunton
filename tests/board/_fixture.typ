@@ -1,6 +1,6 @@
-// Shared fixture for the §2 board tests. The prompt asks all low-level drawing
-// tests to use ONE arbitrary position so they are directly comparable; edit it
-// here once to re-point every §2 test.
+// Shared fixture for the board tests. All low-level drawing tests use ONE
+// arbitrary position so they are directly comparable; edit it here once to
+// re-point every board test.
 //
 // Chosen position: an Italian Game a few moves in. It has all six piece kinds,
 // both colours, and is asymmetric (so flips and labels are visually

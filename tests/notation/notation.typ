@@ -1,6 +1,6 @@
-// §prompt 14/15 - chess-notation / notation: human-readable move notation from a
+// chess-notation / notation: human-readable move notation from a
 // game, a move-text string, or a SAN array. Figurines, language-aware piece
-// letters (auto follows #set text(lang:)), from/to ranges, and (prompt 15) NAG
+// letters (auto follows #set text(lang:)), from/to ranges, and NAG
 // and comment rendering gated by the pgn-handling bucket.
 #import "/lib.typ": parse-pgn, notation, chess-notation, set-pgn-defaults
 
@@ -46,7 +46,7 @@
 #assert(s("e4 e5", move-numbers: false) == "e4 e5", message: "move-numbers off")
 #assert(s("d8=Q", lang: "de") == "1. d8=D", message: "promotion localized")
 
-// --- prompt 15: NAGs and comments (opt-in) ---
+// --- NAGs and comments (opt-in) ---
 #let gn = parse-pgn("[White \"A\"][Black \"B\"] 1. e4 $1 e5 $6 2. Nf3 {develops the knight} Nc6 *").first()
 // default off: plain movetext, no NAG glyphs, no prose
 #assert(s(gn) == "1. e4 e5 2. Nf3 Nc6", message: "nags/comments off")

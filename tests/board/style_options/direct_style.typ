@@ -1,4 +1,4 @@
-// §2.5 Style options - using styles "directly": build an override dict with
+// Style options - using styles "directly": build an override dict with
 // `chess-style(..)` and spread it into a board, and assert the style contract
 // (default-style keys, flip is NOT a style key). Mixed test: assertions (fail
 // on regression) plus a visual render of the directly-built style.

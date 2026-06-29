@@ -1,5 +1,5 @@
 // EXPECT: supports only standard chess
-// §prompt 13 - move analysis is standard-chess only for now; the engine rejects
+// move analysis is standard-chess only for now; the engine rejects
 // a non-standard position, so play-moves on one errors (no `variant` parameter).
 #import "/lib.typ": play-moves, position
 #let pos = position((e1: "K", e8: "k"), variant: "standard")

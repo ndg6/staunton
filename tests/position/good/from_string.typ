@@ -1,4 +1,4 @@
-// §position - the new "string" constructor: build a position from row strings
+// the new "string" constructor: build a position from row strings
 // (first line = top rank, "." = empty, upper = white, lower = black). Both the
 // raw-block form and the several-row-strings form must agree, derive geometry by
 // counting, and render.

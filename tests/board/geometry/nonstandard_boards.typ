@@ -1,4 +1,4 @@
-// §prompt 12, item 1 - non-standard board geometries. The renderer is no longer
+// non-standard board geometries. The renderer is no longer
 // 8x8-only: the position model carries cols/rows and the board draws a square-
 // celled cols x rows grid. `size` is the LARGER dimension (cells stay square).
 #import "/lib.typ": board, position
@@ -8,7 +8,7 @@
 
 = Non-standard board geometries
 
-== 9x9 (e.g. a Xiangqi-sized grid) -- the prompt's 9-queens example
+== 9x9 (e.g. a Xiangqi-sized grid) -- a 9-queens example
 
 #board(position(```
 ....Q....

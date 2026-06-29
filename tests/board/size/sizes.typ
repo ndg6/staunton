@@ -1,5 +1,5 @@
-// §2.1 Sizes - the same position at a range of sizes, NO labeling (per the
-// prompt). Eyeball that pieces stay centred and proportional as the board grows.
+// Sizes - the same position at a range of sizes, with NO labeling. Eyeball that
+// pieces stay centred and proportional as the board grows.
 #import "/lib.typ": board
 #import "/tests/board/_fixture.typ": test-fen
 

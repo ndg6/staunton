@@ -1,4 +1,4 @@
-// §2.2 Colors - different square / highlight colors. At least one LABELED board
+// Colors - different square / highlight colors. At least one LABELED board
 // per mode so we can see how the label font colors are chosen against custom
 // squares (on-square: opposite square color; border: light color on a darkened
 // dark-square band).

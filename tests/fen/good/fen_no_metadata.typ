@@ -1,8 +1,8 @@
-// §4.0 FEN (good) - a FEN with NO whitespace is just the placement field; the
+// FEN (good) - a FEN with NO whitespace is just the placement field; the
 // missing metadata is filled in silently (w KQkq - 0 1). Placement-only input
 // must therefore parse and render without error.
 //
-// NOTE (decision 2 / backlog): once "any whitespace present => must be a
+// NOTE ( / backlog): once "any whitespace present => must be a
 // complete, valid FEN" lands, the silent-default castling for the no-whitespace
 // case becomes KQkq (today the code defaults castling to "-"). This test only
 // checks that a space-free FEN is accepted; it does not pin the castling value.

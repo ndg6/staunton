@@ -1,4 +1,4 @@
-// §prompt 16 - smoke test over a real division (roster-only subset of
+// smoke test over a real division (roster-only subset of
 // real_tournament.pgn). Player standings only sum per-player points, so they are
 // robust regardless of the file's (non-standard) round numbering. (The full
 // tournament file is too large for Typst's loop limit; this is the M1 subset.)

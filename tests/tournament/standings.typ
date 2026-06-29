@@ -1,4 +1,4 @@
-// §prompt 16 (Stage 1) - standings tables. Compute (`standings`) returns sorted
+// standings tables. Compute (`standings`) returns sorted
 // records; `standings-table` renders a #table. Player and team entities; Buchholz
 // / Sonneborn-Berger tie-breaks; sort = score desc, ties by first appearance.
 #import "/lib.typ": parse-pgn, standings, standings-table, games-by-event

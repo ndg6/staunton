@@ -1,4 +1,4 @@
-// §prompt 17 - REFERENCING chess tables, plus the chess outlines. Tournament
+// REFERENCING chess tables, plus the chess outlines. Tournament
 // tables are #figure(kind: "chess-table"), so they can be referenced (@label) and
 // listed by chess-table-outline / chess-outlines, with their OWN counter separate
 // from diagrams. The per-call `supplement` override is checked here; the
