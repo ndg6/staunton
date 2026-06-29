@@ -77,3 +77,8 @@ size=$(du -sh "$DEST" | cut -f1)
 echo "OK: $files files, $size"
 echo "Verify it compiles standalone, e.g.:"
 echo "  typst compile --root \"$DEST\" \"$DEST/lib.typ\" /dev/null  # (or a small import test)"
+echo
+echo "Reminder: docs/ (incl. the manual) is NOT in this bundle by design. The"
+echo "tracked repo PDF is a build artifact -- if docs/manual.typ changed, rebuild"
+echo "and re-stage it so the repo copy doesn't drift:"
+echo "  typst compile --root . docs/manual.typ docs/manual.pdf && git add docs/manual.pdf"

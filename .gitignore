@@ -2,10 +2,12 @@
 tests/out/
 out/
 *.pdf
+# ...but the compiled user manual is intentionally tracked, so it can be read /
+# downloaded straight from the repo (it is NOT shipped in the package bundle).
+!docs/manual.pdf
 
 # Release bundle output (scripts/build-bundle.sh)
 dist/
-# but keep any sample PDFs we intentionally track (none today)
 
 # OS / editor cruft
 .DS_Store

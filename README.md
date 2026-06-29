@@ -61,13 +61,17 @@ And from a game:
 
 ## Documentation
 
-- **[User manual](docs/manual.md)** — the complete reference (every function,
-  option, and example).
+- **User manual** — the complete reference (every function, option, and example),
+  with each feature shown as the code you type beside the board it produces.
+  Read or download the compiled **[PDF](docs/manual.pdf)**, or build it yourself
+  from its Typst source, [`docs/manual.typ`](docs/manual.typ). The manual is part
+  of the repo only — it is not shipped in the package bundle.
 - **[Showcase](docs/examples/showcase.typ)** — a runnable capability tour.
 
-Compile the showcase locally with the package folder as root:
+Compile the manual and the showcase locally with the package folder as root:
 
 ```sh
+typst compile --root . docs/manual.typ docs/manual.pdf
 typst compile --root . docs/examples/showcase.typ showcase.pdf
 ```
 
@@ -93,7 +97,8 @@ and [LICENSE-PIECES](LICENSE-PIECES). The package manifest declares
 `MIT AND GPL-2.0-or-later`.
 
 A `"unicode"` glyph fallback needs no SVGs. The renderer accepts any set name, so
-you can add your own piece set — see the [manual](docs/manual.md#pieces-and-fonts).
+you can add your own piece set — see the *Pieces and fonts* section of the
+[manual](docs/manual.typ).
 (Other popular lichess sets carry non-commercial licenses and are not bundled.)
 
 ## Repository layout
@@ -103,7 +108,7 @@ typst.toml          package manifest          LICENSE / LICENSE-PIECES  MIT / GP
 lib.typ             public API + figure wrapper
 src/                engine, FEN/PGN/SAN, notation, tournament, board renderer, i18n
 src/assets/         piece-set SVGs (cburnett, merida) + i18n language files
-docs/manual.md      user manual               docs/examples/  runnable showcase
+docs/manual.typ     user manual (-> PDF)      docs/examples/  runnable showcase
 tests/              test suite (bash tests/run.sh)   scripts/  release bundle build
 ```
 
