@@ -47,16 +47,15 @@
 
 = Introduction
 
-*staunton* is a Typst package for chess. From a FEN string, a parsed PGN, or a
-position you build by hand, it produces:
+*staunton* is a Typst package for chess publications. From a FEN string, a parsed
+PGN, or a position you build by hand, it produces:
 
-- *boards and diagrams* — captioned, cross-referenceable figures, with labels,
-  highlights, arrows, an optional grid, flexible sizing, custom colours, and
-  bundled SVG piece sets (or a Unicode fallback);
-- *games from PGN* — a lazy parser, position navigation by locator (mainline and
-  variations), move play-out, and FEN export;
-- *move notation* — localized piece letters, figurine glyphs, NAGs and comments,
-  and diagrams embedded inline;
+- *boards and diagrams* — pure boards with labels, highlights, arrows, an optional grid, 
+  flexible sizing, custom colours, and bundled SVG piece sets (or a Unicode fallback); and building on that diagrams with captions, figure counters, and referenceable labels;
+- *games from PGN* — a sophisticated parser creates single games or an array of games,  
+  from which you create positions by "locators" (mainline and variations), move play-out, and FEN export;
+- *move notation* — move text output with localized piece letters, figurine glyphs, NAGs,
+  comments and diagrams embedded inline;
 - *tournament tables* — standings, cross-tables and progress charts from a PGN's
   results, by player or by team;
 - *outlines and references* — diagrams and tables get their own counters and lists;
@@ -77,14 +76,12 @@ references*, and the *document-wide style* settings.
 
 == The name
 
-staunton honours *Howard Staunton* (c. 1810–1874): a leading chess master of his
-day, organiser of the first international tournament (London, 1851), a chess author
-and publisher, and the namesake of the standardised *Staunton pattern* chessmen —
+Typst package *staunton* is named after *Howard Staunton* (c. 1810–1874): a leading chess master of his day, organiser of the first international tournament (London, 1851), a chess author and publisher, and the namesake of the standardised *Staunton pattern* chessmen —
 still the tournament standard.
 
 == Installing and importing
 
-staunton is a Typst package. Import its public API once and every function in this
+*staunton* is a Typst package. Import its public API once and every function in this
 manual is in scope:
 
 ```typ
@@ -326,24 +323,26 @@ abbreviation, or a bare letter (UPPER = white, lower = black):
 ```)
 
 The *string form* reads like the board itself — first line is the TOP rank, `.`
-is empty. It is rectangular-only (this is what lets a board be non-8×8) and rejects
-characters that aren't a valid piece abbreviation or `.`:
+is empty. Pass it as a raw block, as below — the most legible, least error-prone
+way, with no per-line quotes or commas (several row strings work too). It is
+rectangular-only (this is what lets a board be non-8×8) and rejects characters
+that aren't a valid piece abbreviation or `.`:
 
-#example(```typ
+#example(````typ
 #chess-diagram(
-  position(
-    "....r...",
-    "........",
-    "..p..PPk",
-    ".p.r....",
-    "pP..p.R.",
-    "P.B.....",
-    "..P..K..",
-    "........",
-  ),
+  position(```
+    ....r...
+    ........
+    ..p..PPk
+    .p.r....
+    pP..p.R.
+    P.B.....
+    ..P..K..
+    ........
+  ```),
   size: 4.2cm,
 )
-```)
+````)
 
 `position` returns a dict `(variant, cols, rows, squares, turn, castling,
 en-passant, halfmove, fullmove)`; `parse-fen` returns the same shape. The `cols` /
