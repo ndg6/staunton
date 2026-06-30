@@ -5,6 +5,9 @@
 // change; there is no separate markdown copy to keep in sync.
 //
 // Build:  typst compile --root . docs/manual.typ docs/manual.pdf
+//
+// Chapter order is deliberately bottom-up: board -> diagram -> position -> games
+// -> tables -> outlines -> document-wide style.
 
 #import "manual-tools.typ": example
 
@@ -36,40 +39,239 @@
 
 #v(1.4cm)
 
-All examples assume the package is in scope:
+#outline(title: [Contents], depth: 2, indent: auto)
+
+#pagebreak()
+
+// === Introduction ============================================================
+
+= Introduction
+
+*staunton* is a Typst package for chess. From a FEN string, a parsed PGN, or a
+position you build by hand, it produces:
+
+- *boards and diagrams* — captioned, cross-referenceable figures, with labels,
+  highlights, arrows, an optional grid, flexible sizing, custom colours, and
+  bundled SVG piece sets (or a Unicode fallback);
+- *games from PGN* — a lazy parser, position navigation by locator (mainline and
+  variations), move play-out, and FEN export;
+- *move notation* — localized piece letters, figurine glyphs, NAGs and comments,
+  and diagrams embedded inline;
+- *tournament tables* — standings, cross-tables and progress charts from a PGN's
+  results, by player or by team;
+- *outlines and references* — diagrams and tables get their own counters and lists;
+- *document-wide styling* and *localization* (six languages, easily extended).
+
+#example(```typ
+#chess-diagram(
+  "r1bqkbnr/pppp1ppp/2n5/4p3/4P3/5N2/PPPP1PPP/RNBQKB1R",
+  caption: [The Ruy Lopez, three moves in.],
+  size: 4cm,
+)
+```)
+
+This manual is bottom-up. The *board* is the drawing primitive; a *diagram* wraps
+a board in a referenceable figure; a *position* is the data a board draws; *games*
+add PGN, notation, and play; then come *tournament tables*, *outlines and
+references*, and the *document-wide style* settings.
+
+== The name
+
+staunton honours *Howard Staunton* (c. 1810–1874): a leading chess master of his
+day, organiser of the first international tournament (London, 1851), a chess author
+and publisher, and the namesake of the standardised *Staunton pattern* chessmen —
+still the tournament standard.
+
+== Installing and importing
+
+staunton is a Typst package. Import its public API once and every function in this
+manual is in scope:
 
 ```typ
 #import "@preview/staunton:0.1.0": *
 ```
 
-In every framed example below, the left side is *the code you type* and the right
-side is *exactly what it renders* — the manual compiles its own examples, so the
-two can never disagree.
+== How to read this manual
 
-#outline(title: [Contents], depth: 2, indent: auto)
+In every framed example, the left side is *the code you type* and the right side
+is *exactly what it renders* — the manual compiles its own examples, so the two
+can never disagree.
 
-#pagebreak()
+// === The board ===============================================================
 
-// === chess-diagram ===========================================================
+= The board
 
-= chess-diagram
-
-`chess-diagram(source, ..)` is the everyday entry point for *standard western
-chess*. It returns a `#figure` with `kind: "chess"`, so it is captioned and
-cross-referenceable. The simplest call takes a FEN string:
+`board(source, ..)` draws *just the board* — no caption, no figure — and is the
+primitive every diagram builds on. `source` is one of: a *FEN string*; a
+*position* (from `position(..)` or `parse-fen(..)`); or a bare *squares* dict
+(square name → `(kind, color)`).
 
 #example(```typ
-#chess-diagram(
+#board(
   "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR",
   size: 4cm,
 )
 ```)
 
-`source` is one of: a *FEN string*; a *position* dict from `position(..)` or
-`parse-fen(..)`; or a bare *squares* dict (square name → `(kind, color)`).
+`board` is the variant-agnostic primitive; `chess-board` is the standard-chess
+sugar over it (same rendering, but it documents the variant and rejects a
+non-standard source). Use `board` inline in text or inside your own layout; reach
+for a *diagram* (next chapter) when you want a captioned, referenceable figure.
 
-A diagram can carry two labels: a *game-info* line above the board (drawn
-automatically as `"<White> – <Black> (<Year>)"` when both players are known), and
+The rest of this chapter covers the board's drawing options: labels, highlights,
+arrows, the grid, coordinates, size, colours, orientation, and piece sets — all of
+which a `chess-diagram` accepts too.
+
+== Labels
+
+`label-mode` chooses how files and ranks are drawn — `"on-square"` (default,
+tucked into the corner squares), `"outside"` (a gutter strip), or `"border"` (a
+themed band, styled by `border-theme`). `labels: false` suppresses them.
+
+#example(```typ
+#board(
+  "8/5k2/8/8/3Q4/8/4K3/8",
+  label-mode: "border",
+  border-theme: "brown",
+  size: 3.8cm,
+)
+```)
+
+== Highlights
+
+`highlight` marks squares; each entry is a square name (drawn with
+`highlight-shape`, default `"filled"`), a `(square, color)` pair, or a dict
+`(square: .., shape: .., color: ..)` where `shape` is `"filled"`, `"cross"`, or
+`"circle"`. By convention a *cross* marks an empty square.
+
+#example(```typ
+#board(
+  "8/8/8/4p3/4P3/8/8/8",
+  highlight: (
+    "e4",
+    (square: "e5", shape: "circle"),
+    (square: "d5", shape: "cross"),
+  ),
+  size: 4cm,
+)
+```)
+
+== Arrows and the grid
+
+`arrows` draws arrows; each entry is a `(from, to)` or `(from, to, color)` tuple,
+or a dict `(from: .., to: .., color: ..)`. A missing color uses `arrow-color`.
+Arrows scale with the board and flip with it. A `grid: true` overlay draws thin
+lines between the squares.
+
+#example(```typ
+#board(
+  "r1bqkb1r/pppp1ppp/2n2n2/4p3/2B1P3/5N2/PPPP1PPP/RNBQK2R",
+  grid: true,
+  highlight: ("f7",),
+  arrows: (("c4", "f7"), ("f3", "e5", rgb(0, 70, 160, 200))),
+  size: 4.4cm,
+)
+```, stacked: true)
+
+== Coordinates and non-square boards
+
+Files run `a`, `b`, … and ranks `1`, `2`, …; `a1` is the dark square in the
+lower-left corner, `h8` the upper-right. Square names are case-insensitive
+(`"E4"` = `"e4"`).
+
+#example(```typ
+#board(
+  "8/8/8/8/8/8/8/8",
+  label-mode: "outside",
+  size: 4cm,
+)
+```)
+
+The board is *not* tied to 8×8. A `position` built from the string form (next
+chapter) counts its own columns and rows, and the renderer draws whatever geometry
+it is given — files and ranks extend as far as the board needs, and the cells stay
+square while the board itself becomes rectangular:
+
+#example(```typ
+#board(
+  position(
+    "r..k.r",
+    "pp..pp",
+    "......",
+    "RN..KR",
+  ),
+  size: 4cm,
+)
+```)
+
+== Sizing
+
+The default board size suits an A4 two-column layout. A board reads the available
+space at its insertion point via `layout`, so it adapts to any column or page size
+without being told the geometry, and shrinks to fit if asked for more than fits.
+`size` may be a `length`, a `ratio` of the available width, or `auto`:
+
+#example(```typ
+#board(
+  "8/8/8/3k4/3K4/8/8/8",
+  size: 60%,   // of the available width
+)
+```)
+
+== Colours
+
+`light` and `dark` set the two square colours:
+
+#example(```typ
+#board(
+  "8/8/8/3qk3/3QK3/8/8/8",
+  light: rgb("#eeeed2"),
+  dark: rgb("#769656"),
+  size: 3.8cm,
+)
+```)
+
+== Flip
+
+`flip: true` shows the board from Black's side; labels, highlights and arrows all
+flip with it. Orientation is a *per-board* choice — `flip` is the one setting that
+cannot be made a document default (see *Document-wide style*).
+
+#example(```typ
+#board("8/8/8/3k4/3K4/8/8/8", flip: true, size: 3.4cm)
+```)
+
+== Piece sets and fonts
+
+Pieces are drawn from bundled *SVG piece sets*. Two ship with the package, both
+GPLv2+: `cburnett` (default) and `merida`. Choose one with `piece-set:` per board,
+or document-wide with `set-piece-set`:
+
+#example(```typ
+#grid(columns: 3, gutter: 8pt, align: bottom,
+  board("8/8/8/8/4N3/8/8/8", size: 2.6cm, piece-set: "cburnett"),
+  board("8/8/8/8/4N3/8/8/8", size: 2.6cm, piece-set: "merida"),
+  board("8/8/8/8/4N3/8/8/8", size: 2.6cm, piece-set: "unicode"),
+)
+```, stacked: true)
+
+The renderer accepts *any* set name and loads
+`src/assets/piece_sets/<name>/{w,b}{K,Q,R,B,N,P}.svg` on demand, so you can add a
+set by dropping such a folder into your copy and passing its name. `piece-set:
+"unicode"` (or `none`) selects the glyph fallback — solid Unicode chess glyphs
+distinguished by fill and a contrasting stroke; it needs a font carrying them.
+
+// === Diagrams ================================================================
+
+= Diagrams
+
+`chess-diagram(source, ..)` wraps a board in a `#figure` (kind `"chess"`), so —
+unlike a bare `board` — it is captioned, counted, referenceable, and listed by an
+outline. `source` is the same FEN / position / squares the board takes, and it
+accepts every board option from the previous chapter.
+
+A diagram carries two optional labels: a *game-info* line above the board (drawn
+automatically as `"<White> – <Black> (<Year>)"` when both players are known) and
 the figure *caption* below it.
 
 #example(```typ
@@ -81,113 +283,26 @@ the figure *caption* below it.
 )
 ```)
 
-Use `flip: true` to show the board from Black's side, and `piece-set:` to pick a
-bundled set (`"cburnett"` default, `"merida"`, or `"unicode"` for the glyph
-fallback):
+`chess-diagram` is the standard-chess sugar over the generic `diagram`; both take
+the same source and overrides as `board`. Extra named arguments are forwarded to
+`figure` (e.g. `placement: top`).
 
-#example(```typ
-#chess-diagram(
-  "8/8/8/3k4/3K4/8/8/8",
-  flip: true,
-  piece-set: "merida",
-  size: 3.6cm,
-)
-```)
+== Boards are not figures
 
-== Board labels
+A bare `board` is plain content: it has *no* caption, *no* figure counter, does
+*not* resolve `@`-references, and is *not* listed by `chess-diagram-outline`. Only
+a *diagram* is a figure. So draw a `board` for an inline or decorative position,
+and a `chess-diagram` whenever you want to caption it, cross-reference it
+(`@label`), or list it — see *Outlines and references*.
 
-`label-mode` chooses how files and ranks are drawn — `"on-square"` (default,
-tucked into the corner squares), `"outside"` (a gutter strip), or `"border"` (a
-themed band, styled by `border-theme`). `labels: false` suppresses them.
+// === Positions ===============================================================
 
-#example(```typ
-#chess-diagram(
-  "8/5k2/8/8/3Q4/8/4K3/8",
-  label-mode: "border",
-  border-theme: "brown",
-  size: 3.8cm,
-)
-```)
+= Positions
 
-// === Highlights and arrows ===================================================
-
-= Highlights and arrows
-
-`highlight` marks squares; each entry is a square name (drawn with
-`highlight-shape`, default `"filled"`), a `(square, color)` pair, or a dict
-`(square: .., shape: .., color: ..)` where `shape` is `"filled"`, `"cross"`, or
-`"circle"`.
-
-#example(```typ
-#chess-diagram(
-  "8/8/8/4p3/4P3/8/8/8",
-  highlight: (
-    "e4",
-    (square: "e5", shape: "circle"),
-    (square: "d5", shape: "cross"),
-  ),
-  size: 4cm,
-)
-```)
-
-`arrows` draws arrows; each entry is a `(from, to)` or `(from, to, color)` tuple,
-or a dict `(from: .., to: .., color: ..)`. A missing color uses `arrow-color`.
-Arrows scale with the board and flip with it.
-
-#example(```typ
-#chess-diagram(
-  "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR",
-  arrows: (
-    ("e2", "e4"),
-    ("g1", "f3", blue),
-  ),
-  size: 4cm,
-)
-```)
-
-Highlights and arrows combine freely, and a `grid: true` overlay can be added on
-top of any board:
-
-#example(```typ
-#chess-diagram(
-  "r1bqkb1r/pppp1ppp/2n2n2/4p3/2B1P3/5N2/PPPP1PPP/RNBQK2R",
-  grid: true,
-  highlight: ("f7",),
-  arrows: (("c4", "f7"), ("f3", "e5", rgb(0, 70, 160, 200))),
-  size: 4.4cm,
-)
-```, stacked: true)
-
-// === board and diagram =======================================================
-
-= board and diagram
-
-`board(source, ..)` draws *just the board* — no figure, no caption. It is the
-variant-agnostic primitive the diagram wrappers build on, and the right tool when
-you want a board inline in text or inside your own layout. It takes the same
-`source` forms and the same style overrides as `chess-diagram`.
-
-#example(```typ
-A king-and-pawn ending #board(
-  "8/8/8/3k4/3K4/8/8/8",
-  size: 2.2cm,
-  labels: false,
-) drawn inline.
-```)
-
-Reach for `board` when you want the bare board; reach for a `*-diagram` when you
-want the captioned, cross-referenceable `#figure`. `chess-board` / `chess-diagram`
-are the *standard-variant* sugar over the generic `board` / `diagram`: same
-rendering, but they document the variant and reject a non-standard source.
-
-// === position ================================================================
-
-= position
-
-`position(..)` builds the data model — "which piece stands on which square." It
-accepts a FEN string (auto-detected), a *squares dict*, or a *string form*. In a
-squares dict the piece can be a long name, a kind abbreviation, or a bare letter
-(UPPER = white, lower = black):
+`position(..)` builds the data model — "which piece stands on which square" — that
+a board or diagram draws. It accepts a FEN string (auto-detected), a *squares
+dict*, or a *string form*. In a squares dict the piece can be a long name, a kind
+abbreviation, or a bare letter (UPPER = white, lower = black):
 
 #example(```typ
 #chess-diagram(
@@ -201,7 +316,8 @@ squares dict the piece can be a long name, a kind abbreviation, or a bare letter
 ```)
 
 The *string form* reads like the board itself — first line is the TOP rank, `.`
-is empty:
+is empty. It is rectangular-only (this is what lets a board be non-8×8) and rejects
+characters that aren't a valid piece abbreviation or `.`:
 
 #example(```typ
 #chess-diagram(
@@ -220,9 +336,8 @@ is empty:
 ```)
 
 `position` returns a dict `(variant, cols, rows, squares, turn, castling,
-en-passant, halfmove, fullmove)`; `parse-fen` returns the same shape. The string
-form is rectangular-only and rejects characters that aren't a valid piece
-abbreviation or `.`.
+en-passant, halfmove, fullmove)`; `parse-fen` returns the same shape. The `cols` /
+`rows` are counted from the string form (otherwise the 8×8 default).
 
 // === Games (PGN) =============================================================
 
@@ -443,29 +558,63 @@ above the table), `supplement`, and `lang`. The compute functions (`standings`,
 layouts. *Team* mode groups games by the `Round = "round.board"` convention into
 matches.
 
+// === Outlines and references =================================================
+
+= Outlines and references
+
+Diagrams and tables each carry a distinct figure `kind` (`"chess"` /
+`"chess-table"`), so they get their own counters, can be *referenced*
+(`@label` → "Diagram 3" / "Table 2"), and can be *listed separately*:
+
+```typ
+#chess-diagram-outline()     // list of chess diagrams
+#chess-table-outline()       // list of tournament tables
+#chess-outlines()            // both, diagrams then tables
+
+#chess-diagram(starting-fen, caption: [Start]) <start>
+As shown in @start, ...
+```
+
+Only figures that carry a *caption* appear in an outline (a caption-less figure is
+still referenceable but unlisted, matching Typst). Titles are language-aware by
+default and settable per call (`title:`, `lang:`) or document-wide
+(`set-diagram-defaults(outline-title: ..)`). Remember that a bare `board` is not a
+figure, so it can be neither referenced nor listed — use a `chess-diagram`.
+
 // === Document-wide style =====================================================
 
 = Document-wide style
 
-Styling splits into *five* buckets, each with its own setter: *board* style
-(`set-board-defaults`), *diagram* style (`set-diagram-defaults`), *table* style
-(`set-table-defaults`), *language* (`set-lang`), and *PGN handling*
-(`set-pgn-defaults`). `set-chess-defaults` is the single *umbrella* over all five:
-it routes each key to the bucket that owns it, so **any** settable default can go
-through it (`set-chess-defaults(dark: blue, lang: "de", nags: true)` is fine). A
-setter affects *every subsequent* diagram/table; per-call arguments still
-override.
+Defaults live in *five* buckets, each with its own setter:
+
+#table(
+  columns: (auto, auto, 1fr),
+  inset: 6pt,
+  align: (left, left, left),
+  stroke: 0.5pt + rgb("#d9d9d2"),
+  table.header([*bucket*], [*setter*], [*controls*]),
+  [board], raw("set-board-defaults"), [square colours, labels, piece set, highlights, arrows, grid, size],
+  [diagram], raw("set-diagram-defaults"), [the diagram figure: game-info line, supplement, outline title],
+  [table], raw("set-table-defaults"), [the table figure: supplement, outline title, title gap],
+  [language], raw("set-lang"), [the document language (also `set-i18n-defaults`)],
+  [PGN handling], raw("set-pgn-defaults"), [`annotations` / `nags` / `comments` / `diagrams`],
+)
+
+`set-chess-defaults` is the single *umbrella* over *all five* buckets: pass any key
+from any bucket — *including* `lang` — and it is routed to the bucket that owns it.
 
 ```typ
 #set-board-defaults(light: rgb("#eeeed2"), dark: rgb("#769656"), size: 5cm)
-#set-diagram-defaults(info-bold: false, supplement: [Position])
-#set-table-defaults(supplement: [Tabelle])
-#set-piece-set("merida")                          // sugar for set-board-defaults
-#set-chess-defaults(dark: blue, info-gap: 1em)    // umbrella
+#set-lang("de")
+#set-pgn-defaults(nags: true)
+// ...or all of the above at once, through the umbrella:
+#set-chess-defaults(dark: blue, lang: "de", nags: true, info-gap: 1em)
+#set-piece-set("merida")    // sugar for set-board-defaults(piece-set: ..)
 ```
 
-Every default is equivalently a *per-call* argument — the same green theme, set
-once above vs. passed to one diagram:
+A setter affects *every subsequent* diagram/table; per-call arguments still
+override. Every default is equivalently a per-call argument — the same green theme,
+set once above vs. passed to one diagram:
 
 #example(```typ
 #chess-diagram(
@@ -475,10 +624,10 @@ once above vs. passed to one diagram:
 )
 ```)
 
-`flip` is the one setting *not* allowed in any defaults setter — orientation is a
-per-diagram choice, so `set-chess-defaults(flip: ..)` is an error. (`supplement`
-and `outline-title` live in *both* the diagram and table buckets; the umbrella
-routes them to *diagram* — use `set-table-defaults` for the table ones.)
+Two caveats. `flip` is *not* allowed in any defaults setter — orientation is a
+per-board choice, so `set-chess-defaults(flip: ..)` is an error. And `supplement` /
+`outline-title` live in *both* the diagram and table buckets; the umbrella routes
+them to *diagram*, so use `set-table-defaults` for the table ones.
 
 == Language
 
@@ -519,79 +668,3 @@ what is processed, and *all default off*:
 
 Each is also a per-call argument (`auto` → the document default) on `notation` /
 `board-after` — as used in the annotations example above.
-
-// === Outlines and references =================================================
-
-= Outlines and references
-
-Diagrams and tables each carry a distinct figure `kind` (`"chess"` /
-`"chess-table"`), so they get their own counters, can be *referenced*
-(`@label` → "Diagram 3" / "Table 2"), and can be *listed separately*:
-
-```typ
-#chess-diagram-outline()     // list of chess diagrams
-#chess-table-outline()       // list of tournament tables
-#chess-outlines()            // both, diagrams then tables
-
-#chess-diagram(starting-fen, caption: [Start]) <start>
-As shown in @start, ...
-```
-
-Only figures that carry a *caption* appear in an outline (a caption-less figure is
-still referenceable but unlisted, matching Typst). Titles are language-aware by
-default and settable per call (`title:`, `lang:`) or document-wide
-(`set-diagram-defaults(outline-title: ..)`).
-
-// === Pieces and fonts ========================================================
-
-= Pieces and fonts
-
-Pieces are drawn from bundled *SVG piece sets*. Two ship with the package, both
-GPLv2+: `cburnett` (default) and `merida`. Choose one per diagram with
-`piece-set:` or document-wide with `set-piece-set`:
-
-#example(```typ
-#grid(columns: 3, gutter: 8pt, align: bottom,
-  board("8/8/8/8/4N3/8/8/8", size: 2.6cm, piece-set: "cburnett"),
-  board("8/8/8/8/4N3/8/8/8", size: 2.6cm, piece-set: "merida"),
-  board("8/8/8/8/4N3/8/8/8", size: 2.6cm, piece-set: "unicode"),
-)
-```, stacked: true)
-
-The renderer accepts *any* set name and loads
-`src/assets/piece_sets/<name>/{w,b}{K,Q,R,B,N,P}.svg` on demand, so you can add a
-set by dropping such a folder into your copy and passing its name. `piece-set:
-"unicode"` (or `none`) selects the glyph fallback — solid Unicode chess glyphs
-distinguished by fill and a contrasting stroke; it needs a font carrying them.
-
-// === Coordinates =============================================================
-
-= Coordinates
-
-Files `a`–`h`, ranks `1`–`8`; `a1` is the dark square in the lower-left corner,
-`h8` the upper-right. Square names are case-insensitive (`"E4"` = `"e4"`).
-
-#example(```typ
-#board(
-  "8/8/8/8/8/8/8/8",
-  label-mode: "outside",
-  size: 4cm,
-)
-```)
-
-// === Sizing ==================================================================
-
-= Sizing
-
-The default board size suits an A4 two-column layout. A diagram reads the
-available space at its insertion point via `layout`, so it adapts to any column
-or page size without being told the geometry, and shrinks to fit if asked for
-more than fits. `size` may be a `length`, a `ratio` of the available width, or
-`auto`:
-
-#example(```typ
-#chess-diagram(
-  "8/8/8/3k4/3K4/8/8/8",
-  size: 60%,   // of the available width
-)
-```)
