@@ -43,9 +43,10 @@
 #let default-dark = default-style.dark
 #let default-board-size = 6.4cm
 
-// Board labels use their own sans-serif, independent of the main/diagram font.
-#let board-label-font = ("Helvetica", "Arial", "Liberation Sans", "DejaVu Sans")
-#let _label-text(body, size, fill) = text(font: board-label-font, size: size, fill: fill, body)
+// Board labels use their own sans-serif (the `label-font` board-style option),
+// independent of the main/diagram font. `render-board` shadows `_label-text` with
+// a closure bound to `st.label-font`; this module-level default is the fallback.
+#let _label-text(body, size, fill) = text(font: ("Arial", "DejaVu Sans Mono"), size: size, fill: fill, body)
 
 // Label sizing (fractions of a square side). On-square labels are small and sit
 // tucked into the corner; the "outside"/"border" labels live in a gutter so can
@@ -172,6 +173,9 @@
 
   context {
     let st = default-style + style-state.get() + overrides.named()
+    // Labels use `st.label-font` (configurable); shadow the helper so the call
+    // sites below pick it up without threading the font through each one.
+    let _label-text = (body, size, fill) => text(font: st.label-font, size: size, fill: fill, body)
     assert(st.file-side == bottom or st.file-side == top, message: "file-side must be `top` or `bottom`")
     assert(st.rank-side == left or st.rank-side == right, message: "rank-side must be `left` or `right`")
     assert(st.file-label-corner == left or st.file-label-corner == right, message: "file-label-corner must be `left` or `right`")

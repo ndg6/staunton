@@ -1,8 +1,14 @@
 // Labeling - all three modes, each at a few file-side / rank-side positions
 // so the labels move to the requested edges. On-square labels keep a fixed font
 // fraction at every size (no automatic switch to "border").
-#import "/lib.typ": board
+#import "/lib.typ": board, default-board-style, set-board-defaults
 #import "/tests/board/_fixture.typ": test-fen
+
+// `label-font` is a settable board-style option. The default leads with Arial
+// (Windows & macOS) and falls back to Typst's embedded "DejaVu Sans Mono", so a
+// stock install draws labels without "unknown font family" warnings.
+#assert("label-font" in default-board-style, message: "label-font is a board-style option")
+#assert(default-board-style.label-font == ("Arial", "DejaVu Sans Mono"), message: "default label-font fallback list")
 
 #set page(width: auto, height: auto, margin: 1cm)
 #set text(font: "Libertinus Serif", size: 9pt)

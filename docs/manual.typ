@@ -261,6 +261,16 @@ set by dropping such a folder into your copy and passing its name. `piece-set:
 "unicode"` (or `none`) selects the glyph fallback — solid Unicode chess glyphs
 distinguished by fill and a contrasting stroke; it needs a font carrying them.
 
+The rank/file *labels* are drawn in their own sans-serif, set by the `label-font`
+board option (a family or a fallback list), independent of the document font. The
+default is `("Arial", "DejaVu Sans Mono")` — Arial on Windows/macOS, falling back
+to Typst's always-embedded mono — so a stock install draws labels without
+"unknown font family" warnings. Override it like any board default:
+
+```typ
+#set-board-defaults(label-font: "Segoe UI")   // or a list, e.g. ("Helvetica", "DejaVu Sans Mono")
+```
+
 // === Diagrams ================================================================
 
 = Diagrams

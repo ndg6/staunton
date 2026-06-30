@@ -39,6 +39,12 @@
   light: rgb("#f0d9b5"),
   dark: rgb("#b58863"),
   labels: true,
+  // Board labels use their own sans-serif, independent of the document/diagram
+  // font. The default leads with Arial (present on Windows & macOS) and falls
+  // back to Typst's embedded "DejaVu Sans Mono" (always available), so a stock
+  // install draws labels without "unknown font family" warnings. Override with a
+  // single family or a fallback list, e.g. `label-font: "Segoe UI"`.
+  label-font: ("Arial", "DejaVu Sans Mono"),
   label-mode: "on-square",    // "on-square" | "outside" | "border"
   file-side: bottom,          // bottom | top
   rank-side: right,           // right | left
