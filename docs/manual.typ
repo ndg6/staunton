@@ -382,6 +382,22 @@ annotates its 2nd move:
 The color letters (`G R Y B O`) resolve through the `annotation-colors` board
 style; annotations merge with any `arrows` / `highlight` you pass explicitly.
 
+*With embedded diagrams.* The `diagrams` switch (PGN handling) makes
+`notation(diagrams: true)` splice a board after each move whose comment carries a
+diagram marker. If that *same* comment also holds `%cal`/`%csl` **and**
+`annotations` is on, the spliced board shows those arrows/highlights too — the two
+switches compose:
+
+```typ
+// 2. Nf3 {[%cal Gf1c4] [%csl Re5] #[After 2.Nf3]} Nc6 ...
+#set-pgn-defaults(diagrams: true, annotations: true)
+#chess-notation(game)   // ...text, then a board after 2.Nf3 with the arrow + highlight
+```
+
+`diagrams` decides *whether* a board appears; `annotations` decides whether it
+carries the marks. The marker and the `%cal`/`%csl` must be in the *same* move's
+comment. (Only mainline moves are addressed — `notation` renders the mainline.)
+
 == Errors
 
 Malformed PGN is a *hard error*: broken tag syntax and stray variation parens
@@ -431,10 +447,14 @@ matches.
 
 = Document-wide style
 
-Styling splits into buckets — *board* style, *diagram* style, and *table* style —
-each with its own setter; `set-chess-defaults` is an umbrella routing each key to
-the right bucket. A setter affects *every subsequent* diagram/table; per-call
-arguments still override.
+Styling splits into *five* buckets, each with its own setter: *board* style
+(`set-board-defaults`), *diagram* style (`set-diagram-defaults`), *table* style
+(`set-table-defaults`), *language* (`set-lang`), and *PGN handling*
+(`set-pgn-defaults`). `set-chess-defaults` is the single *umbrella* over all five:
+it routes each key to the bucket that owns it, so **any** settable default can go
+through it (`set-chess-defaults(dark: blue, lang: "de", nags: true)` is fine). A
+setter affects *every subsequent* diagram/table; per-call arguments still
+override.
 
 ```typ
 #set-board-defaults(light: rgb("#eeeed2"), dark: rgb("#769656"), size: 5cm)
@@ -456,7 +476,9 @@ once above vs. passed to one diagram:
 ```)
 
 `flip` is the one setting *not* allowed in any defaults setter — orientation is a
-per-diagram choice, so `set-chess-defaults(flip: ..)` is an error.
+per-diagram choice, so `set-chess-defaults(flip: ..)` is an error. (`supplement`
+and `outline-title` live in *both* the diagram and table buckets; the umbrella
+routes them to *diagram* — use `set-table-defaults` for the table ones.)
 
 == Language
 
