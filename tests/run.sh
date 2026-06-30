@@ -143,4 +143,6 @@ echo "----------------------------------------"
 total=$((pass + fail))
 printf 'passed=%d  failed=%d  (%d tests)\n' "$pass" "$fail" "$total"
 printf 'compile time=%d ms   wall time=%d ms\n' "$compile_ms" "$((wall1 - wall0))"
+echo "Some sheets only RENDER (not asserted) -- before a release, eyeball the"
+echo "PDFs under tests/out/ listed in tests/VISUAL_CHECKS.md."
 [ $fail -eq 0 ]
