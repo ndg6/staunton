@@ -114,21 +114,29 @@
 
 // Draw one highlight inside the board canvas at screen offset (dx, dy):
 //   * "filled" -> a square-filling rect in `fill`;
-//   * "circle" -> a centred circle of radius sq/2, stroked in `circle-col`;
-//   * "cross"  -> an X almost spanning the square, stroked in `cross-col` with
-//                 round caps.
+//   * "circle" -> a centred circle whose OUTER stroke edge just touches the square
+//                 border (radius shrunk by half the stroke), stroked in `circle-col`;
+//   * "cross"  -> an X spanning ~95% of the square, stroked in `cross-col` with
+//                 round caps. The two diagonals are placed INDEPENDENTLY: a single
+//                 `place` holding both lines would stack them in normal flow,
+//                 dropping the second diagonal onto a lower square.
 #let _draw-highlight(shape, dx, dy, sq, fill, cross-col, circle-col, cross-w, circle-w) = {
   if shape == "filled" {
     place(dx: dx, dy: dy, rect(width: sq, height: sq, fill: fill, stroke: none))
   } else if shape == "circle" {
-    place(dx: dx, dy: dy, circle(radius: sq / 2, fill: none, stroke: circle-w + circle-col))
+    // The stroke straddles the radius, so the outer edge sits at radius + w/2.
+    // Shrink the radius by w/2 and re-centre by w/2 so that outer edge lands
+    // exactly on the square border, never beyond it.
+    place(
+      dx: dx + circle-w / 2,
+      dy: dy + circle-w / 2,
+      circle(radius: sq / 2 - circle-w / 2, fill: none, stroke: circle-w + circle-col),
+    )
   } else if shape == "cross" {
-    let inset = sq * 0.12   // "almost but not 100%" corner-to-corner
+    let inset = sq * 0.025   // ~95% corner-to-corner
     let str = stroke(paint: cross-col, thickness: cross-w, cap: "round")
-    place(dx: dx, dy: dy, {
-      line(start: (inset, sq - inset), end: (sq - inset, inset), stroke: str)  // LL -> UR
-      line(start: (inset, inset), end: (sq - inset, sq - inset), stroke: str)  // UL -> LR
-    })
+    place(dx: dx, dy: dy, line(start: (inset, sq - inset), end: (sq - inset, inset), stroke: str))      // LL -> UR
+    place(dx: dx, dy: dy, line(start: (inset, inset), end: (sq - inset, sq - inset), stroke: str))      // UL -> LR
   } else {
     panic("highlight shape must be \"filled\", \"cross\", or \"circle\"; got " + repr(shape))
   }

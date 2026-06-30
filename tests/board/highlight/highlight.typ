@@ -10,7 +10,7 @@
 #assert(default-board-style.keys().contains("highlight-fill"), message: "highlight-fill is settable")
 #assert(default-board-style.highlight-shape == "filled", message: "filled is the default shape")
 #assert(default-board-style.highlight-transparency == 75%, message: "default transparency 75%")
-#assert(default-board-style.cross-width == 4pt and default-board-style.circle-width == 4pt, message: "default stroke 4pt")
+#assert(default-board-style.cross-width == 2pt and default-board-style.circle-width == 2pt, message: "default stroke 2pt")
 
 #set page(width: auto, height: auto, margin: 1cm)
 #set text(font: "Libertinus Serif", size: 9pt)
@@ -19,7 +19,11 @@
 
 Filled (default, green @ 75% transparency), cross (red), circle (green). By
 convention a cross marks an EMPTY square, so the cross row uses empty squares
-(d4, f4, e3) while filled/circle sit on occupied ones (e4, e5, c4):
+(d4, f4, e3) while filled/circle sit on occupied ones (e4, e5, c4).
+
+// VISUAL REGRESSION CHECK: each cross must be a complete X CONFINED to its own
+// square (both diagonals overlap on d4/f4/e3), and each circle's outer edge must
+// touch its square border without spilling over.
 
 #grid(columns: 3, column-gutter: 12pt,
   stack(dir: ttb, spacing: 4pt, align(center, emph("filled")),

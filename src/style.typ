@@ -73,8 +73,8 @@
   highlight-transparency: 75%,              // applied to highlight-fill
   cross-color: red,           // cross highlight stroke colour
   circle-color: green,        // circle highlight stroke colour
-  cross-width: 4pt,           // cross stroke width
-  circle-width: 4pt,          // circle stroke width
+  cross-width: 2pt,           // cross stroke width
+  circle-width: 2pt,          // circle stroke width
   arrows: (),                 // array of arrows (item 6); see lib `_to-arrow`
   arrow-color: default-highlight-base,  // default arrow colour (opaque base)
   arrow-transparency: 85%,    // applied to the default arrow colour (more transparent than highlights)
