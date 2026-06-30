@@ -36,6 +36,12 @@
 #assert(s(g, to: "2b") == "1. e4 e5 2. Nf3 Nc6", message: "start -> 2b")
 #assert(s(g, from: "3w") == "3. Bb5 a6 4. Ba4 Nf6 5. O-O", message: "3w -> end")
 #assert(s(g, from: "2b", to: "3b") == "2... Nc6 3. Bb5 a6", message: "Black-start slice numbers as 2...")
+// boundary slices: single move, first only, last only, explicit full == default
+#assert(s(g, from: "2w", to: "2w") == "2. Nf3", message: "single-move slice (one White ply)")
+#assert(s(g, from: "2b", to: "2b") == "2... Nc6", message: "single-move slice (one Black ply)")
+#assert(s(g, to: "1w") == "1. e4", message: "just the first move")
+#assert(s(g, from: "5w") == "5. O-O", message: "just the last move")
+#assert(s(g, from: "1w", to: "5w") == s(g), message: "explicit full range equals the default")
 
 // --- result option appends a real result (never "*") ---
 #assert(s(g, result: true) == "1. e4 e5 2. Nf3 Nc6 3. Bb5 a6 4. Ba4 Nf6 5. O-O 1-0", message: "with result")

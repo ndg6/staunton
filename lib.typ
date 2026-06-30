@@ -23,7 +23,7 @@
 // The text core lives in src/notation.typ; lib defines `notation` /
 // `chess-notation` on top so they can also embed diagrams (which needs the
 // lib-level `chess-diagram`).
-#import "src/notation.typ": notation as _notation-text
+#import "src/notation.typ": notation as _notation-text, with-nags
 
 // NOTE on reading external files: there is intentionally no `read-pgn(path)`
 // wrapper. Typst's `read` resolves paths relative to the file the call appears

@@ -153,7 +153,13 @@
 /// The parsed movetext tree (array of move nodes) of a `game`. Built on demand
 /// from `game.movetext-raw` and memoised. This is where deeper movetext-structure
 /// errors (e.g. a variation '(' without a preceding move) surface.
-#let movetext(game) = _movetext-tree(game.movetext-raw)
+#let movetext(game) = {
+  // A game patched by `with-nags` (notation.typ) carries a precomputed node tree;
+  // honour it so the override flows through every consumer (notation,
+  // position-after, ...). Unpatched games build (and memoise) from the raw text.
+  let pre = game.at("movetext-nodes", default: none)
+  if pre != none { pre } else { _movetext-tree(game.movetext-raw) }
+}
 
 // ---- normalise input (string or raw block) -------------------------------
 #let _as-text(input) = {

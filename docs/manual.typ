@@ -254,14 +254,41 @@ tournament file read only for results never tokenises movetext.
 
 == Locators
 
-`position-after(game, loc)` / `board-after(game, loc, ..)` accept `"30w"` /
-`"30b"` (after White's / Black's 30th mainline move), or a *path* into nested
-variations:
+A *locator* addresses one position in a game. The simple form is a string —
+`"30w"` / `"30b"`, the position after White's / Black's 30th *mainline* move.
+`position-after(game, loc)`, `board-after(game, loc, ..)`, and
+`to-fen(game, locator: ..)` all take it.
 
-```typ
-// the position after 2...Bc5 in variation 0 at White's move 2
-#board-after(game, (line: ((at: "2w", into: 0),), at: "2b"))
-```
+To address a move *inside a variation* (a PGN RAV), pass a *path* dict instead:
+`(line: (..hops..), at: "<final move>")`. Each hop is `(at: "<move>", into: <n>)`
+— branch off at mainline move `at`, descending `into` that move's variation
+number `n` (*0-based*: `0` is the first variation recorded at that move, `1` the
+second, …). The top-level `at` is where you stop within the line you reached:
+
+#example(```typ
+#let g = parse-pgn(
+  "[White \"V\"][Black \"T\"] 1. e4 (1. d4 d5 2. c4) e5 *",
+).first()
+// into variation 0 at White's move 1 (the
+// 1.d4 line), position after 2.c4:
+#board-after(
+  g,
+  (line: ((at: "1w", into: 0),), at: "2w"),
+  size: 3.4cm,
+)
+```)
+
+Two easy traps:
+
+- *The trailing comma.* A single-hop path is written `((at: "1w", into: 0),)` —
+  the comma makes it a one-element *array* of hops. Without it, Typst reads a lone
+  parenthesised dict and the locator is malformed.
+- *Mainline is the fast path.* The string form (equivalently an empty
+  `line: ()`) indexes a memoised list of mainline positions, so many diagrams off
+  one game stay cheap; the path form is walked move by move.
+
+Addressing a variation that isn't there (`into:` past the recorded count) or a
+move past the end of its line is a hard error.
 
 == Playing moves onto a position
 
@@ -292,10 +319,44 @@ letters and render figurine glyphs:
 #chess-notation(game, figurine: true)
 ```, stacked: true)
 
-Useful options: `from` / `to` (inclusive mainline slice, `"8b"`/`"12w"`),
-`move-numbers`, `result`, and — for a *game* source — `nags` / `comments`
-(consulting the PGN-handling defaults). Localization substitutes only the piece
-letters; files, ranks, captures, check marks and `O-O` are untouched.
+`from` / `to` restrict output to an *inclusive* slice of moves. Both are the
+simple `"8b"` / `"12w"` locators; `from` defaults to the first move, `to` to the
+last:
+
+#example(```typ
+#chess-notation(game, from: "2w", to: "3b")
+```, stacked: true)
+
+Unlike `board-after`, these are *mainline-only* — they do not accept the
+variation *path* form, and a `from` past the end or a `to` before `from` is a
+hard error.
+
+Other options: `move-numbers`, `result`, and — for a *game* source — `nags` /
+`comments` (consulting the PGN-handling defaults). Localization substitutes only
+the piece letters; files, ranks, captures, check marks and `O-O` are untouched.
+
+=== Programmatic NAGs
+
+`nags: true` renders the NAGs a game already carries (the `$n` glyphs in the PGN).
+To attach NAGs *without editing the PGN*, use `with-nags(game, map)`: it returns a
+*new* game whose addressed mainline moves carry the given NAGs, which
+`notation(.., nags: true)` then renders.
+
+#example(```typ
+#let g = parse-pgn(
+  "[White \"A\"][Black \"B\"] 1. e4 e5 2. Nf3 Nc6 *",
+).first()
+#chess-notation(
+  with-nags(g, ("2w": "!", "2b": "$14")),
+  nags: true,
+)
+```, stacked: true)
+
+Each map key is a *mainline* locator (`"2w"` / `"2b"`); each value is a `"$n"`
+code, one of the six suffix glyphs `! ? !! ?? !? ?!` (sugar for `$1`–`$6`), or an
+array of those. The mapping *replaces* any NAG already on that move, and the
+source game is never mutated. Only mainline moves are addressable — `notation`
+renders the mainline only.
 
 == Exporting FEN
 
