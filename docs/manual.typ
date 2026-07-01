@@ -466,9 +466,10 @@ last:
 #chess-notation(game, from: "2w", to: "3b")
 ```, stacked: true)
 
-Unlike `board-after`, these are *mainline-only* — they do not accept the
-variation *path* form, and a `from` past the end or a `to` before `from` is a
-hard error.
+`from` / `to` bound a slice of the *mainline*: they are the simple `"8b"` /
+`"12w"` locators, not the variation *path* form that `board-after` takes
+(rendering variations is a separate control — see the next section). A `from` past
+the end or a `to` before `from` is a hard error.
 
 Other options: `move-numbers`, `result`, and — for a *game* source — `nags` /
 `comments` (consulting the PGN-handling defaults). Localization substitutes only
