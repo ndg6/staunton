@@ -56,6 +56,21 @@
   message: "NAGs + comments inside a variation",
 )
 
+// --- line: address one specific variation, correctly offset-numbered --------
+#let gw = parse-pgn("[White \"A\"][Black \"B\"] 1. e4 e5 2. Nf3 Nc6 3. Bb5 (3. Bc4 Bc5 4. c3) a6 *").first()
+#assert(s(gw, line: ((at: "3w", into: 0),)) == "3. Bc4 Bc5 4. c3", message: "line: white-first variation (hops)")
+#assert(s(gw, line: (line: ((at: "3w", into: 0),), at: "3w")) == "3. Bc4 Bc5 4. c3", message: "line: dict form (at ignored)")
+#let gbk = parse-pgn("[White \"A\"][Black \"B\"] 1. e4 e5 2. Nf3 Nc6 (2... d6 3. d4 exd4) 3. Bb5 *").first()
+#assert(s(gbk, line: ((at: "2b", into: 0),)) == "2... d6 3. d4 exd4", message: "line: black-first variation")
+#assert(s(g3, line: ((at: "1w", into: 0), (at: "1b", into: 0))) == "1... Nf6 2. c4", message: "line: nested variation")
+// the addressed sub-line's OWN nested variations follow the `variations` flag:
+#assert(s(g3, line: ((at: "1w", into: 0),)) == "1. d4 d5 (1... Nf6 2. c4)", message: "line: outer, nested spliced (variations on)")
+#assert(
+  notation(g3, line: ((at: "1w", into: 0),), variations: false, lang: "en", nags: false, comments: false)
+    == "1. d4 d5",
+  message: "line: outer, nested suppressed (variations off)",
+)
+
 // --- document-wide switch via set-pgn-defaults ------------------------------
 // A call relying on the document default resolves through `context` (so returns
 // content, not a string); assert the switch is set, and eyeball the render below.

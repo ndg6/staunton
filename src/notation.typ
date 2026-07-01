@@ -173,14 +173,16 @@
   lines
 }
 
-// Render indices [lo, hi] of `nodes` per `opts`; `tail` is an optional result
-// token. `variation-style: "inline"` yields a string; `"block"` yields content.
-#let _render(nodes, lo, hi, opts, tail) = {
+// Render indices [lo, hi] of `nodes` per `opts`, where `start-ply` is the ply of
+// `nodes.at(lo)` (ply 1 for a mainline from the start; the branch ply for a
+// variation sub-line). `tail` is an optional result token. `variation-style:
+// "inline"` yields a string; `"block"` yields content.
+#let _render(nodes, lo, hi, start-ply, opts, tail) = {
   let has-tail = tail != none and tail != "" and tail != "*"
   if hi < lo { return if has-tail { tail } else { "" } }
   let slice = nodes.slice(lo, hi + 1)
   if opts.variation-style == "block" {
-    let lines = _render-block(slice, lo + 1, 0, opts)
+    let lines = _render-block(slice, start-ply, 0, opts)
     if has-tail and lines.len() > 0 {
       let (lvl, txt) = lines.last()
       lines.at(lines.len() - 1) = (lvl, txt + " " + tail)
@@ -188,24 +190,73 @@
     return stack(dir: ttb, spacing: 0.5em,
       ..lines.map(((lvl, txt)) => pad(left: lvl * opts.indent, txt)))
   }
-  let body = _render-inline(slice, lo + 1, opts)
+  let body = _render-inline(slice, start-ply, opts)
   if has-tail { body = body + " " + tail }
   body
 }
 
+// Navigate a variation path to the addressed sub-line and its start ply. `path`
+// is a path locator (dict `(line: (..hops..), at: ..)` -- the `at` is ignored
+// here, only the hops matter) or the bare hops array. Each hop `(at:, into:)`
+// descends into that move's variation `into`. Returns `(nodes, start-ply)`; the
+// sub-line's first move is at ply = the branch ply (the annotated move's ply).
+#let _resolve-variation-line(game, path) = {
+  assert(
+    type(game) == dictionary and "movetext-raw" in game,
+    message: "notation: `line:` needs a parsed game (variations live only in games)",
+  )
+  let hops = if type(path) == dictionary { path.at("line", default: ()) }
+    else if type(path) == array { path }
+    else { panic("notation: `line:` must be a path locator dict or a hops array; got " + repr(path)) }
+  let line = movetext(game)
+  let branch-ply = 1
+  for hop in hops {
+    let target = _ply-of(hop.at("at"))
+    let k = target - branch-ply
+    assert(k >= 0 and k < line.len(), message: "notation: `line:` hop out of range at " + hop.at("at"))
+    let vars = line.at(k).at("variations", default: ())
+    let into = hop.at("into")
+    assert(into < vars.len(), message: "notation: no variation #" + str(into) + " at move " + hop.at("at"))
+    line = vars.at(into)
+    branch-ply = target
+  }
+  (nodes: line, start-ply: branch-ply)
+}
+
 /// Render move notation from a game (mainline), a move-text string, or a SAN
 /// array. `from`/`to` are inclusive mainline locators ("12w"/"12b"); omit for the
-/// whole line. Options: `figurine` (glyphs instead of letters), `lang`
+/// whole line. `line` addresses a specific *variation* to render on its own
+/// (a path locator / hops array like `board-after`'s; `from`/`to`/`result` do not
+/// apply). Options: `figurine` (glyphs instead of letters), `lang`
 /// (`auto` -> the document language via `set-lang`; a code like "de"; or the
 /// string "auto" to follow `#set text(lang: ..)`; unknown -> en),
-/// `move-numbers`, `result` (append the game result). `nags` / `comments`
-/// (default `auto`) render move NAGs / comment prose; `auto` consults the
-/// document `set-pgn-defaults` (both off by default). When everything resolves
+/// `move-numbers`, `result` (append the game result), `variations` /
+/// `variation-style`. `nags` / `comments` / `variations` (default `auto`) consult
+/// the document `set-pgn-defaults` (all off by default). When everything resolves
 /// without document state the result is a plain string; otherwise it is content.
-#let notation(source, from: none, to: none, figurine: false, lang: auto, nags: auto, comments: auto, variations: auto, variation-style: "inline", move-numbers: true, result: false) = {
+#let notation(source, from: none, to: none, line: none, figurine: false, lang: auto, nags: auto, comments: auto, variations: auto, variation-style: "inline", move-numbers: true, result: false) = {
   assert(variation-style in ("inline", "block"), message: "notation: variation-style must be \"inline\" or \"block\"; got " + repr(variation-style))
-  let r = _resolve-line(source, from, to)
-  let tail = if result and type(source) == dictionary and "movetext-raw" in source { game-result(source) } else { none }
+  // Which nodes to render: a mainline slice, or a variation sub-line addressed by
+  // `line`. `start-ply` is the ply of the first rendered node.
+  let nodes = ()
+  let lo = 0
+  let hi = -1
+  let start-ply = 1
+  let tail = none
+  if line != none {
+    let v = _resolve-variation-line(source, line)   // (nodes, start-ply)
+    nodes = v.nodes
+    hi = v.nodes.len() - 1
+    start-ply = v.start-ply
+    // `result` is a game-level token -- not appended to a variation.
+  } else {
+    let r = _resolve-line(source, from, to)
+    nodes = r.nodes
+    lo = r.lo
+    hi = r.hi
+    start-ply = r.lo + 1
+    if result and type(source) == dictionary and "movetext-raw" in source { tail = game-result(source) }
+  }
   let mk-opts = (chars, rn, rc, rv) => (
     figurine: figurine, chars: chars, move-numbers: move-numbers,
     nags: rn, comments: rc, variations: rv,
@@ -223,11 +274,11 @@
       let rc = if comments != auto { comments } else { pg.comments }
       let rv = if variations != auto { variations } else { pg.variations }
       let chars = lang-piece-chars(lang)
-      _render(r.nodes, r.lo, r.hi, mk-opts(chars, rn, rc, rv), tail)
+      _render(nodes, lo, hi, start-ply, mk-opts(chars, rn, rc, rv), tail)
     }
   } else {
     let chars = notation-langs.at(lang, default: notation-langs.en)
-    _render(r.nodes, r.lo, r.hi, mk-opts(chars, nags, comments, variations), tail)
+    _render(nodes, lo, hi, start-ply, mk-opts(chars, nags, comments, variations), tail)
   }
 }
 

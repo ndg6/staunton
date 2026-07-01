@@ -437,10 +437,11 @@
   }
   let diag = named.at("diagrams", default: auto)
   let is-game = type(source) == dictionary and "movetext-raw" in source
-  let all-opts = ("from", "to", "figurine", "lang", "nags", "comments", "variations", "variation-style", "move-numbers", "result")
+  let all-opts = ("from", "to", "line", "figurine", "lang", "nags", "comments", "variations", "variation-style", "move-numbers", "result")
 
-  // No embedding possible/requested -> hand straight to the text core.
-  if diag == false or not is-game {
+  // No embedding possible/requested -> hand straight to the text core. A `line:`
+  // render (a single variation) is text-only, so it bypasses diagram embedding.
+  if diag == false or not is-game or named.at("line", default: none) != none {
     return _notation-text(source, .._text-opts(named, all-opts))
   }
 
