@@ -17,8 +17,11 @@ and tables).
 - **PGN**: parse multi-game files, navigate the mainline and (nested) variations
   by locator, play "what-if" lines, export FEN. Lazy parsing stays fast on large
   files.
-- **Notation**: numbered movetext, figurine glyphs, NAGs, comments, embedded
-  diagrams, and **localized piece letters**.
+- **Notation**: numbered movetext with **variations** (inline or indented),
+  figurine glyphs, NAGs, comments, embedded diagrams, and **localized piece
+  letters**.
+- **Annotate & build**: add NAGs, comments and (nested) **variations** to a game
+  programmatically — without touching the PGN — then render it like any parsed one.
 - **Tournament tables**: standings, cross-tables, and progress (player or team),
   with Buchholz / Sonneborn-Berger tie-breaks.
 - **Internationalization**: one document language drives supplements, outline
@@ -82,6 +85,7 @@ typst compile --root . docs/examples/showcase.typ showcase.pdf
 | diagrams | `chess-diagram`, `diagram`, `board`, `chess-board` |
 | positions | `position`, `parse-fen`, `to-fen`, `starting-fen` |
 | games (PGN) | `parse-pgn`, `movetext`, `mainline`, `board-after`, `position-after`, `play-moves` |
+| annotate / build | `with-nags`, `with-comments`, `with-variation` |
 | notation | `chess-notation`, `notation` |
 | tables | `standings-table`, `crosstable-table`, `progress-table`, `games-by-event` (+ compute: `standings`, `crosstable`, `progress`) |
 | outlines | `chess-diagram-outline`, `chess-table-outline`, `chess-outlines` |
