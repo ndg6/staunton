@@ -10,7 +10,7 @@
 
 #let g = parse-pgn("[White \"A\"][Black \"B\"] 1. e4 e5 2. Nf3 Nc6 *").first()
 // string fast path: every option explicit (incl. diagrams) -> a plain string
-#let s(src, ..a) = notation(src, ..((diagrams: false, nags: true, comments: false, lang: "en") + a.named()))
+#let s(src, ..a) = notation(src, ..((diagrams: false, nags: true, comments: false, variations: false, lang: "en") + a.named()))
 
 // glyph sugar: "!" -> $1 on 1.e4 ; "?!" -> $6 on 2...Nc6
 #let g2 = with-nags(g, ("1w": "!", "2b": "?!"))
@@ -31,7 +31,7 @@
 
 // still gated by `nags:` -- with-nags only sets data, rendering decides
 #assert(
-  notation(g2, diagrams: false, nags: false, comments: false, lang: "en") == "1. e4 e5 2. Nf3 Nc6",
+  notation(g2, diagrams: false, nags: false, comments: false, variations: false, lang: "en") == "1. e4 e5 2. Nf3 Nc6",
   message: "nags: false still suppresses",
 )
 

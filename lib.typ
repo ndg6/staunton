@@ -437,7 +437,7 @@
   }
   let diag = named.at("diagrams", default: auto)
   let is-game = type(source) == dictionary and "movetext-raw" in source
-  let all-opts = ("from", "to", "figurine", "lang", "nags", "comments", "move-numbers", "result")
+  let all-opts = ("from", "to", "figurine", "lang", "nags", "comments", "variations", "variation-style", "move-numbers", "result")
 
   // No embedding possible/requested -> hand straight to the text core.
   if diag == false or not is-game {
@@ -454,7 +454,7 @@
       let lo = if named.at("from", default: none) != none { _index-of-loc(named.from) } else { 0 }
       let hi = if named.at("to", default: none) != none { _index-of-loc(named.to) } else { nodes.len() - 1 }
       let process-anno = if named.at("annotations", default: auto) != auto { named.annotations } else { pg.annotations }
-      let run-opts = _text-opts(named, ("figurine", "lang", "nags", "comments", "move-numbers"))
+      let run-opts = _text-opts(named, ("figurine", "lang", "nags", "comments", "variations", "variation-style", "move-numbers"))
 
       let parts = ()
       let run-start = lo

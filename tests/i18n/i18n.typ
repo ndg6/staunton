@@ -68,7 +68,7 @@
 }
 // notation's default lang now follows the global setting (auto): N -> S, B -> L.
 #let g = parse-pgn("[White \"A\"][Black \"B\"] 1. e4 e5 2. Nf3 Nc6 3. Bb5 a6 *").first()
-#assert(chess-notation(g, lang: "de", nags: false, comments: false, diagrams: false) == "1. e4 e5 2. Sf3 Sc6 3. Lb5 a6", message: "explicit de notation")
+#assert(chess-notation(g, lang: "de", nags: false, comments: false, diagrams: false, variations: false) == "1. e4 e5 2. Sf3 Sc6 3. Lb5 a6", message: "explicit de notation")
 #context {
   // the auto/default path returns content; render it and confirm it carries the
   // German letters (so the global lang reached notation).
