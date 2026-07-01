@@ -754,7 +754,7 @@ Every localizable string is also per-call overridable (the `lang:` argument seen
 on `chess-notation` above). Adding a language is a no-code change: drop a
 `src/assets/i18n/<code>.typ` and register it in `src/i18n.typ`.
 
-== PGN handling
+== PGN handling <pgn-handling>
 
 A *PGN-handling* bucket decides how much of a parsed game's embedded extras get
 interpreted at render time. Parsing stays lossless; these switches only decide
@@ -779,3 +779,218 @@ what is processed, and *all default off*:
 
 Each is also a per-call argument (`auto` → the document default) on `notation` /
 `board-after` — as used in the annotations example above.
+
+// === API Reference ===========================================================
+
+#pagebreak()
+
+= API Reference
+
+The compact lookup: every public function's signature, the recurring *argument
+value shapes*, and the full option lists. The chapters above show each feature in
+use with a rendered example; this chapter is for answering "what exactly can I
+pass". `..style` below means *any board style option* (see #link(<board-options>)[Board style options]).
+
+== Argument value shapes
+
+A few arguments accept more than one shape and recur across functions, so they are
+described once here.
+
+/ `source`: for `board`, `chess-board`, `diagram`, `chess-diagram`, `position` —
+  a *FEN string* `"rnbqkbnr/…"`; a *position* dict (from `position` / `parse-fen`);
+  a *squares* dict `(e1: "K", d8: (kind: "q", color: "black"), e4: "P")` (piece as a
+  long name, kind abbreviation, or bare letter — UPPER white, lower black); or the
+  *string form* (rank-per-line rows, `.` = empty; one raw block or several row
+  strings). `chess-*` reject a non-standard `variant`.
+
+/ `locator`: for `position-after`, `board-after`, `to-fen`, `move-san`,
+  `move-node`, and builder addresses — a *mainline* string `"12w"` / `"12b"`, or a
+  *path* dict `(line: (..hops..), at: "<move>")`, each hop `(at: "<move>", into:
+  <n>)` (descend into variation `n` at that move), to reach a move inside a (nested)
+  variation. `notation`'s `line:` also takes a bare hops array; its `from`/`to` are
+  mainline strings only.
+
+/ `size`: a `length` (`4cm`), a `ratio` of the available width (`60%`), or `auto`.
+
+/ `highlight` entry: a square name `"e4"`; a `(square, color)` pair; or a dict
+  `(square:, shape:, color:)` with shape `"filled"` / `"cross"` / `"circle"`.
+
+/ `arrows` entry: `(from, to)`; `(from, to, color)`; or a dict `(from:, to:, color:)`.
+
+/ builder overrides: for `with-nags` / `with-comments` — a *dict* of mainline
+  locators (`("3w": v)`) or an *array of `(locator, value)` pairs* (this form also
+  takes path-dict locators). A NAG value is `"$n"` or a suffix glyph
+  `! ? !! ?? !? ?!` (sugar for `$1`–`$6`), or an array of those; a comment value is
+  a plain string.
+
+/ annotation colour letters: for PGN `%cal`/`%csl` and the `annotation-colors`
+  map — `G` `R` `Y` `B` `O`.
+
+== Functions
+
+=== Boards and diagrams
+
+```typ
+board(source, flip: false, ..style)
+chess-board(source, flip: false, ..style)              // standard-variant sugar
+diagram(source, white: none, black: none, event: none, year: none,
+        caption: auto, game-info: auto, flip: false, lang: auto, ..style-and-figure)
+chess-diagram(source, ..)                               // sugar over diagram
+```
+
+`board` draws the bare board; `diagram` wraps it in a captioned, referenceable
+`#figure` (kind `"chess"`). `caption: auto` gives a source-specific default (or
+`none`); `game-info: auto` draws the automatic "White – Black (Year)" line when
+players are known. `diagram` forwards any unknown named argument to `#figure`
+(e.g. `placement: top`). `flip` is per-call only — never a document default.
+
+=== Positions
+
+```typ
+position(source, ..opts)   // opts: turn, castling, en-passant, halfmove, fullmove, cols, rows, variant
+parse-fen(fen)
+to-fen(source, locator: none)   // source: a position, or a game addressed by locator
+starting-fen                    // constant: the standard start FEN
+```
+
+`position` returns `(variant, cols, rows, squares, turn, castling, en-passant,
+halfmove, fullmove)`; `parse-fen` returns the same shape. `to-fen` is its inverse.
+
+=== Games (PGN)
+
+```typ
+parse-pgn(input)                // -> array of games; input: a string or raw block
+movetext(game)                  // -> the parsed move-node tree (lazy, memoised)
+mainline(game)                  // -> array of SAN strings
+game-result(game)               // -> "1-0" / "0-1" / "1/2-1/2" / "*"
+position-after(game, locator)   // -> a position
+board-after(game, locator, white: auto, black: auto, year: auto, caption: auto,
+            annotations: auto, flip: false, game-info: auto, lang: auto, ..style)
+move-san(game, locator)         // -> the SAN of the addressed move
+move-node(game, locator)        // -> the full move node (san, nags, comments, variations)
+play-moves(source, moves)       // source: none | FEN | position; moves: text or SAN array
+```
+
+A `game` is `(tags, movetext-raw, result)`. Parsing is lazy: `movetext` builds the
+tree on demand, the engine runs only when a position is asked for. `play-moves`
+resolves each move against the legal moves (illegal/ambiguous is an error) and
+returns the final position; it is mainline-only.
+
+=== Annotate and build
+
+```typ
+with-nags(game, overrides)                  // overrides: dict or array of (locator, value) pairs
+with-comments(game, overrides)              // values: plain strings
+with-variation(game, at: <locator>, moves: <movetext fragment>)
+```
+
+Pure, composable transforms returning a *new* game (the source is never mutated).
+`with-variation`'s `moves` is a PGN movetext fragment (nested `()`, `$n`,
+`{comments}` allowed); the variation is appended (`into` = previous count).
+Legality is checked only on navigation.
+
+=== Notation
+
+```typ
+notation(source, from: none, to: none, line: none, figurine: false, lang: auto,
+         nags: auto, comments: auto, variations: auto, variation-style: "inline",
+         move-numbers: true, result: false, diagrams: auto, annotations: auto)
+chess-notation(source, ..)      // standard-variant sugar over notation
+```
+
+`source` is a game, a move-text string, or a SAN array. `from`/`to` bound a
+mainline slice; `line` renders one addressed variation. `variation-style` is
+`"inline"` or `"block"`. `nags`/`comments`/`variations`/`diagrams`/`annotations`
+default `auto` (consult `set-pgn-defaults`). Returns a plain string when everything
+resolves without document state, else content.
+
+=== Tournament tables
+
+```typ
+standings-table(games, by: "player", tiebreaks: auto,
+                match-points: (win: 2, draw: 1, loss: 0),
+                title: none, caption: none, supplement: auto, lang: auto, ..table)
+crosstable-table(games, by: "player", match-points: (..), title: none, caption: none,
+                 supplement: auto, lang: auto, ..table)
+progress-table(games, by: "player", match-points: (..), title: none, caption: none,
+               supplement: auto, lang: auto, ..table)
+games-by-event(games)           // -> games grouped by the Event tag
+standings(games, by: "player", tiebreaks: auto, match-points: (..))    // compute -> data
+crosstable(games, by: "player", match-points: (..))                    // compute -> data
+progress(games, by: "player", match-points: (..))                      // compute -> data
+```
+
+`by` is `"player"` or `"team"`. The `*-table` renderers produce a `#figure` (kind
+`"chess-table"`); the compute functions return plain data. `title` is a heading
+drawn above the table; unknown named args are forwarded to the inner `#table`.
+
+=== Outlines and references
+
+```typ
+chess-diagram-outline(title: auto, lang: auto, ..outline)
+chess-table-outline(title: auto, lang: auto, ..outline)
+chess-outlines(diagram-title: auto, table-title: auto, lang: auto, ..outline)
+```
+
+Titles are language-aware by default; extra args are forwarded to `outline`.
+
+=== Document defaults
+
+```typ
+set-chess-defaults(..fields)    // umbrella over ALL five buckets (incl. lang)
+set-board-defaults(..fields)    // set-diagram-defaults / set-table-defaults / set-pgn-defaults
+set-lang(code)                  // "en" | "de" | … | "auto"
+set-piece-set(name)             // sugar for set-board-defaults(piece-set: name)
+```
+
+See #link(<board-options>)[Board style options] below for the keys each accepts.
+`flip` is rejected by every setter.
+
+== Board style options <board-options>
+
+Accepted by `board` / `chess-board` / `diagram` / `chess-diagram` per call, and by
+`set-board-defaults` / `set-chess-defaults` document-wide.
+
+#table(
+  columns: (2.3fr, 1.5fr, 3.2fr),
+  inset: 5pt, align: left + horizon, stroke: 0.5pt + rgb("#d9d9d2"),
+  table.header([*option*], [*default*], [*meaning*]),
+  raw("size"), raw("auto"), [board size: a `length`, a `ratio` of the width, or `auto`],
+  [`light` / `dark`], [tan theme], [the two square fill colours],
+  raw("labels"), raw("true"), [show rank/file labels],
+  raw("label-font"), [`("Arial", "DejaVu Sans Mono")`], [label font — a family or a fallback list],
+  raw("label-mode"), raw("\"on-square\""), [`"on-square"` / `"outside"` / `"border"`],
+  [`file-side` / `rank-side`], [`bottom` / `right`], [which edge files / ranks sit on],
+  [`file-label-corner` / `rank-label-corner`], [`left` / `right`], [on-square label corner],
+  raw("border-theme"), raw("\"square\""), [`"border"` band theme: `"square"` / `"brown"` / `"dark"`],
+  raw("border"), [`0.5pt + luma(40)`], [thin board outline (`none` to drop)],
+  raw("grid"), raw("false"), [1pt grid lines between squares],
+  raw("piece-set"), raw("\"cburnett\""), [SVG set name, or `"unicode"` for the glyph fallback],
+  raw("piece-scale"), raw("0.95"), [fraction of a square a piece occupies],
+  [`highlight` / `arrows`], raw("()"), [squares / arrows to draw — see the value shapes],
+  raw("highlight-shape"), raw("\"filled\""), [default shape for plain-string highlight entries],
+  [`highlight-fill` / `highlight-transparency`], [green, `75%`], [filled-highlight colour and its transparency],
+  [`cross-color` / `circle-color`], [red / green], [cross / circle stroke colours],
+  [`cross-width` / `circle-width`], raw("2pt"), [cross / circle stroke widths],
+  [`arrow-color` / `arrow-transparency`], [green, `85%`], [default arrow colour and its transparency],
+  raw("arrow-width"), raw("auto"), [arrow shaft width; `auto` scales with the square],
+  raw("annotation-colors"), [G/R/Y/B/O map], [PGN `%cal`/`%csl` colour-letter → colour],
+  raw("label-color"), raw("luma(90)"), [`"outside"`-mode strip label colour],
+  raw("label-border-ratio"), raw("0.07"), [`"border"`-mode band width, as a board fraction],
+  [`white-fill` / `black-fill` / `piece-font`], [—], [the `"unicode"` glyph fallback only],
+  raw("baseline-inset"), raw("0.20"), [glyph fallback: baseline lift (square fraction)],
+)
+
+== Diagram, table, language, and PGN-handling options
+
+*Diagram* (`set-diagram-defaults`): `info-bold` (`true`), `info-gap` (`0.6em`),
+`supplement` (`auto` → localized "Diagram"), `outline-title` (`auto`).
+
+*Table* (`set-table-defaults`): `supplement` (`auto` → "Table"), `outline-title`
+(`auto`), `title-gap` (`0.6em`).
+
+*Language* (`set-lang`): `lang` — `"en"` (default), a code (`"de"`, `"es"`, `"fr"`,
+`"it"`, `"pt"`, `"ru"`), or `"auto"` (follow `#set text(lang: ..)`).
+
+*PGN handling* (`set-pgn-defaults`): `annotations`, `nags`, `comments`, `diagrams`,
+`variations` — all `false` by default (see #link(<pgn-handling>)[PGN handling]).
