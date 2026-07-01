@@ -524,28 +524,64 @@ Each hop is `(at: "<move>", into: <n>)` — nest hops to reach a deeper line. Th
 addressed line's *own* variations follow the `variations` flag. (`from` / `to`
 stay mainline-only and don't combine with `line`.)
 
-=== Programmatic NAGs
+=== Building on a game: NAGs and comments
 
-`nags: true` renders the NAGs a game already carries (the `$n` glyphs in the PGN).
-To attach NAGs *without editing the PGN*, use `with-nags(game, map)`: it returns a
-*new* game whose addressed mainline moves carry the given NAGs, which
-`notation(.., nags: true)` then renders.
+Beyond `nags: true` (which renders the `$n` NAGs a game *already* carries), you can
+attach NAGs and comments *programmatically* — without editing the PGN — and then
+render them like any parsed game. `with-nags(game, ..)` and
+`with-comments(game, ..)` each return a *new* game (the source is never mutated),
+so they compose:
 
-#example(```typ
+#example(````typ
 #let g = parse-pgn(
-  "[White \"A\"][Black \"B\"] 1. e4 e5 2. Nf3 Nc6 *",
+  "1. e4 e5 2. Nf3 Nc6 3. Bb5 (3. Bc4 Bc5) a6 *",
 ).first()
 #chess-notation(
-  with-nags(g, ("2w": "!", "2b": "$14")),
-  nags: true,
+  with-comments(
+    with-nags(g, ("3w": "!")),
+    (((line: ((at: "3w", into: 0),), at: "3w"), "a sharp try"),),
+  ),
+  variations: true, nags: true, comments: true,
+)
+````, stacked: true)
+
+Moves are addressed the same way everywhere — a *mainline* locator (`"3w"`) or a
+variation *path* dict — so you can annotate a move *inside* a (nested) variation,
+not only the mainline. Two input forms:
+
+- a *dict* `("3w": "!", "5b": "$14")` — mainline moves only (dict keys are strings);
+- an *array of `(locator, value)` pairs* — any move, including a path-dict locator
+  (as in the example above).
+
+`with-nags` values are a `"$n"` code or a suffix glyph (`! ? !! ?? !? ?!`, sugar
+for `$1`–`$6`), or an array of those; `with-comments` values are plain-text
+strings. Both *replace* what was on the move. Comments show only with `comments:
+true`, NAGs only with `nags: true`.
+
+=== Adding variations
+
+`with-variation(game, at:, moves:)` grows the tree: it adds a variation as an
+*alternative* to the move at `at` (a mainline locator or a path dict). `moves` is
+a PGN movetext fragment — the same syntax `parse-pgn` reads — so one call can carry
+move numbers (recomputed), nested `()` variations, `$n` NAGs, and `{comments}`; a
+plain SAN run like `"Bc4 Bc5"` is the simplest case:
+
+#example(```typ
+#let g = parse-pgn("1. e4 e5 2. Nf3 Nc6 3. Bb5 a6 *").first()
+#chess-notation(
+  with-variation(g, at: "3w",
+    moves: "3. Bc4 Bc5! (3... Nf6 4. d4) {a sharp alternative}"),
+  variations: true, nags: true, comments: true,
 )
 ```, stacked: true)
 
-Each map key is a *mainline* locator (`"2w"` / `"2b"`); each value is a `"$n"`
-code, one of the six suffix glyphs `! ? !! ?? !? ?!` (sugar for `$1`–`$6`), or an
-array of those. The mapping *replaces* any NAG already on that move, and the
-source game is never mutated. Only mainline moves are addressable — `notation`
-renders the mainline only.
+The variation is *appended* to the move's variations (its index `into` is the
+previous count — `0` for a move with none yet), so you can address into it
+afterwards and it composes with `with-nags`/`with-comments`. Together these let you
+build a whole annotated tree from a bare game, then render or navigate it exactly
+like a parsed PGN. Moves are *not* checked for legality when added — an illegal
+move surfaces only if you navigate into the line (`board-after`), matching the rest
+of the lazy model.
 
 == Exporting FEN
 

@@ -19,11 +19,11 @@
 #import "src/engine.typ": legal-moves, apply, in-check
 #import "src/san.typ": san-to-move, play-san, play-moves
 #import "src/pgn.typ": parse-pgn, movetext
-#import "src/game.typ": mainline, position-after, game-result, game-start, move-san, move-node
+#import "src/game.typ": mainline, position-after, game-result, game-start, move-san, move-node, with-nags, with-comments, with-variation
 // The text core lives in src/notation.typ; lib defines `notation` /
 // `chess-notation` on top so they can also embed diagrams (which needs the
 // lib-level `chess-diagram`).
-#import "src/notation.typ": notation as _notation-text, with-nags
+#import "src/notation.typ": notation as _notation-text
 
 // NOTE on reading external files: there is intentionally no `read-pgn(path)`
 // wrapper. Typst's `read` resolves paths relative to the file the call appears

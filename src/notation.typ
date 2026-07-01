@@ -289,39 +289,3 @@
   }
   notation(source, ..args.named())
 }
-
-// ---- programmatic NAGs ----------------------------------------------------
-// `with-nags(game, overrides)` returns a NEW game whose addressed MAINLINE moves
-// carry the given NAGs, so `notation(.., nags: true)` renders them without
-// editing the PGN. `overrides` maps a mainline locator ("12w"/"12b") to a NAG
-// value (or an array of them). A value is the canonical "$n" form, or one of the
-// six suffix glyphs (! ? !! ?? !? ?!) -- sugar for $1..$6. The mapping REPLACES
-// any NAGs already on that move; the source game is never mutated. (Variations
-// are not addressable: notation renders the mainline only.)
-//
-// Mechanism: stash the patched node tree on the returned game; `movetext` honours
-// it (see pgn.typ), so the override flows through every consumer transparently.
-#let _glyph-to-code = ("!": "1", "?": "2", "!!": "3", "??": "4", "!?": "5", "?!": "6")
-#let _norm-nag(v) = {
-  if type(v) == str and v.starts-with("$") and v.len() > 1 { v.slice(1) }
-  else if type(v) == str and v in _glyph-to-code { _glyph-to-code.at(v) }
-  else { panic("with-nags: a NAG must be \"$n\" or one of ! ? !! ?? !? ?!; got " + repr(v)) }
-}
-#let with-nags(game, overrides) = {
-  assert(
-    type(game) == dictionary and "movetext-raw" in game,
-    message: "with-nags: first argument must be a parsed game (from parse-pgn)",
-  )
-  let nodes = movetext(game)
-  for (loc, val) in overrides {
-    let idx = _ply-of(loc) - 1
-    assert(idx >= 0 and idx < nodes.len(), message: "with-nags: locator out of range: " + loc)
-    let codes = if type(val) == array { val.map(_norm-nag) } else { (_norm-nag(val),) }
-    let node = nodes.at(idx)
-    node.nags = codes
-    nodes.at(idx) = node
-  }
-  let g = game
-  g.insert("movetext-nodes", nodes)
-  g
-}

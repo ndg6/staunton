@@ -19,7 +19,7 @@
 #import "fen.typ": parse-fen, starting-fen
 #import "san.typ": san-to-move
 #import "engine.typ": apply
-#import "pgn.typ": movetext
+#import "pgn.typ": movetext, _movetext-tree
 
 // "30w" -> 59 ; "30b" -> 60
 #let _ply-of(loc) = {
@@ -141,6 +141,126 @@
   let k = _ply-of(loc.at("at")) - branch-ply
   assert(k >= 0 and k < line.len(), message: "move-node: locator addresses a move past the end of its line")
   line.at(k)
+}
+
+// ===========================================================================
+// Programmatic game building (Phase 1: annotate existing moves).
+//
+// Pure, stash-based transforms over the movetext node tree. Each returns a NEW
+// game with the modified tree stashed as `movetext-nodes` (honoured by
+// `movetext`, see pgn.typ), so the change flows through every consumer and the
+// SOURCE game is never mutated. Moves are addressed by the same locators as
+// navigation: a mainline string ("12w"/"12b") or a path dict
+// `(line: (..hops..), at: "<move>")` for a move inside a (nested) variation.
+// ===========================================================================
+
+// Apply `f` to the node addressed by (hops, final) within `line`, whose first
+// node is at ply `branch-ply`. Functional (immutable) update: returns a new line.
+#let _update-in-line(line, branch-ply, hops, final, f) = {
+  if hops.len() == 0 {
+    let k = _ply-of(final) - branch-ply
+    assert(k >= 0 and k < line.len(), message: "locator addresses a move past the end of its line: " + final)
+    line.at(k) = f(line.at(k))
+    return line
+  }
+  let hop = hops.first()
+  let target = _ply-of(hop.at("at"))
+  let k = target - branch-ply
+  assert(k >= 0 and k < line.len(), message: "locator hop out of range at " + hop.at("at"))
+  let node = line.at(k)
+  let vars = node.at("variations", default: ())
+  let into = hop.at("into")
+  assert(into < vars.len(), message: "no variation #" + str(into) + " at move " + hop.at("at"))
+  vars.at(into) = _update-in-line(vars.at(into), target, hops.slice(1), final, f)
+  node.variations = vars
+  line.at(k) = node
+  line
+}
+
+// Update the node addressed by `locator` in the top-level `nodes` tree.
+#let _update-node-at(nodes, locator, f) = {
+  let loc = if type(locator) == str { (line: (), at: locator) }
+    else if type(locator) == dictionary { locator }
+    else { panic("locator must be a mainline string or a path dict; got " + repr(locator)) }
+  let final = loc.at("at", default: none)
+  assert(final != none, message: "locator must address a move (its `at`)")
+  _update-in-line(nodes, 1, loc.at("line", default: ()), final, f)
+}
+
+// Normalise a builder's overrides into an array of (locator, value) pairs. The
+// dict form ("12w": v, ...) is mainline-only (dict keys must be strings); the
+// array-of-pairs form also reaches moves inside variations (a path-locator dict
+// cannot be a dict key).
+#let _overrides-pairs(overrides) = {
+  if type(overrides) == dictionary { overrides.pairs() }
+  else if type(overrides) == array { overrides }
+  else { panic("overrides must be a dict of mainline locators or an array of (locator, value) pairs; got " + repr(type(overrides))) }
+}
+
+#let _stash(game, nodes) = { let g = game; g.insert("movetext-nodes", nodes); g }
+
+// NAG value -> stored code ("1".."n"). Accepts "$n" or a suffix glyph.
+#let _glyph-to-code = ("!": "1", "?": "2", "!!": "3", "??": "4", "!?": "5", "?!": "6")
+#let _norm-nag(v) = {
+  if type(v) == str and v.starts-with("$") and v.len() > 1 { v.slice(1) }
+  else if type(v) == str and v in _glyph-to-code { _glyph-to-code.at(v) }
+  else { panic("with-nags: a NAG must be \"$n\" or one of ! ? !! ?? !? ?!; got " + repr(v)) }
+}
+
+/// Attach NAGs to addressed moves (mainline or inside variations). `overrides` is
+/// a dict of mainline locators (`"12w": "!"`) or an array of `(locator, value)`
+/// pairs, where a locator may be a variation path dict. A value is `"$n"`, a
+/// suffix glyph (`! ? !! ?? !? ?!`), or an array of those; it REPLACES the move's
+/// NAGs. Returns a new game; the source is not mutated.
+#let with-nags(game, overrides) = {
+  assert(type(game) == dictionary and "movetext-raw" in game, message: "with-nags: first argument must be a parsed game (from parse-pgn)")
+  let nodes = movetext(game)
+  for (loc, val) in _overrides-pairs(overrides) {
+    let codes = if type(val) == array { val.map(_norm-nag) } else { (_norm-nag(val),) }
+    nodes = _update-node-at(nodes, loc, node => { node.nags = codes; node })
+  }
+  _stash(game, nodes)
+}
+
+/// Attach text comments to addressed moves (mainline or inside variations).
+/// `overrides` is a dict of mainline locators or an array of `(locator, text)`
+/// pairs (a variation path dict for the locator). `text` is a plain string, set as
+/// the move's `comment-after` (what notation's `comments` switch renders); it
+/// REPLACES any existing comment. Returns a new game; the source is not mutated.
+#let with-comments(game, overrides) = {
+  assert(type(game) == dictionary and "movetext-raw" in game, message: "with-comments: first argument must be a parsed game (from parse-pgn)")
+  let nodes = movetext(game)
+  for (loc, val) in _overrides-pairs(overrides) {
+    assert(type(val) == str, message: "with-comments: a comment must be a string; got " + repr(type(val)))
+    nodes = _update-node-at(nodes, loc, node => { node.insert("comment-after", val); node })
+  }
+  _stash(game, nodes)
+}
+
+/// Add a variation (RAV) as an ALTERNATIVE to the move at `at` (a mainline locator
+/// or a variation path dict). `moves` is a PGN movetext fragment (a string or raw
+/// block), parsed by the same tokeniser as `parse-pgn`, so it may carry nested
+/// `()` variations, `$n` NAGs and `{comments}`; a plain SAN run like "Bc4 Bc5" is
+/// the simplest case. The variation is APPENDED to the move's variations (its
+/// index `into` is the previous count) and numbered from that move's ply at render
+/// time. Moves are NOT checked for legality here -- illegality surfaces only if you
+/// navigate into the line (e.g. `board-after`). Returns a new game; source intact.
+#let with-variation(game, at: none, moves: none) = {
+  assert(type(game) == dictionary and "movetext-raw" in game, message: "with-variation: first argument must be a parsed game (from parse-pgn)")
+  assert(at != none, message: "with-variation: `at` (a move locator) is required")
+  assert(moves != none, message: "with-variation: `moves` (a movetext fragment) is required")
+  let text = if type(moves) == str { moves }
+    else if type(moves) == content and moves.func() == raw { moves.text }
+    else { panic("with-variation: `moves` must be a movetext string or raw block; got " + repr(type(moves))) }
+  let sub = _movetext-tree(text)
+  assert(sub.len() > 0, message: "with-variation: `moves` produced no moves")
+  let nodes = _update-node-at(movetext(game), at, node => {
+    let vars = node.at("variations", default: ())
+    vars.push(sub)
+    node.variations = vars
+    node
+  })
+  _stash(game, nodes)
 }
 
 // NOTE: the old `line(start, moves)` (apply a SAN array, return every
