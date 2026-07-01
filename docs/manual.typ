@@ -320,7 +320,7 @@ abbreviation, or a bare letter (UPPER = white, lower = black):
   )),
   size: 4cm,
 )
-```)
+```, ratio: 0.7)
 
 The *string form* reads like the board itself — first line is the TOP rank, `.`
 is empty. Pass it as a raw block, as below — the most legible, least error-prone
@@ -351,10 +351,9 @@ en-passant, halfmove, fullmove)`; `parse-fen` returns the same shape. The `cols`
 // === Games (PGN) =============================================================
 
 = Games (PGN)
+THe predominant form of the distribution and publications of chess games (atleast for western chess) are _PGN files_. PGN stands for *Portable Game Notation* and is a text format for chess games. It is human-readable, and can be parsed by chess software. PGN files contain the moves of a game, along with metadata such as player names, event, date, and result. PGN files cao contain just one or many games.
 
-`parse-pgn` returns an *array of games* (a PGN file may hold many); `.first()`
-takes one. Read an external file with `read` in your own file, or pass an inline
-raw block. The examples below assume a parsed game is in scope:
+The `parse-pgn` function returns an *array of games*; `.first()` takes the first one. Read an external file with `read` in your own file, or pass an inline raw block. The examples below assume an already parsed game is in scope:
 
 ```typ
 #let game = parse-pgn(read("game.pgn")).first()
@@ -362,10 +361,10 @@ raw block. The examples below assume a parsed game is in scope:
 
 Parsing is *lazy*: the roster (`tags`), the `result`, and the verbatim
 `movetext-raw` are extracted cheaply; the move tree is built on demand by
-`movetext(game)`; the engine runs only when you ask for a position. So a
-tournament file read only for results never tokenises movetext.
+`movetext(game)`; the move parser / generator engine runs only when you ask
+for a position. So a tournament file read only for results and never tokenises movetext.
 
-`chess-notation(game)` renders the moves the game already holds, and
+`chess-notation(game)` renders the moves (as text) the game already holds, and
 `board-after(game, loc)` draws the position at a locator:
 
 #example(```typ
@@ -381,9 +380,9 @@ tournament file read only for results never tokenises movetext.
 A *locator* addresses one position in a game. The simple form is a string —
 `"30w"` / `"30b"`, the position after White's / Black's 30th *mainline* move.
 `position-after(game, loc)`, `board-after(game, loc, ..)`, and
-`to-fen(game, locator: ..)` all take it.
+`to-fen(game, locator: ..)` all take this simple string form.
 
-To address a move *inside a variation* (a PGN RAV), pass a *path* dict instead:
+To address a move *inside a variation* (a PGN 'Recursive Annotation Variantion' or RAV), pass a *path* dict instead:
 `(line: (..hops..), at: "<final move>")`. Each hop is `(at: "<move>", into: <n>)`
 — branch off at mainline move `at`, descending `into` that move's variation
 number `n` (*0-based*: `0` is the first variation recorded at that move, `1` the
@@ -431,9 +430,25 @@ against the legal moves (illegal/ambiguous is a hard error) and returns the
 
 == Notation output
 
-`chess-notation(source, ..)` formats move text the game already holds — no engine.
-`source` is a game, a move-text string, or a SAN array. It can localise the piece
-letters and render figurine glyphs:
+For chess publications, notational output of the move text is as important as showing 
+board positions. This output has to be flexible and localisable. While you sometimes want to 
+show move text exactly as it was recorded in the PGN, you often want to reformat the move text for your own purposes. The `notation(..)` function is the workhorse for this. It takes a game, a move-text string, or a SAN array and produces a formatted move text output. It can localise the piece letters and render figurine glyphs, and it can include or exclude move numbers, results, NAGs, comments, and embedded diagrams.
+
+Two names, one formatter. `notation(..)` is the *variant-agnostic* primitive;
+`chess-notation(..)` is the *standard-western-chess* wrapper over it — identical
+output today, but `chess-notation` fixes the variant and rejects a source of a
+non-standard `variant`. The split is deliberate and forward-looking: staunton is
+*variant-forward*, so a future variant gets its own name — a planned
+`xiangqi-notation`, `shogi-notation`, … — each a thin wrapper over the same
+generic `notation` core, while `chess-notation` stays western-chess-specific. The
+same pairing runs through the whole package (`board`/`chess-board`,
+`diagram`/`chess-diagram`, `position`, `play-moves`): reach for the `chess-` name
+for ordinary chess, and the generic one only when you are deliberately
+variant-agnostic. Both this manual and everyday use favour `chess-notation`.
+
+Either formats move text the game already holds — no engine. Its `source` is a
+game, a move-text string, or a SAN array; it localises the piece letters and
+renders figurine glyphs:
 
 #example(```typ
 #chess-notation(game, lang: "de")
@@ -458,6 +473,55 @@ hard error.
 Other options: `move-numbers`, `result`, and — for a *game* source — `nags` /
 `comments` (consulting the PGN-handling defaults). Localization substitutes only
 the piece letters; files, ranks, captures, check marks and `O-O` are untouched.
+
+=== Variations
+
+By default `notation` renders only the *mainline*. Set `variations: true` (or the
+`set-pgn-defaults(variations: ..)` document default) to splice the game's
+variations (RAVs) into the output — in parentheses, correctly numbered: a
+white-first line reads `N. …`, a black-first line `N… …`, and the resumed mainline
+move re-shows its number:
+
+#example(```typ
+#chess-notation(
+  parse-pgn(
+    "1. e4 e5 2. Nf3 Nc6 3. Bb5 (3. Bc4 Bc5) a6 *",
+  ).first(),
+  variations: true,
+)
+```, stacked: true)
+
+Variations nest to any depth and honour `nags` / `comments` / `figurine` / `lang`
+inside the parentheses. `variation-style: "block"` instead breaks each variation
+onto its own line, indented one level per nesting depth — the analysis-view
+layout:
+
+#example(```typ
+#chess-notation(
+  parse-pgn(
+    "1. e4 (1. d4 d5 (1... Nf6 2. c4)) e5 *",
+  ).first(),
+  variations: true,
+  variation-style: "block",
+)
+```, stacked: true)
+
+To render *one specific* variation on its own, pass `line:` — a path locator
+(the same `board-after` shape, or just its hops array) that descends into the
+variation. It is numbered from its real branch ply, so it reads exactly as you'd
+write it in analysis:
+
+#example(```typ
+#let g = parse-pgn(
+  "1. e4 e5 2. Nf3 Nc6 (2... d6 3. d4) 3. Bb5 *",
+).first()
+// the 2...d6 side line, on its own:
+#chess-notation(g, line: ((at: "2b", into: 0),))
+```, stacked: true)
+
+Each hop is `(at: "<move>", into: <n>)` — nest hops to reach a deeper line. The
+addressed line's *own* variations follow the `variations` flag. (`from` / `to`
+stay mainline-only and don't combine with `line`.)
 
 === Programmatic NAGs
 
@@ -508,7 +572,7 @@ style; annotations merge with any `arrows` / `highlight` you pass explicitly.
 
 *With embedded diagrams.* The `diagrams` switch (PGN handling) makes
 `notation(diagrams: true)` splice a board after each move whose comment carries a
-diagram marker. If that *same* comment also holds `%cal`/`%csl` **and**
+diagram marker. If that *same* comment also holds `%cal`/`%csl` *and*
 `annotations` is on, the spliced board shows those arrows/highlights too — the two
 switches compose:
 
@@ -673,6 +737,7 @@ what is processed, and *all default off*:
   raw("nags"), [render NAGs (`Nf3!`, `d4⩲`) in `notation`],
   raw("comments"), [include comment prose in `notation`],
   raw("diagrams"), [embed a board in `notation` after each move marked for one],
+  raw("variations"), [splice variations (RAVs) into `notation`, in parentheses],
 )
 
 Each is also a per-call argument (`auto` → the document default) on `notation` /
