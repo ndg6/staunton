@@ -65,9 +65,13 @@
   pawn: 1.0,
 )
 
-// Fonts (in order) that are known to carry the chess glyphs. The first that is
-// installed wins. Override via the `font` argument if you need a specific one.
-#let default-piece-fonts = ("DejaVu Sans Mono", "Segoe UI Symbol", "Apple Symbols", "Noto Sans Symbols 2")
+// Glyph-fallback (piece-set "unicode") font. We name only Typst's always-embedded
+// "DejaVu Sans Mono" so a stock install never warns "unknown font family"; because
+// the piece renderer sets `fallback: true`, Typst still auto-resolves the chess
+// glyphs (U+2654..265F) from a system symbol font (Segoe UI Symbol, Apple Symbols,
+// Noto Sans Symbols 2, ...) when the embedded font lacks them. Override with the
+// `piece-font` board option to pin a specific family.
+#let default-piece-fonts = ("DejaVu Sans Mono",)
 
 #let default-white-fill = rgb("#fcfcfa")
 #let default-black-fill = rgb("#1a1a1a")
