@@ -11,7 +11,7 @@
 #let bc4 = (line: ((at: "3w", into: 0),), at: "3w")   // Bc4, inside the variation
 #let bc5 = (line: ((at: "3w", into: 0),), at: "3b")   // Bc5, inside the variation
 // all switches explicit -> plain string (assertable)
-#let s(x) = chess-notation(x, variations: true, nags: true, comments: true, lang: "en", diagrams: false)
+#let s(x) = chess-notation(x, variations: true, nags: true, comments: true, lang: "en", diagrams: false, bold-mainline: false)
 
 #let base = "1.e4 e5 2.Nf3 Nc6 3.Bb5 (3.Bc4 Bc5) 3...a6"
 #assert(s(g) == base, message: "baseline (unbuilt) render")

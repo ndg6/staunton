@@ -9,7 +9,7 @@
 #set text(font: "Libertinus Serif", size: 10pt)
 
 #let g = parse-pgn("[White \"A\"][Black \"B\"] 1. e4 e5 2. Nf3 Nc6 3. Bb5 a6 *").first()
-#let s(x) = chess-notation(x, variations: true, nags: true, comments: true, lang: "en", diagrams: false)
+#let s(x) = chess-notation(x, variations: true, nags: true, comments: true, lang: "en", diagrams: false, bold-mainline: false)
 #let base = "1.e4 e5 2.Nf3 Nc6 3.Bb5 a6"
 
 // --- plain variation (SAN run) at a White move ------------------------------

@@ -11,7 +11,7 @@
 #assert(mainline(g).len() == 32, message: "mainline: 16 full moves (32 plies)")
 
 // all switches explicit -> a plain string; check the structurally tricky spots.
-#let s = chess-notation(g, variations: true, lang: "en", nags: false, comments: false, diagrams: false)
+#let s = chess-notation(g, variations: true, lang: "en", nags: false, comments: false, diagrams: false, bold-mainline: false)
 #assert(type(s) == str, message: "explicit switches -> plain string")
 #assert(
   s.starts-with("1.e4 e5 2.Nf3 Nc6 3.Bc4 Nf6 4.Ng5 d5 5.exd5 b5 6.dxc6 bxc4 7.O-O "),

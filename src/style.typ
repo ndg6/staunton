@@ -139,6 +139,7 @@
   comments:    false,  // include comment prose in notation
   diagrams:    false,  // act on embedded diagram markers (consumer: inline embed, deferred)
   variations:  false,  // splice variations (RAVs) into notation output
+  bold-mainline: false, // render mainline moves bold (variations stay normal)
 )
 
 // Document-wide overrides (document-order state, like Typst's own #set).

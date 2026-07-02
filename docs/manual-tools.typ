@@ -43,14 +43,16 @@
 // Show `code` (a raw block) as source, and beside/under it the result of
 // evaluating that exact source in markup mode.
 //
-//   stacked: true  -> source on top, output below (good for wide output)
-//   ratio:         -> fraction of the width given to the SOURCE column
-#let example(code, stacked: false, ratio: 0.5) = {
+//   stacked: true     -> source on top, output below (good for wide output)
+//   ratio:            -> fraction of the width given to the SOURCE column
+//   left-align: true  -> left-align the output instead of centring it (needed when
+//                        the output's own indentation matters, e.g. block variations)
+#let example(code, stacked: false, ratio: 0.5, left-align: false) = {
   // Grid cells stretch to the row height, and the grid `fill` covers each cell
   // fully — so the code panel matches the output height with no page-relative
   // sizing (which would blow each example up to a full page).
   let src = raw(code.text.trim(), lang: "typ", block: true)
-  let out = align(center + horizon, eval(code.text, mode: "markup", scope: manual-scope))
+  let out = align((if left-align { left } else { center }) + horizon, eval(code.text, mode: "markup", scope: manual-scope))
 
   block(
     stroke: 0.75pt + _frame,

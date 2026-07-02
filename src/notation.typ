@@ -142,13 +142,16 @@
 
 // Inline renderer: a run of nodes from `start-ply`, with variations (when
 // `opts.variations`) spliced in parentheses. A variation attached to a node is an
-// alternative to THAT move, so it starts at the same ply. Returns a string.
-#let _render-inline(nodes, start-ply, opts) = {
+// alternative to THAT move, so it starts at the same ply. Returns a string, or --
+// when `bold` (the top-level mainline, not variations) -- content with the
+// mainline moves in `strong`; variations always render normally (bold: false).
+#let _render-inline(nodes, start-ply, opts, bold: false) = {
   let parts = ()
   let force = true
   let ply = start-ply
   for node in nodes {
-    parts.push(_move-token(node, ply, force, opts))
+    let tok = _move-token(node, ply, force, opts)
+    parts.push(if bold { strong(tok) } else { tok })
     force = false
     let vars = node.at("variations", default: ())
     if opts.variations and vars.len() > 0 {
@@ -210,10 +213,11 @@
       lines.at(lines.len() - 1) = (lvl, txt + " " + tail)
     }
     return stack(dir: ttb, spacing: 0.5em,
-      ..lines.map(((lvl, txt)) => pad(left: lvl * opts.indent, txt)))
+      ..lines.map(((lvl, txt)) => pad(left: lvl * opts.indent,
+        if opts.bold-mainline and lvl == 0 { strong(txt) } else { txt })))
   }
-  let body = _render-inline(slice, start-ply, opts)
-  if has-tail { body = body + " " + tail }
+  let body = _render-inline(slice, start-ply, opts, bold: opts.bold-mainline)
+  if has-tail { body = if type(body) == str { body + " " + tail } else { [#body #tail] } }
   body
 }
 
@@ -256,7 +260,7 @@
 /// `variation-style`. `nags` / `comments` / `variations` (default `auto`) consult
 /// the document `set-pgn-defaults` (all off by default). When everything resolves
 /// without document state the result is a plain string; otherwise it is content.
-#let notation(source, from: none, to: none, line: none, figurine: false, lang: auto, nags: auto, comments: auto, variations: auto, variation-style: "inline", move-numbers: true, result: false) = {
+#let notation(source, from: none, to: none, line: none, figurine: false, lang: auto, nags: auto, comments: auto, variations: auto, variation-style: "inline", bold-mainline: auto, move-numbers: true, result: false) = {
   assert(variation-style in ("inline", "block"), message: "notation: variation-style must be \"inline\" or \"block\"; got " + repr(variation-style))
   // Which nodes to render: a mainline slice, or a variation sub-line addressed by
   // `line`. `start-ply` is the ply of the first rendered node.
@@ -279,28 +283,29 @@
     start-ply = r.lo + 1
     if result and type(source) == dictionary and "movetext-raw" in source { tail = game-result(source) }
   }
-  let mk-opts = (chars, rn, rc, rv) => (
+  let mk-opts = (chars, rn, rc, rv, rb) => (
     figurine: figurine, chars: chars, move-numbers: move-numbers,
-    nags: rn, comments: rc, variations: rv,
+    nags: rn, comments: rc, variations: rv, bold-mainline: rb,
     variation-style: variation-style, indent: 1.2em,
   )
   // `lang: auto` (the VALUE) consults the document `set-lang` setting; `lang:
   // "auto"` follows `#set text(lang:)`; an explicit code needs no document state.
-  // `nags`/`comments`/`variations: auto` consult `set-pgn-defaults`.
+  // `nags`/`comments`/`variations`/`bold-mainline: auto` consult `set-pgn-defaults`.
   let lang-needs-state = lang == auto or lang == "auto"
-  let needs-state = lang-needs-state or nags == auto or comments == auto or variations == auto
+  let needs-state = lang-needs-state or nags == auto or comments == auto or variations == auto or bold-mainline == auto
   if needs-state {
     context {
       let pg = default-pgn-style + pgn-style-state.get()
       let rn = if nags != auto { nags } else { pg.nags }
       let rc = if comments != auto { comments } else { pg.comments }
       let rv = if variations != auto { variations } else { pg.variations }
+      let rb = if bold-mainline != auto { bold-mainline } else { pg.bold-mainline }
       let chars = lang-piece-chars(lang)
-      _render(nodes, lo, hi, start-ply, mk-opts(chars, rn, rc, rv), tail)
+      _render(nodes, lo, hi, start-ply, mk-opts(chars, rn, rc, rv, rb), tail)
     }
   } else {
     let chars = notation-langs.at(lang, default: notation-langs.en)
-    _render(nodes, lo, hi, start-ply, mk-opts(chars, nags, comments, variations), tail)
+    _render(nodes, lo, hi, start-ply, mk-opts(chars, nags, comments, variations, bold-mainline), tail)
   }
 }
 

@@ -8,12 +8,12 @@
 #set text(font: "Libertinus Serif", size: 10pt)
 
 // All options explicit -> the plain-string fast path (assertable).
-#let s(src, ..a) = notation(src, ..((diagrams: false, nags: false, comments: false, lang: "en", variations: true) + a.named()))
+#let s(src, ..a) = notation(src, ..((diagrams: false, bold-mainline: false, nags: false, comments: false, lang: "en", variations: true) + a.named()))
 
 // --- default OFF is byte-identical to the mainline (regression) -------------
 #let g1 = parse-pgn("[White \"A\"][Black \"B\"] 1. e4 e5 2. Nf3 Nc6 3. Bb5 (3. Bc4 Bc5) a6 *").first()
 #assert(
-  notation(g1, diagrams: false, nags: false, comments: false, variations: false, lang: "en")
+  notation(g1, diagrams: false, bold-mainline: false, nags: false, comments: false, variations: false, lang: "en")
     == "1.e4 e5 2.Nf3 Nc6 3.Bb5 a6",
   message: "variations off -> mainline only, unchanged",
 )
@@ -51,7 +51,7 @@
 // --- NAGs / comments render inside variations when on ------------------------
 #let g5 = parse-pgn("[White \"A\"][Black \"B\"] 1. e4 (1. d4 $1 {solid} d5) e5 *").first()
 #assert(
-  notation(g5, diagrams: false, nags: true, comments: true, variations: true, lang: "en")
+  notation(g5, diagrams: false, bold-mainline: false, nags: true, comments: true, variations: true, lang: "en")
     == "1.e4 (1.d4! solid d5) 1...e5",
   message: "NAGs + comments inside a variation",
 )
@@ -66,10 +66,14 @@
 // the addressed sub-line's OWN nested variations follow the `variations` flag:
 #assert(s(g3, line: ((at: "1w", into: 0),)) == "1.d4 d5 (1...Nf6 2.c4)", message: "line: outer, nested spliced (variations on)")
 #assert(
-  notation(g3, line: ((at: "1w", into: 0),), variations: false, lang: "en", nags: false, comments: false)
+  notation(g3, line: ((at: "1w", into: 0),), variations: false, bold-mainline: false, lang: "en", nags: false, comments: false)
     == "1.d4 d5",
   message: "line: outer, nested suppressed (variations off)",
 )
+
+// --- bold-mainline: mainline moves rendered strong -> content ----------------
+#assert(type(s(g1)) == str, message: "bold-mainline off -> plain string")
+#assert(type(s(g1, bold-mainline: true)) == content, message: "bold-mainline on -> content (strong mainline)")
 
 // --- document-wide switch via set-pgn-defaults ------------------------------
 // A call relying on the document default resolves through `context` (so returns

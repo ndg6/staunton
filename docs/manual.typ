@@ -471,9 +471,11 @@ last:
 (rendering variations is a separate control — see the next section). A `from` past
 the end or a `to` before `from` is a hard error.
 
-Other options: `move-numbers`, `result`, and — for a *game* source — `nags` /
-`comments` (consulting the PGN-handling defaults). Localization substitutes only
-the piece letters; files, ranks, captures, check marks and `O-O` are untouched.
+Other options: `move-numbers`, `result`, `bold-mainline` (render the mainline moves
+bold to set them off from variations — see *Variations*), and — for a *game*
+source — `nags` / `comments`. The last three consult the PGN-handling defaults.
+Localization substitutes only the piece letters; files, ranks, captures, check
+marks and `O-O` are untouched.
 
 === Variations
 
@@ -506,7 +508,7 @@ layout:
   variations: true,
   variation-style: "block",
 )
-```, stacked: true)
+```, stacked: true, left-align: true)
 
 To render *one specific* variation on its own, pass `line:` — a path locator
 (the same `board-after` shape, or just its hops array) that descends into the
@@ -776,6 +778,7 @@ what is processed, and *all default off*:
   raw("comments"), [include comment prose in `notation`],
   raw("diagrams"), [embed a board in `notation` after each move marked for one],
   raw("variations"), [splice variations (RAVs) into `notation`, in parentheses],
+  raw("bold-mainline"), [render `notation` mainline moves bold (variations stay normal)],
 )
 
 Each is also a per-call argument (`auto` → the document default) on `notation` /
@@ -895,7 +898,8 @@ Legality is checked only on navigation.
 ```typ
 notation(source, from: none, to: none, line: none, figurine: false, lang: auto,
          nags: auto, comments: auto, variations: auto, variation-style: "inline",
-         move-numbers: true, result: false, diagrams: auto, annotations: auto)
+         bold-mainline: auto, move-numbers: true, result: false,
+         diagrams: auto, annotations: auto)
 chess-notation(source, ..)      // standard-variant sugar over notation
 ```
 
@@ -994,4 +998,5 @@ Accepted by `board` / `chess-board` / `diagram` / `chess-diagram` per call, and 
 `"it"`, `"pt"`, `"ru"`), or `"auto"` (follow `#set text(lang: ..)`).
 
 *PGN handling* (`set-pgn-defaults`): `annotations`, `nags`, `comments`, `diagrams`,
-`variations` — all `false` by default (see #link(<pgn-handling>)[PGN handling]).
+`variations`, `bold-mainline` — all `false` by default (see
+#link(<pgn-handling>)[PGN handling]).

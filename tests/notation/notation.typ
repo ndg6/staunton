@@ -14,7 +14,7 @@
 // (their `auto`/auto-value defaults consult the document buckets -> content).
 // Helper defaults them off / to English but lets a test override (e.g. nags: true,
 // lang: "de"); the override wins.
-#let s(src, ..a) = notation(src, ..((diagrams: false, nags: false, comments: false, variations: false, lang: "en") + a.named()))
+#let s(src, ..a) = notation(src, ..((diagrams: false, bold-mainline: false, nags: false, comments: false, variations: false, lang: "en") + a.named()))
 
 // --- English (default) ---
 #assert(s(g) == "1.e4 e5 2.Nf3 Nc6 3.Bb5 a6 4.Ba4 Nf6 5.O-O", message: "en mainline")

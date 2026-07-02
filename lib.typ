@@ -428,7 +428,7 @@
 /// context, so they are not individually referenceable.
 #let notation(source, ..args) = {
   let named = args.named()
-  let all-opts = ("from", "to", "line", "figurine", "lang", "nags", "comments", "variations", "variation-style", "move-numbers", "result")
+  let all-opts = ("from", "to", "line", "figurine", "lang", "nags", "comments", "variations", "variation-style", "bold-mainline", "move-numbers", "result")
   let accepted = all-opts + ("diagrams", "annotations")
   // Reject unknown named options up front (e.g. `show-variations` for `variations`);
   // otherwise a typo'd option is silently ignored and its effect just never happens.
@@ -461,7 +461,7 @@
       let lo = if named.at("from", default: none) != none { _index-of-loc(named.from) } else { 0 }
       let hi = if named.at("to", default: none) != none { _index-of-loc(named.to) } else { nodes.len() - 1 }
       let process-anno = if named.at("annotations", default: auto) != auto { named.annotations } else { pg.annotations }
-      let run-opts = _text-opts(named, ("figurine", "lang", "nags", "comments", "variations", "variation-style", "move-numbers"))
+      let run-opts = _text-opts(named, ("figurine", "lang", "nags", "comments", "variations", "variation-style", "bold-mainline", "move-numbers"))
 
       let parts = ()
       let run-start = lo
