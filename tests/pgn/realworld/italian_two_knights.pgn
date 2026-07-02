@@ -1,0 +1,15 @@
+[Event "?"]
+[Site "?"]
+[Date "2020.12.28"]
+[Round "?"]
+[White "?"]
+[Black "?"]
+[Result "*"]
+[ECO "C57"]
+
+1. e4 e5 2. Nf3 Nc6 3. Bc4 Nf6 4. Ng5 d5 5. exd5 b5 6. dxc6 bxc4 7. O-O (7. Qf3
+)  (7. d4 cxd3 8. Qxd3 Qxd3 9. cxd3 Ba6 10. Nc3 Bxd3 11. Be3 Bb4 12. Bc1 (12.
+O-O-O Bf5 13. a3 Bxc3 14. bxc3 Rb8 15. Bxa7 Rb1+ 16. Kd2 Rb2+ 17. Ke3 h6 18.
+Nh3 O-O) ) 7... h6 8. Nf3 e4 9. Re1 Be6 10. Ne5 Bd6 11. d4 cxd3 12. Nd7 Nxd7
+13. cxd7+ Qxd7 14. Rxe4 dxc2 15. Qxc2 O-O 16. Nc3 Rad8 (16... Rab8 17. b3) *
+
