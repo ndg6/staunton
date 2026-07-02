@@ -428,6 +428,13 @@
 /// context, so they are not individually referenceable.
 #let notation(source, ..args) = {
   let named = args.named()
+  let all-opts = ("from", "to", "line", "figurine", "lang", "nags", "comments", "variations", "variation-style", "move-numbers", "result")
+  let accepted = all-opts + ("diagrams", "annotations")
+  // Reject unknown named options up front (e.g. `show-variations` for `variations`);
+  // otherwise a typo'd option is silently ignored and its effect just never happens.
+  for k in named.keys() {
+    assert(k in accepted, message: "notation: unknown option `" + k + "` (expected one of: " + accepted.join(", ") + ")")
+  }
   // Validate range locators eagerly (not deferred behind the context below), so
   // a misuse errors even when the result is discarded.
   for loc in (named.at("from", default: none), named.at("to", default: none)) {
@@ -437,7 +444,6 @@
   }
   let diag = named.at("diagrams", default: auto)
   let is-game = type(source) == dictionary and "movetext-raw" in source
-  let all-opts = ("from", "to", "line", "figurine", "lang", "nags", "comments", "variations", "variation-style", "move-numbers", "result")
 
   // No embedding possible/requested -> hand straight to the text core. A `line:`
   // render (a single variation) is text-only, so it bypasses diagram embedding.
