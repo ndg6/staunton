@@ -26,3 +26,7 @@ src/assets/piece_sets/staunty/
 # Private (local-only): prompts + LLM design discussions, and the agent guide.
 prompts/
 CLAUDE.md
+
+# Per-developer local helpers (machine-specific / convenience, not shipped).
+scripts/install-local.sh
+scripts/build-manual.sh
