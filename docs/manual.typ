@@ -480,8 +480,8 @@ the piece letters; files, ranks, captures, check marks and `O-O` are untouched.
 By default `notation` renders only the *mainline*. Set `variations: true` (or the
 `set-pgn-defaults(variations: ..)` document default) to splice the game's
 variations (RAVs) into the output — in parentheses, correctly numbered: a
-white-first line reads `N. …`, a black-first line `N… …`, and the resumed mainline
-move re-shows its number:
+white-first line reads `3.Bc4 …`, a black-first line `3...Bc5 …`, and the resumed
+mainline move re-shows its number:
 
 #example(```typ
 #chess-notation(

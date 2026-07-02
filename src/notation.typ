@@ -125,8 +125,9 @@
   let num = ""
   if opts.move-numbers {
     let movenum = int((ply + 1) / 2)
-    if white { num = str(movenum) + ". " }
-    else if force { num = str(movenum) + "... " }
+    // No space after the number (real-world publication style): "1.e4", "3...Bc5".
+    if white { num = str(movenum) + "." }
+    else if force { num = str(movenum) + "..." }
   }
   let tok = num + _localize-san(node.san, opts.chars, opts.figurine, white)
   if opts.nags {
