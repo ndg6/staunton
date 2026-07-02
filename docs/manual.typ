@@ -493,8 +493,9 @@ move re-shows its number:
 ```, stacked: true)
 
 Variations nest to any depth and honour `nags` / `comments` / `figurine` / `lang`
-inside the parentheses. `variation-style: "block"` instead breaks each variation
-onto its own line, indented one level per nesting depth — the analysis-view
+inside the parentheses. `variation-style: "block"` keeps the parentheses but breaks
+each variation onto its own line, indented one level per nesting depth (a variation
+that ends on a nested line closes with a `)` on its own line) — the analysis-view
 layout:
 
 #example(```typ

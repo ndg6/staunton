@@ -24,3 +24,9 @@
 
 = Two Knights — full notation with variations
 #chess-notation(g, variations: true)
+
+// VISUAL CHECK (block style): each variation is parenthesised and indented one
+// level per nesting depth; a variation ending on a nested line closes with a ")"
+// on its own line (e.g. after the 12.O-O-O line).
+= Block style (parenthesised, indented)
+#chess-notation(g, variations: true, variation-style: "block")

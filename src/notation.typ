@@ -159,9 +159,14 @@
   parts.join(" ")
 }
 
-// Block renderer: variations break onto their own line, indented one level per
-// nesting depth. Returns an array of (level, text) lines.
-#let _render-block(nodes, start-ply, level, opts) = {
+// Block renderer: variations break onto their own line(s), indented one level per
+// nesting depth AND wrapped in parentheses (like the inline style). Returns an
+// array of (level, text) lines. A run's own moves sit at `level`; each nested
+// variation recurses at `level + 1` with `wrap: true`. When `wrap` is set (a
+// variation, not the mainline) the body is bracketed: "(" opens the first line;
+// ")" closes the last OWN-level line, or stands on its own line at `level` when
+// the variation ends with a (deeper) nested variation.
+#let _block-lines(nodes, start-ply, level, wrap, opts) = {
   let lines = ()
   let buf = ()
   let force = true
@@ -173,12 +178,19 @@
     if opts.variations and vars.len() > 0 {
       lines.push((level, buf.join(" ")))
       buf = ()
-      for sub in vars { lines += _render-block(sub, ply, level + 1, opts) }
+      for sub in vars { lines += _block-lines(sub, ply, level + 1, true, opts) }
       force = true
     }
     ply += 1
   }
   if buf.len() > 0 { lines.push((level, buf.join(" "))) }
+  if wrap {
+    let (l0, t0) = lines.first()
+    lines.at(0) = (l0, "(" + t0)                        // open on the first line
+    let (ln, tn) = lines.last()
+    if ln == level { lines.at(lines.len() - 1) = (ln, tn + ")") }  // close on last own line
+    else { lines.push((level, ")")) }                   // ...or a standalone close
+  }
   lines
 }
 
@@ -191,7 +203,7 @@
   if hi < lo { return if has-tail { tail } else { "" } }
   let slice = nodes.slice(lo, hi + 1)
   if opts.variation-style == "block" {
-    let lines = _render-block(slice, start-ply, 0, opts)
+    let lines = _block-lines(slice, start-ply, 0, false, opts)
     if has-tail and lines.len() > 0 {
       let (lvl, txt) = lines.last()
       lines.at(lines.len() - 1) = (lvl, txt + " " + tail)

@@ -42,6 +42,9 @@ Then open the PDFs below and check the noted property. (The expected-*fail* test
       annotations on, each spliced board carries that move's arrows/highlights.
 - [ ] `notation/notation.pdf` — figurines, localized piece letters, NAG glyphs,
       and `from`/`to` slices read correctly.
+- [ ] `pgn/realworld/two_knights_variations.pdf` — inline variations numbered
+      correctly; the *block* rendering parenthesises and indents each variation by
+      nesting depth (a variation ending on a nested line closes with `)` alone).
 - [ ] `diagram/auto_captions/auto_captions.pdf`, `free_captions/free_captions.pdf`,
       `outlines/outline.pdf`, `refs/diagram_refs.pdf` — game-info line, captions,
       outline entries, and cross-references resolve.
