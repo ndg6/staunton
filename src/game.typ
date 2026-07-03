@@ -237,14 +237,19 @@
   _stash(game, nodes)
 }
 
-/// Add a variation (RAV) as an ALTERNATIVE to the move at `at` (a mainline locator
-/// or a variation path dict). `moves` is a PGN movetext fragment (a string or raw
-/// block), parsed by the same tokeniser as `parse-pgn`, so it may carry nested
-/// `()` variations, `$n` NAGs and `{comments}`; a plain SAN run like "Bc4 Bc5" is
-/// the simplest case. The variation is APPENDED to the move's variations (its
-/// index `into` is the previous count) and numbered from that move's ply at render
-/// time. Moves are NOT checked for legality here -- illegality surfaces only if you
-/// navigate into the line (e.g. `board-after`). Returns a new game; source intact.
+/// Add a variation (RAV) as an *alternative* to the move at `at`, returning a
+/// *new* game (the source is never mutated). The variation is appended to that
+/// move's variations (its `into` index is the previous count) and numbered from
+/// the move's ply at render time. Legality is checked only if you later navigate
+/// into the line (e.g. via `board-after`).
+///
+/// - game (dictionary): a parsed game (from `parse-pgn`).
+/// - at (str, dictionary): the move to branch at — a *mainline* locator
+///   (`"3w"` / `"3b"`), or a *path* dict `(line: (..hops..), at: "<move>")` to
+///   reach a move inside a (possibly nested) variation.
+/// - moves (str, content): a PGN movetext fragment — a plain SAN run like
+///   `"Bc4 Bc5"`, or richer text with nested `()`, `$n` NAGs and `{comments}`.
+/// -> dictionary
 #let with-variation(game, at: none, moves: none) = {
   assert(type(game) == dictionary and "movetext-raw" in game, message: "with-variation: first argument must be a parsed game (from parse-pgn)")
   assert(at != none, message: "with-variation: `at` (a move locator) is required")

@@ -191,13 +191,20 @@
   }
 }
 
-/// Draw a bare board (no figure, no caption) -- the variant-agnostic drawing
-/// primitive. `source` is a FEN string, a position dict, or a squares dict;
-/// `flip: true` shows it from Black's side. Named style overrides (size, light,
-/// dark, labels, label-mode, file-side, rank-side, piece-set, highlight, ...)
-/// behave exactly as for `diagram`. The variant (if any) is carried by `source`;
-/// the variant-named wrappers (`chess-board`, future `xiangqi-board`, ...) are
-/// thin sugar over this.
+/// Draw a bare board — no caption, no figure — the variant-agnostic drawing
+/// primitive that every diagram builds on. The variant (if any) rides on
+/// `source`; the variant-named wrappers (`chess-board`, a future `xiangqi-board`,
+/// …) are thin sugar over this.
+///
+/// - source (str, dictionary): the position to draw — a *FEN string*, a
+///   *position* dict (from `position` / `parse-fen`), or a bare *squares* dict
+///   (`(e1: "K", …)`).
+/// - flip (bool): show the board from Black's side. Per-call only — never a
+///   document default.
+/// - ..overrides (arguments): any board *style* option (`size`, `light`, `dark`,
+///   `labels`, `label-mode`, `file-side`, `rank-side`, `piece-set`, `highlight`,
+///   `arrows`, `grid`, …) — see #link(<board-options>)[Board style options].
+/// -> content
 #let board(source, flip: false, ..overrides) = {
   let b = _to-board(source)
   render-board(b.squares, flip: flip, cols: b.cols, rows: b.rows, ..overrides.named())

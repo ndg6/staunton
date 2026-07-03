@@ -169,9 +169,14 @@
   else { panic("parse-pgn: expected a string or a raw block (`#raw(..)` or ```...```), got " + repr(type(input))) }
 }
 
-/// Parse PGN text (string or raw block) into an array of games. Roster (tags),
-/// result, and the verbatim movetext substring are extracted eagerly; the move
-/// tree is parsed lazily via `movetext(game)`.
+/// Parse PGN text into an array of games. The roster (tags), result, and the
+/// verbatim movetext substring are extracted eagerly; the move tree is parsed
+/// lazily on first use via `movetext(game)`, so a document that shows only a few
+/// positions never parses the rest.
+///
+/// - input (str, content): the PGN source — a string, or a raw block
+///   (```` ```…``` ````) / `#raw(..)`.
+/// -> array
 #let parse-pgn(input) = {
   let s = _normalise(_as-text(input))
 

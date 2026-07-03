@@ -21,9 +21,13 @@
 #import "coords.typ": square-name
 #import "pieces.typ": fen-piece, kind-letters
 
-/// Parse a FEN string into a position dict:
-///   (board, turn, castling, en-passant, halfmove, fullmove)
-/// where `board` maps square name ("e4") -> (kind, color).
+/// Parse a FEN string into a `position` dict — the inverse of `to-fen`. The
+/// result carries the board (square name → `(kind, color)`) plus the side to
+/// move, castling rights, en-passant target, and the halfmove / fullmove clocks.
+///
+/// - fen (str): a FEN record, e.g.
+///   `"rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"`.
+/// -> dictionary
 #let parse-fen(fen) = {
   assert(type(fen) == str, message: "FEN must be a string, got: " + repr(fen))
   let parts = fen.trim().split(regex("\s+")).filter(p => p != "")
@@ -82,7 +86,8 @@
   )
 }
 
-/// The standard starting position, as a convenience.
+/// The standard chess starting position, as a FEN string constant (handy as the
+/// `source` for `chess-moves`, `parse-fen`, `board`, …).
 #let starting-fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
 
 // FEN letter for a piece: kind letter, upper for white, lower for black.
@@ -91,11 +96,14 @@
   if piece.color == "white" { upper(l) } else { lower(l) }
 }
 
-/// Encode a position dict back into a FEN string (the inverse of `parse-fen`).
-/// Geometry-aware (uses the position's `cols`/`rows`, so it also serialises
-/// larger boards), and tolerant of a position built by `position()` (whose
-/// `castling` may be an empty dict and `en-passant` `none`). Standard 8x8
-/// positions round-trip exactly with `parse-fen`.
+/// Encode a `position` dict back into a FEN string (the inverse of `parse-fen`).
+/// Geometry-aware — it uses the position's `cols` / `rows`, so it also serialises
+/// larger-than-8×8 boards — and tolerant of positions built by `position()`
+/// (empty `castling`, `en-passant` `none`). Standard 8×8 positions round-trip
+/// exactly with `parse-fen`.
+///
+/// - position (dictionary): a position dict (from `position` / `parse-fen`).
+/// -> str
 #let position-fen(position) = {
   assert(type(position) == dictionary and "squares" in position,
     message: "position-fen: expected a position dict (with `squares`)")
