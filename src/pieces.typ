@@ -19,7 +19,9 @@
 // The glyph path keeps the baseline lift + per-kind size correction it needs.
 // ===========================================================================
 
+/// The six chess piece kinds: king, queen, rook, bishop, knight, pawn.
 #let piece-kinds = ("king", "queen", "rook", "bishop", "knight", "pawn")
+/// The two piece colours: white and black.
 #let piece-colors = ("white", "black")
 
 // SVG piece sets bundled under src/assets/piece_sets/. `default-piece-set` is the
@@ -28,10 +30,15 @@
 // NOT a guard -- any set name is accepted so users can add their own set by
 // dropping a folder under src/assets/piece_sets/<name>/ with no code change. A name
 // that has no matching SVG simply fails to load the image (Typst's own error).
+/// The factory-default piece set (`"cburnett"`). Set `"unicode"` (or `none`) to
+/// select the glyph fallback.
 #let default-piece-set = "cburnett"
 // Sets bundled with the package (advisory list only -- NOT a guard; any name is
 // accepted, see square-piece). Only the GPLv2+ sets ship; the other lichess sets
 // are non-commercial-licensed and are not redistributed here.
+/// The piece sets bundled with the package (`"cburnett"`, `"merida"`) — an
+/// advisory list, not a guard: any set name is accepted (drop a folder under
+/// `src/assets/piece_sets/<name>/`).
 #let known-piece-sets = ("cburnett", "merida")
 
 // piece kind -> file letter used in the SVG file names ("wK.svg", "bN.svg", ...).
@@ -76,8 +83,11 @@
 #let default-white-fill = rgb("#fcfcfa")
 #let default-black-fill = rgb("#1a1a1a")
 
-/// Map a single FEN piece letter to (kind, color).
-/// Uppercase = white, lowercase = black.  e.g. "N" -> knight/white, "q" -> queen/black.
+/// Map a single FEN piece letter to `(kind, color)` — uppercase = white,
+/// lowercase = black (e.g. `"N"` → knight/white, `"q"` → queen/black).
+///
+/// - letter (str): a one-character FEN piece letter.
+/// -> dictionary
 #let fen-piece(letter) = {
   let kinds = (p: "pawn", n: "knight", b: "bishop", r: "rook", q: "queen", k: "king")
   let key = lower(letter)
@@ -85,8 +95,17 @@
   (kind: kinds.at(key), color: if letter == upper(letter) { "white" } else { "black" })
 }
 
-/// Render a single piece as `size`-tall content (no square background).
-/// `size` is the font size used for the glyph.
+/// Render a single piece as `size`-tall content (no square background) — the SVG
+/// piece if the active set has one, else the glyph fallback.
+///
+/// - kind (str): one of `piece-kinds`.
+/// - color (str): `"white"` or `"black"`.
+/// - size (length): the glyph font size.
+/// - white-fill (color): fill for white pieces.
+/// - black-fill (color): fill for black pieces.
+/// - stroke-ratio (float): outline width as a fraction of `size`.
+/// - font (array): the glyph-fallback font family list.
+/// -> content
 #let piece-content(
   kind,
   color,

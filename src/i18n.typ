@@ -43,18 +43,24 @@
   ru: ru.strings,
 )
 
-// Resolve an effective language CODE. MUST be called inside a `context` (it may
-// read `text.lang` and the document i18n state).
-//   * call-lang == auto (the VALUE) -> the document `lang` setting;
-//   * that setting (or an explicit call-lang) == "auto" -> follow `text.lang`;
-//   * otherwise the code as given.
+/// Resolve an effective language code. Must be called inside a `context`.
+/// `call-lang == auto` uses the document `lang` setting; `"auto"` follows
+/// `text.lang`; any other code is used as given.
+///
+/// - call-lang (auto, str): the per-call language, or `auto` for the document
+///   default.
+/// -> str
 #let resolve-lang(call-lang) = {
   let setting = if call-lang != auto { call-lang } else { (default-i18n-style + i18n-style-state.get()).lang }
   if setting == "auto" { text.lang } else { setting }
 }
 
-// Look up one localized UI string (English fallback for unknown code/key). MUST
-// be called inside a `context`.
+/// Look up one localized UI string (English fallback for an unknown code or key).
+/// Must be called inside a `context`.
+///
+/// - call-lang (auto, str): the language, or `auto` for the document default.
+/// - key (str): the string key (e.g. `"diagram-supplement"`).
+/// -> str
 #let ui-string(call-lang, key) = {
   let code = resolve-lang(call-lang)
   let tbl = ui-strings.at(code, default: ui-strings.en)

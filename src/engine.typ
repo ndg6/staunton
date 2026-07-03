@@ -100,7 +100,11 @@
   none
 }
 
-/// Is `color`'s king currently in check?
+/// Is `color`'s king currently in check in `position`?
+///
+/// - position (dictionary): the position to test.
+/// - color (str): `"white"` or `"black"`.
+/// -> bool
 #let in-check(position, color) = {
   let k = _find-king(position.squares, color)
   if k == none { return false }
@@ -243,9 +247,14 @@
   moves
 }
 
-/// Apply a move to a position, returning the new position. Pure (no mutation
-/// of the input). Handles captures, en passant, castling (rook too),
-/// promotion, castling-rights, en-passant target, and the move clocks.
+/// Apply a move to a position, returning the new position — pure (the input is
+/// not mutated). Handles captures, en passant, castling (rook too), promotion,
+/// castling-rights and en-passant-target updates, and the move clocks.
+///
+/// - position (dictionary): the position to move from.
+/// - move (dictionary): a concrete move dict (e.g. from `san-to-move` or
+///   `legal-moves`).
+/// -> dictionary
 #let apply(position, move) = {
   let board = position.squares
   let color = move.color
@@ -303,7 +312,11 @@
   )
 }
 
-/// All fully-legal moves for the side to move.
+/// All fully-legal moves for the side to move in `position`, as an array of move
+/// dicts.
+///
+/// - position (dictionary): the position to generate moves for.
+/// -> array
 #let legal-moves(position) = {
   // The rules engine implements standard western chess only. Variant boards
   // (xiangqi, shatar, shogi, ...) need their own move generation; until then any

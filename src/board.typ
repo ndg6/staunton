@@ -165,9 +165,16 @@
   s
 }
 
-/// Render a board (square name -> (kind, color)) to content. `flip: true` puts
-/// black at the bottom. `cols`/`rows` give the board geometry (default standard
-/// 8x8). Accepts style fields as named overrides (see style.typ).
+/// Render a board (square name → `(kind, color)`) to content — the low-level
+/// drawing primitive under `board`. `flip: true` puts Black at the bottom.
+///
+/// - squares (dictionary): square name → `(kind, color)`.
+/// - flip (bool): show the board from Black's side.
+/// - cols (int): board width (default `8`).
+/// - rows (int): board height (default `8`).
+/// - ..overrides (arguments): named board style fields (see the Board style
+///   options).
+/// -> content
 #let render-board(squares, flip: false, cols: 8, rows: 8, ..overrides) = {
   assert(type(squares) == dictionary, message: "render-board expects a squares dict (square -> (kind, color)); got " + repr(type(squares)))
 

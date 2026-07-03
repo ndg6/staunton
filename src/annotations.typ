@@ -32,6 +32,12 @@
 #let nag-symbol(n) = nag-symbols.at(n, default: "$" + n)
 
 // ---- comment interpretation -----------------------------------------------
+/// Interpret a PGN move comment: extract a diagram marker, `%cal` arrows, `%csl`
+/// highlights, and the remaining prose. Returns `(diagram, arrows, highlights,
+/// text)`.
+///
+/// - comment (str, none): the raw comment string, or `none`.
+/// -> dictionary
 #let interpret-comment(comment) = {
   if comment == none or comment == "" {
     return (diagram: none, arrows: (), highlights: (), text: "")

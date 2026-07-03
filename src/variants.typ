@@ -11,6 +11,8 @@
 // position layer hardcodes the western piece set.
 // ===========================================================================
 
+/// The variant registry: a dict of variant name → spec `(name, kinds, abbr, cols,
+/// rows)`. Only `standard` is implemented today.
 #let variants = (
   standard: (
     name: "Standard chess",
@@ -28,13 +30,21 @@
 )
 
 /// The spec dict for a variant; errors on an unknown variant name.
+///
+/// - variant (str): a variant name (a key of `variants`).
+/// -> dictionary
 #let variant-spec(variant) = {
   assert(variants.keys().contains(variant), message: "unknown variant: " + repr(variant) + " (known: " + repr(variants.keys()) + ")")
   variants.at(variant)
 }
 
-/// Map a single piece character to (kind, color) for a variant. Upper case =
-/// white, lower case = black. Errors on an unknown abbreviation.
+/// Map a single piece character to `(kind, color)` for a variant — uppercase =
+/// white, lowercase = black. Errors on an unknown abbreviation.
+///
+/// - ch (str): a one-character piece abbreviation.
+/// - variant (str): the variant whose abbreviations to use (default
+///   `"standard"`).
+/// -> dictionary
 #let char-to-piece(ch, variant: "standard") = {
   let spec = variant-spec(variant)
   let key = lower(ch)
