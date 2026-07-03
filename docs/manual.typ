@@ -1,4 +1,4 @@
-// staunton — user manual (the CANONICAL source; compiles to docs/manual.pdf).
+// staunton user manual
 //
 // Every feature is shown as the code you type next to the board it produces, via
 // the `example` helper (see docs/manual-tools.typ). Edit this file for any manual
@@ -45,18 +45,18 @@
 
 // === Introduction ============================================================
 
-= Introduction
+= Introduction<introduction>
 
-*staunton* is a Typst package for chess publications. From a FEN string, a parsed
-PGN, or a position you build by hand, it produces:
+Package *staunton* aims to provide a complete, convenient but also flexible solution
+for chess publications. It provides a full set of features, including:
 
 - *boards and diagrams* — pure boards with labels, highlights, arrows, an optional grid, 
   flexible sizing, custom colours, and bundled SVG piece sets (or a Unicode fallback); and building on that diagrams with captions, figure counters, and referenceable labels;
 - *games from PGN* — a sophisticated parser creates single games or an array of games,  
   from which you create positions by "locators" (mainline and variations), move play-out, and FEN export;
-- *move notation* — move text output with localized piece letters, figurine glyphs, NAGs,
-  comments and diagrams embedded inline;
-- *tournament tables* — standings, cross-tables and progress charts from a PGN's
+- *move notation* — from parsed games you get move text output with localized piece letters, 
+  figurine glyphs, NAGs, comments and diagrams embedded inline;
+- *tournament tables* — we can create standings, cross-tables and progress charts from a PGN's
   results, by player or by team;
 - *outlines and references* — diagrams and tables get their own counters and lists;
 - *document-wide styling* and *localization* (six languages, easily extended).
@@ -74,11 +74,6 @@ a board in a referenceable figure; a *position* is the data a board draws; *game
 add PGN, notation, and play; then come *tournament tables*, *outlines and
 references*, and the *document-wide style* settings.
 
-== The name
-
-Typst package *staunton* is named after *Howard Staunton* (c. 1810–1874): a leading chess master of his day, organiser of the first international tournament (London, 1851), a chess author and publisher, and the namesake of the standardised *Staunton pattern* chessmen —
-still the tournament standard.
-
 == Installing and importing
 
 *staunton* is a Typst package. Import its public API once and every function in this
@@ -94,9 +89,14 @@ In every framed example, the left side is *the code you type* and the right side
 is *exactly what it renders* — the manual compiles its own examples, so the two
 can never disagree.
 
+== The name
+
+Typst package *staunton* is named in honour of *Howard Staunton* (c. 1810–1874): a leading chess master of his day, organiser of the first international tournament (London, 1851), a chess author and publisher, and the namesake of the standardised *Staunton pattern* chessmen —
+still the tournament standard.
+
 // === The board ===============================================================
 
-= The board
+= The board<board>
 
 `board(source, ..)` draws *just the board* — no caption, no figure — and is the
 primitive every diagram builds on. `source` is one of: a *FEN string*; a
@@ -121,9 +121,9 @@ which a `chess-diagram` accepts too.
 
 == Labels
 
-`label-mode` chooses how files and ranks are drawn — `"on-square"` (default,
-tucked into the corner squares), `"outside"` (a gutter strip), or `"border"` (a
-themed band, styled by `border-theme`). `labels: false` suppresses them.
+`label-mode` chooses how labels for files and ranks are drawn — `"on-square"` (default,
+tucked into the corner of the squares), `"outside"` (a gutter strip), or `"border"` (a
+themed band, styled by `border-theme`). `labels: false` suppresses labels completely.
 
 #example(```typ
 #board(
@@ -155,8 +155,7 @@ themed band, styled by `border-theme`). `labels: false` suppresses them.
 
 == Arrows and the grid
 
-`arrows` draws arrows; each entry is a `(from, to)` or `(from, to, color)` tuple,
-or a dict `(from: .., to: .., color: ..)`. A missing color uses `arrow-color`.
+As the name suggests `arrows` draws arrows on the board; each entry is a `(from, to)` or `(from, to, color)` tuple, or a dict `(from: .., to: .., color: ..)`. A missing color uses `arrow-color`.
 Arrows scale with the board and flip with it. A `grid: true` overlay draws thin
 lines between the squares.
 
@@ -172,8 +171,7 @@ lines between the squares.
 
 == Coordinates and non-square boards
 
-Files run `a`, `b`, … and ranks `1`, `2`, …; `a1` is the dark square in the
-lower-left corner, `h8` the upper-right. Square names are case-insensitive
+At leasst in standard western chess, Files run `a`, `b`, … and ranks `1`, `2`, …; `a1` is the dark square in the lower-left corner, `h8` the upper-right. Square names are case-insensitive
 (`"E4"` = `"e4"`).
 
 #example(```typ
@@ -184,7 +182,7 @@ lower-left corner, `h8` the upper-right. Square names are case-insensitive
 )
 ```)
 
-The board is *not* tied to 8×8. A `position` built from the string form (next
+But boards are *not* tied to 8×8. A `position` built from the string form (next
 chapter) counts its own columns and rows, and the renderer draws whatever geometry
 it is given — files and ranks extend as far as the board needs, and the cells stay
 square while the board itself becomes rectangular:
@@ -270,7 +268,7 @@ to Typst's always-embedded mono — so a stock install draws labels without
 
 // === Diagrams ================================================================
 
-= Diagrams
+= Diagrams<diagrams>
 
 `chess-diagram(source, ..)` wraps a board in a `#figure` (kind `"chess"`), so —
 unlike a bare `board` — it is captioned, counted, referenceable, and listed by an
@@ -304,7 +302,7 @@ and a `chess-diagram` whenever you want to caption it, cross-reference it
 
 // === Positions ===============================================================
 
-= Positions
+= Positions<positions>
 
 `position(..)` builds the data model — "which piece stands on which square" — that
 a board or diagram draws. It accepts a FEN string (auto-detected), a *squares
@@ -350,7 +348,7 @@ en-passant, halfmove, fullmove)`; `parse-fen` returns the same shape. The `cols`
 
 // === Games (PGN) =============================================================
 
-= Games (PGN)
+= Games (PGN)<games>
 THe predominant form of the distribution and publications of chess games (atleast for western chess) are _PGN files_. PGN stands for *Portable Game Notation* and is a text format for chess games. It is human-readable, and can be parsed by chess software. PGN files contain the moves of a game, along with metadata such as player names, event, date, and result. PGN files cao contain just one or many games.
 
 The `parse-pgn` function returns an *array of games*; `.first()` takes the first one. Read an external file with `read` in your own file, or pass an inline raw block. The examples below assume an already parsed game is in scope:
@@ -416,14 +414,14 @@ move past the end of its line is a hard error.
 == Playing moves onto a position
 
 To explore a *new* line, or build a position from a FEN plus some moves, use
-`play-moves(source, moves)`. `source` is `none` (the standard start), a FEN
+`chess-moves(source, moves)`. `source` is `none` (the standard start), a FEN
 string, or a position; `moves` is move text or a SAN array. It resolves each move
 against the legal moves (illegal/ambiguous is a hard error) and returns the
 *final* position, never mutating the source:
 
 #example(```typ
 #chess-diagram(
-  play-moves(none, "1. e4 e5 2. Nf3 Nc6 3. Bb5 a6"),
+  chess-moves(none, "1. e4 e5 2. Nf3 Nc6 3. Bb5 a6"),
   size: 4cm,
 )
 ```)
@@ -432,19 +430,21 @@ against the legal moves (illegal/ambiguous is a hard error) and returns the
 
 For chess publications, notational output of the move text is as important as showing 
 board positions. This output has to be flexible and localisable. While you sometimes want to 
-show move text exactly as it was recorded in the PGN, you often want to reformat the move text for your own purposes. The `notation(..)` function is the workhorse for this. It takes a game, a move-text string, or a SAN array and produces a formatted move text output. It can localise the piece letters and render figurine glyphs, and it can include or exclude move numbers, results, NAGs, comments, and embedded diagrams.
+show move text exactly as it was recorded in the PGN, you often want to amend and reformat the move text for your own purposes. The `notation(..)` function is the workhorse for this. It takes a game, a move-text string, or a SAN array and produces a formatted move text output. It can localise the piece letters and render figurine glyphs, and it can include or exclude move numbers, results, NAGs, comments, and embedded diagrams.
 
-Two names, one formatter. `notation(..)` is the *variant-agnostic* primitive;
-`chess-notation(..)` is the *standard-western-chess* wrapper over it — identical
+To support different chess variants in the future`notation(..)` is the *variant-agnostic* primitive and `chess-notation(..)` is the *standard-western-chess* wrapper over it — identical
 output today, but `chess-notation` fixes the variant and rejects a source of a
 non-standard `variant`. The split is deliberate and forward-looking: staunton is
 *variant-forward*, so a future variant gets its own name — a planned
 `xiangqi-notation`, `shogi-notation`, … — each a thin wrapper over the same
 generic `notation` core, while `chess-notation` stays western-chess-specific. The
-same pairing runs through the whole package (`board`/`chess-board`,
-`diagram`/`chess-diagram`, `position`, `play-moves`): reach for the `chess-` name
-for ordinary chess, and the generic one only when you are deliberately
-variant-agnostic. Both this manual and everyday use favour `chess-notation`.
+same pairing runs through the package's drawing and notation entry points —
+`board`/`chess-board`, `diagram`/`chess-diagram`, `notation`/`chess-notation`:
+reach for the `chess-` name for ordinary chess, and the generic one only when you
+are deliberately variant-agnostic. Two functions stand slightly apart: `position`
+is variant-parameterised (the variant rides on its source or `variant:` argument,
+so there is no separate `chess-position`), and `chess-moves` is chess-only today
+(the engine does standard chess, so there is no generic `moves`). Both this manual and everyday use favour `chess-notation`.
 
 Either formats move text the game already holds — no engine. Its `source` is a
 game, a move-text string, or a SAN array; it localises the piece letters and
@@ -592,7 +592,7 @@ of the lazy model.
 locator. Standard 8×8 positions round-trip exactly:
 
 #example(```typ
-#raw(to-fen(play-moves(none, "1. e4 e5 2. Nf3")))
+#raw(to-fen(chess-moves(none, "1. e4 e5 2. Nf3")))
 ```, stacked: true)
 
 == Drawing annotations
@@ -634,7 +634,7 @@ position is navigated. Missing Seven-Tag-Roster tags are tolerated (they default
 
 // === Tournament tables =======================================================
 
-= Tournament tables
+= Tournament tables<tournament-tables>
 
 Tournament tables are built from a parsed PGN's roster + results (no engine). The
 `*-table` renderers produce a captioned, referenceable `#figure` (kind
@@ -673,7 +673,7 @@ matches.
 
 // === Outlines and references =================================================
 
-= Outlines and references
+= Outlines and references<outlines-references>
 
 Diagrams and tables each carry a distinct figure `kind` (`"chess"` /
 `"chess-table"`), so they get their own counters, can be *referenced*
@@ -696,7 +696,7 @@ figure, so it can be neither referenced nor listed — use a `chess-diagram`.
 
 // === Document-wide style =====================================================
 
-= Document-wide style
+= Document-wide style<document-style>
 
 Defaults live in *five* buckets, each with its own setter:
 
@@ -788,12 +788,10 @@ Each is also a per-call argument (`auto` → the document default) on `notation`
 
 #pagebreak()
 
-= API Reference
+= API Reference<api-reference>
 
-The compact lookup: every public function's signature, the recurring *argument
-value shapes*, and the full option lists. The chapters above show each feature in
-use with a rendered example; this chapter is for answering "what exactly can I
-pass". `..style` below means *any board style option* (see #link(<board-options>)[Board style options]).
+The reference below serves as a compact and *complete* lookup for every public function's signature, the recurring *argument value shapes*, and the full option lists. The chapters above show each feature in use with a rendered example, this chapter is for answering "what exactly can I
+pass" to a function. The `..style` argument list below means *any board style option* (see #link(<board-options>)[Board style options]).
 
 == Argument value shapes
 
@@ -810,11 +808,11 @@ described once here.
 / `locator`: for `position-after`, `board-after`, `to-fen`, `move-san`,
   `move-node`, and builder addresses — a *mainline* string `"12w"` / `"12b"`, or a
   *path* dict `(line: (..hops..), at: "<move>")`, each hop `(at: "<move>", into:
-  <n>)` (descend into variation `n` at that move), to reach a move inside a (nested)
+  <n>)` (descend into variation `n` at that move), to reach a move inside a (possibly nested)
   variation. `notation`'s `line:` also takes a bare hops array; its `from`/`to` are
   mainline strings only.
 
-/ `size`: a `length` (`4cm`), a `ratio` of the available width (`60%`), or `auto`.
+/ `size`: a `length` (default: `4cm`), a `ratio` of the available width (default: `60%`), or `auto`.
 
 / `highlight` entry: a square name `"e4"`; a `(square, color)` pair; or a dict
   `(square:, shape:, color:)` with shape `"filled"` / `"cross"` / `"circle"`.
@@ -872,11 +870,11 @@ board-after(game, locator, white: auto, black: auto, year: auto, caption: auto,
             annotations: auto, flip: false, game-info: auto, lang: auto, ..style)
 move-san(game, locator)         // -> the SAN of the addressed move
 move-node(game, locator)        // -> the full move node (san, nags, comments, variations)
-play-moves(source, moves)       // source: none | FEN | position; moves: text or SAN array
+chess-moves(source, moves)      // source: none | FEN | position; moves: text or SAN array
 ```
 
 A `game` is `(tags, movetext-raw, result)`. Parsing is lazy: `movetext` builds the
-tree on demand, the engine runs only when a position is asked for. `play-moves`
+tree on demand, the engine runs only when a position is asked for. `chess-moves`
 resolves each move against the legal moves (illegal/ambiguous is an error) and
 returns the final position; it is mainline-only.
 
@@ -998,5 +996,5 @@ Accepted by `board` / `chess-board` / `diagram` / `chess-diagram` per call, and 
 `"it"`, `"pt"`, `"ru"`), or `"auto"` (follow `#set text(lang: ..)`).
 
 *PGN handling* (`set-pgn-defaults`): `annotations`, `nags`, `comments`, `diagrams`,
-`variations`, `bold-mainline` — all `false` by default (see
+`variations` — all `false` by default; `bold-mainline` defaults `true` (see
 #link(<pgn-handling>)[PGN handling]).

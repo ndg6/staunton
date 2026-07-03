@@ -84,7 +84,7 @@ typst compile --root . docs/examples/showcase.typ showcase.pdf
 |---|---|
 | diagrams | `chess-diagram`, `diagram`, `board`, `chess-board` |
 | positions | `position`, `parse-fen`, `to-fen`, `starting-fen` |
-| games (PGN) | `parse-pgn`, `movetext`, `mainline`, `board-after`, `position-after`, `play-moves` |
+| games (PGN) | `parse-pgn`, `movetext`, `mainline`, `board-after`, `position-after`, `chess-moves` |
 | annotate / build | `with-nags`, `with-comments`, `with-variation` |
 | notation | `chess-notation`, `notation` |
 | tables | `standings-table`, `crosstable-table`, `progress-table`, `games-by-event` (+ compute: `standings`, `crosstable`, `progress`) |

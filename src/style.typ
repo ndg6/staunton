@@ -131,15 +131,16 @@
 
 // ---- PGN handling ---------------------------------------------
 // How PGN-embedded extras are HANDLED at render time. Parsing stays lossless;
-// these switches only decide what gets *interpreted/shown*. All default OFF:
-// reading a PGN yields plain movetext unless you opt in.
+// these switches only decide what gets *interpreted/shown*. The content-extra
+// switches default OFF (reading a PGN yields plain movetext unless you opt in);
+// `bold-mainline` is presentation only and defaults ON.
 #let default-pgn-style = (
   annotations: false,  // process %cal/%csl comment commands -> arrows/highlights
   nags:        false,  // render NAGs ("Nf3!", "d4⩲") in notation
   comments:    false,  // include comment prose in notation
   diagrams:    false,  // act on embedded diagram markers (consumer: inline embed, deferred)
   variations:  false,  // splice variations (RAVs) into notation output
-  bold-mainline: false, // render mainline moves bold (variations stay normal)
+  bold-mainline: true, // render mainline moves bold (variations stay normal)
 )
 
 // Document-wide overrides (document-order state, like Typst's own #set).

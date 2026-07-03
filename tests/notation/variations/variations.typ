@@ -74,6 +74,10 @@
 // --- bold-mainline: mainline moves rendered strong -> content ----------------
 #assert(type(s(g1)) == str, message: "bold-mainline off -> plain string")
 #assert(type(s(g1, bold-mainline: true)) == content, message: "bold-mainline on -> content (strong mainline)")
+// bold-mainline defaults ON: a bare call (default resolves through set-pgn-defaults)
+// therefore yields content, not a plain string.
+#assert(default-pgn-style.bold-mainline == true, message: "bold-mainline defaults on")
+#assert(type(chess-notation(g1, lang: "en")) == content, message: "default bold-mainline -> content")
 
 // --- document-wide switch via set-pgn-defaults ------------------------------
 // A call relying on the document default resolves through `context` (so returns

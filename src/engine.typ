@@ -308,7 +308,7 @@
   // The rules engine implements standard western chess only. Variant boards
   // (xiangqi, shatar, shogi, ...) need their own move generation; until then any
   // move analysis on a non-standard position is a hard error here, so the limit
-  // lives in the engine (callers like play-moves need no `variant` parameter).
+  // lives in the engine (callers like chess-moves need no `variant` parameter).
   assert(position.at("variant", default: "standard") == "standard",
     message: "engine: move analysis supports only standard chess (got variant " + repr(position.at("variant", default: "standard")) + ")")
   let color = if position.turn == "w" { "white" } else { "black" }

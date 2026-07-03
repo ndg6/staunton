@@ -1,6 +1,6 @@
 // to-fen: export a position OR a game-at-locator back to a FEN
 // string (inverse of parse-fen). Standard positions round-trip exactly.
-#import "/lib.typ": to-fen, parse-fen, position, play-moves, parse-pgn, starting-fen
+#import "/lib.typ": to-fen, parse-fen, position, chess-moves, parse-pgn, starting-fen
 
 #set page(width: auto, height: auto, margin: 1cm)
 #set text(font: "Libertinus Serif", size: 10pt)
@@ -19,11 +19,11 @@
 // a position built with position() (castling empty, en-passant none) serialises
 #assert(to-fen(position((e1: "K", e8: "k"))) == "4k3/8/8/8/8/8/8/4K3 w - - 0 1", message: "manual position -> fen")
 
-// from a play-moves result
+// from a chess-moves result
 #assert(
-  to-fen(play-moves(none, "1. e4 e5 2. Nf3 Nc6"))
+  to-fen(chess-moves(none, "1. e4 e5 2. Nf3 Nc6"))
     == "r1bqkbnr/pppp1ppp/2n5/4p3/4P3/5N2/PPPP1PPP/RNBQKB1R w KQkq - 2 3",
-  message: "play-moves -> fen",
+  message: "chess-moves -> fen",
 )
 
 // from a game + locator (board-after locator syntax); "2w" = AFTER White's 2nd

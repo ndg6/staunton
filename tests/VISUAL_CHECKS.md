@@ -45,6 +45,9 @@ Then open the PDFs below and check the noted property. (The expected-*fail* test
 - [ ] `pgn/realworld/two_knights_variations.pdf` — inline variations numbered
       correctly; the *block* rendering parenthesises and indents each variation by
       nesting depth (a variation ending on a nested line closes with `)` alone).
+- [ ] `notation/variations/variations.pdf` — `bold-mainline` now defaults **on**:
+      in the two "with the document default" renders at the bottom, mainline moves
+      read **bold** while moves inside variations stay normal weight.
 - [ ] `diagram/auto_captions/auto_captions.pdf`, `free_captions/free_captions.pdf`,
       `outlines/outline.pdf`, `refs/diagram_refs.pdf` — game-info line, captions,
       outline entries, and cross-references resolve.

@@ -17,7 +17,7 @@
 #import "src/variants.typ": variants, variant-spec, char-to-piece
 #import "src/fen.typ": parse-fen, starting-fen, position-fen
 #import "src/engine.typ": legal-moves, apply, in-check
-#import "src/san.typ": san-to-move, play-san, play-moves
+#import "src/san.typ": san-to-move, play-san, chess-moves
 #import "src/pgn.typ": parse-pgn, movetext
 #import "src/game.typ": mainline, position-after, game-result, game-start, move-san, move-node, with-nags, with-comments, with-variation
 // The text core lives in src/notation.typ; lib defines `notation` /
@@ -119,7 +119,7 @@
 
   // FEN auto-detect: a single string/raw positional that contains "/" is a FEN
   // (rank separators), so delegate to parse-fen. This keeps position(fen),
-  // board(fen) and play-moves(fen, ..) consistent. The string ROW form never
+  // board(fen) and chess-moves(fen, ..) consistent. The string ROW form never
   // uses "/", so there is no clash. (parse-fen sets turn/castling/etc itself.)
   if pos.len() == 1 {
     let p0 = pos.first()

@@ -8,10 +8,10 @@
 // yet; this module only FORMATS SAN we already hold.)
 //
 // `notation` is the variant-agnostic formatter; `chess-notation` is the standard
-// sugar (mirroring board/diagram, play-moves). A future `xiangqi-notation` would
+// sugar (mirroring board/diagram, chess-moves). A future `xiangqi-notation` would
 // be a different formatter entirely.
 //
-// Source forms (consistent with `play-moves`):
+// Source forms (consistent with `chess-moves`):
 //   * a parsed game            -> its mainline SAN;
 //   * a move-text string       -> tokenised with `_split-movetext`;
 //   * a SAN array              -> used directly.
@@ -257,9 +257,11 @@
 /// (`auto` -> the document language via `set-lang`; a code like "de"; or the
 /// string "auto" to follow `#set text(lang: ..)`; unknown -> en),
 /// `move-numbers`, `result` (append the game result), `variations` /
-/// `variation-style`. `nags` / `comments` / `variations` (default `auto`) consult
-/// the document `set-pgn-defaults` (all off by default). When everything resolves
-/// without document state the result is a plain string; otherwise it is content.
+/// `variation-style`. `nags` / `comments` / `variations` / `bold-mainline`
+/// (default `auto`) consult the document `set-pgn-defaults`: `nags` / `comments`
+/// / `variations` are off by default, `bold-mainline` is on. When everything
+/// resolves without document state the result is a plain string; otherwise
+/// (including a bold mainline) it is content.
 #let notation(source, from: none, to: none, line: none, figurine: false, lang: auto, nags: auto, comments: auto, variations: auto, variation-style: "inline", bold-mainline: auto, move-numbers: true, result: false) = {
   assert(variation-style in ("inline", "block"), message: "notation: variation-style must be \"inline\" or \"block\"; got " + repr(variation-style))
   // Which nodes to render: a mainline slice, or a variation sub-line addressed by

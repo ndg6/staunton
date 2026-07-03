@@ -117,7 +117,7 @@
     if t == "" { continue }
     assert(
       not (t.contains("{") or t.contains("}") or t.contains("(") or t.contains(")") or t.starts-with(";") or t.starts-with("$")),
-      message: "play-moves: comments, NAGs and variations are not supported in move text (use parse-pgn); got " + repr(t),
+      message: "chess-moves: comments, NAGs and variations are not supported in move text (use parse-pgn); got " + repr(t),
     )
     if _results.contains(t) { continue }
     if t.match(regex("^[0-9]+\.+$")) != none { continue }   // bare move number
@@ -140,15 +140,15 @@
 /// SAN tokens. Each move is resolved against the position's *legal* moves, so an
 /// illegal/ambiguous move is a hard error (with the offending SAN token). The
 /// variant is taken from `source`; non-standard variants error in the engine.
-#let play-moves(source, moves) = {
+#let chess-moves(source, moves) = {
   let pos = if source == none { parse-fen(starting-fen) }
     else if type(source) == str { parse-fen(source) }
     else if type(source) == dictionary and "squares" in source { source }
-    else { panic("play-moves: source must be none, a FEN string, or a position; got " + repr(type(source))) }
+    else { panic("chess-moves: source must be none, a FEN string, or a position; got " + repr(type(source))) }
   let sans = if type(moves) == array { moves }
     else if type(moves) == str { _split-movetext(moves) }
     else if type(moves) == content and moves.func() == raw { _split-movetext(moves.text) }
-    else { panic("play-moves: moves must be a SAN array, a move-text string, or a raw block; got " + repr(type(moves))) }
+    else { panic("chess-moves: moves must be a SAN array, a move-text string, or a raw block; got " + repr(type(moves))) }
   for s in sans {
     pos = apply(pos, san-to-move(pos, s))
   }
