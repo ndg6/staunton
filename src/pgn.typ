@@ -150,9 +150,13 @@
   _parse-movetext(toks, 0, toks.len(), true).nodes
 }
 
-/// The parsed movetext tree (array of move nodes) of a `game`. Built on demand
-/// from `game.movetext-raw` and memoised. This is where deeper movetext-structure
-/// errors (e.g. a variation '(' without a preceding move) surface.
+/// The parsed movetext tree (an array of move nodes) of a game — the mainline
+/// spine with recursive `variations`. Built on demand from the game's raw
+/// movetext and memoised, so deeper structure errors (e.g. a `(` without a
+/// preceding move) surface here.
+///
+/// - game (dictionary): a parsed game (from `parse-pgn`).
+/// -> array
 #let movetext(game) = {
   // A game patched by the builders (`with-nags` / `with-comments` /
   // `with-variation`, game.typ) carries a precomputed node tree; honour it so the

@@ -31,15 +31,25 @@
   else { panic("move locator must end in 'w' or 'b': " + loc) }
 }
 
-/// The starting position of a game: from the `FEN` tag if present, else standard.
+/// The starting position of a game — from its `FEN` tag if present, else the
+/// standard start.
+///
+/// - game (dictionary): a parsed game (from `parse-pgn`).
+/// -> dictionary
 #let game-start(game) = {
   if "FEN" in game.tags { parse-fen(game.tags.at("FEN")) } else { parse-fen(starting-fen) }
 }
 
-/// The mainline as an array of SAN strings (the game as played).
+/// The mainline of a game as an array of SAN strings (the game as played).
+///
+/// - game (dictionary): a parsed game (from `parse-pgn`).
+/// -> array
 #let mainline(game) = movetext(game).map(n => n.san)
 
-/// The game result string ("1-0" / "0-1" / "1/2-1/2" / "*").
+/// The game result token: `"1-0"`, `"0-1"`, `"1/2-1/2"`, or `"*"`.
+///
+/// - game (dictionary): a parsed game (from `parse-pgn`).
+/// -> str
 #let game-result(game) = game.result
 
 // Apply SAN nodes line[0..k) to `pos`, returning the new position.
@@ -68,7 +78,12 @@
   out
 }
 
-/// The position at a locator. Handles mainline and (nested) variations.
+/// The position at a locator — handles the mainline and (nested) variations.
+///
+/// - game (dictionary): a parsed game (from `parse-pgn`).
+/// - locator (str, dictionary): a mainline `"30w"` / `"30b"`, or a variation path
+///   dict `(line: (..hops..), at: "<move>")`.
+/// -> dictionary
 #let position-after(game, locator) = {
   let loc = if type(locator) == str { (line: (), at: locator) } else { locator }
 
@@ -106,8 +121,13 @@
   _advance(pos, line, k)
 }
 
-/// The SAN of the move addressed by `locator` (mainline "30w"/"30b" or a
-/// variation path), e.g. "O-O-O". Used to build PGN-diagram captions.
+/// The SAN of the move addressed by `locator` (e.g. `"O-O-O"`). Used to build
+/// PGN-diagram captions.
+///
+/// - game (dictionary): a parsed game (from `parse-pgn`).
+/// - locator (str, dictionary): a mainline `"30w"` / `"30b"`, or a variation path
+///   dict.
+/// -> str
 #let move-san(game, locator) = {
   let loc = if type(locator) == str { (line: (), at: locator) } else { locator }
   let line = movetext(game)
@@ -124,9 +144,14 @@
   line.at(k).san
 }
 
-/// The full move node addressed by `locator` (mainline "30w"/"30b" or a variation
-/// path), including its comments (`comment-before` / `comment-after`) and
-/// variations. Used to recover PGN `%cal` / `%csl` annotations for a diagram.
+/// The full move node addressed by `locator` — its SAN plus `nags`, comments
+/// (`comment-before` / `comment-after`) and `variations`. Used e.g. to recover
+/// PGN `%cal` / `%csl` annotations for a diagram.
+///
+/// - game (dictionary): a parsed game (from `parse-pgn`).
+/// - locator (str, dictionary): a mainline `"30w"` / `"30b"`, or a variation path
+///   dict.
+/// -> dictionary
 #let move-node(game, locator) = {
   let loc = if type(locator) == str { (line: (), at: locator) } else { locator }
   let line = movetext(game)
@@ -207,11 +232,15 @@
   else { panic("with-nags: a NAG must be \"$n\" or one of ! ? !! ?? !? ?!; got " + repr(v)) }
 }
 
-/// Attach NAGs to addressed moves (mainline or inside variations). `overrides` is
-/// a dict of mainline locators (`"12w": "!"`) or an array of `(locator, value)`
-/// pairs, where a locator may be a variation path dict. A value is `"$n"`, a
-/// suffix glyph (`! ? !! ?? !? ?!`), or an array of those; it REPLACES the move's
-/// NAGs. Returns a new game; the source is not mutated.
+/// Attach NAGs to addressed moves (mainline or inside variations), returning a
+/// *new* game (the source is not mutated). Each value *replaces* that move's NAGs.
+///
+/// - game (dictionary): a parsed game (from `parse-pgn`).
+/// - overrides (dictionary, array): a dict of mainline locators (`("12w": "!")`)
+///   or an array of `(locator, value)` pairs (a locator may be a variation path
+///   dict). A value is `"$n"`, a suffix glyph (`! ? !! ?? !? ?!`), or an array of
+///   those.
+/// -> dictionary
 #let with-nags(game, overrides) = {
   assert(type(game) == dictionary and "movetext-raw" in game, message: "with-nags: first argument must be a parsed game (from parse-pgn)")
   let nodes = movetext(game)
@@ -222,11 +251,16 @@
   _stash(game, nodes)
 }
 
-/// Attach text comments to addressed moves (mainline or inside variations).
-/// `overrides` is a dict of mainline locators or an array of `(locator, text)`
-/// pairs (a variation path dict for the locator). `text` is a plain string, set as
-/// the move's `comment-after` (what notation's `comments` switch renders); it
-/// REPLACES any existing comment. Returns a new game; the source is not mutated.
+/// Attach text comments to addressed moves (mainline or inside variations),
+/// returning a *new* game (the source is not mutated). Each comment *replaces* any
+/// existing one and is set as the move's `comment-after` (what notation's
+/// `comments` switch renders).
+///
+/// - game (dictionary): a parsed game (from `parse-pgn`).
+/// - overrides (dictionary, array): a dict of mainline locators or an array of
+///   `(locator, text)` pairs (a locator may be a variation path dict); each
+///   `text` is a plain string.
+/// -> dictionary
 #let with-comments(game, overrides) = {
   assert(type(game) == dictionary and "movetext-raw" in game, message: "with-comments: first argument must be a parsed game (from parse-pgn)")
   let nodes = movetext(game)

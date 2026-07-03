@@ -26,7 +26,12 @@
   s
 }
 
-/// Resolve a SAN string to a concrete legal move dict for `position`.
+/// Resolve a SAN string against a position's legal moves, returning the concrete
+/// move dict. Illegal or ambiguous SAN is a hard error.
+///
+/// - position (dictionary): the position to resolve the move in.
+/// - san (str): a SAN token, e.g. `"Nf3"`, `"exd5"`, `"O-O"`, `"e8=Q+"`.
+/// -> dictionary
 #let san-to-move(position, san) = {
   let color = if position.turn == "w" { "white" } else { "black" }
   let legal = legal-moves(position)
@@ -102,7 +107,12 @@
   cand.first()
 }
 
-/// Convenience: resolve a SAN and return the resulting position.
+/// Resolve a SAN string and return the resulting position — a convenience wrapper
+/// for `apply(position, san-to-move(position, san))`.
+///
+/// - position (dictionary): the position to play the move in.
+/// - san (str): a SAN token.
+/// -> dictionary
 #let play-san(position, san) = apply(position, san-to-move(position, san))
 
 // Tokenize free move text into a flat SAN list. Drops move numbers ("3." /
@@ -132,14 +142,17 @@
   out
 }
 
-/// Apply a run of moves to a position and return the FINAL position (renderable).
-///
-/// `source` is `none` (the standard starting position), a FEN string, or a
-/// position dict. `moves` is move text (a string or a ```` ``` ```` raw block --
-/// move numbers and a trailing result are tolerated and stripped) or an array of
-/// SAN tokens. Each move is resolved against the position's *legal* moves, so an
-/// illegal/ambiguous move is a hard error (with the offending SAN token). The
+/// Apply a run of moves to a position and return the *final* position
+/// (renderable). Each move is resolved against the position's legal moves, so an
+/// illegal or ambiguous move is a hard error naming the offending SAN token. The
 /// variant is taken from `source`; non-standard variants error in the engine.
+///
+/// - source (none, str, dictionary): the starting point — `none` for the standard
+///   start, a FEN string, or a position dict.
+/// - moves (str, content, array): move text (a string or a raw block; move
+///   numbers and a trailing result are tolerated and stripped), or an array of
+///   SAN tokens.
+/// -> dictionary
 #let chess-moves(source, moves) = {
   let pos = if source == none { parse-fen(starting-fen) }
     else if type(source) == str { parse-fen(source) }
