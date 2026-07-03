@@ -64,6 +64,12 @@ These are not under `tests/out/`; build them separately.
 
 - [ ] `docs/manual.pdf` — every framed example's board matches its code (rebuild:
       `typst compile --root . docs/manual.typ docs/manual.pdf`).
+- [ ] `docs/manual.pdf` API reference (`tidy`-generated) — the front-matter outline
+      splits into two columns, **Guide** and **Reference**. The **Main functions**
+      and **Behind the scenes** chapters render each function as a signature followed
+      by a parameter list (type + default per parameter). Skim that the entries look
+      well-formed (no empty descriptions, no stray raw-syntax leaking), the tidy
+      styling reads cleanly, and the curated grouping matches the section titles.
 - [ ] `docs/manual.pdf` front matter — the **cover page** shows the hatched pencil
       pawns (`docs/img/pawns-duo.svg`: a white Staunton pawn in front, a black pawn
       diagonally behind-right) above the title block, with **no** header, footer or

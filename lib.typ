@@ -392,7 +392,7 @@
 
 /// A chess diagram for the position at `locator` within a parsed game. Players
 /// and year default to the game's roster tags (so the info line is automatic) and
-/// the caption defaults to "Position after move <last move>".
+/// the caption defaults to "Position after move …" (the move played).
 ///
 /// When the resolved PGN-handling `annotations` switch is on, `%cal` / `%csl`
 /// drawing annotations in the move's comment become arrows / highlights, merged
