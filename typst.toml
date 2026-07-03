@@ -19,6 +19,7 @@ exclude = [
   "scripts",
   "prompts",
   "CLAUDE.md",
+  "RELEASING.md",
   ".github",
   "src/assets/piece_sets/_incomplete",
 ]

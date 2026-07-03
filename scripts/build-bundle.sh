@@ -46,6 +46,7 @@ docs
 scripts
 prompts
 CLAUDE.md
+RELEASING.md
 .github
 .gitignore
 .gitattributes
