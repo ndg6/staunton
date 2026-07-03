@@ -74,8 +74,11 @@
   else { str(x) }
 }
 
-/// Split a games array into a dict keyed by the `Event` tag (insertion order
-/// preserved within each event). Games without an `Event` tag group under "".
+/// Split a games array into a dict keyed by the `Event` tag, preserving insertion
+/// order within each event. Games without an `Event` tag group under `""`.
+///
+/// - games (array): parsed games (from `parse-pgn`).
+/// -> dictionary
 #let games-by-event(games) = {
   let out = (:)
   for g in games {
@@ -164,11 +167,16 @@
   else { panic("tournament: unknown tiebreak " + repr(tb)) }
 }
 
-/// Compute standings. Returns an array of records sorted best-first:
-///   (rank, name, score, played, wins, draws, losses, buchholz,
-///    sonneborn-berger, [board-points for teams]).
-/// `by`: "player" | "team". `tiebreaks`: ordered array, or `auto` for the mode
-/// default. `match-points`: team match-point values.
+/// Compute standings — an array of records sorted best-first: `(rank, name,
+/// score, played, wins, draws, losses, buchholz, sonneborn-berger, [board-points
+/// for teams])`.
+///
+/// - games (array): parsed games (from `parse-pgn`).
+/// - by (str): `"player"` or `"team"`.
+/// - tiebreaks (auto, array): ordered tiebreak keys, or `auto` for the mode
+///   default.
+/// - match-points (dictionary): team match-point values, `(win:, draw:, loss:)`.
+/// -> array
 #let standings(games, by: "player", tiebreaks: auto, match-points: (win: 2, draw: 1, loss: 0)) = {
   let tbs = if tiebreaks != auto { tiebreaks } else { _default-tiebreaks(by) }
   let r = _encounters(games, by, match-points)
@@ -221,8 +229,20 @@
 
 #let _tb-label = (buchholz: "Bh", sonneborn-berger: "SB", board-points: "BP")
 
-/// Render a standings table (a Typst `#table`). Options as for `standings`, plus
-/// a `title` (content above the table) and extra args forwarded to `#table`.
+/// Render a standings table as a Typst `#table` figure (kind `"chess-table"`).
+/// The data options are exactly as for `standings`.
+///
+/// - games (array): parsed games (from `parse-pgn`).
+/// - by (str): `"player"` or `"team"`.
+/// - tiebreaks (auto, array): as for `standings`.
+/// - match-points (dictionary): as for `standings`.
+/// - title (none, content): a title shown above the table.
+/// - caption (none, content): the figure caption (needed for the table to appear
+///   in `chess-table-outline`).
+/// - supplement (auto, content): the figure supplement; `auto` is language-aware.
+/// - lang (auto, str): language for defaults; `auto` follows the document.
+/// - ..table-args (arguments): forwarded to `#table`.
+/// -> content
 #let standings-table(games, by: "player", tiebreaks: auto, match-points: (win: 2, draw: 1, loss: 0), title: none, caption: none, supplement: auto, lang: auto, ..table-args) = {
   let tbs = if tiebreaks != auto { tiebreaks } else { _default-tiebreaks(by) }
   let rows = standings(games, by: by, tiebreaks: tiebreaks, match-points: match-points)
@@ -251,11 +271,16 @@
 
 // ---- cross-table (round-robin only) ---------------------------------------
 
-/// Cross-table for a round-robin. Returns `(names, ranks, totals, matrix)` where
-/// rows/cols are in standings order and `matrix.at(i).at(j)` is entity i's score
-/// vs j (player: game points; team: board points), `none` on the diagonal. Errors
-/// if the chosen entity does not form a round-robin (some pair never met) -- use
-/// standings + progress for Swiss/league events instead.
+/// Cross-table for a round-robin: `(names, ranks, totals, matrix)`, rows/cols in
+/// standings order, `matrix.at(i).at(j)` entity i's score vs j (player: game
+/// points; team: board points), `none` on the diagonal. Errors if the entity does
+/// not form a round-robin (some pair never met) — use `standings` + `progress` for
+/// Swiss / league events.
+///
+/// - games (array): parsed games (from `parse-pgn`).
+/// - by (str): `"player"` or `"team"`.
+/// - match-points (dictionary): team match-point values.
+/// -> dictionary
 #let crosstable(games, by: "player", match-points: (win: 2, draw: 1, loss: 0)) = {
   let rows = standings(games, by: by, match-points: match-points)
   let names = rows.map(r => r.name)
@@ -284,9 +309,18 @@
   (names: names, ranks: rows.map(r => r.rank), totals: rows.map(r => r.score), matrix: matrix)
 }
 
-/// Render a round-robin cross-table (a Typst `#table`). Columns are numbered to
-/// match the row order; the diagonal is shaded. `title` and extra `#table` args
-/// as for `standings-table`.
+/// Render a round-robin cross-table as a Typst `#table` figure. Columns are
+/// numbered to match the row order; the diagonal is shaded.
+///
+/// - games (array): parsed games (from `parse-pgn`).
+/// - by (str): `"player"` or `"team"`.
+/// - match-points (dictionary): team match-point values.
+/// - title (none, content): a title shown above the table.
+/// - caption (none, content): the figure caption.
+/// - supplement (auto, content): the figure supplement; `auto` is language-aware.
+/// - lang (auto, str): language for defaults; `auto` follows the document.
+/// - ..table-args (arguments): forwarded to `#table`.
+/// -> content
 #let crosstable-table(games, by: "player", match-points: (win: 2, draw: 1, loss: 0), title: none, caption: none, supplement: auto, lang: auto, ..table-args) = {
   let ct = crosstable(games, by: by, match-points: match-points)
   let n = ct.names.len()
@@ -316,10 +350,15 @@
 
 // ---- progress (round by round) --------------------------------------------
 
-/// Per-entity round-by-round progress. Returns `(names, ranks, rounds, cells)`
-/// where `cells.at(i).at(k)` is `(score, cumulative)` for entity i in
-/// `rounds.at(k)` (player: game points that round; team: match points). Needs the
-/// `Round` tag. Works for open/Swiss events too.
+/// Per-entity round-by-round progress: `(names, ranks, rounds, cells)`, where
+/// `cells.at(i).at(k)` is `(score, cumulative)` for entity i in `rounds.at(k)`
+/// (player: game points that round; team: match points). Needs the `Round` tag;
+/// works for open / Swiss events too.
+///
+/// - games (array): parsed games (from `parse-pgn`).
+/// - by (str): `"player"` or `"team"`.
+/// - match-points (dictionary): team match-point values.
+/// -> dictionary
 #let progress(games, by: "player", match-points: (win: 2, draw: 1, loss: 0)) = {
   let rows = standings(games, by: by, match-points: match-points)
   let names = rows.map(r => r.name)
@@ -371,9 +410,18 @@
   (names: names, ranks: rows.map(r => r.rank), rounds: rounds, cells: cells)
 }
 
-/// Render a progress table: a column per round showing that round's result and
-/// the running total, plus a final total. `title` and extra `#table` args as for
-/// `standings-table`.
+/// Render a progress table as a Typst `#table` figure: a column per round showing
+/// that round's result and the running total, plus a final total.
+///
+/// - games (array): parsed games (from `parse-pgn`).
+/// - by (str): `"player"` or `"team"`.
+/// - match-points (dictionary): team match-point values.
+/// - title (none, content): a title shown above the table.
+/// - caption (none, content): the figure caption.
+/// - supplement (auto, content): the figure supplement; `auto` is language-aware.
+/// - lang (auto, str): language for defaults; `auto` follows the document.
+/// - ..table-args (arguments): forwarded to `#table`.
+/// -> content
 #let progress-table(games, by: "player", match-points: (win: 2, draw: 1, loss: 0), title: none, caption: none, supplement: auto, lang: auto, ..table-args) = {
   let pg = progress(games, by: by, match-points: match-points)
   let name-h = if by == "team" { "Team" } else { "Player" }
