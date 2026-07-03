@@ -64,5 +64,14 @@ These are not under `tests/out/`; build them separately.
 
 - [ ] `docs/manual.pdf` — every framed example's board matches its code (rebuild:
       `typst compile --root . docs/manual.typ docs/manual.pdf`).
+- [ ] `docs/manual.pdf` front matter — the **cover page** shows the hatched pencil
+      pawns (`docs/img/pawns-duo.svg`: a white Staunton pawn in front, a black pawn
+      diagonally behind-right) above the title block, with **no** header, footer or
+      page number. Rugged graphite look; the two pieces read as clearly separated.
+      (`docs/img/cover-pawn.svg` is the single-pawn variant, kept as an alternate.)
+- [ ] `docs/manual.pdf` running chrome — on every page *after* the cover: header
+      shows `staunton` (left) and the current level-1 chapter title (right); footer
+      shows `© Frank Lippert (<year>)` (left) and the page number (right). The first
+      page after the cover is numbered **2** (pagination skips the cover).
 - [ ] showcase — `typst compile --root . docs/examples/showcase.typ showcase.pdf`,
       then skim it.

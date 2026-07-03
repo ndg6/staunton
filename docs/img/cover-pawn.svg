@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 50 50">
+  <!-- Rugged monochrome pencil sketch of a white Staunton pawn.
+       Ruggedness = a light "ghost" under-stroke, a doubled hand-drawn outline,
+       and coarse DASHED hatch strokes (broken like graphite) that cross and
+       thicken on the shadow (right) side. Silhouette from the bundled `staunty`
+       pawn. No SVG filters (kept renderer-safe). -->
+  <defs>
+    <clipPath id="clip">
+      <path d="M19 17.508a6.35 6.35 0 0 0 1.966 4.587l-3.65 2.1.43 3.399h4.306c-.794 3.559-2.755 7.33-5.062 8.617s-5.3 3.097-4.843 8.189h25.706c.457-5.092-2.535-6.902-4.842-8.189-2.307-1.286-4.268-5.058-5.062-8.617h4.306l.43-3.4-3.65-2.099a6.352 6.352 0 0 0 1.966-4.587c0-3.367-2.628-5.912-6-5.912-3.373 0-6.002 2.545-6.001 5.912z"/>
+    </clipPath>
+    <pattern id="h1" width="2.7" height="2.7" patternUnits="userSpaceOnUse" patternTransform="rotate(50)">
+      <line x1="0" y1="0" x2="0" y2="2.7" stroke="#3f3f3f" stroke-width="0.4" stroke-dasharray="2 1.2"/>
+    </pattern>
+    <pattern id="h2" width="2.5" height="2.5" patternUnits="userSpaceOnUse" patternTransform="rotate(-52)">
+      <line x1="0" y1="0" x2="0" y2="2.5" stroke="#333333" stroke-width="0.42" stroke-dasharray="1.8 1.1"/>
+    </pattern>
+    <pattern id="h3" width="1.9" height="1.9" patternUnits="userSpaceOnUse" patternTransform="rotate(50)">
+      <line x1="0" y1="0" x2="0" y2="1.9" stroke="#2a2a2a" stroke-width="0.42" stroke-dasharray="1.5 1"/>
+    </pattern>
+  </defs>
+
+  <!-- ground contact shadow -->
+  <ellipse cx="25.5" cy="46.7" rx="13" ry="1.9" fill="#000000" opacity="0.12"/>
+
+  <!-- ghost under-sketch (offset, faint) -->
+  <path transform="translate(0.5 0.45)" fill="none" stroke="#b7b7b7" stroke-width="1.5" stroke-linejoin="round" opacity="0.5"
+    d="M19 17.508a6.35 6.35 0 0 0 1.966 4.587l-3.65 2.1.43 3.399h4.306c-.794 3.559-2.755 7.33-5.062 8.617s-5.3 3.097-4.843 8.189h25.706c.457-5.092-2.535-6.902-4.842-8.189-2.307-1.286-4.268-5.058-5.062-8.617h4.306l.43-3.4-3.65-2.099a6.352 6.352 0 0 0 1.966-4.587c0-3.367-2.628-5.912-6-5.912-3.373 0-6.002 2.545-6.001 5.912z"/>
+
+  <g clip-path="url(#clip)">
+    <rect x="0" y="0" width="50" height="50" fill="#fafaf9"/>
+    <!-- soft overall hatch -->
+    <rect x="0" y="0" width="50" height="50" fill="url(#h1)" opacity="0.55"/>
+    <!-- shadow-side cross-hatch (right ~half) -->
+    <rect x="25" y="0" width="25" height="50" fill="url(#h2)" opacity="0.6"/>
+    <!-- deepest core shadow, far right -->
+    <rect x="33" y="0" width="17" height="50" fill="url(#h3)" opacity="0.5"/>
+    <!-- upper-left highlight kept clean -->
+    <ellipse cx="21.4" cy="15.3" rx="3.4" ry="4.7" fill="#ffffff" opacity="0.6"/>
+  </g>
+
+  <!-- doubled, sketchy outline (two slightly offset passes) -->
+  <path fill="none" stroke="#232323" stroke-width="1.0" stroke-linejoin="round" stroke-linecap="round"
+    d="M19 17.508a6.35 6.35 0 0 0 1.966 4.587l-3.65 2.1.43 3.399h4.306c-.794 3.559-2.755 7.33-5.062 8.617s-5.3 3.097-4.843 8.189h25.706c.457-5.092-2.535-6.902-4.842-8.189-2.307-1.286-4.268-5.058-5.062-8.617h4.306l.43-3.4-3.65-2.099a6.352 6.352 0 0 0 1.966-4.587c0-3.367-2.628-5.912-6-5.912-3.373 0-6.002 2.545-6.001 5.912z"/>
+  <path transform="translate(-0.35 -0.28)" fill="none" stroke="#232323" stroke-width="0.55" stroke-linejoin="round" opacity="0.45"
+    d="M19 17.508a6.35 6.35 0 0 0 1.966 4.587l-3.65 2.1.43 3.399h4.306c-.794 3.559-2.755 7.33-5.062 8.617s-5.3 3.097-4.843 8.189h25.706c.457-5.092-2.535-6.902-4.842-8.189-2.307-1.286-4.268-5.058-5.062-8.617h4.306l.43-3.4-3.65-2.099a6.352 6.352 0 0 0 1.966-4.587c0-3.367-2.628-5.912-6-5.912-3.373 0-6.002 2.545-6.001 5.912z"/>
+
+  <!-- sketch accents: collar ring, neck steps, base scuffs -->
+  <path fill="none" stroke="#333333" stroke-width="0.55" opacity="0.85" stroke-linecap="round" d="M21.4 27.55h7.05"/>
+  <path fill="none" stroke="#3a3a3a" stroke-width="0.45" opacity="0.7" stroke-linecap="round" d="M17.5 24.15l3.35-1.95"/>
+  <path fill="none" stroke="#3a3a3a" stroke-width="0.45" opacity="0.7" stroke-linecap="round" d="M29.05 22.2l3.35 1.95"/>
+  <path fill="none" stroke="#3a3a3a" stroke-width="0.4" opacity="0.55" stroke-linecap="round" d="M15.7 44.7q9.6 1.7 19 0"/>
+</svg>

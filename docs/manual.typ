@@ -13,8 +13,7 @@
 
 #set page(
   paper: "a4",
-  margin: (x: 2.4cm, top: 2.4cm, bottom: 2.2cm),
-  numbering: "1",
+  margin: (x: 2.4cm, top: 2.6cm, bottom: 2.4cm),
 )
 #set text(font: "Libertinus Serif", size: 10.5pt)
 #set par(justify: true)
@@ -26,18 +25,67 @@
   fill: rgb("#f0f0ec"), inset: (x: 3pt, y: 0pt), outset: (y: 3pt), radius: 2pt, it,
 )
 
-// --- title -------------------------------------------------------------------
+// Copyright year for the footer, taken from the build date.
+#let _year = str(datetime.today().year())
 
-#align(center)[
-  #v(2cm)
-  #text(size: 30pt, weight: "bold")[staunton]
-  #v(2pt)
-  #text(size: 13pt)[Chess diagrams, games and tournament tables for Typst]
-  #v(6pt)
-  #text(size: 10pt, fill: rgb("#666"))[User manual · package version 0.1.0]
+// Running chapter title for the header (right side): the FIRST level-1 heading
+// that starts on the current page; if none starts here, the LAST one seen on an
+// earlier page. So a page carrying "Introduction" then "The Board" shows
+// "Introduction", and the next page (no new chapter) shows "The Board". (None
+// while still in the front matter, before the first chapter.)
+#let _running-chapter = context {
+  let pg = here().page()
+  let h1 = query(heading.where(level: 1))
+  let on-page = h1.filter(h => h.location().page() == pg)
+  if on-page.len() > 0 { on-page.first().body } else {
+    let earlier = h1.filter(h => h.location().page() < pg)
+    if earlier.len() > 0 { earlier.last().body } else { none }
+  }
+}
+
+// --- cover page (no header, no footer, unnumbered) ---------------------------
+
+#page(header: none, footer: none, numbering: none)[
+  #align(center)[
+    #v(1.1cm)
+    #image("img/pawns-duo.svg", width: 9.5cm)
+    #v(0.7cm)
+    #text(size: 34pt, weight: "bold")[staunton]
+    #v(3pt)
+    #text(size: 13pt)[Chess diagrams, games and tournament tables for Typst]
+    #v(8pt)
+    #text(size: 10pt, fill: rgb("#666"))[User manual · package version 0.1.0]
+  ]
 ]
 
-#v(1.4cm)
+// --- running header & footer for every following page ------------------------
+// Pagination continues from the cover (page 1), so the first body page shows "2".
+
+#set page(
+  numbering: "1",
+  header: context {
+    if here().page() > 1 {
+      set text(size: 9pt, fill: rgb("#666"))
+      grid(columns: (1fr, 1fr),
+        align(left)[staunton],
+        align(right)[#_running-chapter],
+      )
+      v(-0.4em)
+      line(length: 100%, stroke: 0.4pt + rgb("#cccccc"))
+    }
+  },
+  footer: context {
+    if here().page() > 1 {
+      set text(size: 9pt, fill: rgb("#666"))
+      line(length: 100%, stroke: 0.4pt + rgb("#cccccc"))
+      v(-0.2em)
+      grid(columns: (1fr, 1fr),
+        align(left)[© Frank Lippert (#_year)],
+        align(right)[#counter(page).display()],
+      )
+    }
+  },
+)
 
 #outline(title: [Contents], depth: 2, indent: auto)
 
@@ -74,7 +122,7 @@ a board in a referenceable figure; a *position* is the data a board draws; *game
 add PGN, notation, and play; then come *tournament tables*, *outlines and
 references*, and the *document-wide style* settings.
 
-== Installing and importing
+== Installing and Importing
 
 *staunton* is a Typst package. Import its public API once and every function in this
 manual is in scope:
@@ -89,14 +137,14 @@ In every framed example, the left side is *the code you type* and the right side
 is *exactly what it renders* — the manual compiles its own examples, so the two
 can never disagree.
 
-== The name
+== The Name
 
 Typst package *staunton* is named in honour of *Howard Staunton* (c. 1810–1874): a leading chess master of his day, organiser of the first international tournament (London, 1851), a chess author and publisher, and the namesake of the standardised *Staunton pattern* chessmen —
 still the tournament standard.
 
 // === The board ===============================================================
 
-= The board<board>
+= The Board<board>
 
 `board(source, ..)` draws *just the board* — no caption, no figure — and is the
 primitive every diagram builds on. `source` is one of: a *FEN string*; a
@@ -153,7 +201,7 @@ themed band, styled by `border-theme`). `labels: false` suppresses labels comple
 )
 ```)
 
-== Arrows and the grid
+== Arrows and the Grid
 
 As the name suggests `arrows` draws arrows on the board; each entry is a `(from, to)` or `(from, to, color)` tuple, or a dict `(from: .., to: .., color: ..)`. A missing color uses `arrow-color`.
 Arrows scale with the board and flip with it. A `grid: true` overlay draws thin
@@ -169,7 +217,7 @@ lines between the squares.
 )
 ```, stacked: true)
 
-== Coordinates and non-square boards
+== Coordinates and Non-Square Boards
 
 At leasst in standard western chess, Files run `a`, `b`, … and ranks `1`, `2`, …; `a1` is the dark square in the lower-left corner, `h8` the upper-right. Square names are case-insensitive
 (`"E4"` = `"e4"`).
@@ -236,7 +284,7 @@ cannot be made a document default (see *Document-wide style*).
 #board("8/8/8/3k4/3K4/8/8/8", flip: true, size: 3.4cm)
 ```)
 
-== Piece sets and fonts
+== Piece Sets and Fonts
 
 Pieces are drawn from bundled *SVG piece sets*. Two ship with the package, both
 GPLv2+: `cburnett` (default) and `merida`. Choose one with `piece-set:` per board,
@@ -292,7 +340,7 @@ the figure *caption* below it.
 the same source and overrides as `board`. Extra named arguments are forwarded to
 `figure` (e.g. `placement: top`).
 
-== Boards are not figures
+== Boards are not Figures
 
 A bare `board` is plain content: it has *no* caption, *no* figure counter, does
 *not* resolve `@`-references, and is *not* listed by `chess-diagram-outline`. Only
@@ -411,7 +459,7 @@ Two easy traps:
 Addressing a variation that isn't there (`into:` past the recorded count) or a
 move past the end of its line is a hard error.
 
-== Playing moves onto a position
+== Playing Moves onto a Position
 
 To explore a *new* line, or build a position from a FEN plus some moves, use
 `chess-moves(source, moves)`. `source` is `none` (the standard start), a FEN
@@ -426,7 +474,7 @@ against the legal moves (illegal/ambiguous is a hard error) and returns the
 )
 ```)
 
-== Notation output
+== Notation Output
 
 For chess publications, notational output of the move text is as important as showing 
 board positions. This output has to be flexible and localisable. While you sometimes want to 
@@ -527,7 +575,7 @@ Each hop is `(at: "<move>", into: <n>)` — nest hops to reach a deeper line. Th
 addressed line's *own* variations follow the `variations` flag. (`from` / `to`
 stay mainline-only and don't combine with `line`.)
 
-=== Building on a game: NAGs and comments
+=== Building on a Game: NAGs and Comments
 
 Beyond `nags: true` (which renders the `$n` NAGs a game *already* carries), you can
 attach NAGs and comments *programmatically* — without editing the PGN — and then
@@ -561,7 +609,7 @@ for `$1`–`$6`), or an array of those; `with-comments` values are plain-text
 strings. Both *replace* what was on the move. Comments show only with `comments:
 true`, NAGs only with `nags: true`.
 
-=== Adding variations
+=== Adding Variations
 
 `with-variation(game, at:, moves:)` grows the tree: it adds a variation as an
 *alternative* to the move at `at` (a mainline locator or a path dict). `moves` is
@@ -595,7 +643,7 @@ locator. Standard 8×8 positions round-trip exactly:
 #raw(to-fen(chess-moves(none, "1. e4 e5 2. Nf3")))
 ```, stacked: true)
 
-== Drawing annotations
+== Drawing Annotations in PGNs
 
 PGN comments can carry drawing annotations — `[%cal …]` for arrows, `[%csl …]`
 for highlights. Processing is *off by default*; opt in per call with
@@ -634,7 +682,7 @@ position is navigated. Missing Seven-Tag-Roster tags are tolerated (they default
 
 // === Tournament tables =======================================================
 
-= Tournament tables<tournament-tables>
+= Tournament Tables<tournament-tables>
 
 Tournament tables are built from a parsed PGN's roster + results (no engine). The
 `*-table` renderers produce a captioned, referenceable `#figure` (kind
@@ -673,7 +721,7 @@ matches.
 
 // === Outlines and references =================================================
 
-= Outlines and references<outlines-references>
+= Outlines and References<outlines-references>
 
 Diagrams and tables each carry a distinct figure `kind` (`"chess"` /
 `"chess-table"`), so they get their own counters, can be *referenced*
@@ -696,7 +744,7 @@ figure, so it can be neither referenced nor listed — use a `chess-diagram`.
 
 // === Document-wide style =====================================================
 
-= Document-wide style<document-style>
+= Document-Wide Style<document-style>
 
 Defaults live in *five* buckets, each with its own setter:
 
@@ -757,7 +805,7 @@ Every localizable string is also per-call overridable (the `lang:` argument seen
 on `chess-notation` above). Adding a language is a no-code change: drop a
 `src/assets/i18n/<code>.typ` and register it in `src/i18n.typ`.
 
-== PGN handling <pgn-handling>
+== PGN Handling <pgn-handling>
 
 A *PGN-handling* bucket decides how much of a parsed game's embedded extras get
 interpreted at render time. Parsing stays lossless; these switches only decide
@@ -793,7 +841,7 @@ Each is also a per-call argument (`auto` → the document default) on `notation`
 The reference below serves as a compact and *complete* lookup for every public function's signature, the recurring *argument value shapes*, and the full option lists. The chapters above show each feature in use with a rendered example, this chapter is for answering "what exactly can I
 pass" to a function. The `..style` argument list below means *any board style option* (see #link(<board-options>)[Board style options]).
 
-== Argument value shapes
+== Argument Value Shapes
 
 A few arguments accept more than one shape and recur across functions, so they are
 described once here.
@@ -830,7 +878,7 @@ described once here.
 
 == Functions
 
-=== Boards and diagrams
+=== Boards and Diagrams
 
 ```typ
 board(source, flip: false, ..style)
@@ -878,7 +926,7 @@ tree on demand, the engine runs only when a position is asked for. `chess-moves`
 resolves each move against the legal moves (illegal/ambiguous is an error) and
 returns the final position; it is mainline-only.
 
-=== Annotate and build
+=== Annotate and Build
 
 ```typ
 with-nags(game, overrides)                  // overrides: dict or array of (locator, value) pairs
@@ -907,7 +955,7 @@ mainline slice; `line` renders one addressed variation. `variation-style` is
 default `auto` (consult `set-pgn-defaults`). Returns a plain string when everything
 resolves without document state, else content.
 
-=== Tournament tables
+=== Tournament Tables
 
 ```typ
 standings-table(games, by: "player", tiebreaks: auto,
@@ -927,7 +975,7 @@ progress(games, by: "player", match-points: (..))                      // comput
 `"chess-table"`); the compute functions return plain data. `title` is a heading
 drawn above the table; unknown named args are forwarded to the inner `#table`.
 
-=== Outlines and references
+=== Outlines and References
 
 ```typ
 chess-diagram-outline(title: auto, lang: auto, ..outline)
@@ -937,7 +985,7 @@ chess-outlines(diagram-title: auto, table-title: auto, lang: auto, ..outline)
 
 Titles are language-aware by default; extra args are forwarded to `outline`.
 
-=== Document defaults
+=== Document Defaults
 
 ```typ
 set-chess-defaults(..fields)    // umbrella over ALL five buckets (incl. lang)
@@ -949,7 +997,7 @@ set-piece-set(name)             // sugar for set-board-defaults(piece-set: name)
 See #link(<board-options>)[Board style options] below for the keys each accepts.
 `flip` is rejected by every setter.
 
-== Board style options <board-options>
+== Board Style Options <board-options>
 
 Accepted by `board` / `chess-board` / `diagram` / `chess-diagram` per call, and by
 `set-board-defaults` / `set-chess-defaults` document-wide.
@@ -984,7 +1032,7 @@ Accepted by `board` / `chess-board` / `diagram` / `chess-diagram` per call, and 
   raw("baseline-inset"), raw("0.20"), [glyph fallback: baseline lift (square fraction)],
 )
 
-== Diagram, table, language, and PGN-handling options
+== Diagram, Table, Language, and PGN-Handling Options
 
 *Diagram* (`set-diagram-defaults`): `info-bold` (`true`), `info-gap` (`0.6em`),
 `supplement` (`auto` → localized "Diagram"), `outline-title` (`auto`).

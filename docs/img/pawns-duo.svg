@@ -1,0 +1,72 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 54">
+  <!-- Rugged monochrome pencil sketch: a WHITE Staunton pawn in the foreground
+       with a BLACK pawn standing diagonally behind and to its right (the
+       "black-behind-white" motif). Same graphite treatment as cover-pawn.svg:
+       ghost under-stroke, sketchy outline, coarse dashed cross-hatching that
+       thickens on each piece's shadow side. One shared clip (the `staunty`
+       silhouette), reused inside each transformed group. -->
+  <defs>
+    <clipPath id="clip">
+      <path d="M19 17.508a6.35 6.35 0 0 0 1.966 4.587l-3.65 2.1.43 3.399h4.306c-.794 3.559-2.755 7.33-5.062 8.617s-5.3 3.097-4.843 8.189h25.706c.457-5.092-2.535-6.902-4.842-8.189-2.307-1.286-4.268-5.058-5.062-8.617h4.306l.43-3.4-3.65-2.099a6.352 6.352 0 0 0 1.966-4.587c0-3.367-2.628-5.912-6-5.912-3.373 0-6.002 2.545-6.001 5.912z"/>
+    </clipPath>
+    <!-- white-pawn hatches (mid grey) -->
+    <pattern id="h1" width="2.7" height="2.7" patternUnits="userSpaceOnUse" patternTransform="rotate(50)">
+      <line x1="0" y1="0" x2="0" y2="2.7" stroke="#3f3f3f" stroke-width="0.4" stroke-dasharray="2 1.2"/>
+    </pattern>
+    <pattern id="h2" width="2.5" height="2.5" patternUnits="userSpaceOnUse" patternTransform="rotate(-52)">
+      <line x1="0" y1="0" x2="0" y2="2.5" stroke="#333333" stroke-width="0.42" stroke-dasharray="1.8 1.1"/>
+    </pattern>
+    <pattern id="h3" width="1.9" height="1.9" patternUnits="userSpaceOnUse" patternTransform="rotate(50)">
+      <line x1="0" y1="0" x2="0" y2="1.9" stroke="#2a2a2a" stroke-width="0.42" stroke-dasharray="1.5 1"/>
+    </pattern>
+    <!-- black-pawn hatches (near-black, denser) -->
+    <pattern id="b1" width="2.5" height="2.5" patternUnits="userSpaceOnUse" patternTransform="rotate(50)">
+      <line x1="0" y1="0" x2="0" y2="2.5" stroke="#111111" stroke-width="0.5" stroke-dasharray="2 1"/>
+    </pattern>
+    <pattern id="b2" width="2.2" height="2.2" patternUnits="userSpaceOnUse" patternTransform="rotate(-52)">
+      <line x1="0" y1="0" x2="0" y2="2.2" stroke="#000000" stroke-width="0.55" stroke-dasharray="1.7 0.9"/>
+    </pattern>
+    <pattern id="b3" width="1.7" height="1.7" patternUnits="userSpaceOnUse" patternTransform="rotate(50)">
+      <line x1="0" y1="0" x2="0" y2="1.7" stroke="#000000" stroke-width="0.55" stroke-dasharray="1.4 0.8"/>
+    </pattern>
+  </defs>
+
+  <!-- ground contact shadows -->
+  <ellipse cx="39.5" cy="45.8" rx="12" ry="1.8" fill="#000000" opacity="0.13"/>
+  <ellipse cx="24.5" cy="49.7" rx="13" ry="2" fill="#000000" opacity="0.14"/>
+
+  <!-- ===================== BLACK PAWN (behind, upper-right) ===================== -->
+  <g transform="translate(15 -1)">
+    <path transform="translate(0.5 0.45)" fill="none" stroke="#4a4a4a" stroke-width="1.4" stroke-linejoin="round" opacity="0.5"
+      d="M19 17.508a6.35 6.35 0 0 0 1.966 4.587l-3.65 2.1.43 3.399h4.306c-.794 3.559-2.755 7.33-5.062 8.617s-5.3 3.097-4.843 8.189h25.706c.457-5.092-2.535-6.902-4.842-8.189-2.307-1.286-4.268-5.058-5.062-8.617h4.306l.43-3.4-3.65-2.099a6.352 6.352 0 0 0 1.966-4.587c0-3.367-2.628-5.912-6-5.912-3.373 0-6.002 2.545-6.001 5.912z"/>
+    <g clip-path="url(#clip)">
+      <rect x="0" y="0" width="50" height="50" fill="#4c4c4c"/>
+      <rect x="0" y="0" width="50" height="50" fill="url(#b1)" opacity="0.55"/>
+      <rect x="25" y="0" width="25" height="50" fill="url(#b2)" opacity="0.6"/>
+      <rect x="33" y="0" width="17" height="50" fill="url(#b3)" opacity="0.55"/>
+      <ellipse cx="21.4" cy="15.3" rx="3.2" ry="4.4" fill="#9c9c9c" opacity="0.4"/>
+    </g>
+    <path fill="none" stroke="#0e0e0e" stroke-width="1.0" stroke-linejoin="round" stroke-linecap="round"
+      d="M19 17.508a6.35 6.35 0 0 0 1.966 4.587l-3.65 2.1.43 3.399h4.306c-.794 3.559-2.755 7.33-5.062 8.617s-5.3 3.097-4.843 8.189h25.706c.457-5.092-2.535-6.902-4.842-8.189-2.307-1.286-4.268-5.058-5.062-8.617h4.306l.43-3.4-3.65-2.099a6.352 6.352 0 0 0 1.966-4.587c0-3.367-2.628-5.912-6-5.912-3.373 0-6.002 2.545-6.001 5.912z"/>
+    <path fill="none" stroke="#151515" stroke-width="0.55" opacity="0.85" stroke-linecap="round" d="M21.4 27.55h7.05"/>
+  </g>
+
+  <!-- ===================== WHITE PAWN (front, lower-left) ====================== -->
+  <g transform="translate(0 3)">
+    <!-- white halo: a light gap that lifts the white pawn off the black one -->
+    <path fill="none" stroke="#fafaf9" stroke-width="2.6" stroke-linejoin="round"
+      d="M19 17.508a6.35 6.35 0 0 0 1.966 4.587l-3.65 2.1.43 3.399h4.306c-.794 3.559-2.755 7.33-5.062 8.617s-5.3 3.097-4.843 8.189h25.706c.457-5.092-2.535-6.902-4.842-8.189-2.307-1.286-4.268-5.058-5.062-8.617h4.306l.43-3.4-3.65-2.099a6.352 6.352 0 0 0 1.966-4.587c0-3.367-2.628-5.912-6-5.912-3.373 0-6.002 2.545-6.001 5.912z"/>
+    <path transform="translate(0.5 0.45)" fill="none" stroke="#b7b7b7" stroke-width="1.4" stroke-linejoin="round" opacity="0.5"
+      d="M19 17.508a6.35 6.35 0 0 0 1.966 4.587l-3.65 2.1.43 3.399h4.306c-.794 3.559-2.755 7.33-5.062 8.617s-5.3 3.097-4.843 8.189h25.706c.457-5.092-2.535-6.902-4.842-8.189-2.307-1.286-4.268-5.058-5.062-8.617h4.306l.43-3.4-3.65-2.099a6.352 6.352 0 0 0 1.966-4.587c0-3.367-2.628-5.912-6-5.912-3.373 0-6.002 2.545-6.001 5.912z"/>
+    <g clip-path="url(#clip)">
+      <rect x="0" y="0" width="50" height="50" fill="#fafaf9"/>
+      <rect x="0" y="0" width="50" height="50" fill="url(#h1)" opacity="0.55"/>
+      <rect x="25" y="0" width="25" height="50" fill="url(#h2)" opacity="0.6"/>
+      <rect x="33" y="0" width="17" height="50" fill="url(#h3)" opacity="0.5"/>
+      <ellipse cx="21.4" cy="15.3" rx="3.4" ry="4.7" fill="#ffffff" opacity="0.6"/>
+    </g>
+    <path fill="none" stroke="#232323" stroke-width="1.0" stroke-linejoin="round" stroke-linecap="round"
+      d="M19 17.508a6.35 6.35 0 0 0 1.966 4.587l-3.65 2.1.43 3.399h4.306c-.794 3.559-2.755 7.33-5.062 8.617s-5.3 3.097-4.843 8.189h25.706c.457-5.092-2.535-6.902-4.842-8.189-2.307-1.286-4.268-5.058-5.062-8.617h4.306l.43-3.4-3.65-2.099a6.352 6.352 0 0 0 1.966-4.587c0-3.367-2.628-5.912-6-5.912-3.373 0-6.002 2.545-6.001 5.912z"/>
+    <path fill="none" stroke="#333333" stroke-width="0.55" opacity="0.85" stroke-linecap="round" d="M21.4 27.55h7.05"/>
+  </g>
+</svg>
