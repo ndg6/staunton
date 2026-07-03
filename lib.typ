@@ -97,19 +97,20 @@
   (kind: kind, color: color)
 }
 
-/// Build a position from one of several forms (manual placement and friends):
-///   * a squares dict (square -> piece): the piece may be the long form
-///     `(kind: "king", color: "white")`, the abbreviation `(kind: "k", color:
-///     "white")`, or a bare letter `"K"` (upper = white, lower = black);
-///   * the "string" form: a multi-line string, a raw block, or several row
-///     strings -- e.g. position("....r...", "p.......", ...) or
-///     position(```  ....r... \n ... ```).
-/// (The old array-of-(kind,color,square) form was removed in favour of the dict.)
-/// Named options: `variant` (default "standard"), `turn`, `castling`,
-/// `en-passant`, `halfmove`, `fullmove`, and `cols`/`rows` (default: derived
-/// from the variant for non-string forms, counted for the string form).
-/// Returns a position dict: (variant, cols, rows, squares, turn, castling,
-/// en-passant, halfmove, fullmove).
+/// Build a `position` — the data a board draws — from manual placement. (A single
+/// string containing `/` is treated as a FEN and delegated to `parse-fen`.)
+/// Positional arguments place the pieces; named arguments set the metadata.
+///
+/// Pieces are given as a *squares dict* — `(e1: "K", d8: (kind: "q", color:
+/// "black"))`, a piece being a bare letter (UPPER white, lower black) or a
+/// `(kind, color)` with a long or abbreviated kind — or in the *string form*, one
+/// rank per line (or per positional string), `.` for an empty square.
+///
+/// - ..args (arguments): the piece placement (positional), plus named metadata —
+///   `variant` (default `"standard"`), `turn`, `castling`, `en-passant`,
+///   `halfmove`, `fullmove`, and `cols` / `rows` (default: from the variant, or
+///   counted in the string form).
+/// -> dictionary
 #let position(..args) = {
   let opts = args.named()
   let variant = opts.at("variant", default: "standard")
@@ -219,20 +220,30 @@
   }
 }
 
-/// Standard western chess board (the variant-named sugar over `board`). Identical
-/// rendering to `board`, but it documents the variant and rejects a non-standard
-/// position source. Other variants get their own entry (e.g. `xiangqi-board`)
-/// once their renderer/engine land.
+/// Standard western-chess board — the variant-named sugar over `board`, and the
+/// everyday entry point. Identical rendering, but it documents the variant and
+/// rejects a non-standard `source`. (Other variants get their own entry, e.g. a
+/// future `xiangqi-board`.)
+///
+/// - source (str, dictionary): a standard-chess position — a FEN string, a
+///   position dict, or a squares dict.
+/// - flip (bool): show the board from Black's side.
+/// - ..overrides (arguments): any board *style* option (as for `board`).
+/// -> content
 #let chess-board(source, flip: false, ..overrides) = {
   _assert-variant("chess-board", "standard", source)
   board(source, flip: flip, ..overrides.named())
 }
 
-/// Export a position as a FEN string (the inverse of `parse-fen`). Works for:
-///   * a **position** dict        -> `to-fen(pos)`;
-///   * a **game** + locator       -> `to-fen(game, locator: "12w")`, which
-///     serialises the position at that locator (board-after locator syntax).
-/// Standard 8x8 positions round-trip exactly with `parse-fen`.
+/// Export a position as a FEN string — the inverse of `parse-fen`. Serialises
+/// either a *position* dict directly, or a *game* at a locator. Standard 8×8
+/// positions round-trip exactly.
+///
+/// - source (dictionary): a *position* dict, or a *game* (from `parse-pgn`).
+/// - locator (str, dictionary): required when `source` is a game — which move's
+///   position to serialise (a mainline `"12w"` or a path dict). Ignored for a
+///   position.
+/// -> str
 #let to-fen(source, locator: none) = {
   assert(type(source) == dictionary, message: "to-fen: expected a position or a game dict")
   if "squares" in source { return position-fen(source) }
@@ -302,21 +313,8 @@
   (board-ov, diagram-ov, fig-args)
 }
 
-/// A board wrapped in a #figure -- the variant-agnostic diagram. This is the
-/// generic primitive; the variant-named `chess-diagram` (and future
-/// `xiangqi-diagram`, ...) are thin sugar over it.
-///
-/// `source` may be a FEN string, a position dict (from `position`/`parse-fen`),
-/// or a bare board dict. Labeling:
-///   * ABOVE the board: if both players are known, an automatic
-///     "<White> – <Black> (<Year>)" line; override with `game-info`.
-///   * BELOW the board (the figure caption): for a FEN string source, a default
-///     "Position at move N, X to play"; for a position/board dict, no default.
-///     Override either with `caption`.
-/// `flip: true` shows the board from Black's side (per-diagram only). Remaining
-/// named arguments are split: style fields (size, light, dark, labels,
-/// label-mode, file-side, rank-side, piece-set, highlight, ...) go to the
-/// renderer; anything else is forwarded to `figure` (e.g. `placement: top`).
+// `diagram` (defined just below `_assemble`) is the variant-agnostic figure
+// wrapper; its tidy docstring lives directly above the `#let diagram` definition.
 // Assemble a #figure around already-drawn board content `drawn`. The diagram
 // style is read inside the figure BODY (a context), so the #figure itself stays
 // a real, referenceable element. `drawn` may itself be context content (e.g. a
@@ -339,6 +337,27 @@
   figure(body, kind: chess-kind, supplement: supp, caption: below, ..fig-args)
 }
 
+/// A board wrapped in a `#figure` — the variant-agnostic diagram, and the generic
+/// primitive under `chess-diagram` (and a future `xiangqi-diagram`). Draws an
+/// automatic "White – Black (Year)" line above when both players are known, and a
+/// default caption below for a FEN source ("Position at move N, X to play").
+///
+/// - source (str, dictionary): a FEN string, a position dict, or a bare board
+///   dict.
+/// - white (str, none): white player's name, for the automatic info line.
+/// - black (str, none): black player's name.
+/// - event (str, none): event name (carried; not shown by default).
+/// - year (int, str, none): year, appended to the info line in parentheses.
+/// - caption (auto, content, none): the figure caption; `auto` is the
+///   source-specific default (a FEN gets "Position at move N…"; a position or
+///   board dict gets none).
+/// - game-info (auto, content, none): the above-board line; `auto` is the
+///   automatic player line — pass your own content, or `none` to drop it.
+/// - flip (bool): show the board from Black's side (per-diagram only).
+/// - lang (auto, str): language for the supplement; `auto` follows the document.
+/// - ..args (arguments): board *style* options go to the renderer; anything else
+///   is forwarded to `#figure` (e.g. `placement: top`).
+/// -> content
 #let diagram(
   source,
   white: none,
@@ -357,27 +376,42 @@
   _assemble(drawn, white, black, year, game-info, below, diagram-ov, lang, fig-args)
 }
 
-/// Standard western chess diagram (the variant-named sugar over `diagram`).
-/// Identical behaviour to `diagram`, but it documents the variant and rejects a
-/// non-standard position source. This is the everyday entry point for western
-/// chess; other variants get their own (e.g. `xiangqi-diagram`) as they land.
+/// Standard western-chess diagram — the variant-named sugar over `diagram` and
+/// the everyday entry point. Same behaviour, but it documents the variant and
+/// rejects a non-standard `source`.
+///
+/// - source (str, dictionary): a standard-chess position (FEN, position dict, or
+///   squares dict).
+/// - ..args (arguments): everything `diagram` accepts (players, `caption`,
+///   `game-info`, `flip`, `lang`, style options, and `#figure` arguments).
+/// -> content
 #let chess-diagram(source, ..args) = {
   _assert-variant("chess-diagram", "standard", source)
   diagram(source, ..args)
 }
 
-/// A chess diagram for the position at `locator` within a parsed `game`
-/// (mainline "30w"/"30b" or a variation path). The players/year default to the
-/// game's roster tags (so the above-line is drawn automatically) and the caption
-/// defaults to "Position after move <last move>". Override any of them, or pass
-/// `flip` / style fields, exactly as in `chess-diagram`.
+/// A chess diagram for the position at `locator` within a parsed game. Players
+/// and year default to the game's roster tags (so the info line is automatic) and
+/// the caption defaults to "Position after move <last move>".
 ///
 /// When the resolved PGN-handling `annotations` switch is on, `%cal` / `%csl`
-/// drawing annotations in the move's comment become arrows / highlights, MERGED
-/// with any `arrows` / `highlight` passed explicitly (their colour letters
-/// resolve through the board's `annotation-colors` map). `annotations` defaults
-/// to `auto`, which consults `set-pgn-defaults` (off by default); pass
-/// `annotations: true`/`false` to override per call.
+/// drawing annotations in the move's comment become arrows / highlights, merged
+/// with any passed explicitly.
+///
+/// - game (dictionary): a parsed game (from `parse-pgn`).
+/// - locator (str, dictionary): which position — a mainline `"30w"` / `"30b"` or
+///   a variation path dict.
+/// - white (auto, str, none): white player; `auto` uses the game's `White` tag.
+/// - black (auto, str, none): black player; `auto` uses the `Black` tag.
+/// - year (auto, int, str, none): year; `auto` uses the `Date` tag.
+/// - caption (auto, content, none): `auto` is "Position after move …".
+/// - annotations (auto, bool): process `%cal` / `%csl` into arrows / highlights;
+///   `auto` consults `set-pgn-defaults` (off by default).
+/// - flip (bool): show the board from Black's side.
+/// - game-info (auto, content, none): the above-board line (as for `diagram`).
+/// - lang (auto, str): language for the supplement; `auto` follows the document.
+/// - ..args (arguments): board *style* options and `#figure` arguments.
+/// -> content
 #let board-after(game, locator, white: auto, black: auto, year: auto, caption: auto, annotations: auto, flip: false, game-info: auto, lang: auto, ..args) = {
   let pos = position-after(game, locator)
   let cap = if caption != auto { caption } else { _pgn-caption(game, locator) }
@@ -424,15 +458,21 @@
   o
 }
 
-/// Render move notation (text), and -- when `diagrams` is on and the source is a
-/// game -- splice a `chess-diagram` into the flow after each move whose comment
-/// carries a diagram marker (ChessBase `#`/`#[caption]`, Scid `[d]`/`[D]`,
-/// `\diagram`, `%%diagram`). The embedded board uses that move's caption and, when
-/// `annotations` is on, its `%cal`/`%csl`. `diagrams` / `annotations` default to
-/// `auto` (the `set-pgn-defaults` document defaults, both off). All other options
-/// (`from`/`to`, `figurine`, `lang`, `nags`, `comments`, `move-numbers`,
-/// `result`) behave as for the text notation. Embedded diagrams are created in a
-/// context, so they are not individually referenceable.
+/// Render move notation as text, and — when `diagrams` is on and the source is a
+/// game — splice a `chess-diagram` into the flow after each move whose comment
+/// carries a diagram marker (ChessBase `#` / `#[caption]`, Scid `[d]` / `[D]`,
+/// `\diagram`, `%%diagram`). Embedded diagrams are made in a context, so they are
+/// not individually referenceable. The variant-agnostic formatter under
+/// `chess-notation`.
+///
+/// - source (dictionary, str, array): a parsed *game*, a *move-text string*, or a
+///   *SAN array*.
+/// - ..args (arguments): the formatting options — `from` / `to` (mainline slice),
+///   `line` (render one variation), `figurine`, `lang`, `nags`, `comments`,
+///   `variations`, `variation-style` (`"inline"` / `"block"`), `bold-mainline`,
+///   `move-numbers`, `result`, and the embedding switches `diagrams` /
+///   `annotations`. The `auto`-defaulting ones consult `set-pgn-defaults`.
+/// -> content
 #let notation(source, ..args) = {
   let named = args.named()
   let all-opts = ("from", "to", "line", "figurine", "lang", "nags", "comments", "variations", "variation-style", "bold-mainline", "move-numbers", "result")
@@ -493,7 +533,14 @@
   }
 }
 
-/// Standard western chess notation (the variant-named sugar over `notation`).
+/// Standard western-chess notation — the variant-named sugar over `notation` and
+/// the everyday entry point. Same behaviour, but it rejects a non-standard
+/// `source` variant.
+///
+/// - source (dictionary, str, array): a parsed game, a move-text string, or a SAN
+///   array (standard chess).
+/// - ..args (arguments): everything `notation` accepts.
+/// -> content
 #let chess-notation(source, ..args) = {
   if type(source) == dictionary and source.at("variant", default: "standard") != "standard" {
     panic("chess-notation: expected standard chess; got variant " + repr(source.variant))
@@ -509,11 +556,14 @@
   if t == auto { ui-string(lang, key) } else { t }
 }
 
-/// An outline listing only chess DIAGRAMS (figures with `kind: chess-kind`).
-/// `title` defaults to the language-aware "List of Diagrams" (override per call,
-/// or document-wide via `set-diagram-defaults(outline-title: ..)`); `lang`
-/// defaults to the document language. Extra named arguments are forwarded to
-/// `outline` (e.g. `depth`, `indent`).
+/// An outline listing only chess *diagrams* (figures of kind `"chess"`).
+///
+/// - title (auto, content, none): the outline title; `auto` is the language-aware
+///   "List of Diagrams" (or the document value from `set-diagram-defaults`).
+/// - lang (auto, str): language for the default title; `auto` follows the
+///   document.
+/// - ..args (arguments): forwarded to `outline` (e.g. `depth`, `indent`).
+/// -> content
 #let chess-diagram-outline(title: auto, lang: auto, ..args) = context {
   let doc = (default-diagram-style + diagram-style-state.get()).outline-title
   outline(
@@ -523,12 +573,15 @@
   )
 }
 
-/// An outline listing only chess TABLES (figures with `kind: chess-table-kind`,
-/// i.e. standings / cross-table / progress tables). Only tables that carry a
-/// `caption` appear (an uncaptioned figure is not listed by Typst's `outline`).
-/// `title` defaults to the language-aware "List of Tables" (override per call, or
-/// document-wide via `set-table-defaults(outline-title: ..)`). Extra named
-/// arguments are forwarded to `outline`.
+/// An outline listing only chess *tables* (standings / cross-table / progress
+/// figures of kind `"chess-table"`). Only tables that carry a `caption` appear.
+///
+/// - title (auto, content, none): the outline title; `auto` is the language-aware
+///   "List of Tables" (or the document value from `set-table-defaults`).
+/// - lang (auto, str): language for the default title; `auto` follows the
+///   document.
+/// - ..args (arguments): forwarded to `outline`.
+/// -> content
 #let chess-table-outline(title: auto, lang: auto, ..args) = context {
   let doc = (default-table-style + table-style-state.get()).outline-title
   outline(
@@ -538,11 +591,16 @@
   )
 }
 
-/// Print BOTH chess outlines back to back: diagrams first, then tables. The two
-/// section titles default to their language-aware values (override with
-/// `diagram-title` / `table-title`; pass `none` to drop a title). `lang` defaults
-/// to the document language. Extra named arguments are forwarded to both
-/// `outline`s.
+/// Print both chess outlines back to back: diagrams first, then tables.
+///
+/// - diagram-title (auto, content, none): title for the diagram outline; `none`
+///   drops it.
+/// - table-title (auto, content, none): title for the table outline; `none` drops
+///   it.
+/// - lang (auto, str): language for the default titles; `auto` follows the
+///   document.
+/// - ..args (arguments): forwarded to both `outline`s.
+/// -> content
 #let chess-outlines(diagram-title: auto, table-title: auto, lang: auto, ..args) = {
   chess-diagram-outline(title: diagram-title, lang: lang, ..args)
   chess-table-outline(title: table-title, lang: lang, ..args)
