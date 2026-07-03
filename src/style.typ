@@ -162,7 +162,13 @@
   message: "board flipping is per-diagram only; pass `flip: true` to a diagram, not to a defaults setter",
 )
 
-/// Set default BOARD style fields for all subsequent boards/diagrams.
+/// Set default *board* style fields for all subsequent boards and diagrams
+/// (document-order state, like a Typst `#set`). `flip` is rejected (per-diagram
+/// only).
+///
+/// - ..fields (arguments): named board style options (`size`, `light`, `dark`,
+///   `labels`, `label-mode`, `piece-set`, …); unknown keys error.
+/// -> content
 #let set-board-defaults(..fields) = {
   let f = fields.named()
   _reject-flip(f)
@@ -172,7 +178,12 @@
   board-style-state.update(s => s + f)
 }
 
-/// Set default DIAGRAM style fields (the #figure wrapper) for subsequent diagrams.
+/// Set default *diagram* style fields (the `#figure` wrapper) for subsequent
+/// diagrams.
+///
+/// - ..fields (arguments): named diagram style options (`supplement`,
+///   `outline-title`, `info-bold`, `info-gap`, …); unknown keys error.
+/// -> content
 #let set-diagram-defaults(..fields) = {
   let f = fields.named()
   for k in f.keys() {
@@ -181,9 +192,12 @@
   diagram-style-state.update(s => s + f)
 }
 
-/// Set default TABLE style fields (the #figure wrapper around tournament tables)
-/// for subsequent `*-table` renderers. Currently: `supplement` (default "Table"),
-/// `title-gap`.
+/// Set default *table* style fields (the `#figure` wrapper around tournament
+/// tables) for subsequent `*-table` renderers.
+///
+/// - ..fields (arguments): named table style options — currently `supplement`
+///   (default "Table"), `outline-title`, `title-gap`; unknown keys error.
+/// -> content
 #let set-table-defaults(..fields) = {
   let f = fields.named()
   for k in f.keys() {
@@ -192,12 +206,19 @@
   table-style-state.update(s => s + f)
 }
 
-/// Set the document language for all language-aware strings (supplements,
-/// outline titles, notation piece letters). `code` is a language code ("en",
-/// "de", ...) or "auto" (follow `#set text(lang: ..)`).
+/// Set the document language for all language-aware strings (supplements, outline
+/// titles, notation piece letters).
+///
+/// - code (str): a language code (`"en"`, `"de"`, …) or `"auto"` (follow
+///   `#set text(lang: ..)`).
+/// -> content
 #let set-lang(code) = i18n-style-state.update(s => s + (lang: code))
 
 /// Set default i18n fields (currently just `lang`) for subsequent output.
+///
+/// - ..fields (arguments): named i18n options (currently `lang`); unknown keys
+///   error.
+/// -> content
 #let set-i18n-defaults(..fields) = {
   let f = fields.named()
   for k in f.keys() {
@@ -206,8 +227,11 @@
   i18n-style-state.update(s => s + f)
 }
 
-/// Set default PGN-handling fields (annotations / nags / comments / diagrams)
-/// for subsequent notation / diagram output.
+/// Set default PGN-handling fields for subsequent notation / diagram output.
+///
+/// - ..fields (arguments): named switches — `annotations`, `nags`, `comments`,
+///   `diagrams`, `variations`, `bold-mainline`; unknown keys error.
+/// -> content
 #let set-pgn-defaults(..fields) = {
   let f = fields.named()
   for k in f.keys() {
@@ -216,8 +240,15 @@
   pgn-style-state.update(s => s + f)
 }
 
-/// Umbrella setter (back-compat): route each field to the board, diagram, or
-/// PGN-handling bucket. `flip` / `orientation` are rejected.
+/// Umbrella setter: route each field to the board, diagram, table, i18n or
+/// PGN-handling bucket — handy for setting several defaults at once. `flip` /
+/// `orientation` are rejected (per-diagram only).
+///
+/// - ..fields (arguments): any named style option from the board, diagram, table,
+///   i18n or PGN-handling groups; unknown keys error. (`supplement` /
+///   `outline-title`, shared by diagram and table, route to the diagram bucket —
+///   use `set-table-defaults` for the table ones.)
+/// -> content
 #let set-chess-defaults(..fields) = {
   let f = fields.named()
   _reject-flip(f)
@@ -244,7 +275,12 @@
   if pg.len() > 0 { pgn-style-state.update(s => s + pg) }
 }
 
-/// Convenience: set the default piece set for subsequent diagrams.
+/// Set the default piece set for subsequent diagrams — a convenience wrapper over
+/// `set-board-defaults(piece-set: name)`.
+///
+/// - name (str): a bundled piece-set name (`"cburnett"`, `"merida"`, …) or a
+///   registered custom set.
+/// -> content
 #let set-piece-set(name) = board-style-state.update(s => s + (piece-set: name))
 
 /// Build a style-overrides dict (just sugar around named arguments).
