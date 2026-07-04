@@ -194,7 +194,7 @@
     let orient = if flip { "black" } else { "white" }
     let maxdim = calc.max(cols, rows)
 
-    layout(available => {
+    let rendered = layout(available => {
       let mode = st.label-mode
 
       // gutter as a fraction of the nominal size, by mode (0 = labels on board)
@@ -384,5 +384,10 @@
         })
       }
     })
+    // The board is built from layout-dependent primitives (`layout`, `place`),
+    // which HTML export drops. Under an HTML target, wrap the deferred board in
+    // `html.frame`: it lays the board out into a self-contained inline SVG that
+    // renders in a browser. Paged (PDF/PNG) export takes the board unchanged.
+    if target() == "html" { html.frame(rendered) } else { rendered }
   }
 }

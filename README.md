@@ -28,6 +28,9 @@ and tables).
   titles, and notation (en, de, es, fr, it, pt, ru; per-call overridable).
 - **References & outlines**: diagrams and tables are figures with distinct kinds,
   so `@label` and dedicated "list of diagrams / tables" outlines just work.
+- **HTML export (limited)**: notation, tables, outlines, references and captioned
+  figures export to native HTML; boards and diagrams embed as inline SVG. Typst's
+  own HTML export is still experimental, so parity with PDF is partial.
 
 ## Quick start
 

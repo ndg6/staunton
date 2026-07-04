@@ -233,7 +233,10 @@ for chess publications. It provides a full set of features, including:
 - *tournament tables* — we can create standings, cross-tables and progress charts from a PGN's
   results, by player or by team;
 - *outlines and references* — diagrams and tables get their own counters and lists;
-- *document-wide styling* and *localization* (six languages, easily extended).
+- *document-wide styling* and *localization* (six languages, easily extended);
+- *limited HTML export* — notation, tables, outlines, references and captioned
+  figures become native HTML, with boards and diagrams embedded as inline SVG
+  (see @html-export).
 
 #example(```typ
 #chess-diagram(
@@ -982,6 +985,35 @@ interpreted at render time. Because those switches are best understood next to
 the notation and board features they govern, they are documented with the games
 themselves — see @pgn-handling. `set-pgn-defaults` sets them document-wide, and
 `set-chess-defaults` routes the same keys through the umbrella.
+
+// === HTML export =============================================================
+
+#pagebreak()
+
+= HTML Export<html-export>
+
+Besides paged output (PDF / PNG), *staunton* also supports Typst's *HTML export*.
+Compile with the `html` feature and target:
+
+```sh
+typst compile --features html --format html your-doc.typ out.html
+```
+
+The library-level output maps onto native HTML:
+
+- *move notation* becomes ordinary inline text (mainline moves as `<strong>`);
+- *tournament tables* become real `<table>` elements;
+- *diagram* and *table* figures keep their captions, numbering and supplements as
+  `<figure>` / `<figcaption>`, and `@`-references and the diagram / table
+  *outlines* resolve to in-document links;
+- *boards and diagrams* are embedded as *inline SVG* (a board is layout-drawn, so
+  it is wrapped in `html.frame` under an HTML target — paged export is unchanged).
+
+*Caveats.* Typst's HTML export is itself #emph[under active development], so this
+is *limited* support, not full PDF parity. Page-level chrome (the `#set page`
+header / footer, `#pagebreak`, multi-column `#grid` layout) is dropped by HTML
+export — that is document styling, not part of staunton. Treat HTML output as a
+useful secondary format that will improve as Typst's own HTML support matures.
 
 // === API Reference ===========================================================
 
