@@ -38,7 +38,7 @@
   default-pgn-style, pgn-style-state, pgn-style-keys, set-pgn-defaults,
 )
 #import "src/i18n.typ": ui-string, resolve-lang
-#import "src/board.typ": render-board, default-light, default-dark, default-board-size
+#import "src/board.typ": render-board, default-board-size
 #import "src/annotations.typ": interpret-comment
 #import "src/tournament.typ": (
   games-by-event, standings, standings-table,

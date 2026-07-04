@@ -39,8 +39,6 @@
 #import "pieces.typ": square-piece
 #import "style.typ": default-style, style-state, border-brown, border-creme, border-dark, border-dark-label
 
-#let default-light = default-style.light
-#let default-dark = default-style.dark
 #let default-board-size = 6.4cm
 
 // Board labels use their own sans-serif (the `label-font` board-style option),
