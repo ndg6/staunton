@@ -97,3 +97,10 @@ These are not under `tests/out/`; build them separately.
       skips the cover).
 - [ ] showcase — `typst compile --root . docs/examples/showcase.typ showcase.pdf`,
       then skim it.
+- [ ] HTML export — `typst compile --root . --features html --format html
+      docs/examples/html_export.typ html_export.html`, then open it in a browser:
+      the boards/diagrams render (as inline SVG), the standings table and the
+      diagram outline show, and the "See Diagram 1" link jumps to the figure.
+      (The presence of these elements is asserted by
+      `tests/output_formats/html/`; this check is about them actually *rendering*
+      in a browser.)

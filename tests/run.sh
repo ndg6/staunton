@@ -12,6 +12,14 @@
 # Files and directories whose name starts with "_" are skipped (shared fixtures
 # and helpers, e.g. tests/board/_fixture.typ).
 #
+# Output-format tests live under tests/output_formats/ and are NOT compiled to PDF
+# by the walk above. Currently tests/output_formats/html/*.typ are compiled with
+# Typst's HTML export (`--features html --format html`) and asserted on the
+# generated HTML via header directives (each may repeat):
+#   * "// HTML-HAS:  <substr>"   -> the HTML must contain <substr>
+#   * "// HTML-LACKS: <substr>"  -> the HTML must NOT contain <substr>
+# (Future SVG/PNG passes would slot in beside the html/ subdir the same way.)
+#
 # Usage:  bash tests/run.sh [-t|--time]
 #   -t, --time   show per-test compile time and a slowest-tests summary
 #                (can also be enabled with STAUNTON_TIME=1)
@@ -105,6 +113,55 @@ read_expect() {
   done < "$1"
 }
 
+# Read "// HTML-HAS: <substr>" / "// HTML-LACKS: <substr>" header lines (each may
+# repeat) into the global arrays `has` / `lacks`. `has` substrings must appear in
+# the generated HTML, `lacks` substrings must not.
+read_html_checks() {
+  has=(); lacks=()
+  local line s
+  while IFS= read -r line; do
+    case "$line" in
+      "// HTML-HAS:"*)   s="${line#// HTML-HAS:}";   has+=("${s#"${s%%[![:space:]]*}"}") ;;
+      "// HTML-LACKS:"*) s="${line#// HTML-LACKS:}"; lacks+=("${s#"${s%%[![:space:]]*}"}") ;;
+    esac
+  done < "$1"
+}
+
+# HTML output test: must compile under Typst's HTML export, and the generated HTML
+# must contain every HTML-HAS substring and none of the HTML-LACKS ones.
+html_test() {
+  local f="$1"
+  local rel="${f#tests/}"
+  local dest="$OUT/${rel%.typ}.html"
+  mkdir -p "${dest%/*}"
+  read_html_checks "$f"
+  local t0 t1 code
+  t0=$(now_ms)
+  typst compile --root "$ROOT" --features html --format html "$f" "$dest" >/dev/null 2>&1
+  code=$?
+  t1=$(now_ms)
+  if [ $code -ne 0 ]; then
+    printf '  FAIL %s  (expected HTML compile, but it errored)' "$f"; note_time $((t1 - t0)) "$f"; echo
+    fail=$((fail + 1)); return
+  fi
+  local problem="" s
+  for s in "${has[@]:-}"; do
+    [ -z "$s" ] && continue
+    grep -qF -- "$s" "$dest" || problem="missing \"$s\""
+  done
+  for s in "${lacks[@]:-}"; do
+    [ -z "$s" ] && continue
+    if grep -qF -- "$s" "$dest"; then problem="forbidden \"$s\" present"; fi
+  done
+  if [ -n "$problem" ]; then
+    printf '  FAIL %s  (HTML %s)' "$f" "$problem"; note_time $((t1 - t0)) "$f"; echo
+    fail=$((fail + 1))
+  else
+    printf '  ok   %s  -> %s' "$f" "$dest"; note_time $((t1 - t0)) "$f"; echo
+    pass=$((pass + 1))
+  fi
+}
+
 wall0=$(now_ms)
 
 # Walk every .typ under tests/, skipping any path component starting with "_".
@@ -112,6 +169,7 @@ echo "== tests =="
 while IFS= read -r f; do
   case "$f" in
     */_*) continue ;;          # skip _-prefixed files / dirs
+    tests/output_formats/*) continue ;;   # handled by the output-format passes below
   esac
   read_expect "$f"             # sets `want`
   if [ -n "$want" ]; then
@@ -127,6 +185,17 @@ for f in docs/examples/*.typ; do
   [ -e "$f" ] || continue
   ok "$f"
 done
+
+# Output-format tests. HTML: compiled with Typst's experimental HTML export and
+# checked for the expected native-HTML / inline-SVG output (see the HTML-HAS /
+# HTML-LACKS headers). Future SVG/PNG passes would slot in the same way.
+if [ -d tests/output_formats/html ]; then
+  echo "== HTML output tests =="
+  while IFS= read -r f; do
+    case "$f" in */_*) continue ;; esac
+    html_test "$f"
+  done < <(find tests/output_formats/html -name '*.typ' | sort)
+fi
 
 rm -f "$TMP"
 wall1=$(now_ms)
