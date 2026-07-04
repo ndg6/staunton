@@ -133,6 +133,12 @@ header must error with that message, any other must compile. Files/dirs prefixed
 - Engine performance (the narrow `legal-moves`/`apply` seam can swap to WASM).
 - Additional variants (the `position`/board pipeline is variant-aware already).
 
+## Acknowledgements
+
+- The [boards-n-pieces](https://typst.app/universe/package/boards-n-pieces) Typst
+  package was an inspiration for some features.
+- Developed with assistance from Claude (Opus 4.8) by Anthropic.
+
 ## License
 
 Code: **MIT** (© 2026 Frank Lippert). Bundled piece images: **GPL-2.0-or-later**.

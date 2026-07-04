@@ -268,6 +268,12 @@ can never disagree.
 Typst package *staunton* is named in honour of *Howard Staunton* (c. 1810–1874): a leading chess master of his day, organiser of the first international tournament (London, 1851), a chess author and publisher, and the namesake of the standardised *Staunton pattern* chessmen —
 still the tournament standard.
 
+== Acknowledgements
+
+The Typst package #link("https://typst.app/universe/package/boards-n-pieces")[boards-n-pieces]
+was an inspiration for some of staunton's features. This package and its manual
+were developed with assistance from Claude (Opus 4.8) by Anthropic.
+
 // === The board ===============================================================
 
 = The Board<board>
