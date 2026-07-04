@@ -136,6 +136,25 @@ header must error with that message, any other must compile. Files/dirs prefixed
 - Engine performance (the narrow `legal-moves`/`apply` seam can swap to WASM).
 - Additional variants (the `position`/ `board` pipeline is variant-aware already).
 
+## Changelog
+
+### 0.1.0
+
+Initial release.
+
+- Boards and diagrams from a FEN string, a `position(..)` object, or a squares
+  dict; themes, six label placements, flip, piece sets, grid, highlights, arrows.
+- Pure-Typst legal-move engine; PGN parsing with mainline and nested variations,
+  locator navigation, "what-if" play, and FEN export.
+- Localized move notation with variations, figurine glyphs, NAGs, comments, and
+  embedded diagrams; programmatic NAG / comment / variation builders.
+- Tournament tables (standings, cross-tables, progress; player or team) with
+  Buchholz / Sonneborn-Berger tie-breaks.
+- Figure-based references and diagram / table outlines; document-wide defaults
+  and localization (en, de, es, fr, it, pt, ru).
+- Limited HTML export (notation, tables, outlines and references as native HTML;
+  boards and diagrams as inline SVG).
+
 ## Acknowledgements
 
 - The [boards-n-pieces](https://typst.app/universe/package/boards-n-pieces) Typst
