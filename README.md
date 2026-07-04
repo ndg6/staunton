@@ -131,7 +131,7 @@ header must error with that message, any other must compile. Files/dirs prefixed
 - More bundled themes / piece sets and an ergonomic API for user-installed sets.
 - A move→SAN encoder (so notation can be generated from arbitrary positions).
 - Engine performance (the narrow `legal-moves`/`apply` seam can swap to WASM).
-- Additional variants (the `position`/board pipeline is variant-aware already).
+- Additional variants (the `position`/ `board` pipeline is variant-aware already).
 
 ## Acknowledgements
 

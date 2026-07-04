@@ -7,9 +7,10 @@
 // SAN from positions/moves would need a move->SAN encoder, which does not exist
 // yet; this module only FORMATS SAN we already hold.)
 //
-// `notation` is the variant-agnostic formatter; `chess-notation` is the standard
-// sugar (mirroring board/diagram, chess-moves). A future `xiangqi-notation` would
-// be a different formatter entirely.
+// `notation` is the variant-agnostic formatter. The public, variant-named sugar
+// `chess-notation` (mirroring board/diagram, chess-moves) lives in lib.typ, layered
+// on top so it can also embed diagrams. A future `xiangqi-notation` would be a
+// different formatter entirely.
 //
 // Source forms (consistent with `chess-moves`):
 //   * a parsed game            -> its mainline SAN;
@@ -309,12 +310,4 @@
     let chars = notation-langs.at(lang, default: notation-langs.en)
     _render(nodes, lo, hi, start-ply, mk-opts(chars, nags, comments, variations, bold-mainline), tail)
   }
-}
-
-/// Standard western chess notation -- the variant-named sugar over `notation`.
-#let chess-notation(source, ..args) = {
-  if type(source) == dictionary and source.at("variant", default: "standard") != "standard" {
-    panic("chess-notation: expected standard chess; got variant " + repr(source.variant))
-  }
-  notation(source, ..args.named())
 }
