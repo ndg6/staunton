@@ -34,7 +34,7 @@
   default-board-style, default-diagram-style, board-style-keys, diagram-style-keys,
   diagram-style-state, set-board-defaults, set-diagram-defaults,
   default-table-style, table-style-state, table-style-keys, set-table-defaults,
-  default-i18n-style, i18n-style-state, i18n-style-keys, set-lang, set-i18n-defaults,
+  default-i18n-style, i18n-style-state, i18n-style-keys, set-lang,
   default-pgn-style, pgn-style-state, pgn-style-keys, set-pgn-defaults,
 )
 #import "src/i18n.typ": ui-string, resolve-lang

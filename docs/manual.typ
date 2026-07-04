@@ -7,10 +7,89 @@
 // Build:  typst compile --root . docs/manual.typ docs/manual.pdf
 //
 // Chapter order is deliberately bottom-up: board -> diagram -> position -> games
-// -> tables -> outlines -> document-wide style.
+// -> tables -> outlines -> document-wide defaults.
 
 #import "manual-tools.typ": example
 #import "@preview/tidy:0.4.1"
+
+// --- compact tidy style ------------------------------------------------------
+// tidy's default style leaves a very large gap (4.8em) between successive
+// functions and wraps each parameter in a grey 10pt-inset block. We keep the
+// same content but tighten the vertical rhythm and reuse the manual's own
+// inline-code tint (#f0f0ec) for parameter blocks, so the generated API pages
+// sit closer to the hand-written chapters. We override only three of the style
+// functions and borrow the rest from `tidy.styles.default`.
+#let _td = tidy.styles.default
+
+#let _compact-param-block(
+  function-name: none, name, types, content, style-args,
+  show-default: false, default: none,
+) = block(
+  inset: (x: 8pt, y: 7pt), fill: rgb("#f0f0ec"), width: 100%, radius: 2pt,
+  breakable: style-args.break-param-descriptions,
+  [
+    #box(heading(level: style-args.first-heading-level + 3, name))
+    #if function-name != none and style-args.enable-cross-references {
+      label(function-name + "." + name.trim("."))
+    }
+    #h(1.2em)
+    #types.map(x => (style-args.style.show-type)(x, style-args: style-args)).join([ #text("or", size: .6em) ])
+
+    #content
+    #if show-default [ #parbreak() #style-args.local-names.default: #raw(lang: "typc", default) ]
+  ],
+)
+
+#let _compact-function(fn, style-args) = {
+  if style-args.colors == auto { style-args.colors = _td.colors }
+  [
+    #heading(fn.name, level: style-args.first-heading-level + 1)
+    #if style-args.enable-cross-references { label(style-args.label-prefix + fn.name + "()") }
+  ]
+  tidy.utilities.eval-docstring(fn.description, style-args)
+  block(breakable: style-args.break-param-descriptions, {
+    heading(style-args.local-names.parameters, level: style-args.first-heading-level + 2)
+    (style-args.style.show-parameter-list)(fn, style-args: style-args)
+  })
+  for (name, info) in fn.args {
+    if style-args.omit-private-parameters and name.starts-with("_") { continue }
+    let description = info.at("description", default: "")
+    if description == "" and style-args.omit-empty-param-descriptions { continue }
+    (style-args.style.show-parameter-block)(
+      name, info.at("types", default: ()),
+      tidy.utilities.eval-docstring(description, style-args), style-args,
+      show-default: "default" in info,
+      default: info.at("default", default: none),
+      function-name: style-args.label-prefix + fn.name,
+    )
+  }
+  v(1.6em, weak: true)
+}
+
+#let _compact-variable(var, style-args) = {
+  if style-args.colors == auto { style-args.colors = _td.colors }
+  let type = if "type" not in var { none } else { (style-args.style.show-type)(var.type, style-args: style-args) }
+  stack(dir: ltr, spacing: 1.2em,
+    [
+      #heading(var.name, level: style-args.first-heading-level + 1)
+      #if style-args.enable-cross-references { label(style-args.label-prefix + var.name) }
+    ],
+    type,
+  )
+  tidy.utilities.eval-docstring(var.description, style-args)
+  v(1.6em, weak: true)
+}
+
+#let compact-style = (
+  show-outline: _td.show-outline,
+  show-type: _td.show-type,
+  show-function: _compact-function,
+  show-parameter-list: _td.show-parameter-list,
+  show-parameter-block: _compact-param-block,
+  show-reference: _td.show-reference,
+  show-example: _td.show-example,
+  show-variable: _compact-variable,
+)
 
 // API-reference helper: render a CURATED, ordered list of functions/variables —
 // possibly spanning several source modules — from their `tidy` docstrings
@@ -35,7 +114,14 @@
   }
   base.functions = fns
   base.variables = vars
-  tidy.show-module(base, first-heading-level: level, show-outline: false, sort-functions: none)
+  // tidy emits its own function/variable headings; leave them unnumbered so the
+  // API reference doesn't grow odd counters like "10.2.0.1" under the manual's
+  // own "1.1" scheme.
+  set heading(numbering: none)
+  tidy.show-module(
+    base, first-heading-level: level, show-outline: false, sort-functions: none,
+    style: compact-style,
+  )
 }
 
 #set page(
@@ -52,17 +138,16 @@
   fill: rgb("#f0f0ec"), inset: (x: 3pt, y: 0pt), outset: (y: 3pt), radius: 2pt, it,
 )
 
-// Copyright year for the footer, taken from the build date.
-#let _year = str(datetime.today().year())
-
 // Running chapter title for the header (right side): the FIRST level-1 heading
 // that starts on the current page; if none starts here, the LAST one seen on an
 // earlier page. So a page carrying "Introduction" then "The Board" shows
 // "Introduction", and the next page (no new chapter) shows "The Board". (None
-// while still in the front matter, before the first chapter.)
+// while still in the front matter, before the first chapter.) Only numbered
+// chapters count — the outline's own "Guide" / "API Reference" titles are
+// level-1 headings too but carry `numbering: none`, so they never appear here.
 #let _running-chapter = context {
   let pg = here().page()
-  let h1 = query(heading.where(level: 1))
+  let h1 = query(heading.where(level: 1)).filter(h => h.numbering != none)
   let on-page = h1.filter(h => h.location().page() == pg)
   if on-page.len() > 0 { on-page.first().body } else {
     let earlier = h1.filter(h => h.location().page() < pg)
@@ -80,6 +165,8 @@
     #text(size: 34pt, weight: "bold")[staunton]
     #v(3pt)
     #text(size: 13pt)[Chess diagrams, games and tournament tables for Typst]
+    #v(8pt)
+    #link("https://github.com/ndg6/staunton")[#text(size: 11pt, fill: rgb("#555"), font: "DejaVu Sans Mono")[https://github.com/ndg6/staunton]]
     #v(8pt)
     #text(size: 10pt, fill: rgb("#666"))[User manual · package version 0.1.0]
   ]
@@ -106,10 +193,7 @@
       set text(size: 9pt, fill: rgb("#666"))
       line(length: 100%, stroke: 0.4pt + rgb("#cccccc"))
       v(-0.2em)
-      grid(columns: (1fr, 1fr),
-        align(left)[© Frank Lippert (#_year)],
-        align(right)[#counter(page).display()],
-      )
+      align(center)[#here().page() / #counter(page).final().first()]
     }
   },
 )
@@ -125,7 +209,7 @@
     depth: 2, indent: auto,
   ),
   outline(
-    title: [Reference],
+    title: [API Reference],
     target: heading.where(level: 1).or(heading.where(level: 2)).after(<api-reference>, inclusive: true),
     depth: 2, indent: auto,
   ),
@@ -162,7 +246,7 @@ for chess publications. It provides a full set of features, including:
 This manual is bottom-up. The *board* is the drawing primitive; a *diagram* wraps
 a board in a referenceable figure; a *position* is the data a board draws; *games*
 add PGN, notation, and play; then come *tournament tables*, *outlines and
-references*, and the *document-wide style* settings.
+references*, and the *document-wide defaults*.
 
 == Installing and Importing
 
@@ -330,7 +414,7 @@ cannot be made a document default (see *Document-wide style*).
 
 Pieces are drawn from bundled *SVG piece sets*. Two ship with the package, both
 GPLv2+: `cburnett` (default) and `merida`. Choose one with `piece-set:` per board,
-or document-wide with `set-piece-set`:
+or document-wide with `set-piece-set` (see @document-style):
 
 #example(```typ
 #grid(columns: 3, gutter: 8pt, align: bottom,
@@ -689,8 +773,8 @@ locator. Standard 8×8 positions round-trip exactly:
 
 PGN comments can carry drawing annotations — `[%cal …]` for arrows, `[%csl …]`
 for highlights. Processing is *off by default*; opt in per call with
-`annotations: true` (or document-wide with `set-pgn-defaults`). The demo game
-annotates its 2nd move:
+`annotations: true` (or document-wide with `set-pgn-defaults` — see @pgn-handling).
+The demo game annotates its 2nd move:
 
 #example(```typ
 // move 2: {[%cal Gf3e5] [%csl Re5]}
@@ -715,6 +799,36 @@ switches compose:
 `diagrams` decides *whether* a board appears; `annotations` decides whether it
 carries the marks. The marker and the `%cal`/`%csl` must be in the *same* move's
 comment. (Only mainline moves are addressed — `notation` renders the mainline.)
+
+== PGN Handling <pgn-handling>
+
+The switches above — `annotations`, `nags`, `comments`, `diagrams`, `variations`,
+`bold-mainline` — form the *PGN-handling* group: they decide how much of a parsed
+game's embedded extras get interpreted at render time. Parsing itself stays
+lossless; these only decide what is *processed*, and (except `bold-mainline`)
+*all default off*. Each is a per-call argument (`auto` → the document default) on
+`notation` / `board-after`, or a document-wide default via `set-pgn-defaults`:
+
+```typ
+#set-pgn-defaults(annotations: true, nags: true, comments: true)
+```
+
+#table(
+  columns: (auto, 1fr),
+  inset: 6pt,
+  align: (left, left),
+  stroke: 0.5pt + rgb("#d9d9d2"),
+  table.header([*key*], [*effect*]),
+  raw("annotations"), [`%cal`/`%csl` → arrows/highlights on `board-after`],
+  raw("nags"), [render NAGs (`Nf3!`, `d4⩲`) in `notation`],
+  raw("comments"), [include comment prose in `notation`],
+  raw("diagrams"), [embed a board in `notation` after each move marked for one],
+  raw("variations"), [splice variations (RAVs) into `notation`, in parentheses],
+  raw("bold-mainline"), [render `notation` mainline moves bold (variations stay normal)],
+)
+
+`set-chess-defaults` routes these same keys through its umbrella, alongside the
+board, diagram, table and language buckets — see @document-style.
 
 == Errors
 
@@ -781,12 +895,15 @@ As shown in @start, ...
 Only figures that carry a *caption* appear in an outline (a caption-less figure is
 still referenceable but unlisted, matching Typst). Titles are language-aware by
 default and settable per call (`title:`, `lang:`) or document-wide
-(`set-diagram-defaults(outline-title: ..)`). Remember that a bare `board` is not a
+(`set-diagram-defaults(outline-title: ..)` — see @document-style). Remember that a bare `board` is not a
 figure, so it can be neither referenced nor listed — use a `chess-diagram`.
 
 // === Document-wide style =====================================================
 
-= Document-Wide Style<document-style>
+= Document-Wide Defaults<document-style>
+
+Package *staunton* features sensible default settings out of the box, you rarely
+need to adjust them at all. But if you need to, you can achieve that in two ways: per-call arguments overriding the default settings, and *document-wide* defaults that can be set with `set-chess-defaults` or the more specific setters. Adjusting settings this way affects *every subsequent* diagram and table unless overridden per-call.
 
 Defaults live in *five* buckets, each with its own setter:
 
@@ -796,11 +913,11 @@ Defaults live in *five* buckets, each with its own setter:
   align: (left, left, left),
   stroke: 0.5pt + rgb("#d9d9d2"),
   table.header([*bucket*], [*setter*], [*controls*]),
-  [board], raw("set-board-defaults"), [square colours, labels, piece set, highlights, arrows, grid, size],
+  [board], raw("set-board-defaults"), [square colours, labels, piece set, highlights, arrows, grid, size — full list in @board-options],
   [diagram], raw("set-diagram-defaults"), [the diagram figure: game-info line, supplement, outline title],
   [table], raw("set-table-defaults"), [the table figure: supplement, outline title, title gap],
-  [language], raw("set-lang"), [the document language (also `set-i18n-defaults`)],
-  [PGN handling], raw("set-pgn-defaults"), [`annotations` / `nags` / `comments` / `diagrams`],
+  [language], raw("set-lang"), [the document language (localized strings)],
+  [PGN handling], raw("set-pgn-defaults"), [what a parsed game's extras render — see @pgn-handling],
 )
 
 `set-chess-defaults` is the single *umbrella* over *all five* buckets: pass any key
@@ -815,8 +932,7 @@ from any bucket — *including* `lang` — and it is routed to the bucket that o
 #set-piece-set("merida")    // sugar for set-board-defaults(piece-set: ..)
 ```
 
-A setter affects *every subsequent* diagram/table; per-call arguments still
-override. Every default is equivalently a per-call argument — the same green theme,
+Every default is equivalently a per-call argument — the same green theme,
 set once above vs. passed to one diagram:
 
 #example(```typ
@@ -834,6 +950,10 @@ them to *diagram*, so use `set-table-defaults` for the table ones.
 
 == Language
 
+Package *staunton* supports localisation of text-related output. At the moment we support six different languages; apart from the standard English, we offer German, French, Spanish, Italian, Portuguese, and Russian. We can easily extend the list of supported languages by adding new translation files. 
+
+The `notation` / `chess-notation` functions localise the piece letters, and the `chess-diagram` / `chess-table` figures carry language-aware titles and captions. The `lang:` argument on each function overrides the document default, and the document default is set with `set-lang`.
+
 A single document *language* drives every language-aware string — diagram and
 table supplements, outline titles, and notation piece letters. Default is
 English; `"auto"` follows `#set text(lang: ..)`; or pick a code:
@@ -847,45 +967,28 @@ Every localizable string is also per-call overridable (the `lang:` argument seen
 on `chess-notation` above). Adding a language is a no-code change: drop a
 `src/assets/i18n/<code>.typ` and register it in `src/i18n.typ`.
 
-== PGN Handling <pgn-handling>
+== PGN Handling
 
-A *PGN-handling* bucket decides how much of a parsed game's embedded extras get
-interpreted at render time. Parsing stays lossless; these switches only decide
-what is processed, and *all default off*:
-
-```typ
-#set-pgn-defaults(annotations: true, nags: true, comments: true)
-```
-
-#table(
-  columns: (auto, 1fr),
-  inset: 6pt,
-  align: (left, left),
-  stroke: 0.5pt + rgb("#d9d9d2"),
-  table.header([*key*], [*effect*]),
-  raw("annotations"), [`%cal`/`%csl` → arrows/highlights on `board-after`],
-  raw("nags"), [render NAGs (`Nf3!`, `d4⩲`) in `notation`],
-  raw("comments"), [include comment prose in `notation`],
-  raw("diagrams"), [embed a board in `notation` after each move marked for one],
-  raw("variations"), [splice variations (RAVs) into `notation`, in parentheses],
-  raw("bold-mainline"), [render `notation` mainline moves bold (variations stay normal)],
-)
-
-Each is also a per-call argument (`auto` → the document default) on `notation` /
-`board-after` — as used in the annotations example above.
+The fifth bucket, *PGN handling*, decides how much of a parsed game's embedded
+extras (NAGs, comments, annotations, variations, embedded diagrams) get
+interpreted at render time. Because those switches are best understood next to
+the notation and board features they govern, they are documented with the games
+themselves — see @pgn-handling. `set-pgn-defaults` sets them document-wide, and
+`set-chess-defaults` routes the same keys through the umbrella.
 
 // === API Reference ===========================================================
 
 #pagebreak()
 
-= API Reference<api-reference>
+= Common Parameters<api-reference>
 
-This part is the reference lookup. It collects the recurring *argument value
-shapes* and the full board / diagram / table option lists here, and then — in the
-*Main functions* and *Behind the scenes* chapters that follow — every public
-function's signature with each parameter's type and default, generated directly
-from the source docstrings. The chapters above show each feature in use with a
-rendered example; this part answers "what exactly can I pass".
+This chapter collects the recurring *argument value shapes* and the full board /
+diagram / table option lists — the parameters that many functions share. The
+*Main functions* and *Behind the scenes* chapters that follow then give every
+public function's signature with each parameter's type and default, generated
+directly from the source docstrings. The guide chapters above show each feature
+in use with a rendered example; this reference part answers "what exactly can I
+pass".
 
 == Argument Value Shapes
 
@@ -925,7 +1028,7 @@ described once here.
 == Board Style Options <board-options>
 
 Accepted by `board` / `chess-board` / `diagram` / `chess-diagram` per call, and by
-`set-board-defaults` / `set-chess-defaults` document-wide.
+`set-board-defaults` / `set-chess-defaults` document-wide (see @document-style).
 
 #table(
   columns: (2.3fr, 1.5fr, 3.2fr),
@@ -976,12 +1079,12 @@ Accepted by `board` / `chess-board` / `diagram` / `chess-diagram` per call, and 
 
 #pagebreak()
 
-= Main functions<main-functions>
+= Main Functions<main-functions>
 
 The everyday API, grouped by task. Each entry is generated from the function's
 source docstring: its signature, then every parameter with its type and default.
 
-== Boards and diagrams
+== Boards and Diagrams
 #show-fns((
   ("/lib.typ", "board"),
   ("/lib.typ", "chess-board"),
@@ -1010,7 +1113,7 @@ source docstring: its signature, then every parameter with its type and default.
   ("/src/san.typ", "chess-moves"),
 ))
 
-== Annotate and build
+== Annotate and Build
 #show-fns((
   ("/src/game.typ", "with-nags"),
   ("/src/game.typ", "with-comments"),
@@ -1023,7 +1126,7 @@ source docstring: its signature, then every parameter with its type and default.
   ("/lib.typ", "chess-notation"),
 ))
 
-== Tournament tables
+== Tournament Tables
 #show-fns((
   ("/src/tournament.typ", "standings-table"),
   ("/src/tournament.typ", "crosstable-table"),
@@ -1031,14 +1134,14 @@ source docstring: its signature, then every parameter with its type and default.
   ("/src/tournament.typ", "games-by-event"),
 ))
 
-== Outlines and references
+== Outlines and References
 #show-fns((
   ("/lib.typ", "chess-diagram-outline"),
   ("/lib.typ", "chess-table-outline"),
   ("/lib.typ", "chess-outlines"),
 ))
 
-== Document defaults
+== Document Defaults
 #show-fns((
   ("/src/style.typ", "set-chess-defaults"),
   ("/src/style.typ", "set-board-defaults"),
@@ -1046,7 +1149,6 @@ source docstring: its signature, then every parameter with its type and default.
   ("/src/style.typ", "set-table-defaults"),
   ("/src/style.typ", "set-pgn-defaults"),
   ("/src/style.typ", "set-lang"),
-  ("/src/style.typ", "set-i18n-defaults"),
   ("/src/style.typ", "set-piece-set"),
 ))
 
@@ -1054,12 +1156,12 @@ source docstring: its signature, then every parameter with its type and default.
 
 #pagebreak()
 
-= Behind the scenes<behind-the-scenes>
+= Behind the Scenes<behind-the-scenes>
 
 Lower-level public primitives — usable, but not the everyday entry points.
-Private helpers (the `_`-prefixed ones) are intentionally omitted.
+Private helpers (`_`-prefixed functions) are intentionally omitted.
 
-== Engine and position internals
+== Engine and Position Internals
 #show-fns((
   ("/src/engine.typ", "legal-moves"),
   ("/src/engine.typ", "apply"),
@@ -1074,14 +1176,14 @@ Private helpers (the `_`-prefixed ones) are intentionally omitted.
   ("/src/san.typ", "play-san"),
 ))
 
-== Tournament data
+== Tournament Data
 #show-fns((
   ("/src/tournament.typ", "standings"),
   ("/src/tournament.typ", "crosstable"),
   ("/src/tournament.typ", "progress"),
 ))
 
-== Rendering and annotation
+== Rendering and Annotation
 #show-fns((
   ("/src/board.typ", "render-board"),
   ("/src/annotations.typ", "interpret-comment"),

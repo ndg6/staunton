@@ -64,20 +64,36 @@ These are not under `tests/out/`; build them separately.
 
 - [ ] `docs/manual.pdf` — every framed example's board matches its code (rebuild:
       `typst compile --root . docs/manual.typ docs/manual.pdf`).
+- [ ] `docs/manual.pdf` structure & cross-refs — the *Document-Wide Defaults* chapter
+      (formerly "Document-Wide Style") covers the five default buckets; the canonical
+      **PGN Handling** switch table now lives in the *Games* chapter, not the defaults
+      chapter. The in-prose `see Section N.M` cross-refs (piece sets, annotations,
+      outlines, board-options ↔ defaults, PGN handling) point to the right sections
+      and read naturally.
 - [ ] `docs/manual.pdf` API reference (`tidy`-generated) — the front-matter outline
-      splits into two columns, **Guide** and **Reference**. The **Main functions**
-      and **Behind the scenes** chapters render each function as a signature followed
-      by a parameter list (type + default per parameter). Skim that the entries look
-      well-formed (no empty descriptions, no stray raw-syntax leaking), the tidy
-      styling reads cleanly, and the curated grouping matches the section titles.
+      splits into two columns, **Guide** and **API Reference**. The reference part
+      opens with the **Common Parameters** chapter (argument value shapes + option
+      lists); the **Main functions** and **Behind the scenes** chapters render each
+      function as a signature followed by a parameter list (type + default per
+      parameter). The `tidy` output uses the manual's *compact* style: parameter
+      blocks are lightly tinted (`#f0f0ec`, matching inline code) and the gap between
+      successive functions is tight (~1.6em, not the stock 4.8em). Skim that the
+      entries look well-formed (no empty descriptions, no stray raw-syntax leaking),
+      the spacing reads evenly, the tidy-generated headings carry **no numbers**, and
+      the curated grouping matches the section titles.
 - [ ] `docs/manual.pdf` front matter — the **cover page** shows the hatched pencil
       pawns (`docs/img/pawns-duo.svg`: a white Staunton pawn in front, a black pawn
       diagonally behind-right) above the title block, with **no** header, footer or
       page number. Rugged graphite look; the two pieces read as clearly separated.
+      Below the tagline sits the repo link `https://github.com/ndg6/staunton`, then
+      the `User manual · package version 0.1.0` line.
       (`docs/img/cover-pawn.svg` is the single-pawn variant, kept as an alternate.)
 - [ ] `docs/manual.pdf` running chrome — on every page *after* the cover: header
       shows `staunton` (left) and the current level-1 chapter title (right); footer
-      shows `© Frank Lippert (<year>)` (left) and the page number (right). The first
-      page after the cover is numbered **2** (pagination skips the cover).
+      shows the page position **centered** as `<current>/<total>` (e.g. `5/28`) with
+      no copyright line. The **Table of Contents** page (page 2) has an **empty**
+      header right side — the outline's own "Guide"/"API Reference" titles must not
+      appear there. The first page after the cover is numbered **2** (pagination
+      skips the cover).
 - [ ] showcase — `typst compile --root . docs/examples/showcase.typ showcase.pdf`,
       then skim it.

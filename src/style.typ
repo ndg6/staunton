@@ -214,19 +214,6 @@
 /// -> content
 #let set-lang(code) = i18n-style-state.update(s => s + (lang: code))
 
-/// Set default i18n fields (currently just `lang`) for subsequent output.
-///
-/// - ..fields (arguments): named i18n options (currently `lang`); unknown keys
-///   error.
-/// -> content
-#let set-i18n-defaults(..fields) = {
-  let f = fields.named()
-  for k in f.keys() {
-    assert(i18n-style-keys.contains(k), message: "unknown i18n option: " + k)
-  }
-  i18n-style-state.update(s => s + f)
-}
-
 /// Set default PGN-handling fields for subsequent notation / diagram output.
 ///
 /// - ..fields (arguments): named switches — `annotations`, `nags`, `comments`,
