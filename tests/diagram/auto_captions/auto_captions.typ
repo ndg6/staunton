@@ -2,9 +2,9 @@
 //  * ABOVE (game-info): drawn only when BOTH players are known; year appended
 //  in parentheses if present.
 //  * BELOW (figure caption): source-specific default — FEN string -> "Position
-//  at move N, X to play"; PGN (board-after) -> "Position after move <last>";
+//  at move N, X to play"; PGN (diagram-after) -> "Position after move <last>";
 //  manual position/board dict -> no default.
-#import "/lib.typ": chess-diagram, board-after, position, starting-fen, parse-pgn
+#import "/lib.typ": chess-diagram, diagram-after, position, starting-fen, parse-pgn
 
 #set page(width: 13cm, height: auto, margin: 1.2cm)
 #set text(font: "Libertinus Serif", size: 10pt)
@@ -28,9 +28,9 @@
   e1: (kind: "king", color: "white"), e8: (kind: "king", color: "black"), d1: "Q",
 )), size: 3.2cm)
 
-== PGN source via board-after → players/year/last-move pulled from the game
+== PGN source via diagram-after → players/year/last-move pulled from the game
 #let game = parse-pgn(```
 [White "Morphy"] [Black "Allies"] [Date "1858.11.02"]
 1. e4 e5 2. Nf3 d6 3. d4 Bg4 *
 ```).first()
-#board-after(game, "3w", size: 3.2cm)
+#diagram-after(game, "3w", size: 3.2cm)

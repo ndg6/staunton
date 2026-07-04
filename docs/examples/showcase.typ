@@ -6,7 +6,7 @@
 //
 // Compile with the package root:  typst compile --root . examples/showcase.typ
 #import "/lib.typ": (
-  parse-pgn, board-after, board, chess-diagram, chess-diagram-outline,
+  parse-pgn, diagram-after, board, chess-diagram, chess-diagram-outline,
   mainline, game-result, position-after, chess-moves, set-chess-defaults, starting-fen,
 )
 
@@ -64,14 +64,14 @@
 
 = Diagrams from a game (auto captions, different piece sets)
 
-`board-after` pulls the roster and the last move into the labels automatically.
+`diagram-after` pulls the roster and the last move into the labels automatically.
 Each diagram below uses a different bundled piece set.
 
 #grid(
   columns: 2,
   gutter: 14pt,
-  board-after(g-main, "8w", size: 5cm, piece-set: "merida"),
-  board-after(g-main, final-locator(g-main), size: 5cm, piece-set: "cburnett"),
+  diagram-after(g-main, "8w", size: 5cm, piece-set: "merida"),
+  diagram-after(g-main, final-locator(g-main), size: 5cm, piece-set: "cburnett"),
 )
 
 = Label modes and orientation
@@ -96,8 +96,8 @@ The position right before the final blow, and the checkmate itself:
 #grid(
   columns: 2,
   gutter: 14pt,
-  board-after(g-mate, "3b", size: 5cm),
-  board-after(g-mate, final-locator(g-mate), size: 5cm, piece-set: "merida"),
+  diagram-after(g-mate, "3b", size: 5cm),
+  diagram-after(g-mate, final-locator(g-mate), size: 5cm, piece-set: "merida"),
 )
 
 = A "what-if" line that does not exist in any game
@@ -129,7 +129,7 @@ PGN `{[%cal …]}` / `{[%csl …]}` annotations are picked up automatically:
 [White "Demo"] [Black "Annotations"]
 1. e4 e5 2. Nf3 {[%cal Gf3e5,Bf1c4] [%csl Re5]} Nc6 *
 ```).first()
-#board-after(annotated, "2w", size: 6cm)
+#diagram-after(annotated, "2w", size: 6cm)
 
 = Document-wide styling
 
@@ -137,6 +137,6 @@ PGN `{[%cal …]}` / `{[%csl …]}` annotations are picked up automatically:
 After `set-chess-defaults`, subsequent diagrams inherit the green theme:
 
 #grid(columns: 2, gutter: 14pt,
-  board-after(g-main, "10w", size: 4.5cm),
-  board-after(g-main, "14w", size: 4.5cm),
+  diagram-after(g-main, "10w", size: 4.5cm),
+  diagram-after(g-main, "14w", size: 4.5cm),
 )

@@ -63,7 +63,7 @@
 
 // All mainline positions: (start, after ply 1, after ply 2, ...). Each SAN is
 // resolved once, so the move generator runs N times TOTAL here. Typst memoises a
-// pure call by its arguments, so repeated `position-after` / `board-after` on the
+// pure call by its arguments, so repeated `position-after` / `diagram-after` on the
 // SAME game reuse this list instead of re-walking from the start every time --
 // the "fast-track": O(N) once, then O(1) per mainline locator, rather than
 // O(N*K) generator runs for K diagrams. (Legality is still proven the first time
@@ -275,7 +275,7 @@
 /// *new* game (the source is never mutated). The variation is appended to that
 /// move's variations (its `into` index is the previous count) and numbered from
 /// the move's ply at render time. Legality is checked only if you later navigate
-/// into the line (e.g. via `board-after`).
+/// into the line (e.g. via `diagram-after`).
 ///
 /// - game (dictionary): a parsed game (from `parse-pgn`).
 /// - at (str, dictionary): the move to branch at — a *mainline* locator

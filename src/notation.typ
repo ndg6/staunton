@@ -16,7 +16,7 @@
 //   * a parsed game            -> its mainline SAN;
 //   * a move-text string       -> tokenised with `_split-movetext`;
 //   * a SAN array              -> used directly.
-// `from`/`to` are board-after-style mainline locators ("12w"/"12b"), inclusive;
+// `from`/`to` are diagram-after-style mainline locators ("12w"/"12b"), inclusive;
 // defaults are first/last move. (Variation-line ranges are not supported yet.)
 // ===========================================================================
 
@@ -253,7 +253,7 @@
 /// Render move notation from a game (mainline), a move-text string, or a SAN
 /// array. `from`/`to` are inclusive mainline locators ("12w"/"12b"); omit for the
 /// whole line. `line` addresses a specific *variation* to render on its own
-/// (a path locator / hops array like `board-after`'s; `from`/`to`/`result` do not
+/// (a path locator / hops array like `diagram-after`'s; `from`/`to`/`result` do not
 /// apply). Options: `figurine` (glyphs instead of letters), `lang`
 /// (`auto` -> the document language via `set-lang`; a code like "de"; or the
 /// string "auto" to follow `#set text(lang: ..)`; unknown -> en),

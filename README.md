@@ -52,14 +52,14 @@ and tables).
 And from a game:
 
 ```typ
-#import "@preview/staunton:0.1.0": parse-pgn, board-after, mainline
+#import "@preview/staunton:0.1.0": parse-pgn, diagram-after, mainline
 
 #let game = parse-pgn(```
 [White "Morphy"] [Black "NN"] [Result "1-0"]
 1. e4 e5 2. Nf3 d6 3. d4 *
 ```).first()
 
-#board-after(game, "3w")   // a diagram of the position after White's 3rd move
+#diagram-after(game, "3w")   // a diagram of the position after White's 3rd move
 ```
 
 ## Documentation
@@ -84,7 +84,7 @@ typst compile --root . docs/examples/showcase.typ showcase.pdf
 |---|---|
 | diagrams | `chess-diagram`, `diagram`, `board`, `chess-board` |
 | positions | `position`, `parse-fen`, `to-fen`, `starting-fen` |
-| games (PGN) | `parse-pgn`, `movetext`, `mainline`, `board-after`, `position-after`, `chess-moves` |
+| games (PGN) | `parse-pgn`, `movetext`, `mainline`, `diagram-after`, `position-after`, `chess-moves` |
 | annotate / build | `with-nags`, `with-comments`, `with-variation` |
 | notation | `chess-notation`, `notation` |
 | tables | `standings-table`, `crosstable-table`, `progress-table`, `games-by-event` (+ compute: `standings`, `crosstable`, `progress`) |

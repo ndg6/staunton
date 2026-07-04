@@ -543,21 +543,22 @@ Parsing is *lazy*: the roster (`tags`), the `result`, and the verbatim
 for a position. So a tournament file read only for results and never tokenises movetext.
 
 `chess-notation(game)` renders the moves (as text) the game already holds, and
-`board-after(game, loc)` draws the position at a locator:
+`diagram-after(game, loc)` renders a *diagram* (a referenceable `#figure`, like
+`chess-diagram`) of the position at a locator:
 
 #example(```typ
 #chess-notation(game)
 ```, stacked: true)
 
 #example(```typ
-#board-after(game, "3w", size: 4cm)
+#diagram-after(game, "3w", size: 4cm)
 ```)
 
 == Locators
 
 A *locator* addresses one position in a game. The simple form is a string —
 `"30w"` / `"30b"`, the position after White's / Black's 30th *mainline* move.
-`position-after(game, loc)`, `board-after(game, loc, ..)`, and
+`position-after(game, loc)`, `diagram-after(game, loc, ..)`, and
 `to-fen(game, locator: ..)` all take this simple string form.
 
 To address a move *inside a variation* (a PGN 'Recursive Annotation Variantion' or RAV), pass a *path* dict instead:
@@ -572,7 +573,7 @@ second, …). The top-level `at` is where you stop within the line you reached:
 ).first()
 // into variation 0 at White's move 1 (the
 // 1.d4 line), position after 2.c4:
-#board-after(
+#diagram-after(
   g,
   (line: ((at: "1w", into: 0),), at: "2w"),
   size: 3.4cm,
@@ -647,7 +648,7 @@ last:
 ```, stacked: true)
 
 `from` / `to` bound a slice of the *mainline*: they are the simple `"8b"` /
-`"12w"` locators, not the variation *path* form that `board-after` takes
+`"12w"` locators, not the variation *path* form that `diagram-after` takes
 (rendering variations is a separate control — see the next section). A `from` past
 the end or a `to` before `from` is a hard error.
 
@@ -691,7 +692,7 @@ layout:
 ```, stacked: true, left-align: true)
 
 To render *one specific* variation on its own, pass `line:` — a path locator
-(the same `board-after` shape, or just its hops array) that descends into the
+(the same `diagram-after` shape, or just its hops array) that descends into the
 variation. It is numbered from its real branch ply, so it reads exactly as you'd
 write it in analysis:
 
@@ -763,7 +764,7 @@ previous count — `0` for a move with none yet), so you can address into it
 afterwards and it composes with `with-nags`/`with-comments`. Together these let you
 build a whole annotated tree from a bare game, then render or navigate it exactly
 like a parsed PGN. Moves are *not* checked for legality when added — an illegal
-move surfaces only if you navigate into the line (`board-after`), matching the rest
+move surfaces only if you navigate into the line (`diagram-after`), matching the rest
 of the lazy model.
 
 == Exporting FEN
@@ -784,7 +785,7 @@ The demo game annotates its 2nd move:
 
 #example(```typ
 // move 2: {[%cal Gf3e5] [%csl Re5]}
-#board-after(game, "2w", annotations: true, size: 4cm)
+#diagram-after(game, "2w", annotations: true, size: 4cm)
 ```)
 
 The color letters (`G R Y B O`) resolve through the `annotation-colors` board
@@ -813,7 +814,7 @@ The switches above — `annotations`, `nags`, `comments`, `diagrams`, `variation
 game's embedded extras get interpreted at render time. Parsing itself stays
 lossless; these only decide what is *processed*, and (except `bold-mainline`)
 *all default off*. Each is a per-call argument (`auto` → the document default) on
-`notation` / `board-after`, or a document-wide default via `set-pgn-defaults`:
+`notation` / `diagram-after`, or a document-wide default via `set-pgn-defaults`:
 
 ```typ
 #set-pgn-defaults(annotations: true, nags: true, comments: true)
@@ -825,7 +826,7 @@ lossless; these only decide what is *processed*, and (except `bold-mainline`)
   align: (left, left),
   stroke: 0.5pt + rgb("#d9d9d2"),
   table.header([*key*], [*effect*]),
-  raw("annotations"), [`%cal`/`%csl` → arrows/highlights on `board-after`],
+  raw("annotations"), [`%cal`/`%csl` → arrows/highlights on `diagram-after`],
   raw("nags"), [render NAGs (`Nf3!`, `d4⩲`) in `notation`],
   raw("comments"), [include comment prose in `notation`],
   raw("diagrams"), [embed a board in `notation` after each move marked for one],
@@ -1008,7 +1009,7 @@ described once here.
   *string form* (rank-per-line rows, `.` = empty; one raw block or several row
   strings). `chess-*` reject a non-standard `variant`.
 
-/ `locator`: for `position-after`, `board-after`, `to-fen`, `move-san`,
+/ `locator`: for `position-after`, `diagram-after`, `to-fen`, `move-san`,
   `move-node`, and builder addresses — a *mainline* string `"12w"` / `"12b"`, or a
   *path* dict `(line: (..hops..), at: "<move>")`, each hop `(at: "<move>", into:
   <n>)` (descend into variation `n` at that move), to reach a move inside a (possibly nested)
@@ -1113,7 +1114,7 @@ source docstring: its signature, then every parameter with its type and default.
   ("/src/game.typ", "mainline"),
   ("/src/game.typ", "game-result"),
   ("/src/game.typ", "position-after"),
-  ("/lib.typ", "board-after"),
+  ("/lib.typ", "diagram-after"),
   ("/src/game.typ", "move-san"),
   ("/src/game.typ", "move-node"),
   ("/src/san.typ", "chess-moves"),

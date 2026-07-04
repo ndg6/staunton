@@ -318,7 +318,7 @@
 // Assemble a #figure around already-drawn board content `drawn`. The diagram
 // style is read inside the figure BODY (a context), so the #figure itself stays
 // a real, referenceable element. `drawn` may itself be context content (e.g. a
-// pgn-gated board), which composes fine. Shared by `diagram` and `board-after`.
+// pgn-gated board), which composes fine. Shared by `diagram` and `diagram-after`.
 #let _assemble(drawn, white, black, year, game-info, below, diagram-ov, lang, fig-args) = {
   let body = context {
     let dst = default-diagram-style + diagram-style-state.get() + diagram-ov
@@ -412,7 +412,7 @@
 /// - lang (auto, str): language for the supplement; `auto` follows the document.
 /// - ..args (arguments): board *style* options and `#figure` arguments.
 /// -> content
-#let board-after(game, locator, white: auto, black: auto, year: auto, caption: auto, annotations: auto, flip: false, game-info: auto, lang: auto, ..args) = {
+#let diagram-after(game, locator, white: auto, black: auto, year: auto, caption: auto, annotations: auto, flip: false, game-info: auto, lang: auto, ..args) = {
   let pos = position-after(game, locator)
   let cap = if caption != auto { caption } else { _pgn-caption(game, locator) }
   let w = if white != auto { white } else { game.tags.at("White", default: none) }

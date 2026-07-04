@@ -1,6 +1,6 @@
 // PGN (good) - a board for a position inside a NESTED variation (a variation
 // within a variation), addressed by a two-step path locator.
-#import "/lib.typ": parse-pgn, board-after
+#import "/lib.typ": parse-pgn, diagram-after
 
 #set page(width: 13cm, height: auto, margin: 1.2cm)
 #set text(font: "Libertinus Serif", size: 10pt)
@@ -17,4 +17,4 @@
 Into variation 0 at 1w (1.d4), then into variation 0 at 1b (1...Nf6), position
 after 2.c4:
 
-#board-after(game, (line: ((at: "1w", into: 0), (at: "1b", into: 0)), at: "2w"), size: 5cm)
+#diagram-after(game, (line: ((at: "1w", into: 0), (at: "1b", into: 0)), at: "2w"), size: 5cm)

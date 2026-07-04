@@ -32,7 +32,7 @@
 #assert(fig.contains("\u{265E}"), message: "black knight figurine for Black's move")
 #assert(fig.contains("\u{2657}") and not fig.contains("N") and not fig.contains("B"), message: "white bishop figurine; no Latin piece letters")
 
-// --- ranges (inclusive, board-after locators) ---
+// --- ranges (inclusive, diagram-after locators) ---
 #assert(s(g, to: "2b") == "1.e4 e5 2.Nf3 Nc6", message: "start -> 2b")
 #assert(s(g, from: "3w") == "3.Bb5 a6 4.Ba4 Nf6 5.O-O", message: "3w -> end")
 #assert(s(g, from: "2b", to: "3b") == "2...Nc6 3.Bb5 a6", message: "Black-start slice numbers as 2...")
