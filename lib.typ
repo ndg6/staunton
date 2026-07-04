@@ -12,14 +12,19 @@
 // renderer + one #figure wrapper.
 // ===========================================================================
 
-#import "src/coords.typ": parse-square, square-name, file-letter, file-letters, is-dark-square
-#import "src/pieces.typ": piece-content, fen-piece, piece-kinds, piece-colors, default-piece-set, known-piece-sets
-#import "src/variants.typ": variants, variant-spec, char-to-piece
-#import "src/fen.typ": parse-fen, starting-fen, position-fen
+// Public re-exports are curated: only the names documented as supported API are
+// re-exported cleanly. Names lib needs internally but does NOT support as public
+// API are imported with an `_`-prefixed alias, so the clean name is absent from
+// this module's surface (Typst 0.15 has no real export privacy, so this is the
+// convention). Everything else stays reachable via a deep `src/...` import.
+#import "src/coords.typ": parse-square, is-dark-square, square-name as _square-name
+#import "src/pieces.typ": piece-content
+#import "src/variants.typ": variant-spec as _variant-spec, char-to-piece as _char-to-piece
+#import "src/fen.typ": parse-fen, starting-fen, position-fen as _position-fen
 #import "src/engine.typ": legal-moves, apply, in-check
-#import "src/san.typ": san-to-move, play-san, chess-moves
+#import "src/san.typ": chess-moves
 #import "src/pgn.typ": parse-pgn, movetext
-#import "src/game.typ": mainline, position-after, game-result, game-start, move-san, move-node, with-nags, with-comments, with-variation
+#import "src/game.typ": mainline, position-after, game-result, move-san, move-node, with-nags, with-comments, with-variation
 // The text core lives in src/notation.typ; lib defines `notation` /
 // `chess-notation` on top so they can also embed diagrams (which needs the
 // lib-level `chess-diagram`).
@@ -37,9 +42,9 @@
   default-i18n-style, i18n-style-state, i18n-style-keys, set-lang,
   default-pgn-style, pgn-style-state, pgn-style-keys, set-pgn-defaults,
 )
-#import "src/i18n.typ": ui-string, resolve-lang
-#import "src/board.typ": render-board, default-board-size
-#import "src/annotations.typ": interpret-comment
+#import "src/i18n.typ": ui-string as _ui-string
+#import "src/board.typ": render-board as _render-board
+#import "src/annotations.typ": interpret-comment as _interpret-comment
 #import "src/tournament.typ": (
   games-by-event, standings, standings-table,
   crosstable, crosstable-table, progress, progress-table, chess-table-kind,
@@ -70,7 +75,7 @@
     let row = rows - 1 - i   // first line is the top rank
     for (col, ch) in cells.enumerate() {
       if ch == "." { continue }
-      squares.insert(square-name(col, row), char-to-piece(ch, variant: variant))
+      squares.insert(_square-name(col, row), _char-to-piece(ch, variant: variant))
     }
   }
   (squares: squares, cols: cols, rows: rows)
@@ -82,12 +87,12 @@
 //     single-letter abbreviation ("k"), case-insensitive; `color` is
 //     "white"/"black" (case-insensitive).
 #let _normalize-piece(value, variant) = {
-  if type(value) == str { return char-to-piece(value, variant: variant) }
+  if type(value) == str { return _char-to-piece(value, variant: variant) }
   assert(
     type(value) == dictionary and "kind" in value and "color" in value,
     message: "position(): each piece must be a letter (\"K\") or (kind: .., color: ..); got " + repr(value),
   )
-  let spec = variant-spec(variant)
+  let spec = _variant-spec(variant)
   let k = lower(value.kind)
   let kind = if k in spec.abbr { spec.abbr.at(k) } else if spec.kinds.contains(k) { k } else {
     panic("position(): unknown piece kind " + repr(value.kind) + " for variant \"" + variant + "\" (kinds: " + repr(spec.kinds) + ")")
@@ -114,7 +119,7 @@
 #let position(..args) = {
   let opts = args.named()
   let variant = opts.at("variant", default: "standard")
-  let spec = variant-spec(variant)
+  let spec = _variant-spec(variant)
   let pos = args.pos()
   assert(pos.len() >= 1, message: "position(): expected at least one positional argument")
 
@@ -208,7 +213,7 @@
 /// -> content
 #let board(source, flip: false, ..overrides) = {
   let b = _to-board(source)
-  render-board(b.squares, flip: flip, cols: b.cols, rows: b.rows, ..overrides.named())
+  _render-board(b.squares, flip: flip, cols: b.cols, rows: b.rows, ..overrides.named())
 }
 
 // Variant guard for the *-board / *-diagram wrappers: a position source must
@@ -246,10 +251,10 @@
 /// -> str
 #let to-fen(source, locator: none) = {
   assert(type(source) == dictionary, message: "to-fen: expected a position or a game dict")
-  if "squares" in source { return position-fen(source) }
+  if "squares" in source { return _position-fen(source) }
   if "movetext-raw" in source {
     assert(locator != none, message: "to-fen: a game needs a locator (e.g. locator: \"12w\")")
-    return position-fen(position-after(source, locator))
+    return _position-fen(position-after(source, locator))
   }
   panic("to-fen: source must be a position (has `squares`) or a game (has `movetext-raw`)")
 }
@@ -295,7 +300,7 @@
 // The colour letters resolve later through the board's `annotation-colors` map.
 // Returns (arrows, highlight).
 #let _pgn-annotations(game, locator) = {
-  let r = interpret-comment(move-node(game, locator).at("comment-after", default: none))
+  let r = _interpret-comment(move-node(game, locator).at("comment-after", default: none))
   (r.arrows, r.highlights)
 }
 
@@ -331,7 +336,7 @@
   let supp = if "supplement" in diagram-ov { diagram-ov.supplement } else {
     context {
       let s = (default-diagram-style + diagram-style-state.get()).supplement
-      if s == auto { ui-string(lang, "diagram-supplement") } else { s }
+      if s == auto { _ui-string(lang, "diagram-supplement") } else { s }
     }
   }
   figure(body, kind: chess-kind, supplement: supp, caption: below, ..fig-args)
@@ -513,7 +518,7 @@
       let parts = ()
       let run-start = lo
       for idx in range(lo, hi + 1) {
-        let info = interpret-comment(nodes.at(idx).at("comment-after", default: none))
+        let info = _interpret-comment(nodes.at(idx).at("comment-after", default: none))
         if info.diagram != none {
           parts.push(_notation-text(source, from: _loc-of-index(run-start), to: _loc-of-index(idx), result: false, ..run-opts))
           let cap = if info.diagram.caption == none { none } else { [#info.diagram.caption] }
@@ -553,7 +558,7 @@
 // `title`/the document value may be `auto` (use localized) or any content/none.
 #let _outline-title(title, doc-default, lang, key) = context {
   let t = if title != auto { title } else { doc-default }
-  if t == auto { ui-string(lang, key) } else { t }
+  if t == auto { _ui-string(lang, key) } else { t }
 }
 
 /// An outline listing only chess *diagrams* (figures of kind `"chess"`).

@@ -1023,7 +1023,7 @@ useful secondary format that will improve as Typst's own HTML support matures.
 
 This chapter collects the recurring *argument value shapes* and the full board /
 diagram / table option lists — the parameters that many functions share. The
-*Main functions* and *Behind the scenes* chapters that follow then give every
+*Main functions* and *Advanced functions* chapters that follow then give every
 public function's signature with each parameter's type and default, generated
 directly from the source docstrings. The guide chapters above show each feature
 in use with a rendered example; this reference part answers "what exactly can I
@@ -1191,67 +1191,50 @@ source docstring: its signature, then every parameter with its type and default.
   ("/src/style.typ", "set-piece-set"),
 ))
 
-// === Behind the scenes =======================================================
+// === Advanced functions ======================================================
 
 #pagebreak()
 
-= Behind the Scenes<behind-the-scenes>
+= Advanced Functions<behind-the-scenes>
 
-Lower-level public primitives — usable, but not the everyday entry points.
-Private helpers (`_`-prefixed functions) are intentionally omitted.
+A handful of supported *escape hatches* for programmatic use — not the everyday
+entry points, but part of the public API and safe to build on. They cover three
+needs: reading tournament *data* to build your own tables, driving the *engine*
+directly, and dropping a single piece *glyph* or computing a square in your own
+layout code.
 
-== Engine and Position Internals
-#show-fns((
-  ("/src/engine.typ", "legal-moves"),
-  ("/src/engine.typ", "apply"),
-  ("/src/engine.typ", "in-check"),
-  ("/src/fen.typ", "position-fen"),
-  ("/src/game.typ", "game-start"),
-))
+Everything else in `src/` (the position parser's internals, the SAN encoder, the
+renderer, the comment interpreter, the localization tables, …) is deliberately
+*not* re-exported from the package: those names are implementation details that
+may change between releases. If you truly need one, import it directly from its
+module — e.g. `#import "@preview/staunton:0.1.0/src/coords.typ": square-name` —
+with the understanding that it carries no stability promise.
 
-== SAN
-#show-fns((
-  ("/src/san.typ", "san-to-move"),
-  ("/src/san.typ", "play-san"),
-))
-
-== Tournament Data
+== Tournament data
+The `*-table` functions in #link(<tournament-tables>)[Tournament Tables] render standings,
+cross-tables and progress grids. These return the underlying *data* instead, so
+you can lay it out yourself.
 #show-fns((
   ("/src/tournament.typ", "standings"),
   ("/src/tournament.typ", "crosstable"),
   ("/src/tournament.typ", "progress"),
 ))
 
-== Rendering and Annotation
+== Engine
+Generate and apply moves, or test for check — for puzzles, analysis, or
+conditional rendering.
 #show-fns((
-  ("/src/board.typ", "render-board"),
-  ("/src/annotations.typ", "interpret-comment"),
+  ("/src/engine.typ", "legal-moves"),
+  ("/src/engine.typ", "apply"),
+  ("/src/engine.typ", "in-check"),
 ))
 
-== Coordinates
-#show-fns((
-  ("/src/coords.typ", "file-letters"),
-  ("/src/coords.typ", "file-letter"),
-  ("/src/coords.typ", "parse-square"),
-  ("/src/coords.typ", "square-name"),
-  ("/src/coords.typ", "is-dark-square"),
-))
-
-== Pieces and variants
+== Pieces and coordinates
+`piece-content` renders a single piece glyph for use in running prose; the two
+coordinate helpers convert between square names and `(col, row)` indices for
+hand-built overlays.
 #show-fns((
   ("/src/pieces.typ", "piece-content"),
-  ("/src/pieces.typ", "fen-piece"),
-  ("/src/pieces.typ", "piece-kinds"),
-  ("/src/pieces.typ", "piece-colors"),
-  ("/src/pieces.typ", "default-piece-set"),
-  ("/src/pieces.typ", "known-piece-sets"),
-  ("/src/variants.typ", "variant-spec"),
-  ("/src/variants.typ", "char-to-piece"),
-  ("/src/variants.typ", "variants"),
-))
-
-== Localization
-#show-fns((
-  ("/src/i18n.typ", "resolve-lang"),
-  ("/src/i18n.typ", "ui-string"),
+  ("/src/coords.typ", "parse-square"),
+  ("/src/coords.typ", "is-dark-square"),
 ))

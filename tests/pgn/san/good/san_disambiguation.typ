@@ -1,7 +1,10 @@
 // PGN/SAN (good) - the counterpart to the ambiguous-SAN failure: when two
 // pieces can reach the same square, a DISAMBIGUATED SAN resolves cleanly. Here
 // both knights (b1, f3) can go to d2; "Nbd2" (file hint) picks the b1 knight.
-#import "/lib.typ": parse-fen, san-to-move, square-name
+#import "/lib.typ": parse-fen
+// san-to-move / square-name are internal; test them against their own modules.
+#import "/src/san.typ": san-to-move
+#import "/src/coords.typ": square-name
 
 #set page(width: auto, height: auto, margin: 1cm)
 

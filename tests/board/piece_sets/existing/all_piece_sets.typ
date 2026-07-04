@@ -1,6 +1,7 @@
 // every bundled piece set, same position, side by side, so the sets can
 // be compared and a broken/missing piece in any of them would show up.
-#import "/lib.typ": board, known-piece-sets
+#import "/lib.typ": board
+#import "/src/pieces.typ": known-piece-sets  // internal enumeration, used by this sheet
 #import "/tests/board/_fixture.typ": test-fen
 
 #set page(width: auto, height: auto, margin: 1cm)

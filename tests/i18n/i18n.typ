@@ -4,10 +4,13 @@
 // document-settable and per-call overridable. notation's piece letters follow the
 // same global setting.
 #import "/lib.typ": (
-  ui-string, resolve-lang, set-lang, set-diagram-defaults, set-table-defaults,
+  set-lang, set-diagram-defaults, set-table-defaults,
   chess-diagram, standings-table, parse-pgn, starting-fen, chess-notation,
   default-diagram-style, diagram-style-state, default-table-style, table-style-state,
 )
+// ui-string / resolve-lang are internal (not part of the public lib surface);
+// this sheet tests them directly against their own module.
+#import "/src/i18n.typ": ui-string, resolve-lang
 
 #set page(width: auto, height: auto, margin: 1cm)
 

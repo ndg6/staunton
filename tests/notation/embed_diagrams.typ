@@ -3,7 +3,8 @@
 // chess-diagram after each move whose comment carries a diagram marker (ChessBase
 // #/#[caption], Scid [d]/[D], \diagram, %%diagram), using that move's caption and
 // (when annotations on) its %cal/%csl. Default off -> plain text, unchanged.
-#import "/lib.typ": parse-pgn, notation, chess-notation, set-pgn-defaults, movetext, interpret-comment
+#import "/lib.typ": parse-pgn, notation, chess-notation, set-pgn-defaults, movetext
+#import "/src/annotations.typ": interpret-comment  // internal helper, tested directly
 
 #set page(width: 14cm, height: auto, margin: 1cm)
 #set text(font: "Libertinus Serif", size: 10pt)
