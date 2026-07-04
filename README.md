@@ -6,7 +6,7 @@ engine), write localized move **notation**, and generate **tournament tables** �
 all as referenceable `#figure`s, with ready-made **outlines** (lists of diagrams
 and tables).
 
-![gallery](docs/img/gallery.png)
+![gallery](https://raw.githubusercontent.com/ndg6/staunton/main/docs/img/gallery.png)
 
 ## Features
 
@@ -69,10 +69,10 @@ And from a game:
 
 - **User manual** — the complete reference (every function, option, and example),
   with each feature shown as the code you type beside the board it produces.
-  Read or download the compiled **[PDF](docs/manual.pdf)**, or build it yourself
-  from its Typst source, [`docs/manual.typ`](docs/manual.typ). The manual is part
+  Read or download the compiled **[PDF](https://github.com/ndg6/staunton/blob/main/docs/manual.pdf)**, or build it yourself
+  from its Typst source, [`docs/manual.typ`](https://github.com/ndg6/staunton/blob/main/docs/manual.typ). The manual is part
   of the repo only — it is not shipped in the package bundle.
-- **[Showcase](docs/examples/showcase.typ)** — a runnable capability tour.
+- **[Showcase](https://github.com/ndg6/staunton/blob/main/docs/examples/showcase.typ)** — a runnable capability tour.
 
 Compile the manual and the showcase locally with the package folder as root:
 
@@ -105,7 +105,7 @@ and [LICENSE-PIECES](LICENSE-PIECES). The package manifest declares
 
 A `"unicode"` glyph fallback needs no SVGs. The renderer accepts any set name, so
 you can add your own piece set — see the *Pieces and fonts* section of the
-[manual](docs/manual.typ).
+[manual](https://github.com/ndg6/staunton/blob/main/docs/manual.typ).
 (Other popular lichess sets carry non-commercial licenses and are not bundled.)
 
 ## Repository layout
