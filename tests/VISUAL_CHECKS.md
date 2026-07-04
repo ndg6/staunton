@@ -64,6 +64,21 @@ These are not under `tests/out/`; build them separately.
 
 - [ ] `docs/manual.pdf` — every framed example's board matches its code (rebuild:
       `typst compile --root . docs/manual.typ docs/manual.pdf`).
+- [ ] `docs/manual.pdf` — specific examples revised for the 0.1.0 findings pass:
+      - *The Board → Flip*: two boards side by side, both with `"border"` labels and
+        the `"brown"` theme (dark-brown band, creme labels). Left is normal
+        orientation, right is `flip: true`; confirm `a1` moves from lower-left to
+        upper-right so the coordinate flip is obvious.
+      - *The Board → Labels*: the three `border-theme` looks read as described —
+        `"square"` blends with the board, `"brown"` is dark-brown + creme, `"dark"`
+        is charcoal + light-grey (only the `"brown"` one is rendered inline; the
+        prose describes the others).
+      - *The Board → Piece Sets and Fonts*: the sentence starting "The renderer
+        accepts *any* set name…" no longer has stretched, widely-spaced words — the
+        `piece_sets/<name>/…` path now sits on its own display-code line.
+      - *Games → Drawing Annotations in PGNs*: the new combined example shows the
+        PGN's green `f3→e5` arrow and red `e5` highlight **together with** a
+        programmatic `b1→c3` arrow and a circle on `d4` on one board.
 - [ ] `docs/manual.pdf` structure & cross-refs — the *Document-Wide Defaults* chapter
       (formerly "Document-Wide Style") covers the five default buckets; the canonical
       **PGN Handling** switch table now lives in the *Games* chapter, not the defaults
@@ -94,7 +109,9 @@ These are not under `tests/out/`; build them separately.
       no copyright line. The **Table of Contents** page (page 2) has an **empty**
       header right side — the outline's own "Guide"/"API Reference" titles must not
       appear there. The first page after the cover is numbered **2** (pagination
-      skips the cover).
+      skips the cover). In **both** outline columns the level-1 (chapter) entries are
+      **bold**, with a little extra space above each so a chapter groups with its
+      indented level-2 children; level-2 entries stay regular weight.
 - [ ] showcase — `typst compile --root . docs/examples/showcase.typ showcase.pdf`,
       then skim it.
 - [ ] HTML export — `typst compile --root . --features html --format html

@@ -202,6 +202,14 @@
 // Reference read as distinct parts. The `<api-reference>` label is the boundary:
 // everything before it is Guide, the reference chapter and everything at/after it
 // is Reference.
+// Level-1 (chapter) entries are set bold, with extra space above each (so a new
+// chapter stands off from the previous one) and a smaller space below (so the bold
+// chapter line separates a touch from its own indented level-2 children).
+#show outline.entry.where(level: 1): it => {
+  v(0.7em, weak: false)     // firm gap above a new chapter (also spaces off the title)
+  strong(it)
+  v(0.3em, weak: false)     // firm gap below, before the chapter's level-2 children
+}
 #grid(columns: (1fr, 1fr), column-gutter: 2em,
   outline(
     title: [Guide],
@@ -225,7 +233,7 @@ Package *staunton* aims to provide a complete, convenient but also flexible solu
 for chess publications. It provides a full set of features, including:
 
 - *boards and diagrams* — pure boards with labels, highlights, arrows, an optional grid, 
-  flexible sizing, custom colours, and bundled SVG piece sets (or a Unicode fallback); and building on that diagrams with captions, figure counters, and referenceable labels;
+  flexible sizing, custom colors, and bundled SVG piece sets (or a Unicode fallback); and building on that diagrams with captions, figure counters, and referenceable labels;
 - *games from PGN* — a sophisticated parser creates single games or an array of games,  
   from which you create positions by "locators" (mainline and variations), move play-out, and FEN export;
 - *move notation* — from parsed games you get move text output with localized piece letters, 
@@ -299,7 +307,7 @@ non-standard source). Use `board` inline in text or inside your own layout; reac
 for a *diagram* (next chapter) when you want a captioned, referenceable figure.
 
 The rest of this chapter covers the board's drawing options: labels, highlights,
-arrows, the grid, coordinates, size, colours, orientation, and piece sets — all of
+arrows, the grid, coordinates, size, colors, orientation, and piece sets — all of
 which a `chess-diagram` accepts too.
 
 == Labels
@@ -316,6 +324,18 @@ themed band, styled by `border-theme`). `labels: false` suppresses labels comple
   size: 3.8cm,
 )
 ```)
+
+In `"border"` mode, `border-theme` picks the band's look — the fill color and the
+contrasting label color:
+
+- `"square"` (default) — the band reuses the board's own `dark` square color with
+  `light`-colored labels, so the border blends into the board;
+- `"brown"` — a very dark-brown band with creme labels (a warm, classic frame);
+- `"dark"` — a charcoal band with light-grey labels (suits dark backgrounds).
+
+`border-theme` is a normal board option: set it per call as above, or document-wide
+with `set-board-defaults(border-theme: ..)` / `set-chess-defaults` (see
+@document-style). It only takes effect with `label-mode: "border"`.
 
 == Highlights
 
@@ -398,7 +418,7 @@ without being told the geometry, and shrinks to fit if asked for more than fits.
 
 == Colours
 
-`light` and `dark` set the two square colours:
+`light` and `dark` set the two square colors:
 
 #example(```typ
 #board(
@@ -415,15 +435,31 @@ without being told the geometry, and shrinks to fit if asked for more than fits.
 flip with it. Orientation is a *per-board* choice — `flip` is the one setting that
 cannot be made a document default (see *Document-wide style*).
 
+Shown side by side with `"border"` labels, the flipped coordinates are easy to
+spot — `a1` moves from the lower-left to the upper-right:
+
 #example(```typ
-#board("8/8/8/3k4/3K4/8/8/8", flip: true, size: 3.4cm)
-```)
+#grid(columns: 2, gutter: 8pt,
+  board("8/8/8/3k4/3K4/8/8/8",
+    label-mode: "border", border-theme: "brown", size: 3.4cm),
+  board("8/8/8/3k4/3K4/8/8/8", flip: true,
+    label-mode: "border", border-theme: "brown", size: 3.4cm),
+)
+```, stacked: true)
 
 == Piece Sets and Fonts
 
-Pieces are drawn from bundled *SVG piece sets*. Two ship with the package, both
-GPLv2+: `cburnett` (default) and `merida`. Choose one with `piece-set:` per board,
-or document-wide with `set-piece-set` (see @document-style):
+Pieces are normally drawn from bundled *SVG piece sets* — the preferred rendering:
+vector art that stays crisp at any board size and looks the same across platforms.
+A *Unicode glyph* set is provided only as a *fallback* (see below), for when you
+want no SVG dependency or a font-native look.
+
+Two SVG sets ship with the package: `cburnett` (default) and `merida`. Both are
+distributed under a license that *permits commercial use* (GPLv2+) — a deliberate
+constraint: staunton only bundles piece art whose license does not forbid
+commercial publication, so you can use it freely in commercial work. Choose one
+with `piece-set:` per board, or document-wide with `set-piece-set` (see
+@document-style):
 
 #example(```typ
 #grid(columns: 3, gutter: 8pt, align: bottom,
@@ -433,11 +469,15 @@ or document-wide with `set-piece-set` (see @document-style):
 )
 ```, stacked: true)
 
-The renderer accepts *any* set name and loads
-`src/assets/piece_sets/<name>/{w,b}{K,Q,R,B,N,P}.svg` on demand, so you can add a
-set by dropping such a folder into your copy and passing its name. `piece-set:
-"unicode"` (or `none`) selects the glyph fallback — solid Unicode chess glyphs
-distinguished by fill and a contrasting stroke; it needs a font carrying them.
+The renderer accepts *any* set name and loads a piece's SVG on demand from
+
+```
+src/assets/piece_sets/<name>/{w,b}{K,Q,R,B,N,P}.svg
+```
+
+so you can add a set by dropping such a folder into your copy and passing its name.
+`piece-set: "unicode"` (or `none`) selects the glyph fallback — solid Unicode chess
+glyphs distinguished by fill and a contrasting stroke; it needs a font carrying them.
 
 The rank/file *labels* are drawn in their own sans-serif, set by the `label-font`
 board option (a family or a fallback list), independent of the document font. The
@@ -794,6 +834,22 @@ The demo game annotates its 2nd move:
 The color letters (`G R Y B O`) resolve through the `annotation-colors` board
 style; annotations merge with any `arrows` / `highlight` you pass explicitly.
 
+*PGN marks and your own marks, combined.* The two sources add up — the marks a PGN
+comment carries (`annotations: true`) and the `arrows` / `highlight` you pass on the
+same call are drawn *together* on one board. So you can take an author's annotated
+game and layer your own emphasis on top without editing the PGN. Here the green
+`f3→e5` arrow and red `e5` highlight come from the comment, while the `b1→c3` arrow
+and the circle on `d4` are added programmatically:
+
+#example(```typ
+#diagram-after(game, "2w",
+  annotations: true,                              // Gf3e5 + Re5, from the PGN
+  arrows: (("b1", "c3"),),                        // added here
+  highlight: ((square: "d4", shape: "circle"),),  // added here
+  size: 4cm,
+)
+```)
+
 *With embedded diagrams.* The `diagrams` switch (PGN handling) makes
 `notation(diagrams: true)` splice a board after each move whose comment carries a
 diagram marker. If that *same* comment also holds `%cal`/`%csl` *and*
@@ -836,6 +892,17 @@ lossless; these only decide what is *processed*, and (except `bold-mainline`)
   raw("variations"), [splice variations (RAVs) into `notation`, in parentheses],
   raw("bold-mainline"), [render `notation` mainline moves bold (variations stay normal)],
 )
+
+*Why most of these default off.* For a typical publication you want clean, readable
+move text: the mainline, set as prose. A PGN's *embedded diagrams*, *drawing
+annotations*, and free-form *comments* are usually working notes that would clutter
+that output, so they stay off unless you deliberately ask for them. *NAGs* sit in
+between — a `!` or `⩲` is often wanted in a published line — but they, too, default
+off so nothing appears that you didn't request. *Variations*, by contrast, are a
+first-class part of chess writing: staunton fully supports them, and whether a
+render shows *only the mainline* or *the variations as well* is exactly the choice
+`variations` gives you (per call, or document-wide) — see *Variations* under
+@games. In short: parsing keeps everything; rendering shows only what you opt into.
 
 `set-chess-defaults` routes these same keys through its umbrella, alongside the
 board, diagram, table and language buckets — see @document-style.
@@ -923,7 +990,7 @@ Defaults live in *five* buckets, each with its own setter:
   align: (left, left, left),
   stroke: 0.5pt + rgb("#d9d9d2"),
   table.header([*bucket*], [*setter*], [*controls*]),
-  [board], raw("set-board-defaults"), [square colours, labels, piece set, highlights, arrows, grid, size — full list in @board-options],
+  [board], raw("set-board-defaults"), [square colors, labels, piece set, highlights, arrows, grid, size — full list in @board-options],
   [diagram], raw("set-diagram-defaults"), [the diagram figure: game-info line, supplement, outline title],
   [table], raw("set-table-defaults"), [the table figure: supplement, outline title, title gap],
   [language], raw("set-lang"), [the document language (localized strings)],
@@ -1061,7 +1128,7 @@ described once here.
   `! ? !! ?? !? ?!` (sugar for `$1`–`$6`), or an array of those; a comment value is
   a plain string.
 
-/ annotation colour letters: for PGN `%cal`/`%csl` and the `annotation-colors`
+/ annotation color letters: for PGN `%cal`/`%csl` and the `annotation-colors`
   map — `G` `R` `Y` `B` `O`.
 
 == Board Style Options <board-options>
@@ -1074,7 +1141,7 @@ Accepted by `board` / `chess-board` / `diagram` / `chess-diagram` per call, and 
   inset: 5pt, align: left + horizon, stroke: 0.5pt + rgb("#d9d9d2"),
   table.header([*option*], [*default*], [*meaning*]),
   raw("size"), raw("auto"), [board size: a `length`, a `ratio` of the width, or `auto`],
-  [`light` / `dark`], [tan theme], [the two square fill colours],
+  [`light` / `dark`], [tan theme], [the two square fill colors],
   raw("labels"), raw("true"), [show rank/file labels],
   raw("label-font"), [`("Arial", "DejaVu Sans Mono")`], [label font — a family or a fallback list],
   raw("label-mode"), raw("\"on-square\""), [`"on-square"` / `"outside"` / `"border"`],
@@ -1087,13 +1154,13 @@ Accepted by `board` / `chess-board` / `diagram` / `chess-diagram` per call, and 
   raw("piece-scale"), raw("0.95"), [fraction of a square a piece occupies],
   [`highlight` / `arrows`], raw("()"), [squares / arrows to draw — see the value shapes],
   raw("highlight-shape"), raw("\"filled\""), [default shape for plain-string highlight entries],
-  [`highlight-fill` / `highlight-transparency`], [green, `75%`], [filled-highlight colour and its transparency],
-  [`cross-color` / `circle-color`], [red / green], [cross / circle stroke colours],
+  [`highlight-fill` / `highlight-transparency`], [green, `75%`], [filled-highlight color and its transparency],
+  [`cross-color` / `circle-color`], [red / green], [cross / circle stroke colors],
   [`cross-width` / `circle-width`], raw("2pt"), [cross / circle stroke widths],
-  [`arrow-color` / `arrow-transparency`], [green, `85%`], [default arrow colour and its transparency],
+  [`arrow-color` / `arrow-transparency`], [green, `85%`], [default arrow color and its transparency],
   raw("arrow-width"), raw("auto"), [arrow shaft width; `auto` scales with the square],
-  raw("annotation-colors"), [G/R/Y/B/O map], [PGN `%cal`/`%csl` colour-letter → colour],
-  raw("label-color"), raw("luma(90)"), [`"outside"`-mode strip label colour],
+  raw("annotation-colors"), [G/R/Y/B/O map], [PGN `%cal`/`%csl` color-letter → color],
+  raw("label-color"), raw("luma(90)"), [`"outside"`-mode strip label color],
   raw("label-border-ratio"), raw("0.07"), [`"border"`-mode band width, as a board fraction],
   [`white-fill` / `black-fill` / `piece-font`], [—], [the `"unicode"` glyph fallback only],
   raw("baseline-inset"), raw("0.20"), [glyph fallback: baseline lift (square fraction)],
