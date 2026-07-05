@@ -17,6 +17,9 @@ and tables).
 - **PGN**: parse multi-game files, navigate the mainline and (nested) variations
   by locator, play "what-if" lines, export FEN. Lazy parsing stays fast on large
   files.
+- **Chess960 / Fischer Random**: the same board, engine, PGN pipeline and notation
+  handle 960 — X-FEN castling, the FRC PGN tags (`Variant` / `SetUp` / `FEN` /
+  `FRCPosition`), and start positions by Scharnagl number.
 - **Notation**: numbered movetext with **variations** (inline or indented),
   figurine glyphs, NAGs, comments, embedded diagrams, and **localized piece
   letters**.
@@ -85,9 +88,9 @@ typst compile --root . docs/examples/showcase.typ showcase.pdf
 
 | area | entry points |
 |---|---|
-| diagrams | `chess-diagram`, `diagram`, `board`, `chess-board` |
-| positions | `position`, `parse-fen`, `to-fen`, `starting-fen` |
-| games (PGN) | `parse-pgn`, `movetext`, `mainline`, `diagram-after`, `position-after`, `chess-moves` |
+| diagrams | `chess-diagram`, `diagram`, `board`, `chess-board`, `chess960-board`, `chess960-diagram` |
+| positions | `position`, `parse-fen`, `to-fen`, `starting-fen`, `chess960-start`, `chess960-start-fen` |
+| games (PGN) | `parse-pgn`, `movetext`, `mainline`, `diagram-after`, `position-after`, `chess-moves`, `game-start`, `game-variant` |
 | annotate / build | `with-nags`, `with-comments`, `with-variation` |
 | notation | `chess-notation`, `notation` |
 | tables | `standings-table`, `crosstable-table`, `progress-table`, `games-by-event` (+ compute: `standings`, `crosstable`, `progress`) |
@@ -134,9 +137,23 @@ header must error with that message, any other must compile. Files/dirs prefixed
 - More bundled themes / piece sets and an ergonomic API for user-installed sets.
 - A move→SAN encoder (so notation can be generated from arbitrary positions).
 - Engine performance (the narrow `legal-moves`/`apply` seam can swap to WASM).
-- Additional chess variants for western and non-western chess (the `position` / `board` pipeline is variant-aware already).
+- More chess variants: Chess960 / Fischer Random ships in 0.2.0; non-western variants (e.g. xiangqi) are next (the `position` / `board` pipeline is variant-aware already).
 
 ## Changelog
+
+### 0.2.0 (unreleased)
+
+- **Chess960 / Fischer Random**: variant-named `chess960-board` / `chess960-diagram`;
+  start positions by Scharnagl number (`chess960-start`, `chess960-start-fen`, 0–959,
+  518 = standard); X-FEN castling in `parse-fen` / `to-fen`; PGN recognition of
+  `[Variant]`, `[SetUp]`, `[FEN]` and `[FRCPosition]` / `[Chess960Position]`
+  (`game-variant`, `game-start`). The engine's castling is generalised, so 960
+  shares the standard move generator.
+- **Changed**: `position.castling` is now the castling rook's *file index* (or
+  `none`) per side, not a boolean — breaking if you read that field directly.
+  `to-fen` now emits X-FEN castling when `KQkq` is ambiguous and writes en-passant
+  targets strictly (only when a capture is available); standard positions are
+  otherwise unchanged and still round-trip exactly.
 
 ### 0.1.0
 

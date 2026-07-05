@@ -1,13 +1,13 @@
 // Source for README's gallery image. Regenerate with:
 //   typst compile --root . --format png --ppi 160 docs/img/gallery.typ docs/img/gallery.png
-#import "/lib.typ": board, starting-fen
+#import "/lib.typ": board, starting-fen, chess960-start-fen
 
 #set page(width: auto, height: auto, margin: 10pt, fill: white)
 
 #let cap(body) = align(center, text(size: 9pt, font: "Libertinus Serif", body))
 
 #grid(
-  columns: 3,
+  columns: 4,
   column-gutter: 16pt,
   align: bottom,
 
@@ -38,4 +38,9 @@
       border-theme: "brown",
     ),
     cap[Flipped · border labels]),
+
+  // 4) a Chess960 / Fischer Random start (position 0: BBQNNRKR)
+  stack(spacing: 6pt,
+    board(chess960-start-fen(0), size: 3.4cm),
+    cap[Chess960 start]),
 )
