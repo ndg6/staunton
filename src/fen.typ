@@ -18,8 +18,102 @@
 // for drawing; the rest is carried for later move-generation / display).
 // ===========================================================================
 
-#import "coords.typ": square-name
+#import "coords.typ": square-name, parse-square, file-letter
 #import "pieces.typ": fen-piece, kind-letters
+
+// ---- castling helpers (rook-file model) -----------------------------------
+// Castling rights are stored per side as the *rook's file index* (0..cols-1) or
+// `none` for "no right". This subsumes standard chess (rooks on a/h) and
+// Chess960 / X-FEN (rook on any file), so the engine needs no variant branch.
+// The `king`/`queen` key still names the SIDE (king-side = rook on the h-side of
+// the king; queen-side = a-side).
+
+// (col, row) of `color`'s king in a squares dict, or `none`.
+#let _find-king-cr(board, color) = {
+  for (name, p) in board {
+    if p.kind == "king" and p.color == color {
+      let s = parse-square(name)
+      return (s.col, s.row)
+    }
+  }
+  none
+}
+
+// Ascending list of the file indices of `color`'s rooks on row `row`.
+#let _rook-cols-on(board, color, row) = {
+  let cols = ()
+  for (name, p) in board {
+    if p.kind == "rook" and p.color == color {
+      let s = parse-square(name)
+      if s.row == row { cols.push(s.col) }
+    }
+  }
+  cols.sorted()
+}
+
+// File index (0..7) of a lowercase castling file letter a..h, or `none`.
+#let _castle-file-index(lo) = {
+  ("a", "b", "c", "d", "e", "f", "g", "h").position(x => x == lo)
+}
+
+// Parse the FEN castling field into the rook-file model. `K`/`Q`/`k`/`q` resolve
+// to the OUTERMOST rook on that side of the king (X-FEN convention); an explicit
+// file letter (`A`..`H` / `a`..`h`) names that rook directly. Unresolvable
+// tokens (no matching rook/king) are silently skipped.
+#let _parse-castling(cs, board) = {
+  let out = (white-king: none, white-queen: none, black-king: none, black-queen: none)
+  if cs == "-" or cs == "" { return out }
+  let kings = (white: _find-king-cr(board, "white"), black: _find-king-cr(board, "black"))
+  for ch in cs.clusters() {
+    let color = if ch == upper(ch) { "white" } else { "black" }
+    let king = kings.at(color)
+    if king == none { continue }
+    let lo = lower(ch)
+    if lo == "k" {
+      let r = _rook-cols-on(board, color, king.at(1)).filter(c => c > king.at(0))
+      if r.len() > 0 { out.insert(color + "-king", r.last()) }
+    } else if lo == "q" {
+      let r = _rook-cols-on(board, color, king.at(1)).filter(c => c < king.at(0))
+      if r.len() > 0 { out.insert(color + "-queen", r.first()) }
+    } else {
+      let col = _castle-file-index(lo)
+      if col != none {
+        out.insert(color + "-" + (if col > king.at(0) { "king" } else { "queen" }), col)
+      }
+    }
+  }
+  out
+}
+
+// Serialise the rook-file castling model back to an (X-)FEN field. Emits the
+// conventional letter (K/Q/k/q) when the castling rook is the OUTERMOST rook of
+// its colour on that side of the king (so standard positions stay `KQkq`), and
+// the rook's file letter otherwise (the promotion-rook ambiguity). A legacy
+// boolean `true` is read as the standard file for that side.
+#let _castling-str(position) = {
+  let c = position.at("castling", default: (:))
+  let sq = position.squares
+  let cols = position.at("cols", default: 8)
+  let out = ""
+  for (color, side, letter) in (("white", "king", "K"), ("white", "queen", "Q"), ("black", "king", "k"), ("black", "queen", "q")) {
+    let rf = c.at(color + "-" + side, default: none)
+    if rf == true { rf = if side == "king" { cols - 1 } else { 0 } }
+    if rf == none or rf == false { continue }
+    let king = _find-king-cr(sq, color)
+    if king == none { out += letter; continue }
+    let rooks = _rook-cols-on(sq, color, king.at(1))
+    let outer = if side == "king" {
+      let r = rooks.filter(x => x > king.at(0))
+      if r.len() > 0 { r.last() } else { none }
+    } else {
+      let r = rooks.filter(x => x < king.at(0))
+      if r.len() > 0 { r.first() } else { none }
+    }
+    if outer != none and rf == outer { out += letter }
+    else { out += (if color == "white" { upper(file-letter(rf)) } else { file-letter(rf) }) }
+  }
+  if out == "" { "-" } else { out }
+}
 
 /// Parse a FEN string into a `position` dict — the inverse of `to-fen`. The
 /// result carries the board (square name → `(kind, color)`) plus the side to
@@ -62,12 +156,7 @@
   assert(turn == "w" or turn == "b", message: "side to move must be 'w' or 'b', got: " + turn)
 
   let cs = if parts.len() > 2 { parts.at(2) } else { "-" }
-  let castling = (
-    white-king: cs.contains("K"),
-    white-queen: cs.contains("Q"),
-    black-king: cs.contains("k"),
-    black-queen: cs.contains("q"),
-  )
+  let castling = _parse-castling(cs, board)
 
   let ep = if parts.len() > 3 and parts.at(3) != "-" { lower(parts.at(3)) } else { none }
   let halfmove = if parts.len() > 4 { int(parts.at(4)) } else { 0 }
@@ -132,13 +221,7 @@
 
   // fields 2-6
   let turn = position.at("turn", default: "w")
-  let c = position.at("castling", default: (:))
-  let cstr = ""
-  if c.at("white-king", default: false) { cstr += "K" }
-  if c.at("white-queen", default: false) { cstr += "Q" }
-  if c.at("black-king", default: false) { cstr += "k" }
-  if c.at("black-queen", default: false) { cstr += "q" }
-  if cstr == "" { cstr = "-" }
+  let cstr = _castling-str(position)
   let ep = position.at("en-passant", default: none)
   let epstr = if ep == none { "-" } else { ep }
   let half = position.at("halfmove", default: 0)

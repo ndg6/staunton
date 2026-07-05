@@ -213,35 +213,48 @@
   moves
 }
 
-// Castling moves, fully validated (rights, empty squares, not through/into check).
+// Standard 960 castling destinations: king -> g/c file, rook -> f/d file. These
+// hold for standard chess too (king e1->g1/c1, rook h1->f1 / a1->d1).
+#let _KING-DEST = (castle-k: 6, castle-q: 2)
+#let _ROOK-DEST = (castle-k: 5, castle-q: 3)
+
+// Legality of one castle (rook-file model), generalised for Chess960: the king
+// (file `kf`) and the castling rook (file `rf`) sit anywhere on rank `rank`; they
+// swing to fixed files (`kdest`/`rdest`). Every square the king OR the rook
+// traverses must be empty except for those two pieces themselves, and no square
+// the king passes through (or lands on) may be attacked.
+#let _castle-ok(board, color, opp, kf, rf, rank, kdest, rdest) = {
+  let rook = _at(board, rf, rank)
+  if rook == none or rook.kind != "rook" or rook.color != color { return false }
+  let span(a, b) = range(calc.min(a, b), calc.max(a, b) + 1)
+  for c in span(kf, kdest) + span(rf, rdest) {
+    if c == kf or c == rf { continue }   // the king / rook may occupy their own squares
+    if _at(board, c, rank) != none { return false }
+  }
+  for c in span(kf, kdest) {
+    if is-square-attacked(board, c, rank, opp) { return false }  // includes "out of check" at kf
+  }
+  true
+}
+
+// Castling moves, fully validated (rights, empty path, not through/into check).
+// Variant-agnostic: reads the rook's file from the rook-file castling model, so
+// standard chess and Chess960 share this code path.
 #let _castling-moves(position) = {
   let board = position.squares
   let color = if position.turn == "w" { "white" } else { "black" }
   let opp = _other(color)
-  let rank = if color == "white" { 0 } else { 7 }
   let moves = ()
-  let king = _at(board, 4, rank)
-  if king == none or king.kind != "king" or king.color != color { return moves }
-  if is-square-attacked(board, 4, rank, opp) { return moves } // can't castle out of check
+  let king = _find-king(board, color)
+  if king == none { return moves }
+  let (kf, rank) = king
   let cr = position.castling
-  let can-k = if color == "white" { cr.white-king } else { cr.black-king }
-  let can-q = if color == "white" { cr.white-queen } else { cr.black-queen }
-  // king-side
-  if can-k and _at(board, 5, rank) == none and _at(board, 6, rank) == none {
-    let rook = _at(board, 7, rank)
-    if rook != none and rook.kind == "rook" and rook.color == color {
-      if not is-square-attacked(board, 5, rank, opp) and not is-square-attacked(board, 6, rank, opp) {
-        moves.push(_mv(4, rank, 6, rank, "king", color, kind: "castle-k"))
-      }
-    }
-  }
-  // queen-side
-  if can-q and _at(board, 3, rank) == none and _at(board, 2, rank) == none and _at(board, 1, rank) == none {
-    let rook = _at(board, 0, rank)
-    if rook != none and rook.kind == "rook" and rook.color == color {
-      if not is-square-attacked(board, 3, rank, opp) and not is-square-attacked(board, 2, rank, opp) {
-        moves.push(_mv(4, rank, 2, rank, "king", color, kind: "castle-q"))
-      }
+  for (side, kind) in (("king", "castle-k"), ("queen", "castle-q")) {
+    let rf = cr.at(color + "-" + side, default: none)
+    if rf == none or rf == false { continue }
+    if rf == true { rf = if side == "king" { 7 } else { 0 } }
+    if _castle-ok(board, color, opp, kf, rf, rank, _KING-DEST.at(kind), _ROOK-DEST.at(kind)) {
+      moves.push(_mv(kf, rank, _KING-DEST.at(kind), rank, "king", color, kind: kind))
     }
   }
   moves
@@ -268,34 +281,41 @@
     // captured pawn sits beside the destination, on the mover's origin rank
     board.remove(square-name(tc, fr))
   }
-  let placed = if move.kind == "promotion" { (kind: move.promotion, color: color) } else { (kind: move.piece, color: color) }
-  board.insert(to-name, placed) // overwrites a normally-captured piece
 
-  if move.kind == "castle-k" {
-    board.remove(square-name(7, fr))
-    board.insert(square-name(5, fr), (kind: "rook", color: color))
-  } else if move.kind == "castle-q" {
-    board.remove(square-name(0, fr))
-    board.insert(square-name(3, fr), (kind: "rook", color: color))
+  let cr = position.castling
+  if move.kind == "castle-k" or move.kind == "castle-q" {
+    // Atomic castle (Chess960-safe): remove both castling pieces, then place
+    // both, so the king's and rook's squares may overlap/swap. The king is
+    // already removed above; look the rook's file up from the rights model.
+    let side = if move.kind == "castle-k" { "king" } else { "queen" }
+    let rf = cr.at(color + "-" + side, default: none)
+    if rf == none or rf == true or rf == false { rf = if side == "king" { 7 } else { 0 } }
+    board.remove(square-name(rf, fr))
+    board.insert(square-name(_KING-DEST.at(move.kind), fr), (kind: "king", color: color))
+    board.insert(square-name(_ROOK-DEST.at(move.kind), fr), (kind: "rook", color: color))
+  } else {
+    let placed = if move.kind == "promotion" { (kind: move.promotion, color: color) } else { (kind: move.piece, color: color) }
+    board.insert(to-name, placed) // overwrites a normally-captured piece
   }
 
-  // castling rights
-  let cr = position.castling
+  // castling rights (rook-file model: a right stores the rook's file, or none)
   if move.piece == "king" {
-    if color == "white" { cr.insert("white-king", false); cr.insert("white-queen", false) }
-    else { cr.insert("black-king", false); cr.insert("black-queen", false) }
+    cr.insert(color + "-king", none)
+    cr.insert(color + "-queen", none)
   }
   if move.piece == "rook" {
-    if color == "white" and fc == 0 and fr == 0 { cr.insert("white-queen", false) }
-    if color == "white" and fc == 7 and fr == 0 { cr.insert("white-king", false) }
-    if color == "black" and fc == 0 and fr == 7 { cr.insert("black-queen", false) }
-    if color == "black" and fc == 7 and fr == 7 { cr.insert("black-king", false) }
+    // a rook leaving its stored castling file (on its back rank) kills that right
+    let home = if color == "white" { 0 } else { 7 }
+    if fr == home {
+      for side in ("king", "queen") { if cr.at(color + "-" + side, default: none) == fc { cr.insert(color + "-" + side, none) } }
+    }
   }
-  if move.capture == "rook" { // capturing a rook on its home square kills that right
-    if tc == 0 and tr == 0 { cr.insert("white-queen", false) }
-    if tc == 7 and tr == 0 { cr.insert("white-king", false) }
-    if tc == 0 and tr == 7 { cr.insert("black-queen", false) }
-    if tc == 7 and tr == 7 { cr.insert("black-king", false) }
+  if move.capture == "rook" { // capturing a rook on its castling home square kills that right
+    let opp = _other(color)
+    let ohome = if opp == "white" { 0 } else { 7 }
+    if tr == ohome {
+      for side in ("king", "queen") { if cr.at(opp + "-" + side, default: none) == tc { cr.insert(opp + "-" + side, none) } }
+    }
   }
 
   let ep = if move.kind == "double-push" { square-name(fc, int((fr + tr) / 2)) } else { none }

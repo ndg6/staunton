@@ -24,7 +24,7 @@
 #import "src/engine.typ": legal-moves, apply, in-check
 #import "src/san.typ": chess-moves
 #import "src/pgn.typ": parse-pgn, movetext
-#import "src/game.typ": mainline, position-after, game-result, move-san, move-node, with-nags, with-comments, with-variation
+#import "src/game.typ": mainline, position-after, game-result, move-san, move-node, with-nags, with-comments, with-variation, game-start, game-variant
 // The text core lives in src/notation.typ; lib defines `notation` /
 // `chess-notation` on top so they can also embed diagrams (which needs the
 // lib-level `chess-diagram`).
@@ -102,6 +102,19 @@
   (kind: kind, color: color)
 }
 
+// Normalise a user-supplied `castling` dict to the rook-file model: a boolean
+// `true` becomes the standard rook file for that side (`cols-1` king-side, `0`
+// queen-side), `false` becomes `none`; an integer file is kept as-is. Keeps
+// `position(.., castling: (white-king: true))` working after the model change.
+#let _normalize-castling(c, cols) = {
+  if type(c) != dictionary { return c }
+  let out = (:)
+  for (k, v) in c {
+    out.insert(k, if v == true { if k.ends-with("king") { cols - 1 } else { 0 } } else if v == false { none } else { v })
+  }
+  out
+}
+
 /// Build a `position` — the data a board draws — from manual placement. (A single
 /// string containing `/` is treated as a FEN and delegated to `parse-fen`.)
 /// Positional arguments place the pieces; named arguments set the metadata.
@@ -173,7 +186,7 @@
   (
     variant: variant, cols: cols, rows: rows, squares: squares,
     turn: opts.at("turn", default: "w"),
-    castling: opts.at("castling", default: (:)),
+    castling: _normalize-castling(opts.at("castling", default: (:)), cols),
     en-passant: opts.at("en-passant", default: none),
     halfmove: opts.at("halfmove", default: 0),
     fullmove: opts.at("fullmove", default: 1),
@@ -237,6 +250,23 @@
 /// -> content
 #let chess-board(source, flip: false, ..overrides) = {
   _assert-variant("chess-board", "standard", source)
+  board(source, flip: flip, ..overrides.named())
+}
+
+/// Chess960 / Fischer Random board — the variant-named entry point for 960.
+/// Rendering is identical to `chess-board` (960 shares the standard board,
+/// pieces and position model); the distinct name documents intent and rejects a
+/// genuinely different variant (e.g. a xiangqi position). The 960-ness of a
+/// position lives in its (arbitrary) placement and generalised castling, not in
+/// a separate piece set.
+///
+/// - source (str, dictionary): a Chess960 position — a FEN / X-FEN string, a
+///   position dict, or a squares dict.
+/// - flip (bool): show the board from Black's side.
+/// - ..overrides (arguments): any board *style* option (as for `board`).
+/// -> content
+#let chess960-board(source, flip: false, ..overrides) = {
+  _assert-variant("chess960-board", "standard", source)
   board(source, flip: flip, ..overrides.named())
 }
 
@@ -392,6 +422,21 @@
 /// -> content
 #let chess-diagram(source, ..args) = {
   _assert-variant("chess-diagram", "standard", source)
+  diagram(source, ..args)
+}
+
+/// Chess960 / Fischer Random diagram — the variant-named sugar over `diagram` for
+/// 960. Same behaviour and rendering as `chess-diagram`; the name documents the
+/// variant and rejects a genuinely different one. Pair with `game-variant` to
+/// pick this entry point when a parsed game is Chess960.
+///
+/// - source (str, dictionary): a Chess960 position (FEN / X-FEN, position dict,
+///   or squares dict).
+/// - ..args (arguments): everything `diagram` accepts (players, `caption`,
+///   `game-info`, `flip`, `lang`, style options, and `#figure` arguments).
+/// -> content
+#let chess960-diagram(source, ..args) = {
+  _assert-variant("chess960-diagram", "standard", source)
   diagram(source, ..args)
 }
 

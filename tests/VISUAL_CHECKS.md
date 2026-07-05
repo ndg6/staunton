@@ -57,6 +57,13 @@ Then open the PDFs below and check the noted property. (The expected-*fail* test
 - [ ] `i18n/i18n.pdf` — supplements and piece letters match each language.
 - [ ] `pgn/good/variation_move.pdf`, `nested_variation.pdf` — the board shows the
       correct (nested) variation position.
+- [ ] `pgn/chess960/frc_game.pdf` — the Chess960 start board (king on the f-file,
+      knights on a/g, bishops on c/d, rooks on b/h) draws correctly, and the
+      diagram after `2.O-O O-O` shows **both** kings on g-files with their rooks on
+      the f-files (the 960 castling landed king→g / rook→f, not the standard e→g).
+- [ ] `pgn/chess960/scharnagl_xfen.pdf` — the diagram (before 11.O-O) shows White
+      with rooks on **g1 and h1**, king on **e1**; Black king/rooks on e8/g8 (h-side)
+      as in the caption. (The `Gkq` field itself is asserted; this is just the board.)
 
 ## The showcase and the manual
 

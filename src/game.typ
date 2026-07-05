@@ -32,12 +32,34 @@
 }
 
 /// The starting position of a game — from its `FEN` tag if present, else the
-/// standard start.
+/// standard start. Honours the PGN `SetUp` tag: `[SetUp "1"]` declares a custom
+/// start, so a `FEN` tag is then required (a hard error otherwise). This is also
+/// the entry point for Chess960 games, whose start rides on the `FEN` tag (with
+/// X-FEN castling); see `game-variant`.
 ///
 /// - game (dictionary): a parsed game (from `parse-pgn`).
 /// -> dictionary
 #let game-start(game) = {
-  if "FEN" in game.tags { parse-fen(game.tags.at("FEN")) } else { parse-fen(starting-fen) }
+  if "FEN" in game.tags { return parse-fen(game.tags.at("FEN")) }
+  assert(game.tags.at("SetUp", default: "0") != "1",
+    message: "PGN: [SetUp \"1\"] declares a custom start position but no [FEN] tag is present")
+  parse-fen(starting-fen)
+}
+
+/// The chess variant of a game, recognised from the PGN `Variant` tag:
+/// `"chess960"` for `[Variant "Chess960"]` / `[Variant "Fischerrandom"]` (and
+/// spelling/spacing variants like `"Fischer Random"`), otherwise `"standard"`.
+/// Chess960 games share the standard rules engine — only the start position and
+/// (generalised) castling differ — so this is for the caller's benefit (e.g.
+/// choosing `chess960-diagram`), not an engine switch.
+///
+/// - game (dictionary): a parsed game (from `parse-pgn`).
+/// -> str
+#let game-variant(game) = {
+  let v = game.tags.at("Variant", default: none)
+  if v == none { return "standard" }
+  let norm = lower(v).replace(regex("[^a-z0-9]"), "")
+  if norm == "chess960" or norm == "fischerrandom" or norm == "fischerandom" { "chess960" } else { "standard" }
 }
 
 /// The mainline of a game as an array of SAN strings (the game as played).
