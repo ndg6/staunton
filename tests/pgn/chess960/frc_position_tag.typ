@@ -1,0 +1,32 @@
+// Chess960 games may declare their start by NUMBER instead of a FEN, via a
+// [FRCPosition N] or [Chess960Position N] tag. game-start resolves it through the
+// Scharnagl numbering; an explicit [FEN] still wins when both are present.
+#import "/lib.typ": parse-pgn, game-start, game-variant, to-fen, position-after, chess960-start-fen
+
+#set page(width: auto, height: auto, margin: 1cm)
+#set text(font: "Libertinus Serif", size: 9pt)
+
+// FRCPosition 518 is the standard start.
+#let g518 = parse-pgn("[Variant \"Fischerrandom\"][SetUp \"1\"][FRCPosition \"518\"] 1. e4 e5 *").first()
+#assert(game-variant(g518) == "chess960")
+#assert(to-fen(game-start(g518)) == chess960-start-fen(518), message: "FRCPosition 518 start")
+// and it replays like standard chess from that start
+#assert(
+  to-fen(position-after(g518, "1b")) == "rnbqkbnr/pppp1ppp/8/4p3/4P3/8/PPPP1PPP/RNBQKBNR w KQkq - 0 2",
+  message: "replay: " + to-fen(position-after(g518, "1b")),
+)
+
+// Chess960Position (alternative spelling) with a genuinely non-standard start.
+#let g356 = parse-pgn("[Variant \"Chess960\"][Chess960Position \"356\"] *").first()
+#assert(to-fen(game-start(g356)) == chess960-start-fen(356), message: "Chess960Position 356 start")
+
+// An explicit FEN tag takes precedence over the position number.
+#let gboth = parse-pgn(
+  "[Variant \"Chess960\"][FRCPosition \"0\"][FEN \"" + chess960-start-fen(518) + "\"] *"
+).first()
+#assert(to-fen(game-start(gboth)) == chess960-start-fen(518), message: "FEN wins over FRCPosition")
+
+= Start-by-number
+
+`[FRCPosition 518]` and `[Chess960Position 356]` resolve to their Scharnagl start
+positions; an explicit `[FEN]` still wins.

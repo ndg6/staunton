@@ -10,11 +10,21 @@
   starting-fen,
   "r1bqkb1r/1ppp1ppp/p1n2n2/4p3/B3P3/5N2/PPPP1PPP/RNBQK2R w KQkq - 2 5",
   "8/8/8/3k4/3K4/8/8/8 b - - 10 42",
-  "rnbqkbnr/pp1ppppp/8/2p5/4P3/8/PPPP1PPP/RNBQKBNR w KQkq c6 0 2",  // en-passant target
+  // en-passant target d6 that IS capturable (White pawn on e5): round-trips.
+  "rnbqkbnr/pp2pppp/8/2ppP3/8/8/PPPP1PPP/RNBQKBNR w KQkq d6 0 3",
 )
 #for f in fens {
   assert(to-fen(parse-fen(f)) == f, message: "round-trip failed: " + to-fen(parse-fen(f)) + " != " + f)
 }
+
+// Strict X-FEN e.p.: an e.p. target with no pawn able to capture it is dropped to
+// "-" on output (here c6 has no white pawn on b5/d5), even though parse-fen keeps
+// it leniently on input.
+#assert(
+  to-fen(parse-fen("rnbqkbnr/pp1ppppp/8/2p5/4P3/8/PPPP1PPP/RNBQKBNR w KQkq c6 0 2"))
+    == "rnbqkbnr/pp1ppppp/8/2p5/4P3/8/PPPP1PPP/RNBQKBNR w KQkq - 0 2",
+  message: "strict e.p. should drop a non-capturable target",
+)
 
 // a position built with position() (castling empty, en-passant none) serialises
 #assert(to-fen(position((e1: "K", e8: "k"))) == "4k3/8/8/8/8/8/8/4K3 w - - 0 1", message: "manual position -> fen")

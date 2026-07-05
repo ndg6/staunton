@@ -21,6 +21,7 @@
 #import "src/pieces.typ": piece-content
 #import "src/variants.typ": variant-spec as _variant-spec, char-to-piece as _char-to-piece
 #import "src/fen.typ": parse-fen, starting-fen, position-fen as _position-fen
+#import "src/chess960.typ": chess960-start-fen
 #import "src/engine.typ": legal-moves, apply, in-check
 #import "src/san.typ": chess-moves
 #import "src/pgn.typ": parse-pgn, movetext
@@ -192,6 +193,15 @@
     fullmove: opts.at("fullmove", default: 1),
   )
 }
+
+/// The Chess960 / Fischer Random starting *position* for a position number
+/// (0–959), via Scharnagl's numbering scheme — a ready-to-draw position (feed it
+/// to `chess960-board` / `chess960-diagram`, or `to-fen` it). `518` is the
+/// standard start. The companion `chess960-start-fen` returns the FEN string.
+///
+/// - n (int): the position number, 0–959.
+/// -> dictionary
+#let chess960-start(n) = parse-fen(chess960-start-fen(n))
 
 // Normalise the many accepted `source` forms into (squares, cols, rows) for
 // rendering. The geometry comes from the position model: a FEN

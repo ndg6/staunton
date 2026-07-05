@@ -85,6 +85,27 @@
   out
 }
 
+// Strict en-passant test (for X-FEN output): a recorded e.p. target is only
+// emitted if the side to move actually has a pawn positioned to capture onto it.
+// This is the X-FEN "strict" rule; we use the pawn-attack form (a friendly pawn
+// sits beside the just-double-pushed enemy pawn), which is what most tools emit.
+// An e.p. target on rank 3 means Black is to move (White just pushed) and the
+// capturing black pawns would stand on rank 4 beside the target file; symmetric
+// for rank 6 / White to move.
+#let _ep-capturable(squares, turn, ep) = {
+  if ep == none { return false }
+  let s = parse-square(ep)
+  let cr = if turn == "w" { s.row - 1 } else { s.row + 1 }   // rank of a capturing pawn
+  let want = if turn == "w" { "white" } else { "black" }
+  for dc in (-1, 1) {
+    let c = s.col + dc
+    if c < 0 or c > 7 { continue }
+    let p = squares.at(square-name(c, cr), default: none)
+    if p != none and p.kind == "pawn" and p.color == want { return true }
+  }
+  false
+}
+
 // Serialise the rook-file castling model back to an (X-)FEN field. Emits the
 // conventional letter (K/Q/k/q) when the castling rook is the OUTERMOST rook of
 // its colour on that side of the king (so standard positions stay `KQkq`), and
@@ -223,7 +244,8 @@
   let turn = position.at("turn", default: "w")
   let cstr = _castling-str(position)
   let ep = position.at("en-passant", default: none)
-  let epstr = if ep == none { "-" } else { ep }
+  // Strict X-FEN: only record the e.p. target when a capture is actually on.
+  let epstr = if ep == none or not _ep-capturable(squares, turn, ep) { "-" } else { ep }
   let half = position.at("halfmove", default: 0)
   let full = position.at("fullmove", default: 1)
 

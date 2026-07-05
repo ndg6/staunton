@@ -20,6 +20,7 @@
 #import "san.typ": san-to-move
 #import "engine.typ": apply
 #import "pgn.typ": movetext, _movetext-tree
+#import "chess960.typ": chess960-start-fen
 
 // "30w" -> 59 ; "30b" -> 60
 #let _ply-of(loc) = {
@@ -31,18 +32,22 @@
   else { panic("move locator must end in 'w' or 'b': " + loc) }
 }
 
-/// The starting position of a game — from its `FEN` tag if present, else the
+/// The starting position of a game — from its `FEN` tag if present, else from a
+/// Chess960 position-number tag (`FRCPosition` / `Chess960Position`), else the
 /// standard start. Honours the PGN `SetUp` tag: `[SetUp "1"]` declares a custom
-/// start, so a `FEN` tag is then required (a hard error otherwise). This is also
-/// the entry point for Chess960 games, whose start rides on the `FEN` tag (with
-/// X-FEN castling); see `game-variant`.
+/// start, so one of those sources is then required (a hard error otherwise).
+/// This is also the entry point for Chess960 games, whose start rides on the
+/// `FEN` tag (with X-FEN castling) or a position number; see `game-variant`.
 ///
 /// - game (dictionary): a parsed game (from `parse-pgn`).
 /// -> dictionary
 #let game-start(game) = {
   if "FEN" in game.tags { return parse-fen(game.tags.at("FEN")) }
+  for tag in ("FRCPosition", "Chess960Position") {
+    if tag in game.tags { return parse-fen(chess960-start-fen(int(game.tags.at(tag)))) }
+  }
   assert(game.tags.at("SetUp", default: "0") != "1",
-    message: "PGN: [SetUp \"1\"] declares a custom start position but no [FEN] tag is present")
+    message: "PGN: [SetUp \"1\"] declares a custom start position but no [FEN] or position-number tag is present")
   parse-fen(starting-fen)
 }
 
