@@ -20,21 +20,35 @@
 #   * "// HTML-LACKS: <substr>"  -> the HTML must NOT contain <substr>
 # (Future SVG/PNG passes would slot in beside the html/ subdir the same way.)
 #
-# Usage:  bash tests/run.sh [-t|--time]
+# Usage:  bash tests/run.sh [-t|--time] [PATH ...]
 #   -t, --time   show per-test compile time and a slowest-tests summary
 #                (can also be enabled with STAUNTON_TIME=1)
+#   PATH ...     optional path filter(s) — files or directories under tests/.
+#                When given, this is a FOCUSED run: only tests under those paths
+#                are run, and the examples pass is skipped. See tests/TESTING_MAP.md
+#                for which clusters are independent (e.g. a fen/engine change needs
+#                only  bash tests/run.sh tests/fen tests/position tests/pgn ).
+#                A focused run is a fast inner-loop check; the FULL run (no PATH)
+#                stays the pre-commit gate — it can catch cross-cutting regressions
+#                a single cluster misses.
 # The total wall-clock time is always reported.
 set -u
 
 TIME=${STAUNTON_TIME:-0}
+FILTERS=()
 while [ $# -gt 0 ]; do
   case "$1" in
     -t|--time) TIME=1 ;;
-    -h|--help) echo "usage: bash tests/run.sh [-t|--time]"; exit 0 ;;
-    *) echo "unknown argument: $1" >&2; exit 2 ;;
+    -h|--help) echo "usage: bash tests/run.sh [-t|--time] [PATH ...]"; exit 0 ;;
+    -*) echo "unknown option: $1" >&2; exit 2 ;;
+    *)
+      if [ -e "$1" ]; then FILTERS+=("$1")
+      else echo "no such test path: $1" >&2; exit 2; fi ;;
   esac
   shift
 done
+FOCUSED=0
+[ ${#FILTERS[@]} -gt 0 ] && FOCUSED=1
 
 cd "$(dirname "$0")/.."
 ROOT="."
@@ -164,7 +178,11 @@ html_test() {
 
 wall0=$(now_ms)
 
-# Walk every .typ under tests/, skipping any path component starting with "_".
+# Walk every .typ under the requested roots (default: all of tests/), skipping
+# any path component starting with "_". A focused run narrows the roots to the
+# given PATH filter(s).
+WALK_ROOTS=(tests)
+[ $FOCUSED -eq 1 ] && WALK_ROOTS=("${FILTERS[@]}")
 echo "== tests =="
 while IFS= read -r f; do
   case "$f" in
@@ -177,24 +195,36 @@ while IFS= read -r f; do
   else
     ok "$f"
   fi
-done < <(find tests -name '*.typ' | sort)
+done < <(find "${WALK_ROOTS[@]}" -name '*.typ' | sort)
 
-# Examples are showcases, not tests, but they must still compile.
-echo "== examples (must compile) =="
-for f in docs/examples/*.typ; do
-  [ -e "$f" ] || continue
-  ok "$f"
-done
+# Examples are showcases, not tests, but they must still compile. Skipped on a
+# focused run (they are cross-cutting, not part of any one cluster).
+if [ $FOCUSED -eq 0 ]; then
+  echo "== examples (must compile) =="
+  for f in docs/examples/*.typ; do
+    [ -e "$f" ] || continue
+    ok "$f"
+  done
+fi
 
 # Output-format tests. HTML: compiled with Typst's experimental HTML export and
 # checked for the expected native-HTML / inline-SVG output (see the HTML-HAS /
-# HTML-LACKS headers). Future SVG/PNG passes would slot in the same way.
-if [ -d tests/output_formats/html ]; then
+# HTML-LACKS headers). Future SVG/PNG passes would slot in the same way. On a
+# focused run these run only when a PATH filter points into tests/output_formats.
+HTML_ROOTS=()
+if [ $FOCUSED -eq 0 ]; then
+  [ -d tests/output_formats/html ] && HTML_ROOTS=(tests/output_formats/html)
+else
+  for p in "${FILTERS[@]}"; do
+    case "$p" in tests/output_formats*) HTML_ROOTS+=("$p") ;; esac
+  done
+fi
+if [ ${#HTML_ROOTS[@]} -gt 0 ]; then
   echo "== HTML output tests =="
   while IFS= read -r f; do
     case "$f" in */_*) continue ;; esac
     html_test "$f"
-  done < <(find tests/output_formats/html -name '*.typ' | sort)
+  done < <(find "${HTML_ROOTS[@]}" -name '*.typ' | sort)
 fi
 
 rm -f "$TMP"
@@ -212,6 +242,9 @@ echo "----------------------------------------"
 total=$((pass + fail))
 printf 'passed=%d  failed=%d  (%d tests)\n' "$pass" "$fail" "$total"
 printf 'compile time=%d ms   wall time=%d ms\n' "$compile_ms" "$((wall1 - wall0))"
+if [ $FOCUSED -eq 1 ]; then
+  printf 'FOCUSED run: %s  (examples skipped; run without a PATH for the full gate)\n' "${FILTERS[*]}"
+fi
 echo "Some sheets only RENDER (not asserted) -- before a release, eyeball the"
 echo "PDFs under tests/out/ listed in tests/VISUAL_CHECKS.md."
 [ $fail -eq 0 ]
