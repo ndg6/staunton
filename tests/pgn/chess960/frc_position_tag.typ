@@ -20,13 +20,12 @@
 #let g356 = parse-pgn("[Variant \"Chess960\"][Chess960Position \"356\"] *").first()
 #assert(to-fen(game-start(g356)) == chess960-start-fen(356), message: "Chess960Position 356 start")
 
-// An explicit FEN tag takes precedence over the position number.
-#let gboth = parse-pgn(
-  "[Variant \"Chess960\"][FRCPosition \"0\"][FEN \"" + chess960-start-fen(518) + "\"] *"
-).first()
-#assert(to-fen(game-start(gboth)) == chess960-start-fen(518), message: "FEN wins over FRCPosition")
+// Both number-tag spellings are fine as long as they agree.
+#let gagree = parse-pgn("[Variant \"Chess960\"][FRCPosition \"356\"][Chess960Position \"356\"] *").first()
+#assert(to-fen(game-start(gagree)) == chess960-start-fen(356), message: "agreeing number tags")
 
 = Start-by-number
 
 `[FRCPosition 518]` and `[Chess960Position 356]` resolve to their Scharnagl start
-positions; an explicit `[FEN]` still wins.
+positions. The start must be given exactly one way — a `[FEN]` and a position
+number together are rejected (see `fen_and_number_conflict`).

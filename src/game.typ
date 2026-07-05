@@ -34,18 +34,28 @@
 
 /// The starting position of a game — from its `FEN` tag if present, else from a
 /// Chess960 position-number tag (`FRCPosition` / `Chess960Position`), else the
-/// standard start. Honours the PGN `SetUp` tag: `[SetUp "1"]` declares a custom
-/// start, so one of those sources is then required (a hard error otherwise).
-/// This is also the entry point for Chess960 games, whose start rides on the
-/// `FEN` tag (with X-FEN castling) or a position number; see `game-variant`.
+/// standard start. The start must be declared exactly one way: giving BOTH a
+/// `FEN` and a position number is a hard error (they are redundant and can
+/// conflict), and two position-number tags that disagree are rejected too.
+/// Honours the PGN `SetUp` tag: `[SetUp "1"]` declares a custom start, so one of
+/// those sources is then required. This is also the entry point for Chess960
+/// games, whose start rides on the `FEN` tag (with X-FEN castling) or a position
+/// number; see `game-variant`.
 ///
 /// - game (dictionary): a parsed game (from `parse-pgn`).
 /// -> dictionary
 #let game-start(game) = {
-  if "FEN" in game.tags { return parse-fen(game.tags.at("FEN")) }
-  for tag in ("FRCPosition", "Chess960Position") {
-    if tag in game.tags { return parse-fen(chess960-start-fen(int(game.tags.at(tag)))) }
-  }
+  let has-fen = "FEN" in game.tags
+  let numtags = ("FRCPosition", "Chess960Position").filter(t => t in game.tags)
+  // A start may be declared as a FEN OR a position number, never both.
+  assert(not (has-fen and numtags.len() > 0),
+    message: "PGN: give the start as either a [FEN] or a Chess960 position number ([FRCPosition]/[Chess960Position]), not both")
+  // Two number tags are allowed only if they agree.
+  assert(numtags.len() < 2 or int(game.tags.at("FRCPosition")) == int(game.tags.at("Chess960Position")),
+    message: "PGN: [FRCPosition] and [Chess960Position] disagree on the start position number")
+
+  if has-fen { return parse-fen(game.tags.at("FEN")) }
+  if numtags.len() > 0 { return parse-fen(chess960-start-fen(int(game.tags.at(numtags.first())))) }
   assert(game.tags.at("SetUp", default: "0") != "1",
     message: "PGN: [SetUp \"1\"] declares a custom start position but no [FEN] or position-number tag is present")
   parse-fen(starting-fen)
