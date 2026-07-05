@@ -240,6 +240,8 @@ for chess publications. It provides a full set of features, including:
   figurine glyphs, NAGs, comments and diagrams embedded inline;
 - *tournament tables* — we can create standings, cross-tables and progress charts from a PGN's
   results, by player or by team;
+- *Chess960 / Fischer Random* — the same board, engine, PGN pipeline and notation
+  handle 960, with X-FEN castling, the FRC PGN tags, and start-by-number (see @chess960);
 - *outlines and references* — diagrams and tables get their own counters and lists;
 - *document-wide styling* and *localization* (six languages, easily extended);
 - *limited HTML export* — notation, tables, outlines, references and captioned
@@ -574,6 +576,10 @@ en-passant, halfmove, fullmove)`; `parse-fen` returns the same shape. The `cols`
 = Games (PGN)<games>
 THe predominant form of the distribution and publications of chess games (atleast for western chess) are _PGN files_. PGN stands for *Portable Game Notation* and is a text format for chess games. It is human-readable, and can be parsed by chess software. PGN files contain the moves of a game, along with metadata such as player names, event, date, and result. PGN files cao contain just one or many games.
 
+staunton also reads *Chess960 / Fischer Random* games — the variant tags and
+start-by-number are covered in @chess960; everything in this chapter applies to
+them unchanged.
+
 The `parse-pgn` function returns an *array of games*; `.first()` takes the first one. Read an external file with `read` in your own file, or pass an inline raw block. The examples below assume an already parsed game is in scope:
 
 ```typ
@@ -819,6 +825,9 @@ locator. Standard 8×8 positions round-trip exactly:
 #raw(to-fen(chess-moves(none, "1. e4 e5 2. Nf3")))
 ```, stacked: true)
 
+For Chess960 positions `to-fen` emits *X-FEN* — a rook-file castling letter when
+`KQkq` would be ambiguous — and it writes en-passant targets strictly; see @chess960.
+
 == Drawing Annotations in PGNs
 
 PGN comments can carry drawing annotations — `[%cal …]` for arrows, `[%csl …]`
@@ -912,6 +921,65 @@ board, diagram, table and language buckets — see @document-style.
 Malformed PGN is a *hard error*: broken tag syntax and stray variation parens
 fail at parse time; illegal, ambiguous, or unparseable moves fail when the
 position is navigated. Missing Seven-Tag-Roster tags are tolerated (they default).
+
+// === Chess960 / Fischer Random ==============================================
+
+= Chess960 / Fischer Random<chess960>
+
+*staunton* supports #link("https://en.wikipedia.org/wiki/Chess960")[Chess960]
+(a.k.a. Fischer Random / FRC). It is *not* a separate system: the same board,
+pieces, position model, rules engine, PGN parser and notation output from the
+previous chapters all handle it. Only two things differ — a game starts from one
+of the 960 back-rank arrangements, and *castling is generalised* (the king and
+its rook may begin on other files). So most of this manual already applies; this
+chapter covers just the 960-specific pieces.
+
+== Boards and start positions
+
+`chess960-board` and `chess960-diagram` are the variant-named entry points —
+identical rendering to `chess-board` / `chess-diagram`, but they document the
+variant. Get a start position by its Scharnagl *number* (0–959; `518` is standard
+chess) with `chess960-start` (a position) or `chess960-start-fen` (its FEN):
+
+#example(```typ
+#chess960-diagram(chess960-start(356), size: 4cm)
+```)
+
+== X-FEN castling
+
+`parse-fen` and `to-fen` speak *X-FEN*, the Chess960-compatible extension of FEN.
+On input a castling right may be written as the rook's *file letter* (`A`–`H` /
+`a`–`h`) instead of `K`/`Q`; on output `to-fen` still writes plain `KQkq` whenever
+it is unambiguous, and switches to the file letter only when it is not — for
+instance when another rook stands *outside* the castling rook on its side. In the
+game below the white a1-rook travels `a1→a3→h3→h1`, so before `11.O-O` White has
+rooks on g1 *and* h1 with the king still on e1; the king-side castling rook is the
+inner one on g1, which X-FEN spells `G`:
+
+#example(```typ
+#raw(to-fen(frc, locator: "10b"))
+```, stacked: true)
+
+== Games
+
+A Chess960 PGN is marked `[Variant "Chess960"]` or `[Variant "Fischerrandom"]`,
+usually with `[SetUp "1"]`, and declares its start *exactly one way*: an `[FEN]`
+tag, or a position number in an `[FRCPosition N]` / `[Chess960Position N]` tag
+(giving both is an error). `game-variant` reports a parsed game's variant and
+`game-start` resolves its start position:
+
+#example(```typ
+#game-variant(frc)
+```, stacked: true)
+
+Everything else is unchanged — locators, `chess-notation`, `diagram-after`, move
+play-out and FEN export all behave as in @games. Here is the position right after
+White castles king-side: the king lands on g1 and the g1-rook on f1, the
+generalised 960 castling (the h1-rook stays put):
+
+#example(```typ
+#diagram-after(frc, "11w", size: 4cm)
+```)
 
 // === Tournament tables =======================================================
 
@@ -1194,8 +1262,10 @@ source docstring: its signature, then every parameter with its type and default.
 #show-fns((
   ("/lib.typ", "board"),
   ("/lib.typ", "chess-board"),
+  ("/lib.typ", "chess960-board"),
   ("/lib.typ", "diagram"),
   ("/lib.typ", "chess-diagram"),
+  ("/lib.typ", "chess960-diagram"),
 ))
 
 == Positions
@@ -1204,6 +1274,8 @@ source docstring: its signature, then every parameter with its type and default.
   ("/src/fen.typ", "parse-fen"),
   ("/lib.typ", "to-fen"),
   ("/src/fen.typ", "starting-fen"),
+  ("/lib.typ", "chess960-start"),
+  ("/src/chess960.typ", "chess960-start-fen"),
 ))
 
 == Games (PGN)
@@ -1212,6 +1284,8 @@ source docstring: its signature, then every parameter with its type and default.
   ("/src/pgn.typ", "movetext"),
   ("/src/game.typ", "mainline"),
   ("/src/game.typ", "game-result"),
+  ("/src/game.typ", "game-start"),
+  ("/src/game.typ", "game-variant"),
   ("/src/game.typ", "position-after"),
   ("/lib.typ", "diagram-after"),
   ("/src/game.typ", "move-san"),

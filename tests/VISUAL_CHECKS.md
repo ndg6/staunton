@@ -86,6 +86,13 @@ These are not under `tests/out/`; build them separately.
       - *Games → Drawing Annotations in PGNs*: the new combined example shows the
         PGN's green `f3→e5` arrow and red `e5` highlight **together with** a
         programmatic `b1→c3` arrow and a circle on `d4` on one board.
+- [ ] `docs/manual.pdf` — the new *Chess960 / Fischer Random* chapter (after *Games*):
+      - *Boards and start positions*: `chess960-diagram(chess960-start(356))` draws a
+        valid non-standard back rank (bishops on opposite colours, king between the rooks).
+      - *X-FEN castling*: the `to-fen(frc, "10b")` output line reads
+        `…/2BNK1RR w Gkq - 4 11` (the `Gkq`, not `KQkq`).
+      - *Games*: `game-variant(frc)` prints `chess960`; the `diagram-after(frc, "11w")`
+        board shows the white king on g1 and a rook on f1 (with the other rook still on h1).
 - [ ] `docs/manual.pdf` structure & cross-refs — the *Document-Wide Defaults* chapter
       (formerly "Document-Wide Style") covers the five default buckets; the canonical
       **PGN Handling** switch table now lives in the *Games* chapter, not the defaults
