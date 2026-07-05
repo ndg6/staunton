@@ -5,7 +5,7 @@
 //   1. piece placement   (mandatory) - 8 ranks "/"-separated, rank 8 FIRST,
 //                                       each rank file a->h; digits = empties.
 //   2. side to move       w | b           (default w)
-//   3. castling rights    KQkq | subset | -   (default -)
+//   3. castling rights    KQkq | subset | file letters | -   (default -)
 //   4. en passant target  e3 | -             (default none)
 //   5. halfmove clock     int               (default 0)
 //   6. fullmove number    int               (default 1)
@@ -13,6 +13,11 @@
 // We are strict about the mandatory placement field (clear errors beat silent
 // wrong diagrams in a publishing workflow) but lenient about trailing fields:
 // a placement-only or 4-field FEN is accepted with sensible defaults.
+//
+// Field 3 also accepts X-FEN (Chess960): a rook's file letter (A-H / a-h) names
+// the castling rook when KQkq would be ambiguous; rights are stored as rook file
+// indices (see the castling helpers below). Output is strict X-FEN — the e.p.
+// target is emitted only when a capture is actually available.
 //
 // Output: a `position` dict consumed by the renderer (only `board` is needed
 // for drawing; the rest is carried for later move-generation / display).

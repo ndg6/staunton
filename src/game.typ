@@ -338,7 +338,3 @@
   })
   _stash(game, nodes)
 }
-
-// NOTE: the old `line(start, moves)` (apply a SAN array, return every
-// intermediate position) was removed in the prompt-13 streamline. To play a run
-// of moves and get the FINAL position, use `chess-moves` (src/san.typ).

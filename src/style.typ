@@ -81,7 +81,7 @@
   circle-color: green,        // circle highlight stroke colour
   cross-width: 2pt,           // cross stroke width
   circle-width: 2pt,          // circle stroke width
-  arrows: (),                 // array of arrows (item 6); see lib `_to-arrow`
+  arrows: (),                 // array of arrows (item 6), each `(from, to, color)` e.g. ("f3","e5","G")
   arrow-color: default-highlight-base,  // default arrow colour (opaque base)
   arrow-transparency: 85%,    // applied to the default arrow colour (more transparent than highlights)
   arrow-width: auto,          // shaft width; auto -> proportional to the square
