@@ -469,15 +469,50 @@ with `piece-set:` per board, or document-wide with `set-piece-set` (see
 )
 ```, stacked: true)
 
-The renderer accepts *any* set name and loads a piece's SVG on demand from
-
-```
-src/assets/piece_sets/<name>/{w,b}{K,Q,R,B,N,P}.svg
-```
-
-so you can add a set by dropping such a folder into your copy and passing its name.
 `piece-set: "unicode"` (or `none`) selects the glyph fallback — solid Unicode chess
 glyphs distinguished by fill and a contrasting stroke; it needs a font carrying them.
+
+=== Using your own downloaded piece set<custom-piece-sets>
+
+You are not limited to the bundled sets. Many more are available to download —
+a good source is the #link("https://github.com/lichess-org/lila/tree/master/public/piece")[lichess
+piece library] — as folders of twelve SVGs named `{w,b}{K,Q,R,B,N,P}.svg`.
+
+The key constraint is Typst's file sandbox: code inside an installed package can
+only read files from *its own* directory, never from your project, and no `.typ`
+can read files *above* the compilation root at all. So staunton cannot itself go
+looking for a folder of piece art — *you* must hand it the images, from your own
+document, where file paths resolve against your project. You do that by passing
+`piece-set` a *loader function* `(color, kind)` that returns the image bytes:
+
+The `svg-piece-set` helper does the naming for you (`wK.svg`, `bN.svg`, …); you
+supply only a one-line reader that says *where* the files are. Set it once as the
+document default and every later board uses it:
+
+```typ
+// Put the set's twelve SVGs somewhere under your project, e.g. assets/pieces/alpha/.
+#set-piece-set(svg-piece-set(f => read("/assets/pieces/alpha/" + f, encoding: none)))
+
+#board("...")   // and every board after uses alpha
+```
+
+Because the `read()` is written *here, in your document*, it resolves against your
+project root — that is what lets it reach files a packaged staunton never could
+(its own `read()` would look inside the package, not your project). You never
+re-read art per board: Typst memoizes file reads, so each SVG is loaded once.
+
+A missing or misnamed file fails with Typst's own “file not found”, naming the
+exact path. If you prefer, `piece-set` also accepts the raw loader function
+`(color, kind) -> bytes | content` directly (handy for non-standard file names),
+or a *dictionary* keyed `"<color>-<kind>"` (e.g. `"white-king"`) to bytes or
+ready-made `image(..)` content — only the pieces your position uses need be
+present.
+
+If your art lives *outside* the project (a shared system folder, say), Typst will
+refuse to read it (“would escape the project root”). Two ways around that, both
+chosen at compile time: run `typst compile` with `--root` set to a common
+ancestor of both your document and the art folder, or symlink the folder into
+your project tree.
 
 The rank/file *labels* are drawn in their own sans-serif, set by the `label-font`
 board option (a family or a fallback list), independent of the document font. The

@@ -27,9 +27,12 @@
 // SVG piece sets bundled under src/assets/piece_sets/. `default-piece-set` is the
 // factory default; `"unicode"` (or `none`) selects the glyph fallback.
 // `known-piece-sets` is the list of sets we SHIP (used by docs/examples); it is
-// NOT a guard -- any set name is accepted so users can add their own set by
-// dropping a folder under src/assets/piece_sets/<name>/ with no code change. A name
-// that has no matching SVG simply fails to load the image (Typst's own error).
+// NOT a guard -- any set NAME is accepted, and a vendored/forked copy can add a
+// set by dropping a folder under src/assets/piece_sets/<name>/ (a name with no
+// matching SVG simply fails to load -- Typst's own error). NOTE: the folder-drop
+// only works from a working copy; an INSTALLED package cannot read files outside
+// its own sandbox, so the supported way for users to load their OWN downloaded
+// sets is a loader function / bytes dict passed as `piece-set` (see square-piece).
 /// The factory-default piece set (`"cburnett"`). Set `"unicode"` (or `none`) to
 /// select the glyph fallback.
 #let default-piece-set = "cburnett"
@@ -131,17 +134,64 @@
   )
 }
 
+// Box a user-loader's return value into a `sq`-side square. The value is either
+// raw image `bytes` (which we decode + size ourselves) or ready-made `content`
+// (passed through untouched, so the loader may size/style it however it likes).
+// `image(bytes, ..)` decodes in memory -- no filesystem access -- so this is safe
+// to call from inside the package; the loader itself does any `read()`/`image()`
+// from the USER's document, where paths resolve against the user's project root.
+#let _box-loaded(v, sq, piece-scale, color, kind) = {
+  let art = if type(v) == bytes {
+    image(v, width: sq * piece-scale)
+  } else if type(v) == content {
+    v
+  } else {
+    assert(false, message: "piece loader for " + color + " " + kind + " returned "
+      + type(v) + "; expected bytes (e.g. read(path, encoding: none)) or content (e.g. image(path))")
+  }
+  box(width: sq, height: sq, align(center + horizon, art))
+}
+
+/// Build a `piece-set` loader for the standard lichess file layout
+/// (`{w,b}{K,Q,R,B,N,P}.svg`) from a caller-supplied file reader. This is the
+/// convenient way to use a downloaded set: you supply only *how to read a file*
+/// (which must be authored in YOUR document so paths resolve against your project
+/// root — see square-piece); this helper owns the `wK.svg` naming.
+///
+/// ```typ
+/// #set-piece-set(svg-piece-set(f => read("/assets/pieces/alpha/" + f, encoding: none)))
+/// ```
+///
+/// - read-file (function): `(filename: str) -> bytes | content`, e.g.
+///   `f => read(base + "/" + f, encoding: none)` or `f => image(base + "/" + f)`.
+/// -> function
+#let svg-piece-set(read-file) = (color, kind) => {
+  let c = if color == "white" { "w" } else { "b" }
+  read-file(c + kind-letters.at(kind) + ".svg")
+}
+
 /// Render a piece as content sized to a `sq`-side square, ready to be `place`d at
 /// the square's screen origin. This is the seam the board renderer uses.
 ///
-///   * any other `piece-set` name -> the matching SVG under
+/// `piece-set` selects where the art comes from:
+///   * a bundled/set *name* (str) -> the matching SVG under
 ///     src/assets/piece_sets/<name>/, centred in the square. The SVGs carry the
 ///     correct baseline, so no baseline adjustment is done; `piece-scale` (1.0
 ///     fills the square) just scales the image. The name is NOT checked against a
 ///     list -- a missing/misnamed file fails to load (Typst's own error), which
-///     lets users add their own sets by dropping in a folder.
-///   * `piece-set == "unicode"` or `none` -> the Unicode glyph fallback, which
-///     keeps the baseline lift (`baseline-inset`) and per-kind size correction.
+///     lets a vendored copy add a set by dropping in a folder.
+///   * a *function* `(color, kind) -> bytes | content` -> a user-supplied loader.
+///     This is the only mechanism that can reach the user's OWN files from an
+///     installed package: because the loader body is authored in the user's
+///     document, any `read()`/`image()` inside it resolves against the user's
+///     project root (package code cannot -- its paths resolve to the package's
+///     own sandbox). The loader is kind-agnostic: `kind` is passed straight
+///     through, with no fixed six-kind letter map.
+///   * a *dictionary* keyed `"<color>-<kind>"` (e.g. `"white-king"`) -> the
+///     bytes/content for that piece; a missing key is a clear error. Same
+///     kind-agnostic contract as the function form.
+///   * `"unicode"` or `none` -> the Unicode glyph fallback, which keeps the
+///     baseline lift (`baseline-inset`) and per-kind size correction.
 #let square-piece(
   kind,
   color,
@@ -165,6 +215,15 @@
         white-fill: white-fill, black-fill: black-fill, font: font,
       )),
     )
+  } else if type(piece-set) == function {
+    // User loader: authored in the user's document, so its file access resolves
+    // against the user's project root. This is how downloaded/custom sets load.
+    _box-loaded(piece-set(color, kind), sq, piece-scale, color, kind)
+  } else if type(piece-set) == dictionary {
+    let key = color + "-" + kind
+    assert(key in piece-set, message: "piece set (dictionary) has no entry for \""
+      + key + "\"; keys present: " + repr(piece-set.keys()))
+    _box-loaded(piece-set.at(key), sq, piece-scale, color, kind)
   } else {
     let c = if color == "white" { "w" } else { "b" }
     // Path resolves relative to THIS file (src/pieces.typ), so it is independent

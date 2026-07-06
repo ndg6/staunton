@@ -263,12 +263,15 @@
 }
 
 /// Set the default piece set for subsequent diagrams — a convenience wrapper over
-/// `set-board-defaults(piece-set: name)`.
+/// `set-board-defaults(piece-set: set)`. Set it once; every later board/diagram
+/// uses it (Typst memoizes the underlying file reads, so a shared loader does not
+/// re-read art per board).
 ///
-/// - name (str): a bundled piece-set name (`"cburnett"`, `"merida"`, …) or a
-///   registered custom set.
+/// - spec (str | function | dictionary): a bundled name (`"cburnett"`, `"merida"`,
+///   `"unicode"`/`none`), or a custom loader — a function `(color, kind) -> bytes
+///   | content` (e.g. from `svg-piece-set`), or a dict keyed `"<color>-<kind>"`.
 /// -> content
-#let set-piece-set(name) = board-style-state.update(s => s + (piece-set: name))
+#let set-piece-set(spec) = board-style-state.update(s => s + (piece-set: spec))
 
 /// Build a style-overrides dict (just sugar around named arguments).
 #let chess-style(..fields) = fields.named()
