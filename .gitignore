@@ -4,9 +4,10 @@ out/
 *.pdf
 # Generated HTML export output (e.g. from docs/examples/html_export.typ)
 *.html
-# ...but the compiled user manual is intentionally tracked, so it can be read /
-# downloaded straight from the repo (it is NOT shipped in the package bundle).
-!docs/manual.pdf
+# The compiled user manual (docs/manual.pdf) is a build artifact: it is NOT
+# tracked (binaries bloat history) and NOT shipped in the package bundle. It is
+# published as a GitHub Release asset instead. Build it with
+# scripts/build-manual.sh. See RELEASING.md.
 
 # Release bundle output (scripts/build-bundle.sh)
 dist/
@@ -31,4 +32,3 @@ CLAUDE.md
 
 # Per-developer local helpers (machine-specific / convenience, not shipped).
 scripts/install-local.sh
-scripts/build-manual.sh

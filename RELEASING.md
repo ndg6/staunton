@@ -50,10 +50,13 @@ not version strings).
 ## Publishing to Universe (upload-gated — get explicit approval each time)
 
 1. Green suite: `bash tests/run.sh`.
-2. If `docs/manual.typ` changed, rebuild and re-stage the tracked PDF so the repo
-   copy doesn't drift:
-   `typst compile --root . docs/manual.typ docs/manual.pdf && git add docs/manual.pdf`.
-3. Commit the version bump.
+2. Commit the version bump and land it on GitHub.
+3. Publish the GitHub Release, attaching the compiled manual as an asset (the PDF
+   is a build artifact, gitignored — it is *not* committed; the README download
+   link points at `releases/latest/download/manual.pdf`):
+   `bash scripts/build-manual.sh` then
+   `gh release create vX.Y.Z docs/manual.pdf --title vX.Y.Z` (or, for an existing
+   release, `gh release upload vX.Y.Z docs/manual.pdf`).
 4. Build the bundle: `bash scripts/build-bundle.sh` → `dist/preview/staunton/<version>/`
    (built from a clean `git archive` of HEAD, then the `exclude` globs removed;
    it self-verifies required files are present and repo-only files didn't leak).
