@@ -524,6 +524,85 @@ to Typst's always-embedded mono — so a stock install draws labels without
 #set-board-defaults(label-font: "Segoe UI")   // or a list, e.g. ("Helvetica", "DejaVu Sans Mono")
 ```
 
+=== Non-standard and fairy pieces<fairy-pieces>
+
+Beyond the six western pieces you can define *your own* kinds — *fairy* pieces
+such as the alfil, dabbaba or ferz — and place them on a board, mixed with the
+standard pieces if you like. The support is deliberately limited to *drawing*:
+there is no FEN, PGN, move generation or legality for custom kinds. You place them
+by hand — a squares dict or the string form — and render them; that is all.
+
+Two things are needed: a *vocabulary* that names the kinds and their letters, and
+the *art* to draw them.
+
+*Defining the kinds.* Pass `position` a custom *variant spec* as its `variant:`
+argument. The easiest form `extends` the standard variant — inheriting the six
+kinds and their letters — and adds only the new ones. Each new kind takes a single
+lower-case letter that must not clash with an existing one (case selects colour,
+exactly as for the standard pieces):
+
+```typ
+#let fairy = (
+  extends: "standard",
+  kinds: ("alfil", "dabbaba", "ferz"),
+  abbr:  (a: "alfil", d: "dabbaba", f: "ferz"),   // letters must not overlap
+)
+```
+
+Now `position(.., variant: fairy)` understands `A`/`a`, `D`/`d` and `F`/`f` in
+both the squares-dict and string forms, right beside the standard `K`, `P`, ….
+
+*Drawing the kinds.* A bundled set *name* (`"cburnett"`) knows only the six western
+pieces, so a fairy board is drawn from a *loader* — the same mechanism as a
+downloaded set (previous section), pointed at your fairy art. `named-piece-set`
+maps `(colour, kind)` onto your files through a filename *pattern* you supply, so
+you are not tied to one naming scheme. For a *mixed* board, wrap the loader in
+`with-fallback`: the standard kinds are drawn from a bundled set (cburnett by
+default) and every other kind from your loader.
+
+#example(```typ
+// fairy art named "alfil_white.svg", "dabbaba_black.svg", … under the project
+#let art = with-fallback(named-piece-set(
+  f => read("/docs/assets/fairy/" + f, encoding: none),
+))
+
+#let fairy = (
+  extends: "standard",
+  kinds: ("alfil", "dabbaba", "ferz"),
+  abbr:  (a: "alfil", d: "dabbaba", f: "ferz"),
+)
+
+#board(
+  position((e1: "K", e8: "k", c3: "A", d4: "d", f5: "F"), variant: fairy),
+  piece-set: art, size: 4.6cm,
+)
+```, stacked: true)
+
+_Fairy art above from Wikimedia Commons (dabbaba by Kwamikagami, CC BY-SA 4.0);
+see `docs/assets/fairy/ATTRIBUTION.md`._
+
+The `pattern` defaults to `"{kind}_{color}.svg"`; its placeholders are `{kind}`
+(long name), `{color}` / `{c}` (long / short colour) and `{K}` / `{k}` (the kind's
+letter, upper / lower). The bundled lichess-layout `svg-piece-set` is simply
+`named-piece-set(.., pattern: "{c}{K}.svg")`. If your set follows no tidy pattern
+at all, skip the helper and pass `piece-set` a bare loader
+`(colour, kind) -> bytes | content` that does the naming itself.
+
+*A glyph instead of art.* When you have no SVG for a kind, give the variant a
+`glyphs:` map from kind to a text glyph; then `piece-set: "unicode"` draws that
+glyph while the standard kinds keep their built-in ones. Unicode assigns code
+points to only a handful of fairy pieces, so you supply whatever glyph you like —
+typically a character from a font you embed with `set text(font: ..)`:
+
+```typ
+#let fairy = (
+  extends: "standard",
+  kinds: ("amazon",), abbr: (a: "amazon"),
+  glyphs: (amazon: "🨊"),          // any glyph your font carries
+)
+#board(position((d4: "A"), variant: fairy), piece-set: "unicode")
+```
+
 // === Diagrams ================================================================
 
 = Diagrams<diagrams>
@@ -1339,4 +1418,17 @@ hand-built overlays.
   ("/src/pieces.typ", "piece-content"),
   ("/src/coords.typ", "parse-square"),
   ("/src/coords.typ", "is-dark-square"),
+))
+
+== Piece-set loaders
+Build the `piece-set` value for a downloaded or custom set (see
+#link(<custom-piece-sets>)[Using your own downloaded piece set] and
+#link(<fairy-pieces>)[Non-standard and fairy pieces]). `named-piece-set` maps
+`(colour, kind)` onto your files through a filename pattern; `svg-piece-set` is
+the lichess-layout shorthand; `with-fallback` composes a custom loader over a base
+set for mixed boards.
+#show-fns((
+  ("/src/pieces.typ", "named-piece-set"),
+  ("/src/pieces.typ", "svg-piece-set"),
+  ("/src/pieces.typ", "with-fallback"),
 ))
