@@ -85,6 +85,26 @@
   arrow-color: default-highlight-base,  // default arrow colour (opaque base)
   arrow-transparency: 85%,    // applied to the default arrow colour (more transparent than highlights)
   arrow-width: auto,          // shaft width; auto -> proportional to the square
+  // In-check indicator (prompt 27). A radial glow (colour -> transparent) on the
+  // king that is in check, drawn under the piece. `check` gates it; `check-color`
+  // is the glow's inner colour. `check-square` is the marked square, auto-filled
+  // by `board()` from the side-to-move's king for ANALYZABLE variants (standard
+  // chess) and user-overridable; it stays `none` for fairy/bare positions.
+  check: false,               // show the in-check glow
+  check-color: red,           // glow inner colour (fades to its own transparent)
+  check-square: none,         // square name to glow, or none (auto-filled)
+  // Move-quality indicator (prompt 27). A small badge on the destination square of
+  // the last move, coloured by the move's assessment. `move-quality` gates it;
+  // `move-quality-mark` is the data `(square: "e5", symbol: "!!")`, auto-filled by
+  // `diagram-after` from the move's NAGs (games / PGN / movetext only -- never a
+  // bare position). Per-category backgrounds are settable; badge text is white.
+  move-quality: false,        // show the move-quality badge
+  move-quality-mark: none,    // (square: <name>, symbol: <! ? !! ?? !? ?!>), or none
+  move-quality-colors: (
+    good: rgb("#4b8fd1"),        // ! !!   (light blue)
+    bad: rgb("#c0392b"),         // ? ??   (red)
+    interesting: rgb("#67a04a"), // !? ?!  (green)
+  ),
   // Mapping from PGN %cal/%csl color letters to colors (item 8, decision 8a).
   annotation-colors: (
     G: rgb(21, 120, 27, 200),   // green

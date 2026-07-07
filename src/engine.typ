@@ -111,6 +111,20 @@
   is-square-attacked(position.squares, k.at(0), k.at(1), _other(color))
 }
 
+/// Square (e.g. `"e1"`) of the *side-to-move's* king when it is in check, else
+/// `none`. This is the one king that can legally be in check, so it is what the
+/// in-check indicator glows (prompt 27). Standard-chess only.
+///
+/// - position (dictionary): the position to test (needs `turn` + `squares`).
+/// -> str | none
+#let checked-king-square(position) = {
+  let color = if position.turn == "w" { "white" } else { "black" }
+  let k = _find-king(position.squares, color)
+  if k == none { return none }
+  if not is-square-attacked(position.squares, k.at(0), k.at(1), _other(color)) { return none }
+  square-name(k.at(0), k.at(1))
+}
+
 // Pseudo-legal moves (no king-safety check), excluding castling.
 #let _pseudo-moves(position) = {
   let board = position.squares

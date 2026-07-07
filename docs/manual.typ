@@ -372,6 +372,56 @@ lines between the squares.
 )
 ```, stacked: true)
 
+== Move Markings
+
+Two optional markings annotate the *move* rather than arbitrary squares. Both are
+*off by default* and their colours are settable per call or via
+`set-board-defaults`.
+
+`check: true` draws a radial glow (`check-color`, default red, fading to
+transparent) *under* the king that is in check. On a standard position the checked
+king is located automatically — you only flip the switch:
+
+#example(```typ
+#board(
+  "4k3/8/8/8/8/8/8/r3K3 w - - 0 1",
+  check: true,
+  size: 4cm,
+)
+```)
+
+`move-quality: true` draws a small disc on the *upper-right corner* of the last
+move's destination square, carrying its assessment: `!` / `!!` (good, blue),
+`?` / `??` (bad, red), `!?` / `?!` (interesting, green), text always white. The
+disc clears the piece and spills slightly into the neighbours. Per call you supply
+the square and glyph with `move-quality-mark`; recolour the categories with
+`move-quality-colors`:
+
+#example(```typ
+#board(
+  "8/8/8/8/1N6/8/8/8",
+  move-quality: true,
+  move-quality-mark: (square: "b4", symbol: "!!"),
+  size: 4cm,
+)
+```)
+
+Wired through a game, `diagram-after` fills both in from the move itself — the glow
+from the check it delivers, the badge from the move's quality, read identically
+whether written as a literal `?!` suffix, a PGN NAG, or set with `with-nags`. Here
+the mate `4.Qxf7#` glows on the Black king and, tagged `!` programmatically, wears a
+good-move badge on `f7`:
+
+#example(```typ
+#let g = parse-pgn(
+  "1. e4 e5 2. Qh5 Nc6 3. Bc4 Nf6?? 4. Qxf7# 1-0",
+).first()
+#diagram-after(
+  with-nags(g, ("4w": "!")), "4w",
+  check: true, move-quality: true, size: 4cm,
+)
+```)
+
 == Coordinates and Non-Square Boards
 
 At leasst in standard western chess, Files run `a`, `b`, … and ranks `1`, `2`, …; `a1` is the dark square in the lower-left corner, `h8` the upper-right. Square names are case-insensitive
@@ -1159,6 +1209,11 @@ Accepted by `board` / `chess-board` / `diagram` / `chess-diagram` per call, and 
   [`cross-width` / `circle-width`], raw("2pt"), [cross / circle stroke widths],
   [`arrow-color` / `arrow-transparency`], [green, `85%`], [default arrow color and its transparency],
   raw("arrow-width"), raw("auto"), [arrow shaft width; `auto` scales with the square],
+  raw("check"), raw("false"), [in-check glow on the checked king (auto-located for standard positions)],
+  [`check-color` / `check-square`], [red / `none`], [glow colour; square to glow (`none` → auto-located)],
+  raw("move-quality"), raw("false"), [move-quality badge on the last move's destination],
+  raw("move-quality-mark"), raw("none"), [`(square:, symbol:)`, symbol one of `! ? !! ?? !? ?!` — auto-filled by `diagram-after`],
+  raw("move-quality-colors"), [blue / red / green], [`good` / `bad` / `interesting` badge backgrounds],
   raw("annotation-colors"), [G/R/Y/B/O map], [PGN `%cal`/`%csl` color-letter → color],
   raw("label-color"), raw("luma(90)"), [`"outside"`-mode strip label color],
   raw("label-border-ratio"), raw("0.07"), [`"border"`-mode band width, as a board fraction],

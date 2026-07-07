@@ -35,6 +35,21 @@ Then open the PDFs below and check the noted property. (The expected-*fail* test
       `unicode_fallback.pdf` — every piece glyph present, centred, correct colour
       (including the Unicode glyph fallback).
 - [ ] `board/geometry/nonstandard_boards.pdf` — non-8×8 geometry looks sane.
+- [ ] `board/markings/markings.pdf` (prompt 27) —
+      *In-check glow*: a red radial glow (red centre → transparent) sits **under**
+      the king on the checked square, on both the Black-in-check and White-in-check
+      boards; the "default" board (no `check:`) shows **no** glow; the custom-colour
+      board glows blue. The glow stays roughly circular and does not bleed into
+      neighbouring squares.
+      *Move-quality badge*: the six glyphs read as small discs on each square's
+      **upper-right corner** — good `!`/`!!` blue, bad `?`/`??` red, interesting
+      `!?`/`?!` green, white text, legible (incl. the two-char `!!`/`??`). Each disc
+      clears its piece and spills slightly into the neighbours. On the a8 corner
+      pair the disc spills **above/right of the board** and stays screen-upper-right
+      after `flip: true`.
+      *Wired through a game*: the left diagram (mate `4.Qxf7#`) shows both the glow
+      on the Black king **and** a blue `!` badge on f7; the right diagram shows a red
+      `??` badge on f6. Badge and glow never overlap the wrong square.
 
 ## Diagrams, notation, tables
 

@@ -21,10 +21,10 @@
 #import "src/pieces.typ": piece-content
 #import "src/variants.typ": variant-spec as _variant-spec, char-to-piece as _char-to-piece
 #import "src/fen.typ": parse-fen, starting-fen, position-fen as _position-fen
-#import "src/engine.typ": legal-moves, apply, in-check
+#import "src/engine.typ": legal-moves, apply, in-check, checked-king-square as _checked-king-square
 #import "src/san.typ": chess-moves
 #import "src/pgn.typ": parse-pgn, movetext
-#import "src/game.typ": mainline, position-after, game-result, move-san, move-node, with-nags, with-comments, with-variation
+#import "src/game.typ": mainline, position-after, game-result, move-san, move-node, move-quality-mark as _move-quality-mark, with-nags, with-comments, with-variation
 // The text core lives in src/notation.typ; lib defines `notation` /
 // `chess-notation` on top so they can also embed diagrams (which needs the
 // lib-level `chess-diagram`).
@@ -197,6 +197,20 @@
   }
 }
 
+// The full position behind `source` when it is ANALYZABLE by the rules engine
+// (standard chess only, and only when a `turn` is known) -- else `none`. Used to
+// auto-locate the in-check king. A bare squares dict (no `turn`) and any
+// non-standard variant deliberately return `none`, so the in-check glow never
+// fires on fairy/variant boards.
+#let _analyzable-position(source) = {
+  let pos = if type(source) == str { parse-fen(source) }
+    else if type(source) == dictionary and "squares" in source and "turn" in source { source }
+    else { none }
+  if pos == none { return none }
+  if pos.at("variant", default: "standard") != "standard" { return none }
+  pos
+}
+
 /// Draw a bare board — no caption, no figure — the variant-agnostic drawing
 /// primitive that every diagram builds on. The variant (if any) rides on
 /// `source`; the variant-named wrappers (`chess-board`, a future `xiangqi-board`,
@@ -213,7 +227,18 @@
 /// -> content
 #let board(source, flip: false, ..overrides) = {
   let b = _to-board(source)
-  _render-board(b.squares, flip: flip, cols: b.cols, rows: b.rows, ..overrides.named())
+  let ov = overrides.named()
+  // In-check auto-fill (prompt 27): locate the side-to-move king in check and pass
+  // it as `check-square`, unless the caller set one. Computed only for analyzable
+  // positions; the glow itself is still gated by the `check` style switch.
+  if "check-square" not in ov {
+    let pos = _analyzable-position(source)
+    if pos != none {
+      let cs = _checked-king-square(pos)
+      if cs != none { ov.insert("check-square", cs) }
+    }
+  }
+  _render-board(b.squares, flip: flip, cols: b.cols, rows: b.rows, ..ov)
 }
 
 // Variant guard for the *-board / *-diagram wrappers: a position source must
@@ -303,6 +328,7 @@
   let r = _interpret-comment(move-node(game, locator).at("comment-after", default: none))
   (r.arrows, r.highlights)
 }
+
 
 // Split a mixed named-argument dict three ways: board-style overrides, diagram-
 // style overrides, and leftover #figure arguments.
@@ -430,6 +456,14 @@
   let base-ov = (:)
   for (k, v) in board-ov { if k != "arrows" and k != "highlight" { base-ov.insert(k, v) } }
   let (anno-arrows, anno-highlight) = _pgn-annotations(game, locator)
+  // Move-quality auto-fill (prompt 27): put the addressed move's assessment badge
+  // on its destination square, unless the caller set `move-quality-mark`. The
+  // badge is still gated by the `move-quality` style switch. (The in-check glow is
+  // auto-filled by `board()` itself, since `pos` is an analyzable position.)
+  if "move-quality-mark" not in base-ov {
+    let mq = _move-quality-mark(game, locator)
+    if mq != none { base-ov.insert("move-quality-mark", mq) }
+  }
 
   // Draw the board inside a context so the `annotations` switch can read the
   // pgn-handling document default -- while the #figure (built by `_assemble`)
