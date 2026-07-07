@@ -93,13 +93,14 @@
   check: false,               // show the in-check glow
   check-color: red,           // glow inner colour (fades to its own transparent)
   check-square: none,         // square name to glow, or none (auto-filled)
-  // Move-quality indicator (prompt 27). A small badge on the destination square of
-  // the last move, coloured by the move's assessment. `move-quality` gates it;
-  // `move-quality-mark` is the data `(square: "e5", symbol: "!!")`, auto-filled by
-  // `diagram-after` from the move's NAGs (games / PGN / movetext only -- never a
-  // bare position). Per-category backgrounds are settable; badge text is white.
+  // Move-quality indicator (prompt 27/28). A small badge on the destination square
+  // of the last move, coloured by the move's assessment. `move-quality` gates it;
+  // `move-quality-mark` is the data `(square: "e5", symbol: "!!")`. Because a badge
+  // is tied to a MOVE, it is derived and injected ONLY by `diagram-after` (from the
+  // move's quality NAG / literal suffix) -- never settable on a bare position, and
+  // never on an empty square. Per-category backgrounds are settable; text is white.
   move-quality: false,        // show the move-quality badge
-  move-quality-mark: none,    // (square: <name>, symbol: <! ? !! ?? !? ?!>), or none
+  move-quality-mark: none,    // (square: <name>, symbol: <! ? !! ?? !? ?!>) — internal, set by diagram-after only
   move-quality-colors: (
     good: rgb("#4b8fd1"),        // ! !!   (light blue)
     bad: rgb("#c0392b"),         // ? ??   (red)

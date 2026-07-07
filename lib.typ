@@ -207,8 +207,33 @@
     else if type(source) == dictionary and "squares" in source and "turn" in source { source }
     else { none }
   if pos == none { return none }
+  // In-check detection is pure geometry (attack rays), so it is valid for any
+  // variant that shares the 8×8 board + standard piece moves. Today that is only
+  // "standard"; when chess960 lands as its own variant, add it here (the move
+  // ENGINE stays standard-only, but the glow does not need the engine). Every
+  // other/unknown variant — and by extension arbitrary teaching diagrams that are
+  // not real chess — must NOT be auto-glowed, so we bail. (Prompt 28 §1.1.)
   if pos.at("variant", default: "standard") != "standard" { return none }
   pos
+}
+
+// Shared board renderer (prompt 28): the actual draw, with the in-check
+// auto-fill. `ov` is the resolved override dict. This is the internal seam that
+// lets `diagram-after` inject the move-quality badge (which only it may do — see
+// the public `board` guard below), while `board` itself forbids that key.
+#let _board-internal(source, flip, ov) = {
+  let b = _to-board(source)
+  // In-check auto-fill (prompt 27): locate the side-to-move king in check and pass
+  // it as `check-square`, unless the caller set one. Computed only for analyzable
+  // positions; the glow itself is still gated by the `check` style switch.
+  if "check-square" not in ov {
+    let pos = _analyzable-position(source)
+    if pos != none {
+      let cs = _checked-king-square(pos)
+      if cs != none { ov.insert("check-square", cs) }
+    }
+  }
+  _render-board(b.squares, flip: flip, cols: b.cols, rows: b.rows, ..ov)
 }
 
 /// Draw a bare board — no caption, no figure — the variant-agnostic drawing
@@ -226,19 +251,14 @@
 ///   `arrows`, `grid`, …) — see #link(<board-options>)[Board style options].
 /// -> content
 #let board(source, flip: false, ..overrides) = {
-  let b = _to-board(source)
   let ov = overrides.named()
-  // In-check auto-fill (prompt 27): locate the side-to-move king in check and pass
-  // it as `check-square`, unless the caller set one. Computed only for analyzable
-  // positions; the glow itself is still gated by the `check` style switch.
-  if "check-square" not in ov {
-    let pos = _analyzable-position(source)
-    if pos != none {
-      let cs = _checked-king-square(pos)
-      if cs != none { ov.insert("check-square", cs) }
-    }
-  }
-  _render-board(b.squares, flip: flip, cols: b.cols, rows: b.rows, ..ov)
+  // Move-quality badges (prompt 28) are tied to a MOVE, so they may only be
+  // produced from a game — `diagram-after` derives the mark and injects it via
+  // `_board-internal`. A bare position has no move, so setting `move-quality-mark`
+  // here is a category error (it could otherwise badge an empty square).
+  assert("move-quality-mark" not in ov,
+    message: "move-quality badges are derived from a game move; set `move-quality: true` on `diagram-after` (or annotate the move with `with-nags`) — a bare `board`/`chess-board` cannot carry one")
+  _board-internal(source, flip, ov)
 }
 
 // Variant guard for the *-board / *-diagram wrappers: a position source must
@@ -456,14 +476,16 @@
   let base-ov = (:)
   for (k, v) in board-ov { if k != "arrows" and k != "highlight" { base-ov.insert(k, v) } }
   let (anno-arrows, anno-highlight) = _pgn-annotations(game, locator)
-  // Move-quality auto-fill (prompt 27): put the addressed move's assessment badge
-  // on its destination square, unless the caller set `move-quality-mark`. The
-  // badge is still gated by the `move-quality` style switch. (The in-check glow is
-  // auto-filled by `board()` itself, since `pos` is an analyzable position.)
-  if "move-quality-mark" not in base-ov {
-    let mq = _move-quality-mark(game, locator)
-    if mq != none { base-ov.insert("move-quality-mark", mq) }
-  }
+  // Move-quality badge (prompt 28): this game path is the ONLY producer — the
+  // badge is derived from the addressed move's assessment (its quality NAG or a
+  // literal `!`/`?` suffix) and placed on the move's destination square, gated by
+  // the `move-quality` style switch. Callers cannot set `move-quality-mark`
+  // themselves (a bare position has no move); `board` rejects that key, so we
+  // inject the derived mark through `_board-internal`. (The in-check glow is
+  // auto-filled inside `_board-internal`, since `pos` is an analyzable position.)
+  assert("move-quality-mark" not in base-ov,
+    message: "diagram-after derives the move-quality badge from the move itself; do not pass `move-quality-mark`")
+  let mq = _move-quality-mark(game, locator)
 
   // Draw the board inside a context so the `annotations` switch can read the
   // pgn-handling document default -- while the #figure (built by `_assemble`)
@@ -472,7 +494,11 @@
     let process = if annotations != auto { annotations } else { (default-pgn-style + pgn-style-state.get()).annotations }
     let arr = explicit-arrows + (if process { anno-arrows } else { () })
     let hl = explicit-highlight + (if process { anno-highlight } else { () })
-    board(pos, flip: flip, arrows: arr, highlight: hl, ..base-ov)
+    let ov = base-ov
+    ov.insert("arrows", arr)
+    ov.insert("highlight", hl)
+    if mq != none { ov.insert("move-quality-mark", mq) }
+    _board-internal(pos, flip, ov)
   }
   _assemble(drawn, w, b, y, game-info, cap, diagram-ov, lang, fig-args)
 }

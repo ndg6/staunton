@@ -27,11 +27,13 @@
 )
 
 // per-call overrides also accept them, and an explicit check-square is honoured
-// (not overwritten by auto-detection)
+// (not overwritten by auto-detection). `move-quality-mark` is NOT accepted on a
+// bare board (prompt 28: badges come from a game only — see malformed/); the
+// `move-quality` switch alone is harmless (nothing to draw without a move).
 #board(
   "4k3/8/8/8/8/8/8/4K3 w - - 0 1",
   check: true, check-square: "d4", check-color: purple,
-  move-quality: true, move-quality-mark: (square: "e4", symbol: "!"),
+  move-quality: true,
 )
 
 = move-markings options

@@ -390,27 +390,19 @@ king is located automatically — you only flip the switch:
 )
 ```)
 
-`move-quality: true` draws a small disc on the *upper-right corner* of the last
-move's destination square, carrying its assessment: `!` / `!!` (good, blue),
-`?` / `??` (bad, red), `!?` / `?!` (interesting, green), text always white. The
-disc clears the piece and spills slightly into the neighbours. Per call you supply
-the square and glyph with `move-quality-mark`; recolour the categories with
-`move-quality-colors`:
+`move-quality: true` draws a small disc near the *upper-right* of the last move's
+destination square, carrying its assessment: `!` / `!!` (good, blue), `?` / `??`
+(bad, red), `!?` / `?!` (interesting, green), text always white. The disc clears the
+piece and spills slightly into the neighbours; recolour the categories with
+`move-quality-colors`.
 
-#example(```typ
-#board(
-  "8/8/8/8/1N6/8/8/8",
-  move-quality: true,
-  move-quality-mark: (square: "b4", symbol: "!!"),
-  size: 4cm,
-)
-```)
-
-Wired through a game, `diagram-after` fills both in from the move itself — the glow
-from the check it delivers, the badge from the move's quality, read identically
-whether written as a literal `?!` suffix, a PGN NAG, or set with `with-nags`. Here
-the mate `4.Qxf7#` glows on the Black king and, tagged `!` programmatically, wears a
-good-move badge on `f7`:
+A badge is tied to a *move*, so it is only available when you draw *from a game*:
+`diagram-after` derives it from the addressed move itself and places it on that
+move's destination. (A bare `board` / `chess-board` has no move, so it cannot carry
+a badge — setting `move-quality-mark` there is an error.) The assessment is read
+identically whether written as a literal `?!` suffix, a PGN NAG, or set with
+`with-nags`. Here the mate `4.Qxf7#` glows on the Black king and, tagged `!`
+programmatically, wears a good-move badge on `f7`:
 
 #example(```typ
 #let g = parse-pgn(
@@ -1212,7 +1204,7 @@ Accepted by `board` / `chess-board` / `diagram` / `chess-diagram` per call, and 
   raw("check"), raw("false"), [in-check glow on the checked king (auto-located for standard positions)],
   [`check-color` / `check-square`], [red / `none`], [glow colour; square to glow (`none` → auto-located)],
   raw("move-quality"), raw("false"), [move-quality badge on the last move's destination],
-  raw("move-quality-mark"), raw("none"), [`(square:, symbol:)`, symbol one of `! ? !! ?? !? ?!` — auto-filled by `diagram-after`],
+  raw("move-quality-mark"), raw("none"), [`(square:, symbol:)`, symbol one of `! ? !! ?? !? ?!` — derived and set by `diagram-after` only; not settable on a bare board],
   raw("move-quality-colors"), [blue / red / green], [`good` / `bad` / `interesting` badge backgrounds],
   raw("annotation-colors"), [G/R/Y/B/O map], [PGN `%cal`/`%csl` color-letter → color],
   raw("label-color"), raw("luma(90)"), [`"outside"`-mode strip label color],

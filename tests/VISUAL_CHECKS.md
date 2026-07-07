@@ -35,18 +35,22 @@ Then open the PDFs below and check the noted property. (The expected-*fail* test
       `unicode_fallback.pdf` — every piece glyph present, centred, correct colour
       (including the Unicode glyph fallback).
 - [ ] `board/geometry/nonstandard_boards.pdf` — non-8×8 geometry looks sane.
-- [ ] `board/markings/markings.pdf` (prompt 27) —
-      *In-check glow*: a red radial glow (red centre → transparent) sits **under**
-      the king on the checked square, on both the Black-in-check and White-in-check
-      boards; the "default" board (no `check:`) shows **no** glow; the custom-colour
-      board glows blue. The glow stays roughly circular and does not bleed into
-      neighbouring squares.
-      *Move-quality badge*: the six glyphs read as small discs on each square's
-      **upper-right corner** — good `!`/`!!` blue, bad `?`/`??` red, interesting
-      `!?`/`?!` green, white text, legible (incl. the two-char `!!`/`??`). Each disc
-      clears its piece and spills slightly into the neighbours. On the a8 corner
-      pair the disc spills **above/right of the board** and stays screen-upper-right
-      after `flip: true`.
+- [ ] `board/markings/markings.pdf` (prompt 27/28) —
+      *In-check glow*: a **Lichess-style** red radial that fills most of the square
+      — solid near the centre and reaching the **edge midpoints**, with only the four
+      **corners** left showing the bare square colour — sits **under** the king on
+      the checked square, which stays crisp **on top** (the glow must NOT vanish
+      under the piece). Present on both the Black-in-check and White-in-check boards; the
+      "default" board (no `check:`) shows **no** glow; the custom-colour board glows
+      blue. The reference-play board (`3. Qh5#`) glows the Black king. The glow stays
+      roughly circular and does not bleed into neighbouring squares.
+      *Move-quality badge* (all now sourced from a game): the six glyphs read as
+      discs on each move's destination square, at the **upper-right**, pulled toward
+      the piece's square — good `!`/`!!` blue, bad `?`/`??` red, interesting `!?`/`?!`
+      green, white text, legible (incl. the two-char `!!`/`??`). Each disc sits on an
+      **occupied** square, clears its piece, and spills slightly into the neighbours.
+      On the a8 corner pair (`Nxa8!!`) the disc spills **above/right of the board**
+      and stays screen-upper-right after `flip: true`.
       *Wired through a game*: the left diagram (mate `4.Qxf7#`) shows both the glow
       on the Black king **and** a blue `!` badge on f7; the right diagram shows a red
       `??` badge on f6. Badge and glow never overlap the wrong square.

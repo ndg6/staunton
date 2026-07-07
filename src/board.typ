@@ -141,15 +141,20 @@
   }
 }
 
-// In-check glow (prompt 27): a square-filling radial gradient from `color` at the
-// centre fading to fully transparent, drawn UNDER the piece so the king reads on
-// top. The final stop reuses `color`'s RGB at 0% alpha so the fade is hueless.
+// In-check glow (prompt 27/28): a square-filling radial gradient, drawn UNDER the
+// piece so the king reads crisp on top and the glow radiates from beneath it —
+// the Lichess look. The gradient's default 50% radius is the circle inscribed in
+// the square (touching the four EDGE MIDPOINTS); the four corners fall outside it
+// and so keep the underlying square colour. We hold the glow FULLY OPAQUE almost
+// to that edge, fading out only in the last sliver, so the colour reaches the edge
+// midpoints and only the corners stay bare. The transparent stop reuses `color`'s
+// RGB at 0% alpha so the fade is hueless.
 #let _draw-check(dx, dy, sq, color) = {
   let c = rgb(color).components()
   let clear = rgb(c.at(0), c.at(1), c.at(2), 0%)
   place(dx: dx, dy: dy, rect(
     width: sq, height: sq, stroke: none,
-    fill: gradient.radial((color, 0%), (clear, 75%), (clear, 100%)),
+    fill: gradient.radial((color, 0%), (color, 78%), (clear, 100%)),
   ))
 }
 
@@ -161,17 +166,21 @@
   else { panic("move-quality symbol must be one of ! ? !! ?? !? ?!; got " + repr(symbol)) }
 }
 
-// Move-quality badge (prompt 27): a small filled disc centred on the square's
-// screen top-right CORNER (dx+sq, dy), so it never touches the piece and spills
-// slightly into the neighbouring squares. `colors` is the per-category background
-// map; the symbol text is always white. Two-glyph symbols ("!!") shrink to fit.
-// Drawn on top of everything. The corner is orientation-agnostic (always the
-// screen upper-right), matching the Lichess look under a flip.
+// Move-quality badge (prompt 27/28): a filled disc near the square's screen
+// top-right, its centre pulled INTO the move's square by `inset` (so it reads as
+// belonging to that square) while still spilling over the top-right edge into the
+// neighbours. Prompt 28 enlarged the disc (r ≈ 0.28·sq) and moved the centre off
+// the bare corner. `colors` is the per-category background map; the symbol text is
+// always white. Two-glyph symbols ("!!") shrink to fit. Drawn on top of
+// everything. The corner is orientation-agnostic (always screen upper-right),
+// matching the Lichess look under a flip.
 #let _draw-move-quality(dx, dy, sq, symbol, colors) = {
   let bg = colors.at(_mq-category(symbol))
-  let r = sq * 0.19
-  let fs = if symbol.clusters().len() >= 2 { sq * 0.19 } else { sq * 0.27 }
-  place(dx: dx + sq - r, dy: dy - r, box(width: 2 * r, height: 2 * r, {
+  let r = sq * 0.28
+  let inset = r * 0.5   // pull the centre down-and-left, into the move's square
+  let fs = if symbol.clusters().len() >= 2 { r * 0.85 } else { r * 1.2 }
+  // box top-left so the disc centre lands at (dx + sq - inset, dy + inset)
+  place(dx: dx + sq - inset - r, dy: dy + inset - r, box(width: 2 * r, height: 2 * r, {
     place(circle(radius: r, fill: bg, stroke: none))
     place(box(width: 2 * r, height: 2 * r, align(center + horizon,
       text(fill: white, size: fs, weight: "bold", symbol))))
@@ -369,9 +378,9 @@
         if st.border != none {
           place(rect(width: bw, height: bh, fill: none, stroke: st.border))
         }
-        // move-quality badge (prompt 27): topmost, on the destination square's
-        // screen top-right corner. `move-quality-mark` is auto-filled by
-        // `diagram-after`; a bare board can set it explicitly per call.
+        // move-quality badge (prompt 27/28): topmost, on the destination square's
+        // screen top-right corner. `move-quality-mark` is derived and injected by
+        // `diagram-after` only (badges are tied to a move; never a bare position).
         if st.move-quality and st.move-quality-mark != none {
           let mq = st.move-quality-mark
           let p = parse-square(mq.square, cols: cols, rows: rows)
