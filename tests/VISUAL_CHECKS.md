@@ -41,6 +41,13 @@ Then open the PDFs below and check the noted property. (The expected-*fail* test
       present, centred, sized like the bundled sets. (All three self-assert the
       image count, so a dropped piece fails the run; the eyeball is only for
       sizing/centring.)
+- [ ] `board/piece_sets/fairy/mixed_board.pdf` — a mixed fairy board: standard
+      king/pawn (from cburnett via `with-fallback`) sit alongside the three fairy
+      pieces **alfil** (a1, white), **dabbaba** (d4, black) and **ferz** (f6,
+      white). Check each fairy glyph is the right piece, the right colour, centred
+      and sized like the standard ones. (The sheet self-asserts that all 6 pieces
+      render, so a dropped piece fails the run; the eyeball is glyph identity,
+      colour and sizing.)
 - [ ] `board/geometry/nonstandard_boards.pdf` — non-8×8 geometry looks sane.
 
 ## Diagrams, notation, tables

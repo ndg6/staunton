@@ -152,22 +152,92 @@
   box(width: sq, height: sq, align(center + horizon, art))
 }
 
-/// Build a `piece-set` loader for the standard lichess file layout
-/// (`{w,b}{K,Q,R,B,N,P}.svg`) from a caller-supplied file reader. This is the
-/// convenient way to use a downloaded set: you supply only *how to read a file*
-/// (which must be authored in YOUR document so paths resolve against your project
-/// root — see square-piece); this helper owns the `wK.svg` naming.
+/// Build a `piece-set` loader from a caller-supplied file reader and a *filename
+/// pattern*, so a downloaded/self-made set loads without prescribing one fixed
+/// naming scheme. You supply only *how to read a file* (which must be authored in
+/// YOUR document so paths resolve against your project root — see square-piece)
+/// and the `pattern` your set follows; the helper substitutes it per `(color,
+/// kind)`. This is the convenient way to load a custom set, including fairy sets.
+///
+/// Pattern placeholders (we prescribe the *vocabulary*, not the layout):
+/// / `{kind}`: long kind name — `"king"`, `"alfil"`.
+/// / `{color}`: long colour — `"white"`, `"black"`.
+/// / `{c}`: short colour — `"w"`, `"b"`.
+/// / `{K}` / `{k}`: the kind's letter, upper / lower case. Needs a letter for the
+///   kind: taken from `letters` if given, else the built-in standard map (so it
+///   only works out-of-the-box for the standard six). Pass `letters` for custom
+///   kinds that use a `{K}`/`{k}` pattern.
 ///
 /// ```typ
-/// #set-piece-set(svg-piece-set(f => read("/assets/pieces/alpha/" + f, encoding: none)))
+/// // fairy set named e.g. "alfil_white.svg"
+/// #named-piece-set(f => read("/assets/fairy_1/" + f, encoding: none))
+/// // lichess layout "wK.svg"
+/// #named-piece-set(f => read("/assets/alpha/" + f, encoding: none), pattern: "{c}{K}.svg")
 /// ```
 ///
-/// - read-file (function): `(filename: str) -> bytes | content`, e.g.
-///   `f => read(base + "/" + f, encoding: none)` or `f => image(base + "/" + f)`.
+/// - read-file (function): `(filename: str) -> bytes | content`.
+/// - pattern (str): the filename template (default `"{kind}_{color}.svg"`).
+/// - letters (dictionary): optional `kind -> letter` map for `{K}`/`{k}` patterns.
 /// -> function
-#let svg-piece-set(read-file) = (color, kind) => {
+#let named-piece-set(read-file, pattern: "{kind}_{color}.svg", letters: none) = (color, kind) => {
   let c = if color == "white" { "w" } else { "b" }
-  read-file(c + kind-letters.at(kind) + ".svg")
+  let name = pattern.replace("{kind}", kind).replace("{color}", color).replace("{c}", c)
+  if name.contains("{K}") or name.contains("{k}") {
+    let lk = if letters != none and kind in letters { letters.at(kind) }
+      else if kind in kind-letters { kind-letters.at(kind) }
+      else { panic("named-piece-set: pattern uses {K}/{k} but no letter is known for "
+        + "kind \"" + kind + "\"; pass `letters: (" + kind + ": \"X\", ..)`") }
+    name = name.replace("{K}", upper(lk)).replace("{k}", lower(lk))
+  }
+  read-file(name)
+}
+
+/// Build a `piece-set` loader for the standard lichess file layout
+/// (`{w,b}{K,Q,R,B,N,P}.svg`) — a thin alias of `named-piece-set` with
+/// `pattern: "{c}{K}.svg"`, kept for back-compatibility.
+///
+/// - read-file (function): `(filename: str) -> bytes | content`.
+/// -> function
+#let svg-piece-set(read-file) = named-piece-set(read-file, pattern: "{c}{K}.svg")
+
+// Resolve a base `piece-set` (a bundled NAME, a loader function, or a bytes/
+// content dict) to the art (bytes | content) for one (color, kind). Used by
+// `with-fallback` to draw the kinds it delegates to the base. A bundled NAME is
+// read as bytes from the packaged assets (source-relative, so packaging-safe).
+#let _piece-art(base, color, kind) = {
+  if type(base) == function {
+    base(color, kind)
+  } else if type(base) == dictionary {
+    let key = color + "-" + kind
+    assert(key in base, message: "with-fallback base (dictionary) has no entry for \"" + key + "\"")
+    base.at(key)
+  } else {
+    let c = if color == "white" { "w" } else { "b" }
+    assert(kind in kind-letters, message: "with-fallback base set \"" + base
+      + "\" has no file for kind \"" + kind + "\" (bundled sets cover only the "
+      + "standard six); give custom kinds their own loader, or adjust `base-kinds`")
+    read("assets/piece_sets/" + base + "/" + c + kind-letters.at(kind) + ".svg", encoding: none)
+  }
+}
+
+/// Compose a custom-kind `loader` with a fallback `base` piece-set, so ONE
+/// `piece-set` can draw a mixed board (standard pieces + fairy pieces). Standard
+/// kinds are drawn from `base`; every other kind is delegated to `loader`. This is
+/// the ergonomic answer to "standard king/pawn alongside alfil/dabbaba/ferz".
+///
+/// ```typ
+/// #let art = with-fallback(named-piece-set(
+///   f => read("/assets/fairy_1/" + f, encoding: none)))
+/// #board(position(.., variant: fairy), piece-set: art)
+/// ```
+///
+/// - loader (function): `(color, kind) -> bytes | content` for the non-base kinds.
+/// - base (str, function, dictionary): the fallback piece-set for `base-kinds`
+///   (default the factory set `"cburnett"`); any `piece-set` form.
+/// - base-kinds (array): the kinds served by `base` (default the standard six).
+/// -> function
+#let with-fallback(loader, base: default-piece-set, base-kinds: piece-kinds) = (color, kind) => {
+  if base-kinds.contains(kind) { _piece-art(base, color, kind) } else { loader(color, kind) }
 }
 
 /// Render a piece as content sized to a `sq`-side square, ready to be `place`d at
@@ -203,11 +273,19 @@
   piece-scale: 1.0,
   baseline-inset: 0.20,
 ) = {
-  assert(piece-kinds.contains(kind), message: "unknown piece kind: \"" + repr(kind) + "\" (expected one of " + repr(piece-kinds) + ")")
+  // NOTE: `kind` is NOT gated against the standard six here. The kind vocabulary
+  // is validated upstream by the (variant-aware) position layer, so a custom
+  // (fairy) kind reaches us legitimately. The loader/dict paths draw ANY kind;
+  // only the two paths that genuinely need the built-in six-kind tables (the
+  // bundled-name path's `kind-letters`, and the Unicode glyph fallback) guard the
+  // kind locally, with a message that points custom kinds at a loader.
   assert(piece-colors.contains(color), message: "unknown piece color: \"" + repr(color) + "\" (expected \"white\" or \"black\")")
 
   if piece-set == none or piece-set == "unicode" {
     // Glyph fallback: lift onto a common baseline and apply the glyph fit factor.
+    assert(piece-kinds.contains(kind), message: "no built-in glyph for piece kind \""
+      + kind + "\"; the Unicode fallback only covers the standard six — render custom "
+      + "(fairy) kinds with an SVG loader or bytes-dict `piece-set` instead")
     box(
       width: sq, height: sq, inset: (bottom: sq * baseline-inset),
       align(center + bottom, piece-content(
@@ -218,14 +296,22 @@
   } else if type(piece-set) == function {
     // User loader: authored in the user's document, so its file access resolves
     // against the user's project root. This is how downloaded/custom sets load.
+    // Kind-agnostic: any (fairy) kind is passed straight through.
     _box-loaded(piece-set(color, kind), sq, piece-scale, color, kind)
   } else if type(piece-set) == dictionary {
+    // Kind-agnostic: keyed "<color>-<kind>", so custom kinds work as-is.
     let key = color + "-" + kind
     assert(key in piece-set, message: "piece set (dictionary) has no entry for \""
       + key + "\"; keys present: " + repr(piece-set.keys()))
     _box-loaded(piece-set.at(key), sq, piece-scale, color, kind)
   } else {
     let c = if color == "white" { "w" } else { "b" }
+    // Bundled-set NAME path: needs the fixed six-kind `kind-letters` map, so a
+    // custom kind cannot be served here -- point the user at a loader/dict.
+    assert(kind in kind-letters, message: "bundled piece set \"" + piece-set
+      + "\" has no file for custom kind \"" + kind + "\" (named sets cover only the "
+      + "standard six); render it with an SVG loader or bytes-dict `piece-set` "
+      + "(e.g. `with-fallback`)")
     // Path resolves relative to THIS file (src/pieces.typ), so it is independent
     // of the compile root and survives packaging.
     let path = "assets/piece_sets/" + piece-set + "/" + c + kind-letters.at(kind) + ".svg"

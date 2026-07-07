@@ -18,7 +18,7 @@
 // this module's surface (Typst 0.15 has no real export privacy, so this is the
 // convention). Everything else stays reachable via a deep `src/...` import.
 #import "src/coords.typ": parse-square, is-dark-square, square-name as _square-name
-#import "src/pieces.typ": piece-content, svg-piece-set
+#import "src/pieces.typ": piece-content, svg-piece-set, named-piece-set, with-fallback
 #import "src/variants.typ": variant-spec as _variant-spec, char-to-piece as _char-to-piece
 #import "src/fen.typ": parse-fen, starting-fen, position-fen as _position-fen
 #import "src/engine.typ": legal-moves, apply, in-check
@@ -95,7 +95,7 @@
   let spec = _variant-spec(variant)
   let k = lower(value.kind)
   let kind = if k in spec.abbr { spec.abbr.at(k) } else if spec.kinds.contains(k) { k } else {
-    panic("position(): unknown piece kind " + repr(value.kind) + " for variant \"" + variant + "\" (kinds: " + repr(spec.kinds) + ")")
+    panic("position(): unknown piece kind " + repr(value.kind) + " for variant \"" + spec.name + "\" (kinds: " + repr(spec.kinds) + ")")
   }
   let color = lower(value.color)
   assert(color == "white" or color == "black", message: "position(): color must be \"white\" or \"black\", got " + repr(value.color))
@@ -220,8 +220,9 @@
 // already be of the expected variant (catches e.g. chess-board(xiangqi-pos)).
 #let _assert-variant(fname, variant, source) = {
   if type(source) == dictionary and "variant" in source {
+    let got = if type(source.variant) == str { source.variant } else { "custom" }
     assert(source.variant == variant,
-      message: fname + ": expected a \"" + variant + "\" position, got \"" + source.variant + "\"")
+      message: fname + ": expected a \"" + variant + "\" position, got a \"" + got + "\" one")
   }
 }
 
