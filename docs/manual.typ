@@ -380,15 +380,8 @@ Two optional markings annotate the *move* rather than arbitrary squares. Both ar
 
 `check: true` draws a radial glow (`check-color`, default red, fading to
 transparent) *under* the king that is in check. On a standard position the checked
-king is located automatically — you only flip the switch:
-
-#example(```typ
-#board(
-  "4k3/8/8/8/8/8/8/r3K3 w - - 0 1",
-  check: true,
-  size: 4cm,
-)
-```)
+king is located automatically — you only flip the switch (see the combined example
+below).
 
 `move-quality: true` draws a small disc near the *upper-right* of the last move's
 destination square, carrying its assessment: `!` / `!!` (good, blue), `?` / `??`
