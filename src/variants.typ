@@ -108,3 +108,38 @@
   assert(spec.abbr.keys().contains(key), message: "invalid piece char \"" + ch + "\" for variant \"" + spec.name + "\"")
   (kind: spec.abbr.at(key), color: if ch == upper(ch) { "white" } else { "black" })
 }
+
+/// Define a reusable custom variant — the named-argument sugar over the inline
+/// spec dict (see `variant-spec`). It validates *eagerly* (so a bad letter or an
+/// overlap errors at the definition, not at first use) and returns the canonical,
+/// normalised spec, which you bind once and pass as `variant:`.
+///
+/// Typst has no mutable global registry that a position parser could read, so a
+/// custom variant is a *value*, not a string key: bind it and reuse it. (Built-in
+/// variants such as `"standard"` are still referred to by name.)
+///
+/// ```typ
+/// #let fairy = define-variant("Fairy demo",
+///   extends: "standard",
+///   kinds: ("alfil", "dabbaba", "ferz"),
+///   abbr:  (a: "alfil", d: "dabbaba", f: "ferz"))
+/// #board(position((a1: "A"), variant: fairy))
+/// ```
+///
+/// - name (str): a human-readable variant name (shown in error messages).
+/// - extends (str, none): a built-in variant to inherit kinds/letters/geometry
+///   from (e.g. `"standard"`); `none` for a from-scratch spec.
+/// - kinds (array): the piece kinds to ADD (beyond any inherited).
+/// - abbr (dictionary): `letter -> kind` for the added kinds — single lower-case
+///   letters (case selects colour); must not overlap an inherited letter.
+/// - glyphs (dictionary): optional `kind -> glyph` fallback entries.
+/// - cols (int, auto): board width (default: inherited, else `8`).
+/// - rows (int, auto): board height (default: inherited, else `8`).
+/// -> dictionary
+#let define-variant(name, extends: none, kinds: (), abbr: (:), glyphs: (:), cols: auto, rows: auto) = {
+  let spec = (name: name, kinds: kinds, abbr: abbr, glyphs: glyphs)
+  if extends != none { spec.insert("extends", extends) }
+  if cols != auto { spec.insert("cols", cols) }
+  if rows != auto { spec.insert("rows", rows) }
+  variant-spec(spec)
+}

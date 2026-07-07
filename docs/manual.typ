@@ -535,14 +535,14 @@ by hand — a squares dict or the string form — and render them; that is all.
 Two things are needed: a *vocabulary* that names the kinds and their letters, and
 the *art* to draw them.
 
-*Defining the kinds.* Pass `position` a custom *variant spec* as its `variant:`
-argument. The easiest form `extends` the standard variant — inheriting the six
-kinds and their letters — and adds only the new ones. Each new kind takes a single
-lower-case letter that must not clash with an existing one (case selects colour,
-exactly as for the standard pieces):
+*Defining the kinds.* `define-variant` builds a custom *variant* you bind once and
+pass to `position` as its `variant:` argument. The easiest form `extends` the
+standard variant — inheriting the six kinds and their letters — and adds only the
+new ones. Each new kind takes a single lower-case letter that must not clash with
+an existing one (case selects colour, exactly as for the standard pieces):
 
 ```typ
-#let fairy = (
+#let fairy = define-variant("Fairy demo",
   extends: "standard",
   kinds: ("alfil", "dabbaba", "ferz"),
   abbr:  (a: "alfil", d: "dabbaba", f: "ferz"),   // letters must not overlap
@@ -551,6 +551,11 @@ exactly as for the standard pieces):
 
 Now `position(.., variant: fairy)` understands `A`/`a`, `D`/`d` and `F`/`f` in
 both the squares-dict and string forms, right beside the standard `K`, `P`, ….
+`define-variant` validates *eagerly*, so an overlapping letter or an unknown kind
+is caught at the definition. (A variant is a *value* you reuse, not a global name —
+Typst has no mutable registry a position parser could read; built-in variants like
+`"standard"` are still named by string. An inline spec dict works too, wherever a
+variant is expected.)
 
 *Drawing the kinds.* A bundled set *name* (`"cburnett"`) knows only the six western
 pieces, so a fairy board is drawn from a *loader* — the same mechanism as a
@@ -566,7 +571,7 @@ default) and every other kind from your loader.
   f => read("/docs/assets/fairy/" + f, encoding: none),
 ))
 
-#let fairy = (
+#let fairy = define-variant("Fairy demo",
   extends: "standard",
   kinds: ("alfil", "dabbaba", "ferz"),
   abbr:  (a: "alfil", d: "dabbaba", f: "ferz"),
@@ -595,7 +600,7 @@ points to only a handful of fairy pieces, so you supply whatever glyph you like 
 typically a character from a font you embed with `set text(font: ..)`:
 
 ```typ
-#let fairy = (
+#let fairy = define-variant("Amazon demo",
   extends: "standard",
   kinds: ("amazon",), abbr: (a: "amazon"),
   glyphs: (amazon: "🨊"),          // any glyph your font carries
@@ -1313,11 +1318,14 @@ source docstring: its signature, then every parameter with its type and default.
 ))
 
 == Positions
+`define-variant` builds a reusable custom (fairy) variant to pass as `variant:`
+(see #link(<fairy-pieces>)[Non-standard and fairy pieces]).
 #show-fns((
   ("/lib.typ", "position"),
   ("/src/fen.typ", "parse-fen"),
   ("/lib.typ", "to-fen"),
   ("/src/fen.typ", "starting-fen"),
+  ("/src/variants.typ", "define-variant"),
 ))
 
 == Games (PGN)

@@ -19,7 +19,7 @@
 // convention). Everything else stays reachable via a deep `src/...` import.
 #import "src/coords.typ": parse-square, is-dark-square, square-name as _square-name
 #import "src/pieces.typ": piece-content, svg-piece-set, named-piece-set, with-fallback
-#import "src/variants.typ": variant-spec as _variant-spec, char-to-piece as _char-to-piece
+#import "src/variants.typ": variant-spec as _variant-spec, char-to-piece as _char-to-piece, define-variant
 #import "src/fen.typ": parse-fen, starting-fen, position-fen as _position-fen
 #import "src/engine.typ": legal-moves, apply, in-check
 #import "src/san.typ": chess-moves
