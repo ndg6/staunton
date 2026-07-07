@@ -1,6 +1,7 @@
-// EXPECT: no built-in glyph for piece kind
-// The Unicode glyph fallback only covers the standard six. Asking to draw a fairy
-// kind with `piece-set: "unicode"` must fail with a message pointing at a loader.
+// EXPECT: no glyph for piece kind
+// The glyph fallback covers only the standard six unless the variant supplies a
+// glyph. This fairy variant supplies NONE, so drawing it with `piece-set:
+// "unicode"` must fail with a message pointing at `glyphs:` / an SVG piece-set.
 #import "/lib.typ": board, position
 
 #let fairy = (extends: "standard", kinds: ("alfil",), abbr: (a: "alfil"))

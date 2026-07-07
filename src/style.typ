@@ -68,6 +68,9 @@
   white-fill: default-white-fill, // glyph fallback only
   black-fill: default-black-fill, // glyph fallback only
   piece-font: default-piece-fonts, // glyph fallback only
+  piece-glyphs: (:),          // glyph fallback: extra `kind -> glyph` entries for
+                              // custom (fairy) kinds; overrides the built-in six.
+                              // Auto-seeded from a custom variant's `glyphs:` map.
   // Highlights. Entries: a square name "e4" (uses
   // highlight-shape + highlight-fill), a (square, color) pair (filled, explicit
   // colour -- e.g. PGN %csl), or a dict (square:, shape:, color:) for full

@@ -98,6 +98,16 @@
   (kind: kinds.at(key), color: if letter == upper(letter) { "white" } else { "black" })
 }
 
+/// Resolve the fallback glyph for a piece `kind`: a caller/variant-supplied glyph
+/// (from `glyphs`) wins, else the built-in table (standard six only), else `none`
+/// (the caller decides how to error). Unicode cannot foresee every fairy piece, so
+/// a custom kind must bring its own glyph or be drawn from an SVG piece-set.
+///
+/// - kind (str): the piece kind.
+/// - glyphs (dictionary): extra `kind -> glyph` entries (e.g. a variant's map).
+/// -> str | none
+#let _resolve-glyph(kind, glyphs) = glyphs.at(kind, default: piece-glyphs.at(kind, default: none))
+
 /// Render a single piece as `size`-tall content (no square background) — the SVG
 /// piece if the active set has one, else the glyph fallback.
 ///
@@ -108,6 +118,9 @@
 /// - black-fill (color): fill for black pieces.
 /// - stroke-ratio (float): outline width as a fraction of `size`.
 /// - font (array): the glyph-fallback font family list.
+/// - glyphs (dictionary): extra `kind -> glyph` entries for custom (fairy) kinds,
+///   consulted before the built-in six-kind table. A kind with no glyph in either
+///   is an error (the built-in table can only cover the standard six).
 /// -> content
 #let piece-content(
   kind,
@@ -117,12 +130,18 @@
   black-fill: default-black-fill,
   stroke-ratio: 0.03,
   font: default-piece-fonts,
+  glyphs: (:),
 ) = {
-  assert(piece-kinds.contains(kind), message: "unknown piece kind: \"" + repr(kind) + "\" (expected one of " + repr(piece-kinds) + ")")
+  let glyph = _resolve-glyph(kind, glyphs)
+  assert(glyph != none, message: "no glyph for piece kind \"" + kind + "\": the "
+    + "built-in fallback covers only the standard six and no glyph was supplied — "
+    + "add one via the variant's `glyphs:` map, or draw it from an SVG loader/"
+    + "bytes-dict `piece-set`")
   assert(piece-colors.contains(color), message: "unknown piece color: \"" + repr(color) + "\" (expected \"white\" or \"black\")")
   let fill = if color == "white" { white-fill } else { black-fill }
   let stroke-col = if color == "white" { black-fill } else { white-fill }
-  let glyph-size = size * piece-size-ratio.at(kind)
+  // Custom kinds have no tuned size ratio; default to the pawn baseline (1.0).
+  let glyph-size = size * piece-size-ratio.at(kind, default: 1.0)
   // "bounds" makes the text box hug the actual glyph ink, so that bottom-
   // aligning different-sized pieces puts them all on one common baseline.
   set text(font: font, fallback: true, top-edge: "bounds", bottom-edge: "bounds")
@@ -130,7 +149,7 @@
     size: glyph-size,
     fill: fill,
     stroke: stroke-ratio * glyph-size + stroke-col,
-    piece-glyphs.at(kind),
+    glyph,
   )
 }
 
@@ -270,6 +289,7 @@
   white-fill: default-white-fill,
   black-fill: default-black-fill,
   font: default-piece-fonts,
+  glyphs: (:),
   piece-scale: 1.0,
   baseline-inset: 0.20,
 ) = {
@@ -283,14 +303,13 @@
 
   if piece-set == none or piece-set == "unicode" {
     // Glyph fallback: lift onto a common baseline and apply the glyph fit factor.
-    assert(piece-kinds.contains(kind), message: "no built-in glyph for piece kind \""
-      + kind + "\"; the Unicode fallback only covers the standard six — render custom "
-      + "(fairy) kinds with an SVG loader or bytes-dict `piece-set` instead")
+    // A custom (fairy) kind is drawable here iff a glyph was supplied for it;
+    // `piece-content` enforces that (built-in table covers only the standard six).
     box(
       width: sq, height: sq, inset: (bottom: sq * baseline-inset),
       align(center + bottom, piece-content(
         kind, color, sq * piece-scale * _glyph-fit,
-        white-fill: white-fill, black-fill: black-fill, font: font,
+        white-fill: white-fill, black-fill: black-fill, font: font, glyphs: glyphs,
       )),
     )
   } else if type(piece-set) == function {

@@ -48,6 +48,12 @@ Then open the PDFs below and check the noted property. (The expected-*fail* test
       and sized like the standard ones. (The sheet self-asserts that all 6 pieces
       render, so a dropped piece fails the run; the eyeball is glyph identity,
       colour and sizing.)
+- [ ] `board/piece_sets/fairy/glyph_fallback.pdf` — the user-supplied glyph
+      fallback: the fairy **alfil** on a1 draws the variant's glyph (`✶`), while the
+      standard king on e1 still uses the built-in glyph. Check the `✶` shows on a1
+      (font-dependent) and the king renders normally. (The sheet self-asserts glyph
+      *precedence* at the unit level and that the render compiles; the eyeball is
+      that the custom glyph actually appears and is placed/sized sanely.)
 - [ ] `board/geometry/nonstandard_boards.pdf` — non-8×8 geometry looks sane.
 
 ## Diagrams, notation, tables

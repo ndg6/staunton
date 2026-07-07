@@ -213,7 +213,17 @@
 /// -> content
 #let board(source, flip: false, ..overrides) = {
   let b = _to-board(source)
-  _render-board(b.squares, flip: flip, cols: b.cols, rows: b.rows, ..overrides.named())
+  let ov = overrides.named()
+  // Auto-seed the glyph fallback from a custom (fairy) variant's `glyphs:` map, so
+  // `board(fairy-pos, piece-set: "unicode")` just works. A user-supplied
+  // `piece-glyphs` override wins per kind. Standard positions carry a string
+  // variant, so this is a no-op for them (glyphs stays empty).
+  let v-glyphs = if type(source) == dictionary and "variant" in source and type(source.variant) == dictionary {
+    _variant-spec(source.variant).glyphs
+  } else { (:) }
+  let merged = v-glyphs + ov.at("piece-glyphs", default: (:))
+  if merged.len() > 0 { ov.insert("piece-glyphs", merged) }
+  _render-board(b.squares, flip: flip, cols: b.cols, rows: b.rows, ..ov)
 }
 
 // Variant guard for the *-board / *-diagram wrappers: a position source must
