@@ -283,6 +283,7 @@
             piece.kind, piece.color, sq,
             piece-set: st.piece-set,
             white-fill: st.white-fill, black-fill: st.black-fill, font: st.piece-font,
+            glyphs: st.piece-glyphs,
             piece-scale: st.piece-scale, baseline-inset: st.baseline-inset,
           ))
         }

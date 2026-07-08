@@ -18,8 +18,8 @@
 // this module's surface (Typst 0.15 has no real export privacy, so this is the
 // convention). Everything else stays reachable via a deep `src/...` import.
 #import "src/coords.typ": parse-square, is-dark-square, square-name as _square-name
-#import "src/pieces.typ": piece-content, svg-piece-set
-#import "src/variants.typ": variant-spec as _variant-spec, char-to-piece as _char-to-piece
+#import "src/pieces.typ": piece-content, svg-piece-set, named-piece-set, with-fallback
+#import "src/variants.typ": variant-spec as _variant-spec, char-to-piece as _char-to-piece, define-variant
 #import "src/fen.typ": parse-fen, starting-fen, position-fen as _position-fen
 #import "src/engine.typ": legal-moves, apply, in-check
 #import "src/san.typ": chess-moves
@@ -95,7 +95,7 @@
   let spec = _variant-spec(variant)
   let k = lower(value.kind)
   let kind = if k in spec.abbr { spec.abbr.at(k) } else if spec.kinds.contains(k) { k } else {
-    panic("position(): unknown piece kind " + repr(value.kind) + " for variant \"" + variant + "\" (kinds: " + repr(spec.kinds) + ")")
+    panic("position(): unknown piece kind " + repr(value.kind) + " for variant \"" + spec.name + "\" (kinds: " + repr(spec.kinds) + ")")
   }
   let color = lower(value.color)
   assert(color == "white" or color == "black", message: "position(): color must be \"white\" or \"black\", got " + repr(value.color))
@@ -213,15 +213,26 @@
 /// -> content
 #let board(source, flip: false, ..overrides) = {
   let b = _to-board(source)
-  _render-board(b.squares, flip: flip, cols: b.cols, rows: b.rows, ..overrides.named())
+  let ov = overrides.named()
+  // Auto-seed the glyph fallback from a custom (fairy) variant's `glyphs:` map, so
+  // `board(fairy-pos, piece-set: "unicode")` just works. A user-supplied
+  // `piece-glyphs` override wins per kind. Standard positions carry a string
+  // variant, so this is a no-op for them (glyphs stays empty).
+  let v-glyphs = if type(source) == dictionary and "variant" in source and type(source.variant) == dictionary {
+    _variant-spec(source.variant).glyphs
+  } else { (:) }
+  let merged = v-glyphs + ov.at("piece-glyphs", default: (:))
+  if merged.len() > 0 { ov.insert("piece-glyphs", merged) }
+  _render-board(b.squares, flip: flip, cols: b.cols, rows: b.rows, ..ov)
 }
 
 // Variant guard for the *-board / *-diagram wrappers: a position source must
 // already be of the expected variant (catches e.g. chess-board(xiangqi-pos)).
 #let _assert-variant(fname, variant, source) = {
   if type(source) == dictionary and "variant" in source {
+    let got = if type(source.variant) == str { source.variant } else { "custom" }
     assert(source.variant == variant,
-      message: fname + ": expected a \"" + variant + "\" position, got \"" + source.variant + "\"")
+      message: fname + ": expected a \"" + variant + "\" position, got a \"" + got + "\" one")
   }
 }
 

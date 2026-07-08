@@ -41,6 +41,24 @@ Then open the PDFs below and check the noted property. (The expected-*fail* test
       present, centred, sized like the bundled sets. (All three self-assert the
       image count, so a dropped piece fails the run; the eyeball is only for
       sizing/centring.)
+- [ ] `board/piece_sets/fairy/mixed_board.pdf` — a mixed fairy board: standard
+      king/pawn (from cburnett via `with-fallback`) sit alongside the three fairy
+      pieces **alfil** (a1, white), **dabbaba** (d4, black) and **ferz** (f6,
+      white). Check each fairy glyph is the right piece, the right colour, centred
+      and sized like the standard ones. (The sheet self-asserts that all 6 pieces
+      render, so a dropped piece fails the run; the eyeball is glyph identity,
+      colour and sizing.)
+- [ ] `board/piece_sets/fairy/glyph_fallback.pdf` — the user-supplied glyph
+      fallback: the fairy **alfil** on a1 draws the variant's glyph (`✶`), while the
+      standard king on e1 still uses the built-in glyph. Check the `✶` shows on a1
+      (font-dependent) and the king renders normally. (The sheet self-asserts glyph
+      *precedence* at the unit level and that the render compiles; the eyeball is
+      that the custom glyph actually appears and is placed/sized sanely.)
+- [ ] `board/piece_sets/fairy/highlights.pdf` — highlights work on a fairy board:
+      the **filled** squares (a1 alfil, e1 king) sit *under* their pieces, the
+      **circle** rings the dabbaba on d4 without spilling, and the **cross** marks
+      the empty f5. (Self-asserts the 4 pieces render; the eyeball is that each
+      highlight lands on the right square and layers correctly with custom pieces.)
 - [ ] `board/geometry/nonstandard_boards.pdf` — non-8×8 geometry looks sane.
 
 ## Diagrams, notation, tables
