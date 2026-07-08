@@ -374,6 +374,41 @@ lines between the squares.
 )
 ```, stacked: true)
 
+== Move Markings
+
+Two optional markings annotate the *move* rather than arbitrary squares. Both are
+*off by default* and their colours are settable per call or via
+`set-board-defaults`.
+
+`check: true` draws a radial glow (`check-color`, default red, fading to
+transparent) *under* the king that is in check. On a standard position the checked
+king is located automatically — you only flip the switch (see the combined example
+below).
+
+`move-quality: true` draws a small disc near the *upper-right* of the last move's
+destination square, carrying its assessment: `!` / `!!` (good, blue), `?` / `??`
+(bad, red), `!?` / `?!` (interesting, green), text always white. The disc clears the
+piece and spills slightly into the neighbours; recolour the categories with
+`move-quality-colors`.
+
+A badge is tied to a *move*, so it is only available when you draw *from a game*:
+`diagram-after` derives it from the addressed move itself and places it on that
+move's destination. (A bare `board` / `chess-board` has no move, so it cannot carry
+a badge — setting `move-quality-mark` there is an error.) The assessment is read
+identically whether written as a literal `?!` suffix, a PGN NAG, or set with
+`with-nags`. Here the mate `4.Qxf7#` glows on the Black king and, tagged `!`
+programmatically, wears a good-move badge on `f7`:
+
+#example(```typ
+#let g = parse-pgn(
+  "1. e4 e5 2. Qh5 Nc6 3. Bc4 Nf6?? 4. Qxf7# 1-0",
+).first()
+#diagram-after(
+  with-nags(g, ("4w": "!")), "4w",
+  check: true, move-quality: true, size: 4cm,
+)
+```)
+
 == Coordinates and Non-Square Boards
 
 At leasst in standard western chess, Files run `a`, `b`, … and ranks `1`, `2`, …; `a1` is the dark square in the lower-left corner, `h8` the upper-right. Square names are case-insensitive
@@ -471,15 +506,50 @@ with `piece-set:` per board, or document-wide with `set-piece-set` (see
 )
 ```, stacked: true)
 
-The renderer accepts *any* set name and loads a piece's SVG on demand from
-
-```
-src/assets/piece_sets/<name>/{w,b}{K,Q,R,B,N,P}.svg
-```
-
-so you can add a set by dropping such a folder into your copy and passing its name.
 `piece-set: "unicode"` (or `none`) selects the glyph fallback — solid Unicode chess
 glyphs distinguished by fill and a contrasting stroke; it needs a font carrying them.
+
+=== Using your own downloaded piece set<custom-piece-sets>
+
+You are not limited to the bundled sets. Many more are available to download —
+a good source is the #link("https://github.com/lichess-org/lila/tree/master/public/piece")[lichess
+piece library] — as folders of twelve SVGs named `{w,b}{K,Q,R,B,N,P}.svg`.
+
+The key constraint is Typst's file sandbox: code inside an installed package can
+only read files from *its own* directory, never from your project, and no `.typ`
+can read files *above* the compilation root at all. So staunton cannot itself go
+looking for a folder of piece art — *you* must hand it the images, from your own
+document, where file paths resolve against your project. You do that by passing
+`piece-set` a *loader function* `(color, kind)` that returns the image bytes:
+
+The `svg-piece-set` helper does the naming for you (`wK.svg`, `bN.svg`, …); you
+supply only a one-line reader that says *where* the files are. Set it once as the
+document default and every later board uses it:
+
+```typ
+// Put the set's twelve SVGs somewhere under your project, e.g. assets/pieces/alpha/.
+#set-piece-set(svg-piece-set(f => read("/assets/pieces/alpha/" + f, encoding: none)))
+
+#board("...")   // and every board after uses alpha
+```
+
+Because the `read()` is written *here, in your document*, it resolves against your
+project root — that is what lets it reach files a packaged staunton never could
+(its own `read()` would look inside the package, not your project). You never
+re-read art per board: Typst memoizes file reads, so each SVG is loaded once.
+
+A missing or misnamed file fails with Typst's own “file not found”, naming the
+exact path. If you prefer, `piece-set` also accepts the raw loader function
+`(color, kind) -> bytes | content` directly (handy for non-standard file names),
+or a *dictionary* keyed `"<color>-<kind>"` (e.g. `"white-king"`) to bytes or
+ready-made `image(..)` content — only the pieces your position uses need be
+present.
+
+If your art lives *outside* the project (a shared system folder, say), Typst will
+refuse to read it (“would escape the project root”). Two ways around that, both
+chosen at compile time: run `typst compile` with `--root` set to a common
+ancestor of both your document and the art folder, or symlink the folder into
+your project tree.
 
 The rank/file *labels* are drawn in their own sans-serif, set by the `label-font`
 board option (a family or a fallback list), independent of the document font. The
@@ -489,6 +559,90 @@ to Typst's always-embedded mono — so a stock install draws labels without
 
 ```typ
 #set-board-defaults(label-font: "Segoe UI")   // or a list, e.g. ("Helvetica", "DejaVu Sans Mono")
+```
+
+=== Non-standard and fairy pieces<fairy-pieces>
+
+Beyond the six western pieces you can define *your own* kinds — *fairy* pieces
+such as the alfil, dabbaba or ferz — and place them on a board, mixed with the
+standard pieces if you like. The support is deliberately limited to *drawing*:
+there is no FEN, PGN, move generation or legality for custom kinds. You place them
+by hand — a squares dict or the string form — and render them; that is all.
+
+Two things are needed: a *vocabulary* that names the kinds and their letters, and
+the *art* to draw them.
+
+*Defining the kinds.* `define-variant` builds a custom *variant* you bind once and
+pass to `position` as its `variant:` argument. The easiest form `extends` the
+standard variant — inheriting the six kinds and their letters — and adds only the
+new ones. Each new kind takes a single lower-case letter that must not clash with
+an existing one (case selects colour, exactly as for the standard pieces):
+
+```typ
+#let fairy = define-variant("Fairy demo",
+  extends: "standard",
+  kinds: ("alfil", "dabbaba", "ferz"),
+  abbr:  (a: "alfil", d: "dabbaba", f: "ferz"),   // letters must not overlap
+)
+```
+
+Now `position(.., variant: fairy)` understands `A`/`a`, `D`/`d` and `F`/`f` in
+both the squares-dict and string forms, right beside the standard `K`, `P`, ….
+`define-variant` validates *eagerly*, so an overlapping letter or an unknown kind
+is caught at the definition. (A variant is a *value* you reuse, not a global name —
+Typst has no mutable registry a position parser could read; built-in variants like
+`"standard"` are still named by string. An inline spec dict works too, wherever a
+variant is expected.)
+
+*Drawing the kinds.* A bundled set *name* (`"cburnett"`) knows only the six western
+pieces, so a fairy board is drawn from a *loader* — the same mechanism as a
+downloaded set (previous section), pointed at your fairy art. `named-piece-set`
+maps `(colour, kind)` onto your files through a filename *pattern* you supply, so
+you are not tied to one naming scheme. For a *mixed* board, wrap the loader in
+`with-fallback`: the standard kinds are drawn from a bundled set (cburnett by
+default) and every other kind from your loader.
+
+#example(```typ
+// fairy art named "alfil_white.svg", "dabbaba_black.svg", … under the project
+#let art = with-fallback(named-piece-set(
+  f => read("/docs/assets/fairy/" + f, encoding: none),
+))
+
+#let fairy = define-variant("Fairy demo",
+  extends: "standard",
+  kinds: ("alfil", "dabbaba", "ferz"),
+  abbr:  (a: "alfil", d: "dabbaba", f: "ferz"),
+)
+
+#board(
+  position((e1: "K", e8: "k", c3: "A", d4: "d", f5: "F"), variant: fairy),
+  piece-set: art, size: 4.6cm,
+)
+```, stacked: true)
+
+_Fairy art above from Wikimedia Commons (dabbaba by Kwamikagami, CC BY-SA 4.0);
+see `docs/assets/fairy/ATTRIBUTION.md`._
+
+The `pattern` defaults to `"{kind}_{color}.svg"`; its placeholders are `{kind}`
+(long name), `{color}` / `{c}` (long / short colour) and `{K}` / `{k}` (the kind's
+letter, upper / lower). The bundled lichess-layout `svg-piece-set` is simply
+`named-piece-set(.., pattern: "{c}{K}.svg")`. If your set follows no tidy pattern
+at all, skip the helper and pass `piece-set` a bare loader
+`(colour, kind) -> bytes | content` that does the naming itself.
+
+*A glyph instead of art.* When you have no SVG for a kind, give the variant a
+`glyphs:` map from kind to a text glyph; then `piece-set: "unicode"` draws that
+glyph while the standard kinds keep their built-in ones. Unicode assigns code
+points to only a handful of fairy pieces, so you supply whatever glyph you like —
+typically a character from a font you embed with `set text(font: ..)`:
+
+```typ
+#let fairy = define-variant("Amazon demo",
+  extends: "standard",
+  kinds: ("amazon",), abbr: (a: "amazon"),
+  glyphs: (amazon: "🨊"),          // any glyph your font carries
+)
+#board(position((d4: "A"), variant: fairy), piece-set: "unicode")
 ```
 
 // === Diagrams ================================================================
@@ -1227,6 +1381,11 @@ Accepted by `board` / `chess-board` / `diagram` / `chess-diagram` per call, and 
   [`cross-width` / `circle-width`], raw("2pt"), [cross / circle stroke widths],
   [`arrow-color` / `arrow-transparency`], [green, `85%`], [default arrow color and its transparency],
   raw("arrow-width"), raw("auto"), [arrow shaft width; `auto` scales with the square],
+  raw("check"), raw("false"), [in-check glow on the checked king (auto-located for standard positions)],
+  [`check-color` / `check-square`], [red / `none`], [glow colour; square to glow (`none` → auto-located)],
+  raw("move-quality"), raw("false"), [move-quality badge on the last move's destination],
+  raw("move-quality-mark"), raw("none"), [`(square:, symbol:)`, symbol one of `! ? !! ?? !? ?!` — derived and set by `diagram-after` only; not settable on a bare board],
+  raw("move-quality-colors"), [blue / red / green], [`good` / `bad` / `interesting` badge backgrounds],
   raw("annotation-colors"), [G/R/Y/B/O map], [PGN `%cal`/`%csl` color-letter → color],
   raw("label-color"), raw("luma(90)"), [`"outside"`-mode strip label color],
   raw("label-border-ratio"), raw("0.07"), [`"border"`-mode band width, as a board fraction],
@@ -1269,6 +1428,8 @@ source docstring: its signature, then every parameter with its type and default.
 ))
 
 == Positions
+`define-variant` builds a reusable custom (fairy) variant to pass as `variant:`
+(see #link(<fairy-pieces>)[Non-standard and fairy pieces]).
 #show-fns((
   ("/lib.typ", "position"),
   ("/src/fen.typ", "parse-fen"),
@@ -1276,6 +1437,7 @@ source docstring: its signature, then every parameter with its type and default.
   ("/src/fen.typ", "starting-fen"),
   ("/lib.typ", "chess960-start"),
   ("/src/chess960.typ", "chess960-start-fen"),
+  ("/src/variants.typ", "define-variant"),
 ))
 
 == Games (PGN)
@@ -1378,4 +1540,17 @@ hand-built overlays.
   ("/src/pieces.typ", "piece-content"),
   ("/src/coords.typ", "parse-square"),
   ("/src/coords.typ", "is-dark-square"),
+))
+
+== Piece-set loaders
+Build the `piece-set` value for a downloaded or custom set (see
+#link(<custom-piece-sets>)[Using your own downloaded piece set] and
+#link(<fairy-pieces>)[Non-standard and fairy pieces]). `named-piece-set` maps
+`(colour, kind)` onto your files through a filename pattern; `svg-piece-set` is
+the lichess-layout shorthand; `with-fallback` composes a custom loader over a base
+set for mixed boards.
+#show-fns((
+  ("/src/pieces.typ", "named-piece-set"),
+  ("/src/pieces.typ", "svg-piece-set"),
+  ("/src/pieces.typ", "with-fallback"),
 ))

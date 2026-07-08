@@ -34,7 +34,51 @@ Then open the PDFs below and check the noted property. (The expected-*fail* test
 - [ ] `board/piece_sets/existing/all_piece_sets.pdf`, `custom_user_set.pdf`,
       `unicode_fallback.pdf` — every piece glyph present, centred, correct colour
       (including the Unicode glyph fallback).
+- [ ] `board/piece_sets/existing/loader_function.pdf`,
+      `loader_bytes_dict.pdf`, `loader_settable_default.pdf` — pieces render from a
+      user-supplied loader (a function; a bytes dictionary; and a `svg-piece-set`
+      loader set once as the document default across two boards): all pieces
+      present, centred, sized like the bundled sets. (All three self-assert the
+      image count, so a dropped piece fails the run; the eyeball is only for
+      sizing/centring.)
+- [ ] `board/piece_sets/fairy/mixed_board.pdf` — a mixed fairy board: standard
+      king/pawn (from cburnett via `with-fallback`) sit alongside the three fairy
+      pieces **alfil** (a1, white), **dabbaba** (d4, black) and **ferz** (f6,
+      white). Check each fairy glyph is the right piece, the right colour, centred
+      and sized like the standard ones. (The sheet self-asserts that all 6 pieces
+      render, so a dropped piece fails the run; the eyeball is glyph identity,
+      colour and sizing.)
+- [ ] `board/piece_sets/fairy/glyph_fallback.pdf` — the user-supplied glyph
+      fallback: the fairy **alfil** on a1 draws the variant's glyph (`✶`), while the
+      standard king on e1 still uses the built-in glyph. Check the `✶` shows on a1
+      (font-dependent) and the king renders normally. (The sheet self-asserts glyph
+      *precedence* at the unit level and that the render compiles; the eyeball is
+      that the custom glyph actually appears and is placed/sized sanely.)
+- [ ] `board/piece_sets/fairy/highlights.pdf` — highlights work on a fairy board:
+      the **filled** squares (a1 alfil, e1 king) sit *under* their pieces, the
+      **circle** rings the dabbaba on d4 without spilling, and the **cross** marks
+      the empty f5. (Self-asserts the 4 pieces render; the eyeball is that each
+      highlight lands on the right square and layers correctly with custom pieces.)
 - [ ] `board/geometry/nonstandard_boards.pdf` — non-8×8 geometry looks sane.
+- [ ] `board/markings/markings.pdf` (prompt 27/28) —
+      *In-check glow*: a **Lichess-style** red radial that fills most of the square
+      — solid near the centre and reaching the **edge midpoints**, with only the four
+      **corners** left showing the bare square colour — sits **under** the king on
+      the checked square, which stays crisp **on top** (the glow must NOT vanish
+      under the piece). Present on both the Black-in-check and White-in-check boards; the
+      "default" board (no `check:`) shows **no** glow; the custom-colour board glows
+      blue. The reference-play board (`3. Qh5#`) glows the Black king. The glow stays
+      roughly circular and does not bleed into neighbouring squares.
+      *Move-quality badge* (all now sourced from a game): the six glyphs read as
+      discs on each move's destination square, at the **upper-right**, pulled toward
+      the piece's square — good `!`/`!!` blue, bad `?`/`??` red, interesting `!?`/`?!`
+      green, white text, legible (incl. the two-char `!!`/`??`). Each disc sits on an
+      **occupied** square, clears its piece, and spills slightly into the neighbours.
+      On the a8 corner pair (`Nxa8!!`) the disc spills **above/right of the board**
+      and stays screen-upper-right after `flip: true`.
+      *Wired through a game*: the left diagram (mate `4.Qxf7#`) shows both the glow
+      on the Black king **and** a blue `!` badge on f7; the right diagram shows a red
+      `??` badge on f6. Badge and glow never overlap the wrong square.
 
 ## Diagrams, notation, tables
 
@@ -80,9 +124,9 @@ These are not under `tests/out/`; build them separately.
         `"square"` blends with the board, `"brown"` is dark-brown + creme, `"dark"`
         is charcoal + light-grey (only the `"brown"` one is rendered inline; the
         prose describes the others).
-      - *The Board → Piece Sets and Fonts*: the sentence starting "The renderer
-        accepts *any* set name…" no longer has stretched, widely-spaced words — the
-        `piece_sets/<name>/…` path now sits on its own display-code line.
+      - *The Board → Piece Sets and Fonts → Using your own downloaded piece set*:
+        the new subsection reads cleanly — the `piece-loader` code block is not
+        clipped or overflowing, and the lichess link renders.
       - *Games → Drawing Annotations in PGNs*: the new combined example shows the
         PGN's green `f3→e5` arrow and red `e5` highlight **together with** a
         programmatic `b1→c3` arrow and a circle on `d4` on one board.

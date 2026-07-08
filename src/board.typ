@@ -141,6 +141,52 @@
   }
 }
 
+// In-check glow (prompt 27/28): a square-filling radial gradient, drawn UNDER the
+// piece so the king reads crisp on top and the glow radiates from beneath it —
+// the Lichess look. The gradient's default 50% radius is the circle inscribed in
+// the square (touching the four EDGE MIDPOINTS); the four corners fall outside it
+// and so keep the underlying square colour. We hold the glow FULLY OPAQUE almost
+// to that edge, fading out only in the last sliver, so the colour reaches the edge
+// midpoints and only the corners stay bare. The transparent stop reuses `color`'s
+// RGB at 0% alpha so the fade is hueless.
+#let _draw-check(dx, dy, sq, color) = {
+  let c = rgb(color).components()
+  let clear = rgb(c.at(0), c.at(1), c.at(2), 0%)
+  place(dx: dx, dy: dy, rect(
+    width: sq, height: sq, stroke: none,
+    fill: gradient.radial((color, 0%), (color, 78%), (clear, 100%)),
+  ))
+}
+
+// Move-quality symbol -> category (prompt 27). The six recognised glyphs only.
+#let _mq-category(symbol) = {
+  if symbol == "!" or symbol == "!!" { "good" }
+  else if symbol == "?" or symbol == "??" { "bad" }
+  else if symbol == "!?" or symbol == "?!" { "interesting" }
+  else { panic("move-quality symbol must be one of ! ? !! ?? !? ?!; got " + repr(symbol)) }
+}
+
+// Move-quality badge (prompt 27/28): a filled disc near the square's screen
+// top-right, its centre pulled INTO the move's square by `inset` (so it reads as
+// belonging to that square) while still spilling over the top-right edge into the
+// neighbours. Prompt 28 enlarged the disc (r ≈ 0.28·sq) and moved the centre off
+// the bare corner. `colors` is the per-category background map; the symbol text is
+// always white. Two-glyph symbols ("!!") shrink to fit. Drawn on top of
+// everything. The corner is orientation-agnostic (always screen upper-right),
+// matching the Lichess look under a flip.
+#let _draw-move-quality(dx, dy, sq, symbol, colors) = {
+  let bg = colors.at(_mq-category(symbol))
+  let r = sq * 0.28
+  let inset = r * 0.5   // pull the centre down-and-left, into the move's square
+  let fs = if symbol.clusters().len() >= 2 { r * 0.85 } else { r * 1.2 }
+  // box top-left so the disc centre lands at (dx + sq - inset, dy + inset)
+  place(dx: dx + sq - inset - r, dy: dy + inset - r, box(width: 2 * r, height: 2 * r, {
+    place(circle(radius: r, fill: bg, stroke: none))
+    place(box(width: 2 * r, height: 2 * r, align(center + horizon,
+      text(fill: white, size: fs, weight: "bold", symbol))))
+  }))
+}
+
 // `w-factor` / `h-factor` are the multipliers (on the nominal size `s`) that the
 // board width / height occupy, INCLUDING any label gutter. For a square 8x8 with
 // no gutter both are 1; for a 10x8 board the height factor is 0.8; "outside"
@@ -264,6 +310,13 @@
           let circle-c = if ecol == auto { st.circle-color } else { _resolve-anno-color(ecol, st.annotation-colors, st.circle-color) }
           _draw-highlight(shape, o.dx, o.dy, sq, fill, cross-c, circle-c, st.cross-width, st.circle-width)
         }
+        // in-check glow (prompt 27): under the pieces, over the checker/highlights.
+        // `check-square` is auto-filled by `board()` for analyzable positions.
+        if st.check and st.check-square != none {
+          let p = parse-square(st.check-square, cols: cols, rows: rows)
+          let o = _screen(p.col, p.row, sq, orient, cols, rows)
+          _draw-check(o.dx, o.dy, sq, st.check-color)
+        }
         // optional grid lines between squares: a fixed 0.5pt black, at every
         // size (item 2). Drawn over the checker/highlights, under the pieces.
         if st.grid {
@@ -283,6 +336,7 @@
             piece.kind, piece.color, sq,
             piece-set: st.piece-set,
             white-fill: st.white-fill, black-fill: st.black-fill, font: st.piece-font,
+            glyphs: st.piece-glyphs,
             piece-scale: st.piece-scale, baseline-inset: st.baseline-inset,
           ))
         }
@@ -324,6 +378,15 @@
         }
         if st.border != none {
           place(rect(width: bw, height: bh, fill: none, stroke: st.border))
+        }
+        // move-quality badge (prompt 27/28): topmost, on the destination square's
+        // screen top-right corner. `move-quality-mark` is derived and injected by
+        // `diagram-after` only (badges are tied to a move; never a bare position).
+        if st.move-quality and st.move-quality-mark != none {
+          let mq = st.move-quality-mark
+          let p = parse-square(mq.square, cols: cols, rows: rows)
+          let o = _screen(p.col, p.row, sq, orient, cols, rows)
+          _draw-move-quality(o.dx, o.dy, sq, mq.symbol, st.move-quality-colors)
         }
       })
 

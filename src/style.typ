@@ -68,6 +68,9 @@
   white-fill: default-white-fill, // glyph fallback only
   black-fill: default-black-fill, // glyph fallback only
   piece-font: default-piece-fonts, // glyph fallback only
+  piece-glyphs: (:),          // glyph fallback: extra `kind -> glyph` entries for
+                              // custom (fairy) kinds; overrides the built-in six.
+                              // Auto-seeded from a custom variant's `glyphs:` map.
   // Highlights. Entries: a square name "e4" (uses
   // highlight-shape + highlight-fill), a (square, color) pair (filled, explicit
   // colour -- e.g. PGN %csl), or a dict (square:, shape:, color:) for full
@@ -85,6 +88,27 @@
   arrow-color: default-highlight-base,  // default arrow colour (opaque base)
   arrow-transparency: 85%,    // applied to the default arrow colour (more transparent than highlights)
   arrow-width: auto,          // shaft width; auto -> proportional to the square
+  // In-check indicator (prompt 27). A radial glow (colour -> transparent) on the
+  // king that is in check, drawn under the piece. `check` gates it; `check-color`
+  // is the glow's inner colour. `check-square` is the marked square, auto-filled
+  // by `board()` from the side-to-move's king for ANALYZABLE variants (standard
+  // chess) and user-overridable; it stays `none` for fairy/bare positions.
+  check: false,               // show the in-check glow
+  check-color: red,           // glow inner colour (fades to its own transparent)
+  check-square: none,         // square name to glow, or none (auto-filled)
+  // Move-quality indicator (prompt 27/28). A small badge on the destination square
+  // of the last move, coloured by the move's assessment. `move-quality` gates it;
+  // `move-quality-mark` is the data `(square: "e5", symbol: "!!")`. Because a badge
+  // is tied to a MOVE, it is derived and injected ONLY by `diagram-after` (from the
+  // move's quality NAG / literal suffix) -- never settable on a bare position, and
+  // never on an empty square. Per-category backgrounds are settable; text is white.
+  move-quality: false,        // show the move-quality badge
+  move-quality-mark: none,    // (square: <name>, symbol: <! ? !! ?? !? ?!>) — internal, set by diagram-after only
+  move-quality-colors: (
+    good: rgb("#4b8fd1"),        // ! !!   (light blue)
+    bad: rgb("#c0392b"),         // ? ??   (red)
+    interesting: rgb("#67a04a"), // !? ?!  (green)
+  ),
   // Mapping from PGN %cal/%csl color letters to colors (item 8, decision 8a).
   annotation-colors: (
     G: rgb(21, 120, 27, 200),   // green
@@ -263,12 +287,15 @@
 }
 
 /// Set the default piece set for subsequent diagrams — a convenience wrapper over
-/// `set-board-defaults(piece-set: name)`.
+/// `set-board-defaults(piece-set: set)`. Set it once; every later board/diagram
+/// uses it (Typst memoizes the underlying file reads, so a shared loader does not
+/// re-read art per board).
 ///
-/// - name (str): a bundled piece-set name (`"cburnett"`, `"merida"`, …) or a
-///   registered custom set.
+/// - spec (str | function | dictionary): a bundled name (`"cburnett"`, `"merida"`,
+///   `"unicode"`/`none`), or a custom loader — a function `(color, kind) -> bytes
+///   | content` (e.g. from `svg-piece-set`), or a dict keyed `"<color>-<kind>"`.
 /// -> content
-#let set-piece-set(name) = board-style-state.update(s => s + (piece-set: name))
+#let set-piece-set(spec) = board-style-state.update(s => s + (piece-set: spec))
 
 /// Build a style-overrides dict (just sugar around named arguments).
 #let chess-style(..fields) = fields.named()
