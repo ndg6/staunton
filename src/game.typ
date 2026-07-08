@@ -20,6 +20,8 @@
 #import "san.typ": san-to-move
 #import "engine.typ": apply
 #import "pgn.typ": movetext, _movetext-tree
+#import "coords.typ": square-name
+#import "annotations.typ": nag-symbol
 
 // "30w" -> 59 ; "30b" -> 60
 #let _ply-of(loc) = {
@@ -166,6 +168,91 @@
   let k = _ply-of(loc.at("at")) - branch-ply
   assert(k >= 0 and k < line.len(), message: "move-node: locator addresses a move past the end of its line")
   line.at(k)
+}
+
+/// The destination square (e.g. `"e5"`, or the king's `"g1"` for `O-O`) of the
+/// move addressed by `locator`. Resolves the move's SAN against the position
+/// *before* it, so it works for captures, castling and promotions. Standard-chess
+/// only (uses the rules engine). Used to place the move-quality badge (prompt 27).
+///
+/// - game (dictionary): a parsed game (from `parse-pgn`).
+/// - locator (str, dictionary): a mainline `"30w"` / `"30b"`, or a variation path
+///   dict.
+/// -> str
+#let move-destination(game, locator) = {
+  let loc = if type(locator) == str { (line: (), at: locator) } else { locator }
+  let before = none
+  let san = none
+  // Mainline fast path: the position before ply p is the (memoised) position at
+  // ply p-1; the SAN is that node's.
+  if loc.at("line", default: ()).len() == 0 {
+    let all = _mainline-positions(game)
+    let target = _ply-of(loc.at("at"))
+    assert(target >= 1 and target < all.len(), message: "move-destination: locator out of range")
+    before = all.at(target - 1)
+    san = movetext(game).at(target - 1).san
+  } else {
+    // Variations: walk to the branch line (as position-after does), then advance
+    // to just before the addressed move.
+    let line = movetext(game)
+    let branch-ply = 1
+    let pos = game-start(game)
+    for hop in loc.at("line", default: ()) {
+      let target = _ply-of(hop.at("at"))
+      let k = target - branch-ply
+      pos = _advance(pos, line, k)
+      line = line.at(k).at("variations").at(hop.at("into"))
+      branch-ply = target
+    }
+    let k = _ply-of(loc.at("at")) - branch-ply
+    assert(k >= 0 and k < line.len(), message: "move-destination: locator addresses a move past the end of its line")
+    before = _advance(pos, line, k)
+    san = line.at(k).san
+  }
+  let mv = san-to-move(before, san)
+  square-name(mv.to.at(0), mv.to.at(1))
+}
+
+// Move-quality glyphs (prompt 27): the six the badge recognises, and the NAG codes
+// ($1..$6) that map to them.
+#let _quality-nag-codes = ("1", "2", "3", "4", "5", "6")
+#let _quality-symbols = ("!", "?", "!!", "??", "!?", "?!")
+
+// Trailing run of `!`/`?` on a SAN string (e.g. "Nf6??" -> "??", "Nf3" -> "").
+#let _quality-suffix(san) = {
+  let s = san
+  let suf = ""
+  while s.len() > 0 and ("!", "?").contains(s.slice(s.len() - 1)) {
+    suf = s.slice(s.len() - 1) + suf
+    s = s.slice(0, s.len() - 1)
+  }
+  suf
+}
+
+/// The move-quality badge data for the move at `locator`: a dict
+/// `(square: <dest>, symbol: <! ? !! ?? !? ?!>)`, or `none` when the move carries
+/// no quality mark. The symbol is sourced (in order) from the move's first quality
+/// NAG (`$1`..`$6`, whether parsed from the PGN or set with `with-nags`) or a
+/// literal `!`/`?` suffix on the SAN — so a mark written as text, as a PGN NAG, or
+/// set programmatically all resolve identically. Other NAGs (position evals like
+/// `$14`) are ignored. Used to place the badge (prompt 27); standard-chess only.
+///
+/// - game (dictionary): a parsed game (from `parse-pgn`).
+/// - locator (str, dictionary): a mainline `"30w"` / `"30b"`, or a variation path
+///   dict.
+/// -> dictionary | none
+#let move-quality-mark(game, locator) = {
+  let node = move-node(game, locator)
+  let symbol = none
+  for ng in node.at("nags", default: ()) {
+    if _quality-nag-codes.contains(ng) { symbol = nag-symbol(ng); break }
+  }
+  if symbol == none {
+    let suf = _quality-suffix(node.san)
+    if _quality-symbols.contains(suf) { symbol = suf }
+  }
+  if symbol == none { return none }
+  (square: move-destination(game, locator), symbol: symbol)
 }
 
 // ===========================================================================

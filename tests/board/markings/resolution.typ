@@ -1,0 +1,66 @@
+// Move-markings (prompt 27) data resolution — the machine-checkable core behind
+// the in-check glow and the move-quality badge. Asserts only; the visual sheet is
+// markings.typ.
+//   * checked-king-square: the side-to-move king when (and only when) in check.
+//   * move-destination: where the addressed move landed (captures, castling,
+//     promotion, mainline + variations).
+//   * move-quality-mark: the badge data, sourced identically from a literal
+//     SAN suffix, a PGN NAG, or a programmatic with-nags.
+#import "/src/engine.typ": checked-king-square
+#import "/src/game.typ": move-destination, move-quality-mark
+#import "/src/fen.typ": parse-fen
+#import "/lib.typ": parse-pgn, with-nags
+
+#set page(width: auto, height: auto, margin: 1cm)
+#set text(font: "Libertinus Serif", size: 10pt)
+
+// ---- checked-king-square --------------------------------------------------
+// Scholar's-mate final position: Black to move, its king on e8 is in check.
+#assert.eq(
+  checked-king-square(parse-fen("rnb1kbnr/pppp1Qpp/8/4p3/2B1P3/8/PPPP1PPP/RNB1K1NR b KQkq - 0 4")),
+  "e8",
+)
+// Not in check -> none. Test both sides to move.
+#assert.eq(checked-king-square(parse-fen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1")), none)
+#assert.eq(checked-king-square(parse-fen("4k3/8/8/8/8/8/8/4K3 b - - 0 1")), none)
+// White king in check (a rook checks along the file): white to move -> e1.
+#assert.eq(checked-king-square(parse-fen("4k3/8/8/8/8/8/8/r3K3 w - - 0 1")), "e1")
+
+// ---- move-destination -----------------------------------------------------
+#let g = parse-pgn(
+  "[White \"A\"][Black \"B\"] 1. e4 e5 2. Qh5 Nc6 3. Bc4 Nf6?? 4. Qxf7# 1-0",
+).first()
+#assert.eq(move-destination(g, "1w"), "e4")   // first move (before = start)
+#assert.eq(move-destination(g, "3b"), "f6")   // knight move
+#assert.eq(move-destination(g, "4w"), "f7")   // capture (Qxf7)
+
+// castling + promotion destinations resolve from the move (not the SAN text)
+#let gc = parse-pgn("[W \"a\"][B \"b\"] 1. e4 e5 2. Nf3 Nc6 3. Bc4 Bc5 4. O-O Nf6 *").first()
+#assert.eq(move-destination(gc, "4w"), "g1")   // O-O -> king to g1
+#let gp = parse-pgn("[W \"a\"][B \"b\"] 1. e4 d5 2. exd5 Qxd5 3. Nc3 Qa5 4. d4 c6 5. Nf3 Bg4 *").first()
+#assert.eq(move-destination(gp, "2w"), "d5")   // exd5 capture
+
+// destination inside a variation (path locator)
+#let gv = parse-pgn("[W \"a\"][B \"b\"] 1. e4 e5 (1... c5 2. Nf3) 2. Nf3 *").first()
+#assert.eq(move-destination(gv, (line: ((at: "1b", into: 0),), at: "2w")), "f3")
+
+// ---- move-quality-mark: three input forms, one result ---------------------
+// (a) literal "!"/"?" suffix in the SAN text (Nf6??)
+#assert.eq(move-quality-mark(g, "3b"), (square: "f6", symbol: "??"))
+// (b) PGN NAG in the movetext ($2 = "?") attached to 1. e4
+#let gn = parse-pgn("[W \"a\"][B \"b\"] 1. e4 $2 e5 2. Nf3 *").first()
+#assert.eq(move-quality-mark(gn, "1w"), (square: "e4", symbol: "?"))
+// (c) programmatic, via with-nags ($5 = "!?")
+#let g2 = with-nags(g, ("2w": "!?"))
+#assert.eq(move-quality-mark(g2, "2w"), (square: "h5", symbol: "!?"))
+
+// no quality mark -> none; a non-quality NAG ($14 = "⩲") is ignored, not shown
+#assert.eq(move-quality-mark(g, "2w"), none)
+#let ge = parse-pgn("[W \"a\"][B \"b\"] 1. e4 $14 e5 *").first()
+#assert.eq(move-quality-mark(ge, "1w"), none)
+// first quality NAG wins when several are present ($3 = "!!" before $1 = "!")
+#let gm = parse-pgn("[W \"a\"][B \"b\"] 1. e4 $3 $1 e5 *").first()
+#assert.eq(move-quality-mark(gm, "1w").symbol, "!!")
+
+= move-markings resolution
+All assertions passed.

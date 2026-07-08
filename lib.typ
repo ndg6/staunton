@@ -21,10 +21,10 @@
 #import "src/pieces.typ": piece-content, svg-piece-set, named-piece-set, with-fallback
 #import "src/variants.typ": variant-spec as _variant-spec, char-to-piece as _char-to-piece, define-variant
 #import "src/fen.typ": parse-fen, starting-fen, position-fen as _position-fen
-#import "src/engine.typ": legal-moves, apply, in-check
+#import "src/engine.typ": legal-moves, apply, in-check, checked-king-square as _checked-king-square
 #import "src/san.typ": chess-moves
 #import "src/pgn.typ": parse-pgn, movetext
-#import "src/game.typ": mainline, position-after, game-result, move-san, move-node, with-nags, with-comments, with-variation
+#import "src/game.typ": mainline, position-after, game-result, move-san, move-node, move-quality-mark as _move-quality-mark, with-nags, with-comments, with-variation
 // The text core lives in src/notation.typ; lib defines `notation` /
 // `chess-notation` on top so they can also embed diagrams (which needs the
 // lib-level `chess-diagram`).
@@ -197,6 +197,54 @@
   }
 }
 
+// The full position behind `source` when it is ANALYZABLE by the rules engine
+// (standard chess only, and only when a `turn` is known) -- else `none`. Used to
+// auto-locate the in-check king. A bare squares dict (no `turn`) and any
+// non-standard variant deliberately return `none`, so the in-check glow never
+// fires on fairy/variant boards.
+#let _analyzable-position(source) = {
+  let pos = if type(source) == str { parse-fen(source) }
+    else if type(source) == dictionary and "squares" in source and "turn" in source { source }
+    else { none }
+  if pos == none { return none }
+  // In-check detection is pure geometry (attack rays), so it is valid for any
+  // variant that shares the 8×8 board + standard piece moves. Today that is only
+  // "standard"; when chess960 lands as its own variant, add it here (the move
+  // ENGINE stays standard-only, but the glow does not need the engine). Every
+  // other/unknown variant — and by extension arbitrary teaching diagrams that are
+  // not real chess — must NOT be auto-glowed, so we bail. (Prompt 28 §1.1.)
+  if pos.at("variant", default: "standard") != "standard" { return none }
+  pos
+}
+
+// Shared board renderer (prompt 28): the actual draw, with the in-check
+// auto-fill. `ov` is the resolved override dict. This is the internal seam that
+// lets `diagram-after` inject the move-quality badge (which only it may do — see
+// the public `board` guard below), while `board` itself forbids that key.
+#let _board-internal(source, flip, ov) = {
+  let b = _to-board(source)
+  // In-check auto-fill (prompt 27): locate the side-to-move king in check and pass
+  // it as `check-square`, unless the caller set one. Computed only for analyzable
+  // positions; the glow itself is still gated by the `check` style switch.
+  if "check-square" not in ov {
+    let pos = _analyzable-position(source)
+    if pos != none {
+      let cs = _checked-king-square(pos)
+      if cs != none { ov.insert("check-square", cs) }
+    }
+  }
+  // Auto-seed the glyph fallback from a custom (fairy) variant's `glyphs:` map, so
+  // `board(fairy-pos, piece-set: "unicode")` (and the same via `diagram-after`)
+  // just works. A user-supplied `piece-glyphs` override wins per kind. Standard
+  // positions carry a string variant, so this is a no-op for them.
+  let v-glyphs = if type(source) == dictionary and "variant" in source and type(source.variant) == dictionary {
+    _variant-spec(source.variant).glyphs
+  } else { (:) }
+  let merged = v-glyphs + ov.at("piece-glyphs", default: (:))
+  if merged.len() > 0 { ov.insert("piece-glyphs", merged) }
+  _render-board(b.squares, flip: flip, cols: b.cols, rows: b.rows, ..ov)
+}
+
 /// Draw a bare board — no caption, no figure — the variant-agnostic drawing
 /// primitive that every diagram builds on. The variant (if any) rides on
 /// `source`; the variant-named wrappers (`chess-board`, a future `xiangqi-board`,
@@ -212,18 +260,15 @@
 ///   `arrows`, `grid`, …) — see #link(<board-options>)[Board style options].
 /// -> content
 #let board(source, flip: false, ..overrides) = {
-  let b = _to-board(source)
   let ov = overrides.named()
-  // Auto-seed the glyph fallback from a custom (fairy) variant's `glyphs:` map, so
-  // `board(fairy-pos, piece-set: "unicode")` just works. A user-supplied
-  // `piece-glyphs` override wins per kind. Standard positions carry a string
-  // variant, so this is a no-op for them (glyphs stays empty).
-  let v-glyphs = if type(source) == dictionary and "variant" in source and type(source.variant) == dictionary {
-    _variant-spec(source.variant).glyphs
-  } else { (:) }
-  let merged = v-glyphs + ov.at("piece-glyphs", default: (:))
-  if merged.len() > 0 { ov.insert("piece-glyphs", merged) }
-  _render-board(b.squares, flip: flip, cols: b.cols, rows: b.rows, ..ov)
+  // Move-quality badges (prompt 28) are tied to a MOVE, so they may only be
+  // produced from a game — `diagram-after` derives the mark and injects it via
+  // `_board-internal`. A bare position has no move, so setting `move-quality-mark`
+  // here is a category error (it could otherwise badge an empty square).
+  assert("move-quality-mark" not in ov,
+    message: "move-quality badges are derived from a game move; set `move-quality: true` on `diagram-after` (or annotate the move with `with-nags`) — a bare `board`/`chess-board` cannot carry one")
+  // Fairy glyph-fallback seeding now lives in `_board-internal`, the shared seam.
+  _board-internal(source, flip, ov)
 }
 
 // Variant guard for the *-board / *-diagram wrappers: a position source must
@@ -314,6 +359,7 @@
   let r = _interpret-comment(move-node(game, locator).at("comment-after", default: none))
   (r.arrows, r.highlights)
 }
+
 
 // Split a mixed named-argument dict three ways: board-style overrides, diagram-
 // style overrides, and leftover #figure arguments.
@@ -441,6 +487,16 @@
   let base-ov = (:)
   for (k, v) in board-ov { if k != "arrows" and k != "highlight" { base-ov.insert(k, v) } }
   let (anno-arrows, anno-highlight) = _pgn-annotations(game, locator)
+  // Move-quality badge (prompt 28): this game path is the ONLY producer — the
+  // badge is derived from the addressed move's assessment (its quality NAG or a
+  // literal `!`/`?` suffix) and placed on the move's destination square, gated by
+  // the `move-quality` style switch. Callers cannot set `move-quality-mark`
+  // themselves (a bare position has no move); `board` rejects that key, so we
+  // inject the derived mark through `_board-internal`. (The in-check glow is
+  // auto-filled inside `_board-internal`, since `pos` is an analyzable position.)
+  assert("move-quality-mark" not in base-ov,
+    message: "diagram-after derives the move-quality badge from the move itself; do not pass `move-quality-mark`")
+  let mq = _move-quality-mark(game, locator)
 
   // Draw the board inside a context so the `annotations` switch can read the
   // pgn-handling document default -- while the #figure (built by `_assemble`)
@@ -449,7 +505,11 @@
     let process = if annotations != auto { annotations } else { (default-pgn-style + pgn-style-state.get()).annotations }
     let arr = explicit-arrows + (if process { anno-arrows } else { () })
     let hl = explicit-highlight + (if process { anno-highlight } else { () })
-    board(pos, flip: flip, arrows: arr, highlight: hl, ..base-ov)
+    let ov = base-ov
+    ov.insert("arrows", arr)
+    ov.insert("highlight", hl)
+    if mq != none { ov.insert("move-quality-mark", mq) }
+    _board-internal(pos, flip, ov)
   }
   _assemble(drawn, w, b, y, game-info, cap, diagram-ov, lang, fig-args)
 }
