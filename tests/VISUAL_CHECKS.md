@@ -34,6 +34,13 @@ Then open the PDFs below and check the noted property. (The expected-*fail* test
 - [ ] `board/piece_sets/existing/all_piece_sets.pdf`, `custom_user_set.pdf`,
       `unicode_fallback.pdf` — every piece glyph present, centred, correct colour
       (including the Unicode glyph fallback).
+- [ ] `board/piece_sets/existing/loader_function.pdf`,
+      `loader_bytes_dict.pdf`, `loader_settable_default.pdf` — pieces render from a
+      user-supplied loader (a function; a bytes dictionary; and a `svg-piece-set`
+      loader set once as the document default across two boards): all pieces
+      present, centred, sized like the bundled sets. (All three self-assert the
+      image count, so a dropped piece fails the run; the eyeball is only for
+      sizing/centring.)
 - [ ] `board/geometry/nonstandard_boards.pdf` — non-8×8 geometry looks sane.
 
 ## Diagrams, notation, tables
@@ -73,9 +80,9 @@ These are not under `tests/out/`; build them separately.
         `"square"` blends with the board, `"brown"` is dark-brown + creme, `"dark"`
         is charcoal + light-grey (only the `"brown"` one is rendered inline; the
         prose describes the others).
-      - *The Board → Piece Sets and Fonts*: the sentence starting "The renderer
-        accepts *any* set name…" no longer has stretched, widely-spaced words — the
-        `piece_sets/<name>/…` path now sits on its own display-code line.
+      - *The Board → Piece Sets and Fonts → Using your own downloaded piece set*:
+        the new subsection reads cleanly — the `piece-loader` code block is not
+        clipped or overflowing, and the lichess link renders.
       - *Games → Drawing Annotations in PGNs*: the new combined example shows the
         PGN's green `f3→e5` arrow and red `e5` highlight **together with** a
         programmatic `b1→c3` arrow and a circle on `d4` on one board.
