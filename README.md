@@ -6,7 +6,7 @@ engine), write localized move **notation**, and generate **tournament tables** �
 all as referenceable `#figure`s, with ready-made **outlines** (lists of diagrams
 and tables).
 
-![Gallery of staunton output: chess boards and diagrams, localized move notation, and tournament tables](https://raw.githubusercontent.com/ndg6/staunton/v0.1.0/docs/img/gallery.png)
+![Gallery of staunton output: chess boards and diagrams, localized move notation, and tournament tables](https://raw.githubusercontent.com/ndg6/staunton/v0.2.0/docs/img/gallery.png)
 
 ## Features
 
@@ -43,7 +43,7 @@ and tables).
 ## Quick start
 
 ```typ
-#import "@preview/staunton:0.1.0": chess-diagram, position, starting-fen
+#import "@preview/staunton:0.2.0": chess-diagram, position, starting-fen
 
 // From a FEN string (this one is 1.e4 c5 2.Nf3):
 #chess-diagram("rnbqkbnr/pp1ppppp/8/2p5/4P3/5N2/PPPP1PPP/RNBQKB1R b KQkq - 1 2")
@@ -63,7 +63,7 @@ and tables).
 And from a game:
 
 ```typ
-#import "@preview/staunton:0.1.0": parse-pgn, diagram-after, mainline
+#import "@preview/staunton:0.2.0": parse-pgn, diagram-after, mainline
 
 #let game = parse-pgn(```
 [White "Morphy"] [Black "NN"] [Result "1-0"]
@@ -78,9 +78,9 @@ And from a game:
 - **User manual** — the complete reference (every function, option, and example),
   with each feature shown as the code you type beside the board it produces.
   Download the compiled **[PDF](https://github.com/ndg6/staunton/releases/latest/download/manual.pdf)** (attached to each release), or build it yourself
-  from its Typst source, [`docs/manual.typ`](https://github.com/ndg6/staunton/blob/v0.1.0/docs/manual.typ). The manual is part
+  from its Typst source, [`docs/manual.typ`](https://github.com/ndg6/staunton/blob/v0.2.0/docs/manual.typ). The manual is part
   of the repo only — it is not shipped in the package bundle.
-- **[Showcase](https://github.com/ndg6/staunton/blob/v0.1.0/docs/examples/showcase.typ)** — a runnable capability tour.
+- **[Showcase](https://github.com/ndg6/staunton/blob/v0.2.0/docs/examples/showcase.typ)** — a runnable capability tour.
 
 Compile the manual and the showcase locally with the package folder as root:
 
@@ -114,7 +114,7 @@ and [LICENSE-PIECES](LICENSE-PIECES). The package manifest declares
 A `"unicode"` glyph fallback needs no SVGs. To use other art, pass `piece-set` a
 loader (`named-piece-set` / `svg-piece-set`, or `with-fallback` for mixed and
 fairy boards) — see the *Pieces and fonts* and *Non-standard pieces* sections of
-the [manual](https://github.com/ndg6/staunton/blob/v0.1.0/docs/manual.typ).
+the [manual](https://github.com/ndg6/staunton/blob/v0.2.0/docs/manual.typ).
 (Other popular lichess sets carry non-commercial licenses and are not bundled.)
 The manual and tests also embed **CC BY-SA 4.0** fairy demo art (under `docs/` and
 `tests/`), which is *not* part of the shipped package — see [LICENSE-PIECES](LICENSE-PIECES).
