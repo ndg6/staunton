@@ -528,25 +528,30 @@ to Typst's always-embedded mono — so a stock install draws labels without
 #set-board-defaults(label-font: "Segoe UI")   // or a list, e.g. ("Helvetica", "DejaVu Sans Mono")
 ```
 
-=== Using your own downloaded piece set<custom-piece-sets>
+=== Bringing your own piece art<custom-piece-sets>
 
-You are not limited to the bundled sets. Many more are available to download —
-a good source is the lichess piece library @lichess-pieces — as folders of twelve
-SVGs named `{w,b}{K,Q,R,B,N,P}.svg`.
+You are not limited to the bundled sets. Many more are downloadable — a good
+source is the lichess piece library @lichess-pieces — and a set's license often
+lets you *use* it but not *redistribute* it, which is exactly why staunton draws
+art you supply rather than trying to bundle everyone's. You hand it the images; it
+draws them. The same mechanism serves a restyled *standard* set and the
+non-standard pieces of the next section.
 
-The key constraint is Typst's file sandbox: code inside an installed package can
-only read files from *its own* directory, never from your project, and no `.typ`
-can read files *above* the compilation root#footnote[The *compilation root* is the
-top of the directory tree Typst is allowed to read from — by default the directory
-of the document being compiled. Set it explicitly with `typst compile --root <dir>`
-(commonly `--root .`); no `read()` may reach above it.] at all. So staunton cannot itself go
-looking for a folder of piece art — *you* must hand it the images, from your own
-document, where file paths resolve against your project. You do that by passing
-`piece-set` a *loader function* `(color, kind)` that returns the image bytes:
+The one wrinkle is Typst's file sandbox: code inside an installed package can only
+read files from *its own* directory, never from your project, and no `.typ` can
+read files *above* the compilation root#footnote[The *compilation root* is the top
+of the directory tree Typst is allowed to read from — by default the directory of
+the document being compiled. Set it explicitly with `typst compile --root <dir>`
+(commonly `--root .`); no `read()` may reach above it.]. So staunton cannot go
+hunting for a folder of art on its own — *you* pass `piece-set` a *loader*: a
+function `(color, kind)` returning the image bytes, with the `read()` written *in
+your document*, where paths resolve against your project root (a packaged
+staunton's own `read()` would look inside the package instead).
 
-The `svg-piece-set` helper does the naming for you (`wK.svg`, `bN.svg`, …); you
-supply only a one-line reader that says *where* the files are. Set it once as the
-document default and every later board uses it:
+*The easy case — a lichess-style set.* If your set is twelve SVGs named
+`{w,b}{K,Q,R,B,N,P}.svg` (`wK.svg`, `bN.svg`, …), `svg-piece-set` does the naming
+for you; you supply only a one-line reader saying *where* the files are. Set it
+once as the document default and every later board uses it:
 
 ```typ
 // Put the set's twelve SVGs somewhere under your project, e.g. assets/pieces/alpha/.
@@ -555,23 +560,36 @@ document default and every later board uses it:
 #board("...")   // and every board after uses alpha
 ```
 
-Because the `read()` is written *here, in your document*, it resolves against your
-project root — that is what lets it reach files a packaged staunton never could
-(its own `read()` would look inside the package, not your project). You never
-re-read art per board: Typst memoizes file reads, so each SVG is loaded once.
+Typst memoizes file reads, so each SVG is loaded once however many boards use it.
 
-A missing or misnamed file fails with Typst's own “file not found”, naming the
-exact path. If you prefer, `piece-set` also accepts the raw loader function
-`(color, kind) -> bytes | content` directly (handy for non-standard file names),
-or a *dictionary* keyed `"<color>-<kind>"` (e.g. `"white-king"`) to bytes or
-ready-made `image(..)` content — only the pieces your position uses need be
-present.
+*Any other naming scheme.* Downloaded sets don't all agree on filenames, and a
+folder you had to symlink in may be read-only with names you cannot change.
+`named-piece-set` adapts to whatever scheme through a filename *pattern* you supply
+— `svg-piece-set` is simply its `"{c}{K}.svg"` shorthand:
 
-If your art lives *outside* the project (a shared system folder, say), Typst will
-refuse to read it (“would escape the project root”). Two ways around that, both
-chosen at compile time: run `typst compile` with `--root` set to a common
-ancestor of both your document and the art folder, or symlink the folder into
-your project tree.
+```typ
+#named-piece-set(f => read("/assets/pieces/alpha/" + f, encoding: none),
+                 pattern: "{kind}_{color}.svg")   // e.g. king_white.svg, knight_black.svg
+```
+
+The pattern's placeholders are `{kind}` (long name), `{color}` / `{c}` (long /
+short color) and `{K}` / `{k}` (the kind's letter, upper / lower); the default is
+`"{kind}_{color}.svg"`. If the files follow *no* tidy pattern at all, skip the
+helper and pass `piece-set` a bare loader `(color, kind) -> bytes | content` that
+does the naming itself — or a *dictionary* keyed `"<color>-<kind>"` (e.g.
+`"white-king"`) mapping to bytes or ready-made `image(..)` content, in which case
+only the pieces your positions actually use need be present.
+
+*Only some pieces your own.* To restyle just a few pieces — or, in the next
+section, to add non-standard kinds to an otherwise standard board — wrap your
+loader in `with-fallback`: the standard six come from a bundled set (cburnett by
+default) and every other kind from your loader.
+
+*Art outside the project.* If the art lives outside your project tree (a shared
+system folder, say), Typst refuses to read it (“would escape the project root”).
+Two compile-time fixes: run `typst compile` with `--root` set to a common ancestor
+of your document and the art, or symlink the folder into your project. A missing
+or misnamed file fails with Typst's own “file not found”, naming the exact path.
 
 === Non-standard pieces<fairy-pieces>
 
@@ -613,12 +631,11 @@ Typst has no mutable registry a position parser could read; built-in variants li
 variant is expected.)
 
 *Drawing the kinds.* A bundled set *name* (`"cburnett"`) knows only the six western
-pieces, so a fairy board is drawn from a *loader* — the same mechanism as a
-#link(<custom-piece-sets>)[downloaded set], pointed at your fairy art. `named-piece-set`
-maps `(color, kind)` onto your files through a filename *pattern* you supply, so
-you are not tied to one naming scheme. For a *mixed* board, wrap the loader in
-`with-fallback`: the standard kinds are drawn from a bundled set (cburnett by
-default) and every other kind from your loader.
+pieces, so a fairy board is drawn from a *loader* — exactly as for your own piece
+art (@custom-piece-sets), pointed at your fairy SVGs. Use `named-piece-set` with a
+`pattern` matching your filenames, and, for a *mixed* board, wrap it in
+`with-fallback` so the standard kinds come from a bundled set and every custom kind
+from your loader:
 
 #example(```typ
 // fairy art named "alfil_white.svg", "dabbaba_black.svg", … under the project
@@ -642,13 +659,6 @@ _Fairy art above, Wikimedia Commons, CC BY-SA 4.0: alfil (elephant) and ferz fro
 the Xogos da Meiga chess icons family by Iago Casabiell González @fairy-art;
 dabbaba by Kwamikagami @fairy-art-dabbaba. Per-file credits in
 `docs/assets/fairy/ATTRIBUTION.md`._
-
-The `pattern` defaults to `"{kind}_{color}.svg"`; its placeholders are `{kind}`
-(long name), `{color}` / `{c}` (long / short color) and `{K}` / `{k}` (the kind's
-letter, upper / lower). The bundled lichess-layout `svg-piece-set` is simply
-`named-piece-set(.., pattern: "{c}{K}.svg")`. If your set follows no tidy pattern
-at all, skip the helper and pass `piece-set` a bare loader
-`(color, kind) -> bytes | content` that does the naming itself.
 
 *A glyph instead of art.* When you have no SVG for a kind, give the variant a
 `glyphs:` map from kind to a text glyph; then `piece-set: "unicode"` draws that
@@ -1454,7 +1464,7 @@ source docstring: its signature, then every parameter with its type and default.
 
 == Positions
 `define-variant` builds a reusable custom (fairy) variant to pass as `variant:`
-(see #link(<fairy-pieces>)[Non-standard and fairy pieces]).
+(see #link(<fairy-pieces>)[Non-standard pieces]).
 #show-fns((
   ("/lib.typ", "position"),
   ("/src/fen.typ", "parse-fen"),
@@ -1569,7 +1579,7 @@ hand-built overlays.
 
 == Piece-set loaders
 Build the `piece-set` value for a downloaded or custom set (see
-#link(<custom-piece-sets>)[Using your own downloaded piece set] and
+#link(<custom-piece-sets>)[Bringing your own piece art] and
 #link(<fairy-pieces>)[Non-standard pieces]). `named-piece-set` maps
 `(color, kind)` onto your files through a filename pattern; `svg-piece-set` is
 the lichess-layout shorthand; `with-fallback` composes a custom loader over a base
