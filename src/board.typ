@@ -49,8 +49,8 @@
 // Label sizing (fractions of a square side). On-square labels are small and sit
 // tucked into the corner; the "outside"/"border" labels live in a gutter so can
 // be larger.
-#let _on-square-label-frac = 0.22   // on-square label size (item 1: a bit smaller)
-#let _on-square-pad-frac = 0.07     // on-square label inset from the corner (item 1: further in)
+#let _on-square-label-frac = 0.22   // on-square label size (a bit smaller)
+#let _on-square-pad-frac = 0.07     // on-square label inset from the corner (further in)
 #let _strip-label-frac = 0.40       // "outside"/"border" label size
 
 // (col,row) -> (dx,dy) for a square of side `sq`, honouring orientation and the
@@ -73,7 +73,7 @@
   rgb(c.at(0), c.at(1), c.at(2), 100% - transparency)
 }
 
-// Resolve a color spec used by arrows / highlights (item 6/8):
+// Resolve a color spec used by arrows / highlights:
 //   * `auto`         -> the supplied fallback color;
 //   * a string (a PGN %cal/%csl letter like "G") -> annotation-colors lookup;
 //   * a color value -> used as-is.
@@ -83,7 +83,7 @@
   else { c }
 }
 
-// A straight arrow (item 6): a shaft plus a filled triangular head, from
+// A straight arrow: a shaft plus a filled triangular head, from
 // (fx,fy) to (tx,ty) in board-canvas coordinates. Drawn by `place`ing at the
 // origin and giving absolute vertex coordinates, so it composes with the rest of
 // the canvas. The head scales with the square `sq`; the shaft width is
@@ -141,7 +141,7 @@
   }
 }
 
-// In-check glow (prompt 27/28): a square-filling radial gradient, drawn UNDER the
+// In-check glow: a square-filling radial gradient, drawn UNDER the
 // piece so the king reads crisp on top and the glow radiates from beneath it —
 // the Lichess look. The gradient's default 50% radius is the circle inscribed in
 // the square (touching the four EDGE MIDPOINTS); the four corners fall outside it
@@ -158,7 +158,7 @@
   ))
 }
 
-// Move-quality symbol -> category (prompt 27). The six recognised glyphs only.
+// Move-quality symbol -> category. The six recognised glyphs only.
 #let _mq-category(symbol) = {
   if symbol == "!" or symbol == "!!" { "good" }
   else if symbol == "?" or symbol == "??" { "bad" }
@@ -166,7 +166,7 @@
   else { panic("move-quality symbol must be one of ! ? !! ?? !? ?!; got " + repr(symbol)) }
 }
 
-// Move-quality badge (prompt 27/28): a filled disc near the square's screen
+// Move-quality badge: a filled disc near the square's screen
 // top-right, its centre pulled INTO the move's square by `inset` (so it reads as
 // belonging to that square) while still spilling over the top-right edge into the
 // neighbours. Prompt 28 enlarged the disc (r ≈ 0.28·sq) and moved the centre off
@@ -310,7 +310,7 @@
           let circle-c = if ecol == auto { st.circle-color } else { _resolve-anno-color(ecol, st.annotation-colors, st.circle-color) }
           _draw-highlight(shape, o.dx, o.dy, sq, fill, cross-c, circle-c, st.cross-width, st.circle-width)
         }
-        // in-check glow (prompt 27): under the pieces, over the checker/highlights.
+        // in-check glow: under the pieces, over the checker/highlights.
         // `check-square` is auto-filled by `board()` for analyzable positions.
         if st.check and st.check-square != none {
           let p = parse-square(st.check-square, cols: cols, rows: rows)
@@ -318,7 +318,7 @@
           _draw-check(o.dx, o.dy, sq, st.check-color)
         }
         // optional grid lines between squares: a fixed 0.5pt black, at every
-        // size (item 2). Drawn over the checker/highlights, under the pieces.
+        // size. Drawn over the checker/highlights, under the pieces.
         if st.grid {
           for k in range(1, cols) {
             place(dx: k * sq, dy: 0pt, line(start: (0pt, 0pt), end: (0pt, bh), stroke: 0.5pt + black))
@@ -363,7 +363,7 @@
               align(rank-align, _label-text(str(row + 1), corner-size, if on-dark { st.light } else { st.dark }))))
           }
         }
-        // arrows (item 6): on top of the pieces. Each entry is a dict
+        // arrows: on top of the pieces. Each entry is a dict
         // (from:, to:, color:) or a tuple ("f3","e5") / ("f3","e5", color).
         for a in st.arrows {
           let fsq = if type(a) == dictionary { a.from } else { a.at(0) }
@@ -379,7 +379,7 @@
         if st.border != none {
           place(rect(width: bw, height: bh, fill: none, stroke: st.border))
         }
-        // move-quality badge (prompt 27/28): topmost, on the destination square's
+        // move-quality badge: topmost, on the destination square's
         // screen top-right corner. `move-quality-mark` is derived and injected by
         // `diagram-after` only (badges are tied to a move; never a bare position).
         if st.move-quality and st.move-quality-mark != none {
@@ -393,7 +393,7 @@
       if not labels or mode == "on-square" { return board-canvas }
 
       if mode == "border" {
-        // a band of width `g` around the board (item 2). `border-theme` picks the
+        // a band of width `g` around the board. `border-theme` picks the
         // band fill / label color. A thin black line always separates the band
         // from the board, regardless of the `border` outline.
         let total-w = bw + 2 * g

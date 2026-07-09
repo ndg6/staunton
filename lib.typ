@@ -241,13 +241,13 @@
   pos
 }
 
-// Shared board renderer (prompt 28): the actual draw, with the in-check
+// Shared board renderer: the actual draw, with the in-check
 // auto-fill. `ov` is the resolved override dict. This is the internal seam that
 // lets `diagram-after` inject the move-quality badge (which only it may do — see
 // the public `board` guard below), while `board` itself forbids that key.
 #let _board-internal(source, flip, ov) = {
   let b = _to-board(source)
-  // In-check auto-fill (prompt 27): locate the side-to-move king in check and pass
+  // In-check auto-fill: locate the side-to-move king in check and pass
   // it as `check-square`, unless the caller set one. Computed only for analyzable
   // positions; the glow itself is still gated by the `check` style switch.
   if "check-square" not in ov {
@@ -285,7 +285,7 @@
 /// -> content
 #let board(source, flip: false, ..overrides) = {
   let ov = overrides.named()
-  // Move-quality badges (prompt 28) are tied to a MOVE, so they may only be
+  // Move-quality badges are tied to a MOVE, so they may only be
   // produced from a game — `diagram-after` derives the mark and injects it via
   // `_board-internal`. A bare position has no move, so setting `move-quality-mark`
   // here is a category error (it could otherwise badge an empty square).
@@ -543,7 +543,7 @@
   let base-ov = (:)
   for (k, v) in board-ov { if k != "arrows" and k != "highlight" { base-ov.insert(k, v) } }
   let (anno-arrows, anno-highlight) = _pgn-annotations(game, locator)
-  // Move-quality badge (prompt 28): this game path is the ONLY producer — the
+  // Move-quality badge: this game path is the ONLY producer — the
   // badge is derived from the addressed move's assessment (its quality NAG or a
   // literal `!`/`?` suffix) and placed on the move's destination square, gated by
   // the `move-quality` style switch. Callers cannot set `move-quality-mark`

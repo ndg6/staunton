@@ -59,9 +59,9 @@
   // "dark" = charcoal band, light-grey labels (a neutral dark-mode look).
   border-theme: "square",     // "square" | "brown" | "dark"
   border: 0.5pt + luma(40),   // thin board outline (none to drop)
-  grid: false,                // 1pt grid lines between squares (item 2)
+  grid: false,                // 1pt grid lines between squares
   piece-set: default-piece-set, // SVG set name, or "unicode" for the glyph fallback
-  piece-scale: 0.95,          // fraction of a square the piece occupies (item 1)
+  piece-scale: 0.95,          // fraction of a square the piece occupies
   baseline-inset: 0.20,       // glyph fallback only: baseline lift (fraction of a square)
   label-color: luma(90),      // "outside" mode strip labels
   label-border-ratio: 0.07,   // "border" mode band width as a fraction of the board
@@ -84,11 +84,11 @@
   circle-color: green,        // circle highlight stroke color
   cross-width: 2pt,           // cross stroke width
   circle-width: 2pt,          // circle stroke width
-  arrows: (),                 // array of arrows (item 6), each `(from, to, color)` e.g. ("f3","e5","G")
+  arrows: (),                 // array of arrows, each `(from, to, color)` e.g. ("f3","e5","G")
   arrow-color: default-highlight-base,  // default arrow color (opaque base)
   arrow-transparency: 85%,    // applied to the default arrow color (more transparent than highlights)
   arrow-width: auto,          // shaft width; auto -> proportional to the square
-  // In-check indicator (prompt 27). A radial glow (color -> transparent) on the
+  // In-check indicator. A radial glow (color -> transparent) on the
   // king that is in check, drawn under the piece. `check` gates it; `check-color`
   // is the glow's inner color. `check-square` is the marked square, auto-filled
   // by `board()` from the side-to-move's king for ANALYZABLE variants (standard
@@ -96,7 +96,7 @@
   check: false,               // show the in-check glow
   check-color: red,           // glow inner color (fades to its own transparent)
   check-square: none,         // square name to glow, or none (auto-filled)
-  // Move-quality indicator (prompt 27/28). A small badge on the destination square
+  // Move-quality indicator. A small badge on the destination square
   // of the last move, colored by the move's assessment. `move-quality` gates it;
   // `move-quality-mark` is the data `(square: "e5", symbol: "!!")`. Because a badge
   // is tied to a MOVE, it is derived and injected ONLY by `diagram-after` (from the
@@ -109,7 +109,7 @@
     bad: rgb("#c0392b"),         // ? ??   (red)
     interesting: rgb("#67a04a"), // !? ?!  (green)
   ),
-  // Mapping from PGN %cal/%csl color letters to colors (item 8, decision 8a).
+  // Mapping from PGN %cal/%csl color letters to colors.
   annotation-colors: (
     G: rgb(21, 120, 27, 200),   // green
     R: rgb(136, 32, 32, 200),   // red
@@ -135,7 +135,7 @@
 // language-aware string"; set a literal (content) to override, per document or
 // per call.
 #let default-diagram-style = (
-  info-bold: true,            // bold the auto game-info line (item 4)
+  info-bold: true,            // bold the auto game-info line
   info-gap: 0.6em,            // space between the game-info line and the board
   supplement: auto,           // figure supplement (auto -> localized "Diagram")
   outline-title: auto,        // chess-diagram-outline title (auto -> "List of Diagrams")
@@ -162,7 +162,7 @@
   annotations: false,  // process %cal/%csl comment commands -> arrows/highlights
   nags:        false,  // render NAGs ("Nf3!", "d4⩲") in notation
   comments:    false,  // include comment prose in notation
-  diagrams:    false,  // act on embedded diagram markers (consumer: inline embed, deferred)
+  diagrams:    false,  // act on embedded diagram markers (consumer: chess-notation, splices boards into the movetext)
   variations:  false,  // splice variations (RAVs) into notation output
   bold-mainline: true, // render mainline moves bold (variations stay normal)
 )

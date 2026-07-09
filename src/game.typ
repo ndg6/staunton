@@ -210,7 +210,7 @@
 /// The destination square (e.g. `"e5"`, or the king's `"g1"` for `O-O`) of the
 /// move addressed by `locator`. Resolves the move's SAN against the position
 /// *before* it, so it works for captures, castling and promotions. Standard-chess
-/// only (uses the rules engine). Used to place the move-quality badge (prompt 27).
+/// only (uses the rules engine). Used to place the move-quality badge.
 ///
 /// - game (dictionary): a parsed game (from `parse-pgn`).
 /// - locator (str, dictionary): a mainline `"30w"` / `"30b"`, or a variation path
@@ -250,7 +250,7 @@
   square-name(mv.to.at(0), mv.to.at(1))
 }
 
-// Move-quality glyphs (prompt 27): the six the badge recognises, and the NAG codes
+// Move-quality glyphs: the six the badge recognises, and the NAG codes
 // ($1..$6) that map to them.
 #let _quality-nag-codes = ("1", "2", "3", "4", "5", "6")
 #let _quality-symbols = ("!", "?", "!!", "??", "!?", "?!")
@@ -272,7 +272,7 @@
 /// NAG (`$1`..`$6`, whether parsed from the PGN or set with `with-nags`) or a
 /// literal `!`/`?` suffix on the SAN — so a mark written as text, as a PGN NAG, or
 /// set programmatically all resolve identically. Other NAGs (position evals like
-/// `$14`) are ignored. Used to place the badge (prompt 27); standard-chess only.
+/// `$14`) are ignored. Used to place the badge; standard-chess only.
 ///
 /// - game (dictionary): a parsed game (from `parse-pgn`).
 /// - locator (str, dictionary): a mainline `"30w"` / `"30b"`, or a variation path

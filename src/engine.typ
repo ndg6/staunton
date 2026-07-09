@@ -113,7 +113,7 @@
 
 /// Square (e.g. `"e1"`) of the *side-to-move's* king when it is in check, else
 /// `none`. This is the one king that can legally be in check, so it is what the
-/// in-check indicator glows (prompt 27). Standard-chess only.
+/// in-check indicator glows. Standard-chess only.
 ///
 /// - position (dictionary): the position to test (needs `turn` + `squares`).
 /// -> str | none
