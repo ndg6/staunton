@@ -41,22 +41,28 @@ Then update the version string **everywhere it appears** (keep them in sync):
 | File | What |
 |------|------|
 | [`typst.toml`](typst.toml) | `version` — authoritative |
-| [`README.md`](README.md) | the two `@preview/staunton:X.Y.Z` import lines |
-| [`docs/manual.typ`](docs/manual.typ) | the import snippet **and** the title-page "package version" line |
+| [`README.md`](README.md) | the `@preview/staunton:X.Y.Z` import lines; the `vX.Y.Z` tag URLs (gallery image, manual/showcase source links); and the **pinned manual download link** `releases/download/vX.Y.Z/manual.pdf` |
+| [`docs/manual.typ`](docs/manual.typ) | the `@preview/staunton:X.Y.Z` import snippets **and** the title-page "package version" line |
+| [`tests/VISUAL_CHECKS.md`](tests/VISUAL_CHECKS.md) | the cover-string eyeball item that mirrors the "package version" line |
 
-Find them with `grep -rn "0\.1\.0"` (ignore the FEN/position examples, which are
-not version strings).
+Find them with `grep -rn "0\.1\.0"` and bump each. Leave only the *historical*
+`0.1.0` mentions: the `## 0.1.0` changelog heading in README, the example in this
+file, and past-findings notes. (Ignore the FEN/position examples, which are not
+version strings.)
 
 ## Publishing to Universe (upload-gated — get explicit approval each time)
 
 1. Green suite: `bash tests/run.sh`.
 2. Commit the version bump and land it on GitHub.
 3. Publish the GitHub Release, attaching the compiled manual as an asset (the PDF
-   is a build artifact, gitignored — it is *not* committed; the README download
-   link points at `releases/latest/download/manual.pdf`):
+   is a build artifact, gitignored — it is *not* committed). The README download
+   link is **pinned** to `releases/download/vX.Y.Z/manual.pdf` (not `latest`), so
+   the Release for `vX.Y.Z` **must** attach `manual.pdf`, and the link must be
+   bumped each release (see the table above). Pinning keeps a given version's
+   README pointing at *its own* manual, so a later release can't hijack the link:
    `bash scripts/build-manual.sh` then
    `gh release create vX.Y.Z docs/manual.pdf --title vX.Y.Z` (or, for an existing
-   release, `gh release upload vX.Y.Z docs/manual.pdf`).
+   release, `gh release upload vX.Y.Z docs/manual.pdf --clobber`).
 4. Build the bundle: `bash scripts/build-bundle.sh` → `dist/preview/staunton/<version>/`
    (built from a clean `git archive` of HEAD, then the `exclude` globs removed;
    it self-verifies required files are present and repo-only files didn't leak).
