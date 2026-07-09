@@ -1,7 +1,7 @@
 // Chess960 position numbering (Scharnagl scheme): number -> start FEN and the
 // inverse rank -> number. Anchors: 518 = standard, 0 = BBQNNRKR, 959 = RKRNNQBB.
 // Every number 0..959 must round-trip, and every generated start must be a valid
-// FEN that serialises back as KQkq (each colour's castling rooks are the outer
+// FEN that serialises back as KQkq (each color's castling rooks are the outer
 // pair, so no file-letter disambiguation is needed for a fresh start).
 #import "/lib.typ": chess960-start-fen, chess960-start, parse-fen, to-fen
 #import "/src/chess960.typ": chess960-back-rank, chess960-number

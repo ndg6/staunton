@@ -26,7 +26,7 @@
 #let ru = s(g, lang: "ru")
 #assert(ru != s(g) and ru.contains("f3") and not ru.contains("Nf3"), message: "ru localizes piece letters, keeps coords")
 
-// --- figurines: colour-aware (White outline U+2658, Black solid U+265E) ---
+// --- figurines: color-aware (White outline U+2658, Black solid U+265E) ---
 #let fig = s(g, figurine: true)
 #assert(fig.contains("\u{2658}"), message: "white knight figurine for White's move")
 #assert(fig.contains("\u{265E}"), message: "black knight figurine for Black's move")

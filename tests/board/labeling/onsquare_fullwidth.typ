@@ -1,6 +1,6 @@
 // on-square labels at a near-page-width board, so the
 // corner labels are large enough to judge their size, corner offset, and the
-// opposite-colour contrast. On-square labels keep a fixed font fraction at every
+// opposite-color contrast. On-square labels keep a fixed font fraction at every
 // size (no automatic switch to "border" at small sizes).
 #import "/lib.typ": board
 #import "/tests/board/_fixture.typ": test-fen

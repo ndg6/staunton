@@ -31,7 +31,7 @@
 // ranks, "x", "+", "#", "O-O" and NAGs are never piece letters and pass through.
 #let _letter-to-kind = (K: "king", Q: "queen", R: "rook", B: "bishop", N: "knight")
 
-// Figurine glyphs are colour-aware: White's moves use the OUTLINE ("white")
+// Figurine glyphs are color-aware: White's moves use the OUTLINE ("white")
 // chess symbols U+2654..2658, Black's the SOLID ("black") ones U+265A..265E, so
 // the side to move reads off the figurine itself (not just the move number).
 // (Some fonts render the outline glyphs lighter than the solid ones.)
@@ -47,7 +47,7 @@
   else { panic("notation: move locator must end in 'w' or 'b': " + loc) }
 }
 
-// One piece letter rendered as the language letter, or the colour-aware figurine
+// One piece letter rendered as the language letter, or the color-aware figurine
 // glyph (`white` selects the outline vs solid set).
 #let _piece-out(letter, chars, figurine, white) = {
   let kind = _letter-to-kind.at(letter)
@@ -57,7 +57,7 @@
 
 // Transform one canonical (English) SAN token: substitute the leading piece
 // letter and any promotion letter (after "="); leave everything else untouched.
-// `white` is the side that played the move (for colour-aware figurines).
+// `white` is the side that played the move (for color-aware figurines).
 #let _localize-san(san, chars, figurine, white) = {
   if san == "" { return "" }
   let cs = san.clusters()

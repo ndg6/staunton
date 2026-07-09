@@ -3,7 +3,7 @@
 //
 // Maps a position number 0..959 to its standard back-rank arrangement and back,
 // using the direct algorithm (no lookup tables): the number's digits pick the
-// two bishops (on opposite colours), the queen, the knight pair, and the last
+// two bishops (on opposite colors), the queen, the knight pair, and the last
 // three squares are always rook-king-rook (which is what makes every 960 start
 // legally castleable). Anchors: 518 = RNBQKBNR (standard), 0 = BBQNNRKR,
 // 959 = RKRNNQBB.
@@ -68,7 +68,7 @@
   assert(type(rank) == array and rank.len() == 8, message: "chess960-number: expected 8 files")
   let bl = (1, 3, 5, 7).position(f => rank.at(f) == "bishop")
   let bd = (0, 2, 4, 6).position(f => rank.at(f) == "bishop")
-  assert(bl != none and bd != none, message: "chess960-number: need one bishop on each colour")
+  assert(bl != none and bd != none, message: "chess960-number: need one bishop on each color")
   // queen index among the 6 non-bishop squares (in file order)
   let non-bishop = range(8).filter(f => rank.at(f) != "bishop")
   let q = non-bishop.position(f => rank.at(f) == "queen")

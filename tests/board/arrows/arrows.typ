@@ -8,10 +8,10 @@
 #assert(default-board-style.keys().contains("arrows"), message: "arrows is a board key")
 #assert(default-board-style.arrows == (), message: "no arrows by default")
 // width settable (auto -> proportional), transparency 75%,
-// and the default arrow colour is the same base as the default highlight fill.
+// and the default arrow color is the same base as the default highlight fill.
 #assert(default-board-style.arrow-width == auto, message: "arrow-width auto by default")
 #assert(default-board-style.arrow-transparency == 85%, message: "arrow transparency 85%")
-#assert(default-board-style.arrow-color == default-board-style.highlight-fill, message: "arrow colour defaults to the highlight base")
+#assert(default-board-style.arrow-color == default-board-style.highlight-fill, message: "arrow color defaults to the highlight base")
 
 #set page(width: auto, height: auto, margin: 1cm)
 #set text(font: "Libertinus Serif", size: 9pt)

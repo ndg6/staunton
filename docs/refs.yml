@@ -1,0 +1,32 @@
+# Bibliography for the staunton user manual (Hayagriva format).
+# Only entries actually cited with @key appear in the rendered reference list.
+
+pgn-spec:
+  type: report
+  title: "Standard: Portable Game Notation Specification and Implementation Guide"
+  author: "Edwards, Steven J."
+  date: 1994
+  url: https://www.thechessdrum.net/PGN_Reference.txt
+
+scharnagl:
+  type: web
+  title: "Chess960 numbering scheme"
+  parent:
+    type: web
+    title: Wikipedia
+  url: https://en.wikipedia.org/wiki/Chess960_numbering_scheme
+
+lichess-pieces:
+  type: repository
+  title: "lila — lichess.org piece sets (public/piece)"
+  author: "Lichess"
+  url: https://github.com/lichess-org/lila/tree/master/public/piece
+
+fairy-art:
+  type: web
+  title: "Fairy chess piece SVGs (dabbaba by Kwamikagami, CC BY-SA 4.0)"
+  author: "Wikimedia Commons contributors"
+  parent:
+    type: web
+    title: Wikimedia Commons
+  url: https://commons.wikimedia.org/wiki/Category:SVG_fairy_chess_pieces

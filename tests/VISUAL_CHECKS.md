@@ -22,7 +22,7 @@ Then open the PDFs below and check the noted property. (The expected-*fail* test
       its square border without spilling; filled squares sit under the pieces.
       *(This sheet hid a cross-on-the-wrong-square bug that compiled green.)*
 - [ ] `board/arrows/arrows.pdf` — arrows run centre-to-centre, scale with the
-      board, and flip with it; colours/widths as labelled.
+      board, and flip with it; colors/widths as labelled.
 - [ ] `board/labeling/label_modes.pdf`, `border_themes.pdf`, `onsquare_corners.pdf`,
       `onsquare_fullwidth.pdf` — files/ranks in the right gutter/corner, themed
       bands correct, labels legible and not clashing with pieces.
@@ -32,7 +32,7 @@ Then open the PDFs below and check the noted property. (The expected-*fail* test
 - [ ] `board/grid/grid.pdf` — 1pt grid lines sit between squares at every size.
 - [ ] `board/colors/colors.pdf` — light/dark themes render as intended.
 - [ ] `board/piece_sets/existing/all_piece_sets.pdf`, `custom_user_set.pdf`,
-      `unicode_fallback.pdf` — every piece glyph present, centred, correct colour
+      `unicode_fallback.pdf` — every piece glyph present, centred, correct color
       (including the Unicode glyph fallback).
 - [ ] `board/piece_sets/existing/loader_function.pdf`,
       `loader_bytes_dict.pdf`, `loader_settable_default.pdf` — pieces render from a
@@ -44,10 +44,10 @@ Then open the PDFs below and check the noted property. (The expected-*fail* test
 - [ ] `board/piece_sets/fairy/mixed_board.pdf` — a mixed fairy board: standard
       king/pawn (from cburnett via `with-fallback`) sit alongside the three fairy
       pieces **alfil** (a1, white), **dabbaba** (d4, black) and **ferz** (f6,
-      white). Check each fairy glyph is the right piece, the right colour, centred
+      white). Check each fairy glyph is the right piece, the right color, centred
       and sized like the standard ones. (The sheet self-asserts that all 6 pieces
       render, so a dropped piece fails the run; the eyeball is glyph identity,
-      colour and sizing.)
+      color and sizing.)
 - [ ] `board/piece_sets/fairy/glyph_fallback.pdf` — the user-supplied glyph
       fallback: the fairy **alfil** on a1 draws the variant's glyph (`✶`), while the
       standard king on e1 still uses the built-in glyph. Check the `✶` shows on a1
@@ -63,10 +63,10 @@ Then open the PDFs below and check the noted property. (The expected-*fail* test
 - [ ] `board/markings/markings.pdf` (prompt 27/28) —
       *In-check glow*: a **Lichess-style** red radial that fills most of the square
       — solid near the centre and reaching the **edge midpoints**, with only the four
-      **corners** left showing the bare square colour — sits **under** the king on
+      **corners** left showing the bare square color — sits **under** the king on
       the checked square, which stays crisp **on top** (the glow must NOT vanish
       under the piece). Present on both the Black-in-check and White-in-check boards; the
-      "default" board (no `check:`) shows **no** glow; the custom-colour board glows
+      "default" board (no `check:`) shows **no** glow; the custom-color board glows
       blue. The reference-play board (`3. Qh5#`) glows the Black king. The glow stays
       roughly circular and does not bleed into neighbouring squares.
       *Move-quality badge* (all now sourced from a game): the six glyphs read as
@@ -132,7 +132,7 @@ These are not under `tests/out/`; build them separately.
         programmatic `b1→c3` arrow and a circle on `d4` on one board.
 - [ ] `docs/manual.pdf` — the new *Chess960 / Fischer Random* chapter (after *Games*):
       - *Boards and start positions*: `chess960-diagram(chess960-start(356))` draws a
-        valid non-standard back rank (bishops on opposite colours, king between the rooks).
+        valid non-standard back rank (bishops on opposite colors, king between the rooks).
       - *X-FEN castling*: the `to-fen(frc, "10b")` output line reads
         `…/2BNK1RR w Gkq - 4 11` (the `Gkq`, not `KQkq`).
       - *Games*: `game-variant(frc)` prints `chess960`; the `diagram-after(frc, "11w")`

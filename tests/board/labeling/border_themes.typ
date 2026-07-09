@@ -1,5 +1,5 @@
 // "border" mode band themes. `border-theme` picks the band
-// fill / label colour: "square" (default) = dark-square band + light-square
+// fill / label color: "square" (default) = dark-square band + light-square
 // labels; "brown" = very-dark-brown band + creme-white labels; "dark" = charcoal
 // band + light-grey labels (a neutral dark-mode look). Settable as a document
 // default and a per-call override.

@@ -22,8 +22,8 @@
 
 #import "pieces.typ": default-white-fill, default-black-fill, default-piece-fonts, default-piece-set
 
-// Shared base colour for the default highlight fill AND the default arrow colour
-// (arrows default to the highlight colour). The transparency
+// Shared base color for the default highlight fill AND the default arrow color
+// (arrows default to the highlight color). The transparency
 // is applied separately by the renderer via `highlight-transparency` /
 // `arrow-transparency`, so this base is stored fully opaque.
 #let default-highlight-base = rgb(60, 130, 90)
@@ -73,31 +73,31 @@
                               // Auto-seeded from a custom variant's `glyphs:` map.
   // Highlights. Entries: a square name "e4" (uses
   // highlight-shape + highlight-fill), a (square, color) pair (filled, explicit
-  // colour -- e.g. PGN %csl), or a dict (square:, shape:, color:) for full
+  // color -- e.g. PGN %csl), or a dict (square:, shape:, color:) for full
   // control. Shapes: "filled" | "cross" | "circle". By convention a "cross"
   // marks an EMPTY square (it would clash with a piece); not enforced.
   highlight: (),
   highlight-shape: "filled",  // default shape for plain-string entries
-  highlight-fill: default-highlight-base,   // filled-highlight colour (opaque base)
+  highlight-fill: default-highlight-base,   // filled-highlight color (opaque base)
   highlight-transparency: 75%,              // applied to highlight-fill
-  cross-color: red,           // cross highlight stroke colour
-  circle-color: green,        // circle highlight stroke colour
+  cross-color: red,           // cross highlight stroke color
+  circle-color: green,        // circle highlight stroke color
   cross-width: 2pt,           // cross stroke width
   circle-width: 2pt,          // circle stroke width
   arrows: (),                 // array of arrows (item 6), each `(from, to, color)` e.g. ("f3","e5","G")
-  arrow-color: default-highlight-base,  // default arrow colour (opaque base)
-  arrow-transparency: 85%,    // applied to the default arrow colour (more transparent than highlights)
+  arrow-color: default-highlight-base,  // default arrow color (opaque base)
+  arrow-transparency: 85%,    // applied to the default arrow color (more transparent than highlights)
   arrow-width: auto,          // shaft width; auto -> proportional to the square
-  // In-check indicator (prompt 27). A radial glow (colour -> transparent) on the
+  // In-check indicator (prompt 27). A radial glow (color -> transparent) on the
   // king that is in check, drawn under the piece. `check` gates it; `check-color`
-  // is the glow's inner colour. `check-square` is the marked square, auto-filled
+  // is the glow's inner color. `check-square` is the marked square, auto-filled
   // by `board()` from the side-to-move's king for ANALYZABLE variants (standard
   // chess) and user-overridable; it stays `none` for fairy/bare positions.
   check: false,               // show the in-check glow
-  check-color: red,           // glow inner colour (fades to its own transparent)
+  check-color: red,           // glow inner color (fades to its own transparent)
   check-square: none,         // square name to glow, or none (auto-filled)
   // Move-quality indicator (prompt 27/28). A small badge on the destination square
-  // of the last move, coloured by the move's assessment. `move-quality` gates it;
+  // of the last move, colored by the move's assessment. `move-quality` gates it;
   // `move-quality-mark` is the data `(square: "e5", symbol: "!!")`. Because a badge
   // is tied to a MOVE, it is derived and injected ONLY by `diagram-after` (from the
   // move's quality NAG / literal suffix) -- never settable on a bare position, and

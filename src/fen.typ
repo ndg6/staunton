@@ -113,7 +113,7 @@
 
 // Serialise the rook-file castling model back to an (X-)FEN field. Emits the
 // conventional letter (K/Q/k/q) when the castling rook is the OUTERMOST rook of
-// its colour on that side of the king (so standard positions stay `KQkq`), and
+// its color on that side of the king (so standard positions stay `KQkq`), and
 // the rook's file letter otherwise (the promotion-rook ambiguity). A legacy
 // boolean `true` is read as the standard file for that side.
 #let _castling-str(position) = {

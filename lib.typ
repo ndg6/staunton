@@ -83,7 +83,7 @@
 }
 
 // Normalise one square's piece value into canonical (kind, color). Accepts:
-//   * a piece letter   "K" / "k"          (case selects colour, variant abbrev)
+//   * a piece letter   "K" / "k"          (case selects color, variant abbrev)
 //   * (kind: .., color: ..) where `kind` is the long name ("king") OR the
 //     single-letter abbreviation ("k"), case-insensitive; `color` is
 //     "white"/"black" (case-insensitive).
@@ -393,7 +393,7 @@
 // interpreter (src/annotations.typ):
 //   {[%cal Gf3e5,Bc6e5]}  -> arrows  (("f3","e5","G"), ("c6","e5","B"))
 //   {[%csl Re5,Yc6]}      -> highlights (("e5","R"), ("c6","Y"))
-// The colour letters resolve later through the board's `annotation-colors` map.
+// The color letters resolve later through the board's `annotation-colors` map.
 // Returns (arrows, highlight).
 #let _pgn-annotations(game, locator) = {
   let r = _interpret-comment(move-node(game, locator).at("comment-after", default: none))

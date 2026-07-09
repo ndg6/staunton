@@ -143,8 +143,8 @@
 // earlier page. So a page carrying "Introduction" then "The Board" shows
 // "Introduction", and the next page (no new chapter) shows "The Board". (None
 // while still in the front matter, before the first chapter.) Only numbered
-// chapters count — the outline's own "Guide" / "API Reference" titles are
-// level-1 headings too but carry `numbering: none`, so they never appear here.
+// chapters count — the part dividers ("User Guide" / "API Reference" / "Appendix")
+// are level-1 headings too but carry `numbering: none`, so they never appear here.
 #let _running-chapter = context {
   let pg = here().page()
   let h1 = query(heading.where(level: 1)).filter(h => h.numbering != none)
@@ -152,6 +152,27 @@
   if on-page.len() > 0 { on-page.first().body } else {
     let earlier = h1.filter(h => h.location().page() < pg)
     if earlier.len() > 0 { earlier.last().body } else { none }
+  }
+}
+
+// --- parts: a hierarchy level ABOVE chapters ---------------------------------
+// `part(..)` emits an *unnumbered* level-1 heading; chapters stay numbered
+// level-1 headings, so their 1, 2, 3 counter runs unbroken across the parts (an
+// unnumbered heading neither takes a number nor increments the counter). A part
+// therefore never shows in the running header either (that filters
+// `numbering != none`). The show rule below gives a part its banner look; a
+// numbered level-1 heading — a chapter — falls through to Typst's default.
+#let part(body) = [#heading(level: 1, numbering: none, outlined: true)[#body]]
+#show heading.where(level: 1): it => {
+  if it.numbering == none {
+    pagebreak(weak: true)
+    v(2.2cm)
+    align(center, text(size: 24pt, weight: "bold", it.body))
+    v(0.5em)
+    align(center, box(width: 28%, divider()))
+    v(1.1cm)
+  } else {
+    it
   }
 }
 
@@ -198,50 +219,49 @@
   },
 )
 
-// Front-matter outline, split into two columns so the Guide and the API
-// Reference read as distinct parts. The `<api-reference>` label is the boundary:
-// everything before it is Guide, the reference chapter and everything at/after it
-// is Reference.
-// Level-1 (chapter) entries are set bold, with extra space above each (so a new
-// chapter stands off from the previous one) and a smaller space below (so the bold
-// chapter line separates a touch from its own indented level-2 children).
+// Front-matter table of contents. Level-1 entries come in two kinds and are
+// styled apart: a PART divider (unnumbered — "User Guide" / "API Reference" /
+// "Appendix") reads as a larger group header, while a numbered chapter is set
+// bold with its level-2 sections indented beneath. Parts and chapters share the
+// level-1 indent (parts are separators, not a deeper nesting).
 #show outline.entry.where(level: 1): it => {
-  v(0.7em, weak: false)     // firm gap above a new chapter (also spaces off the title)
-  strong(it)
-  v(0.3em, weak: false)     // firm gap below, before the chapter's level-2 children
+  if it.element.numbering == none {
+    v(1.1em, weak: false)                 // strong gap above a new part
+    strong(text(size: 1.1em, it))
+    v(0.45em, weak: false)
+  } else {
+    v(0.55em, weak: false)                // firm gap above a new chapter
+    strong(it)
+    v(0.2em, weak: false)                 // small gap before its level-2 children
+  }
 }
-#grid(columns: (1fr, 1fr), column-gutter: 2em,
-  outline(
-    title: [Guide],
-    target: selector(heading).before(<api-reference>, inclusive: false),
-    depth: 2, indent: auto,
-  ),
-  outline(
-    title: [API Reference],
-    target: heading.where(level: 1).or(heading.where(level: 2)).after(<api-reference>, inclusive: true),
-    depth: 2, indent: auto,
-  ),
-)
+
+#align(center, text(size: 15pt, weight: "bold")[Contents])
+#v(0.6em)
+#outline(title: none, depth: 2, indent: auto)
 
 #pagebreak()
+
+#part[User Guide]
 
 // === Introduction ============================================================
 
 = Introduction<introduction>
 
-Package *staunton* aims to provide a complete, convenient but also flexible solution
+Package *staunton* aims to provide a complete, convenient and flexible solution
 for chess publications. It provides a full set of features, including:
 
-- *boards and diagrams* — pure boards with labels, highlights, arrows, an optional grid, 
+- *boards and diagrams* — bare boards with labels, highlights, arrows, an optional grid, 
   flexible sizing, custom colors, and bundled SVG piece sets (or a Unicode fallback); and building on that diagrams with captions, figure counters, and referenceable labels;
-- *games from PGN* — a sophisticated parser creates single games or an array of games,  
-  from which you create positions by "locators" (mainline and variations), move play-out, and FEN export;
-- *move notation* — from parsed games you get move text output with localized piece letters, 
-  figurine glyphs, NAGs, comments and diagrams embedded inline;
+- *games from PGN* — a sophisticated parser creates single games or an array of games from a PGN file,  
+  from which you create positions by using move "locators" (mainline and variations). You can also 
+  play out moves from start positions and export resulting positions as FEN strings;
+- *move notation* — from parsed games you create move text output with localized piece letters,
+  figurine glyphs, NAGs (numeric annotation glyphs, the standard `$n` move-assessment codes), comments and diagrams embedded inline;
 - *tournament tables* — we can create standings, cross-tables and progress charts from a PGN's
   results, by player or by team;
-- *Chess960 / Fischer Random* — the same board, engine, PGN pipeline and notation
-  handle 960, with X-FEN castling, the FRC PGN tags, and start-by-number (see @chess960);
+- *Chess960 / Fischer Random Chess* — the same board, engine, PGN pipeline and notation
+  handle chess960, with X-FEN castling, the FRC PGN tags, and start-by-number instead of FEN (see @chess960);
 - *outlines and references* — diagrams and tables get their own counters and lists;
 - *document-wide styling* and *localization* (six languages, easily extended);
 - *limited HTML export* — notation, tables, outlines, references and captioned
@@ -281,18 +301,12 @@ can never disagree.
 Typst package *staunton* is named in honour of *Howard Staunton* (c. 1810–1874): a leading chess master of his day, organiser of the first international tournament (London, 1851), a chess author and publisher, and the namesake of the standardised *Staunton pattern* chessmen —
 still the tournament standard.
 
-== Acknowledgements
-
-The Typst package #link("https://typst.app/universe/package/boards-n-pieces")[boards-n-pieces]
-was an inspiration for some of staunton's features. This package and its manual
-were developed with assistance from Claude (Opus 4.8) by Anthropic.
-
 // === The board ===============================================================
 
 = The Board<board>
 
 `board(source, ..)` draws *just the board* — no caption, no figure — and is the
-primitive every diagram builds on. `source` is one of: a *FEN string*; a
+primary building block every diagram builds on. `source` is one of: a *FEN string*; a
 *position* (from `position(..)` or `parse-fen(..)`); or a bare *squares* dict
 (square name → `(kind, color)`).
 
@@ -377,7 +391,7 @@ lines between the squares.
 == Move Markings
 
 Two optional markings annotate the *move* rather than arbitrary squares. Both are
-*off by default* and their colours are settable per call or via
+*off by default* and their colors are settable per call or via
 `set-board-defaults`.
 
 `check: true` draws a radial glow (`check-color`, default red, fading to
@@ -388,7 +402,7 @@ below).
 `move-quality: true` draws a small disc near the *upper-right* of the last move's
 destination square, carrying its assessment: `!` / `!!` (good, blue), `?` / `??`
 (bad, red), `!?` / `?!` (interesting, green), text always white. The disc clears the
-piece and spills slightly into the neighbours; recolour the categories with
+piece and spills slightly into the neighbours; recolor the categories with
 `move-quality-colors`.
 
 A badge is tied to a *move*, so it is only available when you draw *from a game*:
@@ -411,18 +425,10 @@ programmatically, wears a good-move badge on `f7`:
 
 == Coordinates and Non-Square Boards
 
-At leasst in standard western chess, Files run `a`, `b`, … and ranks `1`, `2`, …; `a1` is the dark square in the lower-left corner, `h8` the upper-right. Square names are case-insensitive
+At least in standard western chess, files run `a`, `b`, … and ranks `1`, `2`, …; `a1` is the dark square in the lower-left corner, `h8` the upper-right. Square names are case-insensitive
 (`"E4"` = `"e4"`).
 
-#example(```typ
-#board(
-  "8/8/8/8/8/8/8/8",
-  label-mode: "outside",
-  size: 4cm,
-)
-```)
-
-But boards are *not* tied to 8×8. A `position` built from the string form (next
+But boards are *not* tied to an 8×8 layout. A `position` built from the string form (next
 chapter) counts its own columns and rows, and the renderer draws whatever geometry
 it is given — files and ranks extend as far as the board needs, and the cells stay
 square while the board itself becomes rectangular:
@@ -453,7 +459,7 @@ without being told the geometry, and shrinks to fit if asked for more than fits.
 )
 ```)
 
-== Colours
+== Colors
 
 `light` and `dark` set the two square colors:
 
@@ -499,25 +505,41 @@ with `piece-set:` per board, or document-wide with `set-piece-set` (see
 @document-style):
 
 #example(```typ
+#let pos = "2kr3r/ppp2ppp/2n1bn2/3q4/3P4/2NB1N2/PPPQ1PPP/R4RK1"
 #grid(columns: 3, gutter: 8pt, align: bottom,
-  board("8/8/8/8/4N3/8/8/8", size: 2.6cm, piece-set: "cburnett"),
-  board("8/8/8/8/4N3/8/8/8", size: 2.6cm, piece-set: "merida"),
-  board("8/8/8/8/4N3/8/8/8", size: 2.6cm, piece-set: "unicode"),
+  board(pos, size: 3.4cm, piece-set: "cburnett"),
+  board(pos, size: 3.4cm, piece-set: "merida"),
+  board(pos, size: 3.4cm, piece-set: "unicode"),
 )
 ```, stacked: true)
 
 `piece-set: "unicode"` (or `none`) selects the glyph fallback — solid Unicode chess
 glyphs distinguished by fill and a contrasting stroke; it needs a font carrying them.
 
+=== The label font<label-font>
+
+The rank/file *labels* are drawn in their own sans-serif, set by the `label-font`
+board option (a family or a fallback list), independent of the document font. The
+default is `("Arial", "DejaVu Sans Mono")` — Arial on Windows/macOS, falling back
+to Typst's always-embedded mono — so a stock install draws labels without
+"unknown font family" warnings. Override it like any board default:
+
+```typ
+#set-board-defaults(label-font: "Segoe UI")   // or a list, e.g. ("Helvetica", "DejaVu Sans Mono")
+```
+
 === Using your own downloaded piece set<custom-piece-sets>
 
 You are not limited to the bundled sets. Many more are available to download —
-a good source is the #link("https://github.com/lichess-org/lila/tree/master/public/piece")[lichess
-piece library] — as folders of twelve SVGs named `{w,b}{K,Q,R,B,N,P}.svg`.
+a good source is the lichess piece library @lichess-pieces — as folders of twelve
+SVGs named `{w,b}{K,Q,R,B,N,P}.svg`.
 
 The key constraint is Typst's file sandbox: code inside an installed package can
 only read files from *its own* directory, never from your project, and no `.typ`
-can read files *above* the compilation root at all. So staunton cannot itself go
+can read files *above* the compilation root#footnote[The *compilation root* is the
+top of the directory tree Typst is allowed to read from — by default the directory
+of the document being compiled. Set it explicitly with `typst compile --root <dir>`
+(commonly `--root .`); no `read()` may reach above it.] at all. So staunton cannot itself go
 looking for a folder of piece art — *you* must hand it the images, from your own
 document, where file paths resolve against your project. You do that by passing
 `piece-set` a *loader function* `(color, kind)` that returns the image bytes:
@@ -551,23 +573,19 @@ chosen at compile time: run `typst compile` with `--root` set to a common
 ancestor of both your document and the art folder, or symlink the folder into
 your project tree.
 
-The rank/file *labels* are drawn in their own sans-serif, set by the `label-font`
-board option (a family or a fallback list), independent of the document font. The
-default is `("Arial", "DejaVu Sans Mono")` — Arial on Windows/macOS, falling back
-to Typst's always-embedded mono — so a stock install draws labels without
-"unknown font family" warnings. Override it like any board default:
+=== Non-standard pieces<fairy-pieces>
 
-```typ
-#set-board-defaults(label-font: "Segoe UI")   // or a list, e.g. ("Helvetica", "DejaVu Sans Mono")
-```
+Beyond the six western pieces you can define *your own* kinds — non-standard
+pieces, also known as _fairy_ pieces, such as the alfil, dabbaba or ferz — and
+place them on a board, mixed with the standard pieces if you like. The support is
+deliberately limited to *drawing*: there is no FEN, PGN, move generation or
+legality for custom kinds. You place them by hand — a squares dict or the string
+form — and render them; that is all.
 
-=== Non-standard and fairy pieces<fairy-pieces>
-
-Beyond the six western pieces you can define *your own* kinds — *fairy* pieces
-such as the alfil, dabbaba or ferz — and place them on a board, mixed with the
-standard pieces if you like. The support is deliberately limited to *drawing*:
-there is no FEN, PGN, move generation or legality for custom kinds. You place them
-by hand — a squares dict or the string form — and render them; that is all.
+Two structural assumptions still hold, whatever the pieces: the board is a
+*rectangular* grid of *square* cells, and there are exactly *two* piece colors
+(white and black). Non-square fields, hexagonal boards or a third side are out of
+scope.
 
 Two things are needed: a *vocabulary* that names the kinds and their letters, and
 the *art* to draw them.
@@ -576,7 +594,7 @@ the *art* to draw them.
 pass to `position` as its `variant:` argument. The easiest form `extends` the
 standard variant — inheriting the six kinds and their letters — and adds only the
 new ones. Each new kind takes a single lower-case letter that must not clash with
-an existing one (case selects colour, exactly as for the standard pieces):
+an existing one (case selects color, exactly as for the standard pieces):
 
 ```typ
 #let fairy = define-variant("Fairy demo",
@@ -596,8 +614,8 @@ variant is expected.)
 
 *Drawing the kinds.* A bundled set *name* (`"cburnett"`) knows only the six western
 pieces, so a fairy board is drawn from a *loader* — the same mechanism as a
-downloaded set (previous section), pointed at your fairy art. `named-piece-set`
-maps `(colour, kind)` onto your files through a filename *pattern* you supply, so
+#link(<custom-piece-sets>)[downloaded set], pointed at your fairy art. `named-piece-set`
+maps `(color, kind)` onto your files through a filename *pattern* you supply, so
 you are not tied to one naming scheme. For a *mixed* board, wrap the loader in
 `with-fallback`: the standard kinds are drawn from a bundled set (cburnett by
 default) and every other kind from your loader.
@@ -620,15 +638,15 @@ default) and every other kind from your loader.
 )
 ```, stacked: true)
 
-_Fairy art above from Wikimedia Commons (dabbaba by Kwamikagami, CC BY-SA 4.0);
-see `docs/assets/fairy/ATTRIBUTION.md`._
+_Fairy art above from Wikimedia Commons @fairy-art (CC BY-SA 4.0); per-file
+credits in `docs/assets/fairy/ATTRIBUTION.md`._
 
 The `pattern` defaults to `"{kind}_{color}.svg"`; its placeholders are `{kind}`
-(long name), `{color}` / `{c}` (long / short colour) and `{K}` / `{k}` (the kind's
+(long name), `{color}` / `{c}` (long / short color) and `{K}` / `{k}` (the kind's
 letter, upper / lower). The bundled lichess-layout `svg-piece-set` is simply
 `named-piece-set(.., pattern: "{c}{K}.svg")`. If your set follows no tidy pattern
 at all, skip the helper and pass `piece-set` a bare loader
-`(colour, kind) -> bytes | content` that does the naming itself.
+`(color, kind) -> bytes | content` that does the naming itself.
 
 *A glyph instead of art.* When you have no SVG for a kind, give the variant a
 `glyphs:` map from kind to a text glyph; then `piece-set: "unicode"` draws that
@@ -671,13 +689,11 @@ the figure *caption* below it.
 the same source and overrides as `board`. Extra named arguments are forwarded to
 `figure` (e.g. `placement: top`).
 
-== Boards are not Figures
-
-A bare `board` is plain content: it has *no* caption, *no* figure counter, does
-*not* resolve `@`-references, and is *not* listed by `chess-diagram-outline`. Only
-a *diagram* is a figure. So draw a `board` for an inline or decorative position,
-and a `chess-diagram` whenever you want to caption it, cross-reference it
-(`@label`), or list it — see *Outlines and references*.
+The distinction matters: a bare `board` is plain content — it has *no* caption,
+*no* figure counter, does *not* resolve `@`-references, and is *not* listed by
+`chess-diagram-outline`. Only a *diagram* is a figure. So draw a `board` for an
+inline or decorative position, and a `chess-diagram` whenever you want to caption
+it, cross-reference it (`@label`), or list it — see *Outlines and references*.
 
 // === Positions ===============================================================
 
@@ -728,7 +744,11 @@ en-passant, halfmove, fullmove)`; `parse-fen` returns the same shape. The `cols`
 // === Games (PGN) =============================================================
 
 = Games (PGN)<games>
-THe predominant form of the distribution and publications of chess games (atleast for western chess) are _PGN files_. PGN stands for *Portable Game Notation* and is a text format for chess games. It is human-readable, and can be parsed by chess software. PGN files contain the moves of a game, along with metadata such as player names, event, date, and result. PGN files cao contain just one or many games.
+The predominant form for distributing and publishing chess games (at least for
+western chess) is the _PGN file_. PGN stands for *Portable Game Notation*
+@pgn-spec: a human-readable text format that chess software can parse. A PGN file
+holds the moves of a game together with metadata such as player names, event, date
+and result, and may contain a single game or many.
 
 staunton also reads *Chess960 / Fischer Random* games — the variant tags and
 start-by-number are covered in @chess960; everything in this chapter applies to
@@ -801,7 +821,9 @@ To explore a *new* line, or build a position from a FEN plus some moves, use
 `chess-moves(source, moves)`. `source` is `none` (the standard start), a FEN
 string, or a position; `moves` is move text or a SAN array. It resolves each move
 against the legal moves (illegal/ambiguous is a hard error) and returns the
-*final* position, never mutating the source:
+*final* position, never mutating the source. The result is a *position*, not a
+game: it carries no move history, roster or PGN — for those, parse a game
+(@games).
 
 #example(```typ
 #chess-diagram(
@@ -1011,7 +1033,7 @@ and the circle on `d4` are added programmatically:
   highlight: ((square: "d4", shape: "circle"),),  // added here
   size: 4cm,
 )
-```)
+```, stacked: true)
 
 *With embedded diagrams.* The `diagrams` switch (PGN handling) makes
 `notation(diagrams: true)` splice a board after each move whose comment carries a
@@ -1092,8 +1114,9 @@ chapter covers just the 960-specific pieces.
 
 `chess960-board` and `chess960-diagram` are the variant-named entry points —
 identical rendering to `chess-board` / `chess-diagram`, but they document the
-variant. Get a start position by its Scharnagl *number* (0–959; `518` is standard
-chess) with `chess960-start` (a position) or `chess960-start-fen` (its FEN):
+variant. Get a start position by its Scharnagl *number* — the standard indexing of
+the 960 back-rank arrangements @scharnagl, running `0`–`959` (`518` is standard
+chess) — with `chess960-start` (a position) or `chess960-start-fen` (its FEN):
 
 #example(```typ
 #chess960-diagram(chess960-start(356), size: 4cm)
@@ -1116,7 +1139,7 @@ inner one on g1, which X-FEN spells `G`:
 
 == Games
 
-A Chess960 PGN is marked `[Variant "Chess960"]` or `[Variant "Fischerrandom"]`,
+A Chess960 PGN must be marked `[Variant "Chess960"]` or `[Variant "Fischerrandom"]`,
 usually with `[SetUp "1"]`, and declares its start *exactly one way*: an `[FEN]`
 tag, or a position number in an `[FRCPosition N]` / `[Chess960Position N]` tag
 (giving both is an error). `game-variant` reports a parsed game's variant and
@@ -1306,9 +1329,9 @@ useful secondary format that will improve as Typst's own HTML support matures.
 
 // === API Reference ===========================================================
 
-#pagebreak()
+#part[API Reference] <api-reference>
 
-= Common Parameters<api-reference>
+= Common Parameters
 
 This chapter collects the recurring *argument value shapes* and the full board /
 diagram / table option lists — the parameters that many functions share. The
@@ -1382,7 +1405,7 @@ Accepted by `board` / `chess-board` / `diagram` / `chess-diagram` per call, and 
   [`arrow-color` / `arrow-transparency`], [green, `85%`], [default arrow color and its transparency],
   raw("arrow-width"), raw("auto"), [arrow shaft width; `auto` scales with the square],
   raw("check"), raw("false"), [in-check glow on the checked king (auto-located for standard positions)],
-  [`check-color` / `check-square`], [red / `none`], [glow colour; square to glow (`none` → auto-located)],
+  [`check-color` / `check-square`], [red / `none`], [glow color; square to glow (`none` → auto-located)],
   raw("move-quality"), raw("false"), [move-quality badge on the last move's destination],
   raw("move-quality-mark"), raw("none"), [`(square:, symbol:)`, symbol one of `! ? !! ?? !? ?!` — derived and set by `diagram-after` only; not settable on a bare board],
   raw("move-quality-colors"), [blue / red / green], [`good` / `bad` / `interesting` badge backgrounds],
@@ -1545,8 +1568,8 @@ hand-built overlays.
 == Piece-set loaders
 Build the `piece-set` value for a downloaded or custom set (see
 #link(<custom-piece-sets>)[Using your own downloaded piece set] and
-#link(<fairy-pieces>)[Non-standard and fairy pieces]). `named-piece-set` maps
-`(colour, kind)` onto your files through a filename pattern; `svg-piece-set` is
+#link(<fairy-pieces>)[Non-standard pieces]). `named-piece-set` maps
+`(color, kind)` onto your files through a filename pattern; `svg-piece-set` is
 the lichess-layout shorthand; `with-fallback` composes a custom loader over a base
 set for mixed boards.
 #show-fns((
@@ -1554,3 +1577,23 @@ set for mixed boards.
   ("/src/pieces.typ", "svg-piece-set"),
   ("/src/pieces.typ", "with-fallback"),
 ))
+
+// === Appendix ================================================================
+
+#part[Appendix]
+
+// Appendix chapters are lettered A, B, … (sections A.1, …). Reset the level-1
+// heading counter and switch its format; the part heading itself is unnumbered,
+// so this only affects the chapters that follow.
+#counter(heading).update(0)
+#set heading(numbering: "A.1")
+
+= Bibliography
+
+#bibliography("refs.yml", title: none)
+
+= Acknowledgements
+
+The Typst package #link("https://typst.app/universe/package/boards-n-pieces")[boards-n-pieces]
+was an inspiration for some of staunton's features. This package and its manual
+were developed with assistance from Claude (Opus 4.8) by Anthropic.

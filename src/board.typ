@@ -16,12 +16,12 @@
 // Board labeling (`label-mode` field) has three modes:
 //   * "on-square" (default): tiny file letters in a bottom corner of the
 //     file-side edge squares, rank digits in a top corner of the rank-side edge
-//     squares, each in the OPPOSITE colour of its square. Which corner is set by
+//     squares, each in the OPPOSITE color of its square. Which corner is set by
 //     `file-label-corner` / `rank-label-corner`. Drawn inside the board (no
 //     gutter), at a fixed font fraction that does NOT change with board size.
 //   * "outside": label strips in a gutter outside the board (the classic look).
 //   * "border": a band of `label-border-ratio` width around the board. The band
-//     fill / label colour follow `border-theme` ("square" = dark band + light
+//     fill / label color follow `border-theme` ("square" = dark band + light
 //     labels, "brown" = dark-brown band + creme labels).
 // `labels: false` suppresses all of them. Board labels always use a fixed
 // sans-serif font, independent of the document / diagram font.
@@ -65,18 +65,18 @@
   }
 }
 
-// Set a colour's alpha to an absolute opacity (`100% - transparency`), preserving
+// Set a color's alpha to an absolute opacity (`100% - transparency`), preserving
 // its RGB components. Used to apply the `*-transparency` style fields to the
-// (opaque) default highlight/arrow colours.
+// (opaque) default highlight/arrow colors.
 #let _with-alpha(col, transparency) = {
   let c = rgb(col).components()
   rgb(c.at(0), c.at(1), c.at(2), 100% - transparency)
 }
 
-// Resolve a colour spec used by arrows / highlights (item 6/8):
-//   * `auto`         -> the supplied fallback colour;
+// Resolve a color spec used by arrows / highlights (item 6/8):
+//   * `auto`         -> the supplied fallback color;
 //   * a string (a PGN %cal/%csl letter like "G") -> annotation-colors lookup;
-//   * a colour value -> used as-is.
+//   * a color value -> used as-is.
 #let _resolve-anno-color(c, anno-map, fallback) = {
   if c == auto { fallback }
   else if type(c) == str { anno-map.at(c, default: fallback) }
@@ -145,8 +145,8 @@
 // piece so the king reads crisp on top and the glow radiates from beneath it —
 // the Lichess look. The gradient's default 50% radius is the circle inscribed in
 // the square (touching the four EDGE MIDPOINTS); the four corners fall outside it
-// and so keep the underlying square colour. We hold the glow FULLY OPAQUE almost
-// to that edge, fading out only in the last sliver, so the colour reaches the edge
+// and so keep the underlying square color. We hold the glow FULLY OPAQUE almost
+// to that edge, fading out only in the last sliver, so the color reaches the edge
 // midpoints and only the corners stay bare. The transparent stop reuses `color`'s
 // RGB at 0% alpha so the fade is hueless.
 #let _draw-check(dx, dy, sq, color) = {
@@ -269,7 +269,7 @@
       let bh = rows * sq
       let label-size = sq * _strip-label-frac
 
-      // colours that depend on style fields (computed once)
+      // colors that depend on style fields (computed once)
       let hl-default-fill = _with-alpha(st.highlight-fill, st.highlight-transparency)
       let arrow-default = _with-alpha(st.arrow-color, st.arrow-transparency)
 
@@ -287,12 +287,12 @@
         }
         // highlights (under the pieces, over the checker). Each entry is a square
         // name (uses highlight-shape + highlight-fill), a (square, color) pair
-        // (filled, explicit colour -- e.g. PGN %csl), or a dict (square:, shape:,
+        // (filled, explicit color -- e.g. PGN %csl), or a dict (square:, shape:,
         // color:) for full control.
         for h in st.highlight {
           let hname = none
           let shape = st.highlight-shape
-          let ecol = auto   // explicit colour, or auto = use the shape default
+          let ecol = auto   // explicit color, or auto = use the shape default
           if type(h) == str {
             hname = h
           } else if type(h) == dictionary {
@@ -341,7 +341,7 @@
           ))
         }
         // on-square labels: drawn on top, in the chosen corner, in the opposite
-        // colour of the square they sit on. The edge rank/file follows file-side /
+        // color of the square they sit on. The edge rank/file follows file-side /
         // rank-side AND orientation, so labels move with a flip.
         if labels and mode == "on-square" {
           let pad = sq * _on-square-pad-frac
@@ -394,7 +394,7 @@
 
       if mode == "border" {
         // a band of width `g` around the board (item 2). `border-theme` picks the
-        // band fill / label colour. A thin black line always separates the band
+        // band fill / label color. A thin black line always separates the band
         // from the board, regardless of the `border` outline.
         let total-w = bw + 2 * g
         let total-h = bh + 2 * g

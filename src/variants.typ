@@ -17,7 +17,7 @@
   standard: (
     name: "Standard chess",
     kinds: ("king", "queen", "rook", "bishop", "knight", "pawn"),
-    // single-letter abbreviation (lower case) -> kind; case selects colour.
+    // single-letter abbreviation (lower case) -> kind; case selects color.
     abbr: (k: "king", q: "queen", r: "rook", b: "bishop", n: "knight", p: "pawn"),
     cols: 8,
     rows: 8,
@@ -68,7 +68,7 @@
     assert(letter.clusters().len() == 1,
       message: "custom variant: piece letter \"" + letter + "\" must be a single character")
     assert(lower(letter) == letter,
-      message: "custom variant: piece letters must be lower case (\"" + letter + "\"); case selects colour")
+      message: "custom variant: piece letters must be lower case (\"" + letter + "\"); case selects color")
     assert(kinds.contains(kind),
       message: "custom variant: letter \"" + letter + "\" maps to unknown kind \"" + kind + "\" (not in `kinds`)")
   }
@@ -131,7 +131,7 @@
 ///   from (e.g. `"standard"`); `none` for a from-scratch spec.
 /// - kinds (array): the piece kinds to ADD (beyond any inherited).
 /// - abbr (dictionary): `letter -> kind` for the added kinds — single lower-case
-///   letters (case selects colour); must not overlap an inherited letter.
+///   letters (case selects color); must not overlap an inherited letter.
 /// - glyphs (dictionary): optional `kind -> glyph` fallback entries.
 /// - cols (int, auto): board width (default: inherited, else `8`).
 /// - rows (int, auto): board height (default: inherited, else `8`).

@@ -1,6 +1,6 @@
 // highlights. Three shapes: "filled" (default), "cross",
 // "circle". Entry forms: a square name (uses highlight-shape + highlight-fill);
-// a (square, color) pair (filled, explicit colour, e.g. PGN %csl); a dict
+// a (square, color) pair (filled, explicit color, e.g. PGN %csl); a dict
 // (square:, shape:, color:) for full control. Settable options: highlight-fill +
 // highlight-transparency (filled), cross-color / circle-color, cross-width /
 // circle-width.
@@ -34,10 +34,10 @@ convention a cross marks an EMPTY square, so the cross row uses empty squares
     board(test-fen, size: 4cm, labels: false, highlight: ("e4", "e5", "c4"), highlight-shape: "circle")),
 )
 
-= Per-entry shapes and colours (dict form)
+= Per-entry shapes and colors (dict form)
 
 A single board mixing all three shapes (crosses on empty squares), with per-entry
-colour overrides:
+color overrides:
 
 #board(test-fen, size: 5cm, labels: false, highlight: (
   (square: "e4", shape: "filled"),
@@ -47,7 +47,7 @@ colour overrides:
   (square: "d4", shape: "cross",  color: rgb(120, 0, 140)), // purple cross, empty
 ))
 
-= Settable widths, colours, and transparency
+= Settable widths, colors, and transparency
 
 #set-board-defaults(
   cross-color: rgb(20, 90, 200),   // blue crosses

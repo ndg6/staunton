@@ -2,7 +2,7 @@
 // path). A spec that `extends: "standard"` inherits the six standard kinds and
 // letters, then adds alfil/dabbaba/ferz with non-overlapping letters a/d/f.
 //
-// Asserting test: `position` must resolve the custom letters (case = colour) in
+// Asserting test: `position` must resolve the custom letters (case = color) in
 // BOTH the squares-dict and the string form, and keep the standard kinds working
 // alongside them. No rendering -- this pins the position layer.
 #import "/lib.typ": position

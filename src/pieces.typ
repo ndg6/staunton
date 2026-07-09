@@ -11,7 +11,7 @@
 // just centre them in the square -- no baseline lifting, no per-kind correction.
 //
 // Glyph fallback: we deliberately use only the SOLID (nominally "black") glyph
-// shapes U+265A..U+265F for BOTH colours, and distinguish colour via `fill` + a
+// shapes U+265A..U+265F for BOTH colors, and distinguish color via `fill` + a
 // contrasting `stroke`. Reasons:
 //   * many fonts render the outline ("white") glyphs poorly or inconsistently;
 //   * a single shape keeps white and black pieces visually identical in form;
@@ -21,7 +21,7 @@
 
 /// The six chess piece kinds: king, queen, rook, bishop, knight, pawn.
 #let piece-kinds = ("king", "queen", "rook", "bishop", "knight", "pawn")
-/// The two piece colours: white and black.
+/// The two piece colors: white and black.
 #let piece-colors = ("white", "black")
 
 // SVG piece sets bundled under src/assets/piece_sets/. `default-piece-set` is the
@@ -180,8 +180,8 @@
 ///
 /// Pattern placeholders (we prescribe the *vocabulary*, not the layout):
 /// / `{kind}`: long kind name — `"king"`, `"alfil"`.
-/// / `{color}`: long colour — `"white"`, `"black"`.
-/// / `{c}`: short colour — `"w"`, `"b"`.
+/// / `{color}`: long color — `"white"`, `"black"`.
+/// / `{c}`: short color — `"w"`, `"b"`.
 /// / `{K}` / `{k}`: the kind's letter, upper / lower case. Needs a letter for the
 ///   kind: taken from `letters` if given, else the built-in standard map (so it
 ///   only works out-of-the-box for the standard six). Pass `letters` for custom
