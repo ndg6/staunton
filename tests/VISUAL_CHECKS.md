@@ -186,6 +186,16 @@ These are not under `tests/out/`; build them separately.
       skips the cover). In **both** outline columns the level-1 (chapter) entries are
       **bold**, with a little extra space above each so a chapter groups with its
       indented level-2 children; level-2 entries stay regular weight.
+- [ ] `docs/manual.pdf` front-matter figure lists — right after the **Contents**,
+      the manual dogfoods the figure outlines: a **List of Diagrams** then a **List
+      of Tables**, both flowing on the **same page** (no page break between them, no
+      part-style banner or divider rule). Their titles are centered 15pt bold,
+      **matching the "Contents" title** above. Confirm there are **no blank/empty-
+      caption rows** — only captioned figures are listed, so the Diagram numbers
+      legitimately skip the caption-less ones (1, 2, 3, 6, 7, 9, 10, 12, 13). The
+      three tables read *Final standings*, *Round-robin cross-table*, *Round-by-round
+      progress*. Entries use the default outline look (regular weight), **not** the
+      bold chapter-TOC styling.
 - [ ] showcase — `typst compile --root . docs/examples/showcase.typ showcase.pdf`,
       then skim it.
 - [ ] HTML export — `typst compile --root . --features html --format html

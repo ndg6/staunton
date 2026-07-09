@@ -46,7 +46,9 @@
       if s == auto { ui-string(lang, "table-supplement") } else { s }
     }
   }
-  figure(body, kind: chess-table-kind, supplement: supp, caption: caption)
+  // A caption-less table is referenceable but unlisted (see the `caption`
+  // docstring): gate `outlined` on the caption so it leaves no blank outline row.
+  figure(body, kind: chess-table-kind, supplement: supp, caption: caption, outlined: caption != none)
 }
 
 // "1-0"/"0-1"/"1/2-1/2" -> (white, black) scores; anything else (e.g. "*") -> none.

@@ -437,7 +437,10 @@
       if s == auto { _ui-string(lang, "diagram-supplement") } else { s }
     }
   }
-  figure(body, kind: chess-kind, supplement: supp, caption: below, ..fig-args)
+  // A caption-less diagram stays referenceable but unlisted: default `outlined`
+  // to whether it carries a caption, so bare positions don't leave blank rows in
+  // a chess-diagram outline. An explicit `outlined:` in fig-args still wins.
+  figure(body, kind: chess-kind, supplement: supp, caption: below, ..((outlined: below != none) + fig-args))
 }
 
 /// A board wrapped in a `#figure` — the variant-agnostic diagram, and the generic
@@ -683,9 +686,12 @@
 // Resolve an outline title: explicit per-call `title` wins; else the document
 // `outline-title` (from the given style bucket); else the language-aware default.
 // `title`/the document value may be `auto` (use localized) or any content/none.
-#let _outline-title(title, doc-default, lang, key) = context {
+#let _outline-title(title, doc-default, lang, key) = {
   let t = if title != auto { title } else { doc-default }
-  if t == auto { _ui-string(lang, key) } else { t }
+  // Only the localized default needs a context; a concrete title (including
+  // `none`) is returned verbatim, so `title: none` truly drops the outline title
+  // instead of leaving an empty title heading behind.
+  if t == auto { context _ui-string(lang, key) } else { t }
 }
 
 /// An outline listing only chess *diagrams* (figures of kind `"chess"`).

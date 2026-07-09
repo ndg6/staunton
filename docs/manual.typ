@@ -10,6 +10,11 @@
 // -> tables -> outlines -> document-wide defaults.
 
 #import "manual-tools.typ": example
+// The manual keeps the package namespaced (via manual-tools) so example snippets
+// show realistic unqualified calls; the front-matter figure lists below are the
+// one place the manual itself calls the API, so pull in just that function. The
+// dev build reads `/lib.typ`; a reader would `#import "@preview/staunton:..": *`.
+#import "/lib.typ": chess-diagram-outline, chess-table-outline
 #import "@preview/tidy:0.4.1"
 
 // --- compact tidy style ------------------------------------------------------
@@ -164,7 +169,10 @@
 // numbered level-1 heading — a chapter — falls through to Typst's default.
 #let part(body) = [#heading(level: 1, numbering: none, outlined: true)[#body]]
 #show heading.where(level: 1): it => {
-  if it.numbering == none {
+  // A part is unnumbered AND outlined (see `part`); an outline's own title is
+  // also an unnumbered level-1 heading but is `outlined: false`, so it falls
+  // through to default rendering — no banner, no page break.
+  if it.numbering == none and it.outlined {
     pagebreak(weak: true)
     v(2.2cm)
     align(center, text(size: 24pt, weight: "bold", it.body))
@@ -223,8 +231,11 @@
 // styled apart: a PART divider (unnumbered — "User Guide" / "API Reference" /
 // "Appendix") reads as a larger group header, while a numbered chapter is set
 // bold with its level-2 sections indented beneath. Parts and chapters share the
-// level-1 indent (parts are separators, not a deeper nesting).
+// level-1 indent (parts are separators, not a deeper nesting). This only concerns
+// the heading TOC; the front-matter figure lists (List of Diagrams / Tables) are
+// also level-1 entries but of figures, so leave those at the default outline look.
 #show outline.entry.where(level: 1): it => {
+  if it.element.func() != heading { return it }
   if it.element.numbering == none {
     v(1.1em, weak: false)                 // strong gap above a new part
     strong(text(size: 1.1em, it))
@@ -239,6 +250,20 @@
 #align(center, text(size: 15pt, weight: "bold")[Contents])
 #v(0.6em)
 #outline(title: none, depth: 2, indent: auto)
+
+// Dogfood the package's own figure outlines: list the manual's diagrams and
+// tables. We draw the two titles ourselves (identical to "Contents" above) and
+// pass `title: none`, so no outline-title heading is emitted — the lists flow
+// together on one page with no part-style banner or page break. Their figure
+// entries keep the default outline look (the chapter-TOC rule skips non-headings).
+#v(0.4em)
+#align(center, text(size: 15pt, weight: "bold")[List of Diagrams])
+#v(0.6em)
+#chess-diagram-outline(title: none)
+#v(1.2em)
+#align(center, text(size: 15pt, weight: "bold")[List of Tables])
+#v(0.6em)
+#chess-table-outline(title: none)
 
 #pagebreak()
 
@@ -320,7 +345,7 @@ primary building block every diagram builds on. `source` is one of: a *FEN strin
 `board` is the variant-agnostic primitive; `chess-board` is the standard-chess
 sugar over it (same rendering, but it documents the variant and rejects a
 non-standard source). Use `board` inline in text or inside your own layout; reach
-for a *diagram* (next chapter) when you want a captioned, referenceable figure.
+for a *diagram* (@diagrams) when you want a captioned, referenceable figure.
 
 The rest of this chapter covers the board's drawing options: labels, highlights,
 arrows, the grid, coordinates, size, colors, orientation, and piece sets — all of
@@ -428,8 +453,8 @@ programmatically, wears a good-move badge on `f7`:
 At least in standard western chess, files run `a`, `b`, … and ranks `1`, `2`, …; `a1` is the dark square in the lower-left corner, `h8` the upper-right. Square names are case-insensitive
 (`"E4"` = `"e4"`).
 
-But boards are *not* tied to an 8×8 layout. A `position` built from the string form (next
-chapter) counts its own columns and rows, and the renderer draws whatever geometry
+But boards are *not* tied to an 8×8 layout. A `position` built from the string form (@positions)
+counts its own columns and rows, and the renderer draws whatever geometry
 it is given — files and ranks extend as far as the board needs, and the cells stay
 square while the board itself becomes rectangular:
 
@@ -492,8 +517,8 @@ spot — `a1` moves from the lower-left to the upper-right:
 
 == Piece Sets and Fonts
 
-Pieces are normally drawn from bundled *SVG piece sets* — the preferred rendering:
-vector art that stays crisp at any board size and looks the same across platforms.
+Pieces are normally drawn from bundled *SVG piece sets* — this is the preferred rendering, since
+vector art stays crisp at any board size and looks the same across platforms.
 A *Unicode glyph* set is provided only as a *fallback* (see below), for when you
 want no SVG dependency or a font-native look.
 
@@ -532,18 +557,18 @@ to Typst's always-embedded mono — so a stock install draws labels without
 
 You are not limited to the bundled sets. Many more are downloadable — a good
 source is the lichess piece library @lichess-pieces — and a set's license often
-lets you *use* it but not *redistribute* it, which is exactly why staunton draws
-art you supply rather than trying to bundle everyone's. You hand it the images; it
+lets you *use* it but not *redistribute* it, which is exactly why staunton can draw
+artwork you supply rather than trying to bundle everyone's. You hand it the images and *staunton*
 draws them. The same mechanism serves a restyled *standard* set and the
-non-standard pieces of the next section.
+non-standard pieces of @fairy-pieces.
 
-The one wrinkle is Typst's file sandbox: code inside an installed package can only
+One obstacle is Typst's file sandbox: code inside an installed package can only
 read files from *its own* directory, never from your project, and no `.typ` can
 read files *above* the compilation root#footnote[The *compilation root* is the top
 of the directory tree Typst is allowed to read from — by default the directory of
 the document being compiled. Set it explicitly with `typst compile --root <dir>`
 (commonly `--root .`); no `read()` may reach above it.]. So staunton cannot go
-hunting for a folder of art on its own — *you* pass `piece-set` a *loader*: a
+hunting for a folder of artwork on its own — *you* pass `piece-set` a _loader_: a
 function `(color, kind)` returning the image bytes, with the `read()` written *in
 your document*, where paths resolve against your project root (a packaged
 staunton's own `read()` would look inside the package instead).
@@ -580,8 +605,8 @@ does the naming itself — or a *dictionary* keyed `"<color>-<kind>"` (e.g.
 `"white-king"`) mapping to bytes or ready-made `image(..)` content, in which case
 only the pieces your positions actually use need be present.
 
-*Only some pieces your own.* To restyle just a few pieces — or, in the next
-section, to add non-standard kinds to an otherwise standard board — wrap your
+*Only some pieces your own.* To restyle just a few pieces — or, in @fairy-pieces,
+to add non-standard kinds to an otherwise standard board — wrap your
 loader in `with-fallback`: the standard six come from a bundled set (cburnett by
 default) and every other kind from your loader.
 
@@ -682,7 +707,7 @@ typically a character from a font you embed with `set text(font: ..)`:
 `chess-diagram(source, ..)` wraps a board in a `#figure` (kind `"chess"`), so —
 unlike a bare `board` — it is captioned, counted, referenceable, and listed by an
 outline. `source` is the same FEN / position / squares the board takes, and it
-accepts every board option from the previous chapter.
+accepts every board option documented in @board.
 
 A diagram carries two optional labels: a *game-info* line above the board (drawn
 automatically as `"<White> – <Black> (<Year>)"` when both players are known) and
@@ -749,9 +774,13 @@ that aren't a valid piece abbreviation or `.`:
 )
 ````)
 
-`position` returns a dict `(variant, cols, rows, squares, turn, castling,
-en-passant, halfmove, fullmove)`; `parse-fen` returns the same shape. The `cols` /
-`rows` are counted from the string form (otherwise the 8×8 default).
+`position` and `parse-fen` both return a dict of the same shape:
+
+```
+(variant, cols, rows, squares, turn, castling, en-passant, halfmove, fullmove)
+```
+
+The `cols` / `rows` are counted from the string form (otherwise the 8×8 default).
 
 // === Games (PGN) =============================================================
 
@@ -762,7 +791,7 @@ western chess) is the _PGN file_. PGN stands for *Portable Game Notation*
 holds the moves of a game together with metadata such as player names, event, date
 and result, and may contain a single game or many.
 
-staunton also reads *Chess960 / Fischer Random* games — the variant tags and
+Package *staunton* also reads *Chess960 / Fischer Random* games — the variant tags and
 start-by-number are covered in @chess960; everything in this chapter applies to
 them unchanged.
 
@@ -886,7 +915,7 @@ last:
 
 `from` / `to` bound a slice of the *mainline*: they are the simple `"8b"` /
 `"12w"` locators, not the variation *path* form that `diagram-after` takes
-(rendering variations is a separate control — see the next section). A `from` past
+(rendering variations is a separate control — see @variations). A `from` past
 the end or a `to` before `from` is a hard error.
 
 Other options: `move-numbers`, `result`, `bold-mainline` (render the mainline moves
@@ -895,7 +924,7 @@ source — `nags` / `comments`. The last three consult the PGN-handling defaults
 Localization substitutes only the piece letters; files, ranks, captures, check
 marks and `O-O` are untouched.
 
-=== Variations
+=== Variations<variations>
 
 By default `notation` renders only the *mainline*. Set `variations: true` (or the
 `set-pgn-defaults(variations: ..)` document default) to splice the game's
@@ -1116,8 +1145,8 @@ position is navigated. Missing Seven-Tag-Roster tags are tolerated (they default
 
 *staunton* supports #link("https://en.wikipedia.org/wiki/Chess960")[Chess960]
 (a.k.a. Fischer Random / FRC). It is *not* a separate system: the same board,
-pieces, position model, rules engine, PGN parser and notation output from the
-previous chapters all handle it. Only two things differ — a game starts from one
+pieces, position model (@positions), rules engine, PGN parser and notation output
+(@games) all handle it. Only two things differ — a game starts from one
 of the 960 back-rank arrangements, and *castling is generalised* (the king and
 its rook may begin on other files). So most of this manual already applies; this
 chapter covers just the 960-specific pieces.
@@ -1187,20 +1216,20 @@ Tournament tables are built from a parsed PGN's roster + results (no engine). Th
 appearance):
 
 #example(```typ
-#standings-table(games, by: "player")
+#standings-table(games, by: "player", caption: [Final standings.])
 ```, stacked: true)
 
 `crosstable-table` renders the round-robin grid (it *requires* a complete
 round-robin and errors otherwise — use standings + progress for Swiss/league):
 
 #example(```typ
-#crosstable-table(games, by: "player")
+#crosstable-table(games, by: "player", caption: [Round-robin cross-table.])
 ```, stacked: true)
 
 `progress-table` shows the round-by-round running score (needs the `Round` tag):
 
 #example(```typ
-#progress-table(games, by: "player")
+#progress-table(games, by: "player", caption: [Round-by-round progress.])
 ```, stacked: true)
 
 Each renderer takes `caption` (used by refs and the outline), `title` (a heading
