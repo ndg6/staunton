@@ -11,6 +11,17 @@ Both sets originate from the lichess piece-set collection
 piece images are independent data, aggregated with the MIT-licensed code; using
 staunton's code does not place it under the GPL.
 
+Not shipped, but present in the source repository:
+  The repository also carries fairy / non-standard demo piece art used only by
+  the manual and the test suite (docs/assets/fairy/ and
+  tests/board/piece_sets/_fairy_assets/). These SVGs are licensed CC BY-SA 4.0:
+    * alfil, ferz  -- (c) Iago Casabiell Gonzalez, "Xogos da Meiga" chess icons
+    * dabbaba      -- (c) Kwamikagami
+  The docs/ and tests/ trees are excluded from the published package (see
+  typst.toml `exclude`), so this art is NOT part of the distributed bundle and
+  does not affect the package license. It is credited per file in the adjacent
+  ATTRIBUTION.md.
+
 ================================================================================
 
                     GNU GENERAL PUBLIC LICENSE

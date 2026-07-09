@@ -14,6 +14,11 @@ and tables).
   squares dict — captioned `#figure`s with automatic game-info lines.
 - **Styling**: themes, six label placements, flip, piece sets, grid, square
   **highlights** (filled / cross / circle) and **arrows**; size-adaptive layout.
+- **Move markings**: an in-check glow and move-quality badges (`!`, `?`, `!!`, …)
+  on diagrams.
+- **Bring-your-own & fairy pieces**: render any downloaded set through a
+  `piece-set` loader (`named-piece-set` / `svg-piece-set`), and add non-standard
+  kinds and whole variants (`define-variant`, `with-fallback`) for mixed boards.
 - **PGN**: parse multi-game files, navigate the mainline and (nested) variations
   by locator, play "what-if" lines, export FEN. Lazy parsing stays fast on large
   files.
@@ -106,10 +111,13 @@ are **GPLv2+** — two sets ship: `cburnett` (default, © Colin M.L. Burnett) an
 and [LICENSE-PIECES](LICENSE-PIECES). The package manifest declares
 `MIT AND GPL-2.0-or-later`.
 
-A `"unicode"` glyph fallback needs no SVGs. The renderer accepts any set name, so
-you can add your own piece set — see the *Pieces and fonts* section of the
-[manual](https://github.com/ndg6/staunton/blob/v0.1.0/docs/manual.typ).
+A `"unicode"` glyph fallback needs no SVGs. To use other art, pass `piece-set` a
+loader (`named-piece-set` / `svg-piece-set`, or `with-fallback` for mixed and
+fairy boards) — see the *Pieces and fonts* and *Non-standard pieces* sections of
+the [manual](https://github.com/ndg6/staunton/blob/v0.1.0/docs/manual.typ).
 (Other popular lichess sets carry non-commercial licenses and are not bundled.)
+The manual and tests also embed **CC BY-SA 4.0** fairy demo art (under `docs/` and
+`tests/`), which is *not* part of the shipped package — see [LICENSE-PIECES](LICENSE-PIECES).
 
 ## Repository layout
 
@@ -134,10 +142,14 @@ header must error with that message, any other must compile. Files/dirs prefixed
 
 ## Roadmap
 
-- More bundled themes / piece sets and an ergonomic API for user-installed sets.
-- A move→SAN encoder (so notation can be generated from arbitrary positions).
-- Engine performance (the narrow `legal-moves`/`apply` seam can swap to WASM).
-- More chess variants: Chess960 / Fischer Random ships in 0.2.0; non-western variants (e.g. xiangqi) are next (the `position` / `board` pipeline is variant-aware already).
+- **Tournament tables**: read results from non-PGN sources, and richer styling
+  options for the standings / cross / progress tables.
+- A **move→SAN encoder** — name an engine-generated move (`legal-moves` / `apply`)
+  from a bare position; the inverse of the SAN parser, so movetext can be produced
+  without a pre-existing PGN (puzzle solutions, generated lines, legal-move lists).
+- Engine **performance** (the narrow `legal-moves` / `apply` seam can swap to WASM).
+- More **chess variants**: non-western variants (e.g. xiangqi) are a more distant
+  goal (0.5.0); the `position` / `board` pipeline is already variant-aware.
 
 ## Changelog
 
@@ -149,11 +161,29 @@ header must error with that message, any other must compile. Files/dirs prefixed
   `[Variant]`, `[SetUp]`, `[FEN]` and `[FRCPosition]` / `[Chess960Position]`
   (`game-variant`, `game-start`). The engine's castling is generalised, so 960
   shares the standard move generator.
+- **Bring-your-own piece art**: `piece-set` accepts a loader `(color, kind) → bytes`
+  (or a bytes dict), so any downloaded or custom set renders. Helpers build one:
+  `named-piece-set` (filename pattern), `svg-piece-set` (lichess layout), and
+  `with-fallback` (custom pieces over a standard base). Reads live in your
+  document, so it works from an installed package (Typst's file sandbox).
+- **Non-standard / fairy pieces**: define custom piece kinds and whole variants
+  with `define-variant`; the squares-dict and string-form parsers understand the
+  new letters, with a Unicode-glyph fallback for kinds you have no art for.
+- **Move markings**: an in-check glow (`check: true`, auto-locates the king) and a
+  move-quality badge (`move-quality: true` on `diagram-after`; the `!` `?` `!!`
+  `??` `!?` `?!` codes).
+- **Outlines**: caption-less diagrams and tables are no longer listed (they stay
+  referenceable but leave no blank outline row), and `title: none` fully drops an
+  outline title.
 - **Changed**: `position.castling` is now the castling rook's *file index* (or
   `none`) per side, not a boolean — breaking if you read that field directly.
   `to-fen` now emits X-FEN castling when `KQkq` is ambiguous and writes en-passant
   targets strictly (only when a capture is available); standard positions are
   otherwise unchanged and still round-trip exactly.
+- **Changed**: `set-board-defaults` / `set-chess-defaults` now reject the
+  position-specific options `highlight`, `arrows` and `move-quality-mark` as
+  document-wide defaults (they apply per call, or via `diagram-after` for the
+  badge); their *styling* options stay settable document-wide.
 
 ### 0.1.0
 
