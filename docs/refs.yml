@@ -24,9 +24,18 @@ lichess-pieces:
 
 fairy-art:
   type: web
-  title: "Fairy chess piece SVGs (dabbaba by Kwamikagami, CC BY-SA 4.0)"
-  author: "Wikimedia Commons contributors"
+  title: "Xogos da Meiga chess icons family: Elephant (alfil) and Ferz SVGs, CC BY-SA 4.0"
+  author: "Iago Casabiell González"
   parent:
     type: web
     title: Wikimedia Commons
-  url: https://commons.wikimedia.org/wiki/Category:SVG_fairy_chess_pieces
+  url: https://commons.wikimedia.org/wiki/Category:SVG_chess_pieces/Fairy
+
+fairy-art-dabbaba:
+  type: web
+  title: "Dabbaba fairy chess piece SVGs, CC BY-SA 4.0"
+  author: "Kwamikagami"
+  parent:
+    type: web
+    title: Wikimedia Commons
+  url: https://commons.wikimedia.org/wiki/File:Black_dabbaba.svg

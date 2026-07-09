@@ -638,8 +638,10 @@ default) and every other kind from your loader.
 )
 ```, stacked: true)
 
-_Fairy art above from Wikimedia Commons @fairy-art (CC BY-SA 4.0); per-file
-credits in `docs/assets/fairy/ATTRIBUTION.md`._
+_Fairy art above, Wikimedia Commons, CC BY-SA 4.0: alfil (elephant) and ferz from
+the Xogos da Meiga chess icons family by Iago Casabiell González @fairy-art;
+dabbaba by Kwamikagami @fairy-art-dabbaba. Per-file credits in
+`docs/assets/fairy/ATTRIBUTION.md`._
 
 The `pattern` defaults to `"{kind}_{color}.svg"`; its placeholders are `{kind}`
 (long name), `{color}` / `{c}` (long / short color) and `{K}` / `{k}` (the kind's
