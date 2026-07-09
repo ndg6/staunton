@@ -34,3 +34,13 @@
 1. e4 e5 2. Nf3 d6 3. d4 Bg4 *
 ```).first()
 #diagram-after(game, "3w", size: 3.2cm)
+
+== PGN source, no Date tag → above line shows the players *without* "(year)"
+#let undated = parse-pgn(```
+[White "Morphy"] [Black "Allies"]
+1. e4 e5 2. Nf3 d6 3. d4 Bg4 *
+```).first()
+#diagram-after(undated, "3w", size: 3.2cm)
+
+== PGN source, manual `year:` override → shows (2024), not the roster's 1858
+#diagram-after(game, "3w", year: 2024, size: 3.2cm)

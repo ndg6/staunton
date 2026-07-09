@@ -94,7 +94,10 @@ Then open the PDFs below and check the noted property. (The expected-*fail* test
       read **bold** while moves inside variations stay normal weight.
 - [ ] `diagram/auto_captions/auto_captions.pdf`, `free_captions/free_captions.pdf`,
       `outlines/outline.pdf`, `refs/diagram_refs.pdf` — game-info line, captions,
-      outline entries, and cross-references resolve.
+      outline entries, and cross-references resolve. In particular for the
+      automatic year: the dated PGN diagram shows "Morphy – Allies (1858)"; the
+      no-Date PGN diagram shows "Morphy – Allies" with *no* "(year)"; and the
+      manual `year: 2024` override shows "(2024)", not the roster's 1858.
 - [ ] `tournament/standings.pdf`, `crosstable_progress.pdf`,
       `realworld_standings.pdf`, `refs/table_refs.pdf` — columns aligned, headers
       and running totals correct, tie-breaks plausible.
