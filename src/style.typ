@@ -180,15 +180,33 @@
 #let i18n-style-keys = default-i18n-style.keys()
 #let pgn-style-keys = default-pgn-style.keys()
 
+// Board options that are inherently *position-specific* and therefore make no
+// sense as document-wide defaults (a single default would stamp the SAME squares
+// on every later board). `highlight` / `arrows` are per-CALL board arguments;
+// `move-quality-mark` is derived from a game move by `diagram-after`. All three
+// stay valid where they belong (see `board` / `diagram`); the defaults setters
+// reject them.
+#let board-non-default-keys = ("highlight", "arrows", "move-quality-mark")
+
 // ---- setters --------------------------------------------------------------
 #let _reject-flip(f) = assert(
   not ("flip" in f) and not ("orientation" in f),
   message: "board flipping is per-diagram only; pass `flip: true` to a diagram, not to a defaults setter",
 )
 
+// Reject the position-specific board keys (see `board-non-default-keys`) from a
+// defaults setter, naming the offender and pointing at where it belongs.
+#let _reject-non-default-board(f) = {
+  for k in f.keys() {
+    assert(not board-non-default-keys.contains(k),
+      message: "`" + k + "` is position-specific and cannot be a document default; pass `highlight` / `arrows` per call, and let `diagram-after` supply the move-quality badge")
+  }
+}
+
 /// Set default *board* style fields for all subsequent boards and diagrams
 /// (document-order state, like a Typst `#set`). `flip` is rejected (per-diagram
-/// only).
+/// only), as are the position-specific `highlight` / `arrows` (per-call only) and
+/// `move-quality-mark` (supplied by `diagram-after`).
 ///
 /// - ..fields (arguments): named board style options (`size`, `light`, `dark`,
 ///   `labels`, `label-mode`, `piece-set`, …); unknown keys error.
@@ -196,6 +214,7 @@
 #let set-board-defaults(..fields) = {
   let f = fields.named()
   _reject-flip(f)
+  _reject-non-default-board(f)
   for k in f.keys() {
     assert(board-style-keys.contains(k), message: "unknown board style option: " + k)
   }
@@ -253,7 +272,8 @@
 
 /// Umbrella setter: route each field to the board, diagram, table, i18n or
 /// PGN-handling bucket — handy for setting several defaults at once. `flip` /
-/// `orientation` are rejected (per-diagram only).
+/// `orientation` are rejected (per-diagram only), as are the position-specific
+/// `highlight` / `arrows` and `move-quality-mark` (see `set-board-defaults`).
 ///
 /// - ..fields (arguments): any named style option from the board, diagram, table,
 ///   i18n or PGN-handling groups; unknown keys error. (`supplement` /
@@ -263,6 +283,7 @@
 #let set-chess-defaults(..fields) = {
   let f = fields.named()
   _reject-flip(f)
+  _reject-non-default-board(f)
   let bd = (:)
   let dg = (:)
   let tb = (:)

@@ -38,6 +38,7 @@
 #import "src/style.typ": (
   default-style, style-keys, set-chess-defaults, set-piece-set, chess-style,
   default-board-style, default-diagram-style, board-style-keys, diagram-style-keys,
+  board-non-default-keys,
   diagram-style-state, set-board-defaults, set-diagram-defaults,
   default-table-style, table-style-state, table-style-keys, set-table-defaults,
   default-i18n-style, i18n-style-state, i18n-style-keys, set-lang,

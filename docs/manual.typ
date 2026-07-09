@@ -1247,7 +1247,7 @@ Defaults live in *five* buckets, each with its own setter:
   align: (left, left, left),
   stroke: 0.5pt + rgb("#d9d9d2"),
   table.header([*bucket*], [*setter*], [*controls*]),
-  [board], raw("set-board-defaults"), [square colors, labels, piece set, highlights, arrows, grid, size — full list in @board-options],
+  [board], raw("set-board-defaults"), [square colors, labels, piece set, grid, size, highlight/arrow *styling* — full list in @board-options],
   [diagram], raw("set-diagram-defaults"), [the diagram figure: game-info line, supplement, outline title],
   [table], raw("set-table-defaults"), [the table figure: supplement, outline title, title gap],
   [language], raw("set-lang"), [the document language (localized strings)],
@@ -1277,10 +1277,16 @@ set once above vs. passed to one diagram:
 )
 ```)
 
-Two caveats. `flip` is *not* allowed in any defaults setter — orientation is a
-per-board choice, so `set-chess-defaults(flip: ..)` is an error. And `supplement` /
-`outline-title` live in *both* the diagram and table buckets; the umbrella routes
-them to *diagram*, so use `set-table-defaults` for the table ones.
+A few caveats. `flip` is *not* allowed in any defaults setter — orientation is a
+per-board choice, so `set-chess-defaults(flip: ..)` is an error. The
+*position-specific* board options are likewise rejected: `highlight` and `arrows`
+are per-call arguments (a document-wide default would stamp the same squares on
+every diagram), and `move-quality-mark` is derived from a game move by
+`diagram-after` — their *styling* (`highlight-fill`, `cross-color`, `arrow-color`,
+`move-quality-colors`, …) is settable document-wide, but the squares/arrows/mark
+themselves are not. Finally, `supplement` / `outline-title` live in *both* the
+diagram and table buckets; the umbrella routes them to *diagram*, so use
+`set-table-defaults` for the table ones.
 
 == Language
 
@@ -1391,7 +1397,10 @@ described once here.
 == Board Style Options <board-options>
 
 Accepted by `board` / `chess-board` / `diagram` / `chess-diagram` per call, and by
-`set-board-defaults` / `set-chess-defaults` document-wide (see @document-style).
+`set-board-defaults` / `set-chess-defaults` document-wide (see @document-style) —
+*except* the three *position-specific* ones marked _(per call only)_ below:
+`highlight`, `arrows` and `move-quality-mark` cannot be document defaults (the
+setters reject them), though their *styling* options can.
 
 #table(
   columns: (2.3fr, 1.5fr, 3.2fr),
@@ -1409,7 +1418,7 @@ Accepted by `board` / `chess-board` / `diagram` / `chess-diagram` per call, and 
   raw("grid"), raw("false"), [1pt grid lines between squares],
   raw("piece-set"), raw("\"cburnett\""), [SVG set name, or `"unicode"` for the glyph fallback],
   raw("piece-scale"), raw("0.95"), [fraction of a square a piece occupies],
-  [`highlight` / `arrows`], raw("()"), [squares / arrows to draw — see the value shapes],
+  [`highlight` / `arrows`], raw("()"), [squares / arrows to draw — see the value shapes _(per call only)_],
   raw("highlight-shape"), raw("\"filled\""), [default shape for plain-string highlight entries],
   [`highlight-fill` / `highlight-transparency`], [green, `75%`], [filled-highlight color and its transparency],
   [`cross-color` / `circle-color`], [red / green], [cross / circle stroke colors],
@@ -1419,7 +1428,7 @@ Accepted by `board` / `chess-board` / `diagram` / `chess-diagram` per call, and 
   raw("check"), raw("false"), [in-check glow on the checked king (auto-located for standard positions)],
   [`check-color` / `check-square`], [red / `none`], [glow color; square to glow (`none` → auto-located)],
   raw("move-quality"), raw("false"), [move-quality badge on the last move's destination],
-  raw("move-quality-mark"), raw("none"), [`(square:, symbol:)`, symbol one of `! ? !! ?? !? ?!` — derived and set by `diagram-after` only; not settable on a bare board],
+  raw("move-quality-mark"), raw("none"), [`(square:, symbol:)`, symbol one of `! ? !! ?? !? ?!` — derived and set by `diagram-after` only; not a document default nor settable on a bare board _(per call only)_],
   raw("move-quality-colors"), [blue / red / green], [`good` / `bad` / `interesting` badge backgrounds],
   raw("annotation-colors"), [G/R/Y/B/O map], [PGN `%cal`/`%csl` color-letter → color],
   raw("label-color"), raw("luma(90)"), [`"outside"`-mode strip label color],

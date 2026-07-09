@@ -79,6 +79,19 @@ Then open the PDFs below and check the noted property. (The expected-*fail* test
       *Wired through a game*: the left diagram (mate `4.Qxf7#`) shows both the glow
       on the Black king **and** a blue `!` badge on f7; the right diagram shows a red
       `??` badge on f6. Badge and glow never overlap the wrong square.
+- [ ] `board/style_options/defaults_walkthrough.pdf` — a systematic gallery of the
+      *settable* `set-board-defaults(..)` options: each printed call (left) must match
+      the board (right), all differing from the top *baseline* in exactly the one
+      printed option. Spot-check each group takes effect document-wide: the green
+      theme, the label modes/sides/corners, the border themes/outline, the grid, the
+      merida set and 0.7 piece-scale, the check glow (blue, and the forced-`e1` one),
+      and the Unicode glyph fallback. Note the **highlight/arrow *styling*** sections:
+      the fill/circle/cross colors and the teal arrow are set as *defaults*, while the
+      `highlight:` / `arrows:` **list** is passed **per call** (it is per-call only).
+      The **move-quality** section uses `diagram-after` (not a bare board): with
+      `move-quality: true` set as a default the badge is a red `??` disc on c6, then
+      recolored fuchsia by `set-board-defaults(move-quality-colors: ..)`, then a `!`
+      badge on f7 combined with the auto-located mate glow.
 
 ## Diagrams, notation, tables
 
