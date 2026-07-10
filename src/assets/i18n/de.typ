@@ -13,8 +13,8 @@
 	table-supplement: "Tabelle",
 	diagram-outline-title: "Diagrammverzeichnis",
 	table-outline-title: "Tabellenverzeichnis",
-	fen-caption: (num, turn) => "Stellung im " + num + ". Zug, " + (if turn == "w" { "Weiß" } else { "Schwarz" }) + " am Zug",
-	pgn-caption: move => "Stellung nach Zug " + move,
+	fen-caption: turn => if turn == "w" { "Weiß am Zug" } else { "Schwarz am Zug" },
+	pgn-caption: move => "Stellung nach " + move,
 	// Tournament-table column headers.
 	tbl-rank: "Pl.",
 	tbl-player: "Spieler",

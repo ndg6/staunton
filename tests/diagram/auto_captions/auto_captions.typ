@@ -1,9 +1,10 @@
 // Diagrams - automatic caption situations. Two label slots:
 //  * ABOVE (game-info): drawn only when BOTH players are known; year appended
 //  in parentheses if present.
-//  * BELOW (figure caption): source-specific default — FEN string -> "Position
-//  at move N, X to play"; PGN (diagram-after) -> "Position after move <last>";
-//  manual position/board dict -> no default.
+//  * BELOW (figure caption): source-specific default — FEN string -> "White to
+//  move" / "Black to move" (a bare FEN has no reliable move number); PGN
+//  (diagram-after) -> "Position after <last move>"; manual position/board dict ->
+//  no default.
 #import "/lib.typ": chess-diagram, diagram-after, position, starting-fen, parse-pgn
 
 #set page(width: 13cm, height: auto, margin: 1.2cm)

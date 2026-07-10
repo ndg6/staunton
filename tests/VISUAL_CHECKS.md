@@ -112,7 +112,10 @@ Then open the PDFs below and check the noted property. (The expected-*fail* test
       read **bold** while moves inside variations stay normal weight.
 - [ ] `diagram/auto_captions/auto_captions.pdf`, `free_captions/free_captions.pdf`,
       `outlines/outline.pdf`, `refs/diagram_refs.pdf` — game-info line, captions,
-      outline entries, and cross-references resolve. In particular for the
+      outline entries, and cross-references resolve. Caption wording (0.2.2): a FEN
+      diagram reads "White to move" / "Black to move" (no move number); a
+      `diagram-after` reads "Position after 24. Nf3" / "Position after 24... Nf6".
+      In particular for the
       automatic year: the dated PGN diagram shows "Morphy – Allies (1858)"; the
       no-Date PGN diagram shows "Morphy – Allies" with *no* "(year)"; and the
       manual `year: 2024` override shows "(2024)", not the roster's 1858.
@@ -121,8 +124,8 @@ Then open the PDFs below and check the noted property. (The expected-*fail* test
       and running totals correct, tie-breaks plausible.
 - [ ] `i18n/i18n.pdf` — supplements and piece letters match each language.
 - [ ] `i18n/localized_captions.pdf` — **verify the translations** of the automatic
-      diagram captions ("Position after move …" / "Position at move …, X to play")
-      and the tournament-table column headers (rank, player/team, played, points,
+      diagram captions ("Position after …" for PGN / "White to move" · "Black to
+      move" for FEN) and the tournament-table column headers (rank, player/team, played, points,
       round) for each language. en/de are asserted in code; **es / fr / it / pt / ru
       were proposed by Claude and need a native/expert eye** — check wording,
       grammar, and the short column abbreviations. (Tie-break labels Bh/SB/BP are

@@ -14,8 +14,8 @@
 	table-supplement: "Таблица",
 	diagram-outline-title: "Список диаграмм",
 	table-outline-title: "Список таблиц",
-	fen-caption: (num, turn) => "Позиция на " + num + "-м ходу, ход " + (if turn == "w" { "белых" } else { "чёрных" }),
-	pgn-caption: move => "Позиция после хода " + move,
+	fen-caption: turn => if turn == "w" { "Ход белых" } else { "Ход чёрных" },
+	pgn-caption: move => "Позиция после " + move,
 	// Tournament-table column headers.
 	tbl-rank: "№",
 	tbl-player: "Игрок",

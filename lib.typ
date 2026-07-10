@@ -367,10 +367,11 @@
   if bold { strong(txt) } else { txt }
 }
 
-// Below-diagram default caption for a FEN source: position + side to move.
-// Language-aware: the catalog `fen-caption` closure owns the wording/grammar.
-// Must be called inside a `context` (it resolves the language).
-#let _fen-caption(pos, lang) = (_ui-string(lang, "fen-caption"))(str(pos.fullmove), pos.turn)
+// Below-diagram default caption for a FEN source: whose turn it is. A bare FEN has
+// no move history (and its move number is unreliable — an omitted field parses as
+// 1), so the caption names only the side to move. Language-aware: the catalog
+// `fen-caption` closure owns the wording. Must be called inside a `context`.
+#let _fen-caption(pos, lang) = (_ui-string(lang, "fen-caption"))(pos.turn)
 
 // Below-diagram default caption for a PGN source: the last move played. The move
 // reference ("5. Nf3" / "5... Nf3") is assembled here (notation convention,
@@ -448,7 +449,7 @@
 /// A board wrapped in a `#figure` — the variant-agnostic diagram, and the generic
 /// primitive under `chess-diagram` (and a future `xiangqi-diagram`). Draws an
 /// automatic "White – Black (Year)" line above when both players are known, and a
-/// default caption below for a FEN source ("Position at move N, X to play").
+/// default caption below for a FEN source ("White to move" / "Black to move").
 ///
 /// - source (str, dictionary): a FEN string, a position dict, or a bare board
 ///   dict.
@@ -457,7 +458,7 @@
 /// - event (str, none): event name (carried; not shown by default).
 /// - year (int, str, none): year, appended to the info line in parentheses.
 /// - caption (auto, content, none): the figure caption; `auto` is the
-///   source-specific default (a FEN gets "Position at move N…"; a position or
+///   source-specific default (a FEN gets "White to move"; a position or
 ///   board dict gets none).
 /// - game-info (auto, content, none): the above-board line; `auto` is the
 ///   automatic player line — pass your own content, or `none` to drop it.
@@ -518,7 +519,8 @@
 
 /// A chess diagram for the position at `locator` within a parsed game. Players
 /// and year default to the game's roster tags (so the info line is automatic) and
-/// the caption defaults to "Position after move …" (the move played).
+/// the caption defaults to "Position after …" (the move played, e.g.
+/// "Position after 24. Nf3" / "Position after 24... Nf6").
 ///
 /// When the resolved PGN-handling `annotations` switch is on, `%cal` / `%csl`
 /// drawing annotations in the move's comment become arrows / highlights, merged
@@ -530,7 +532,7 @@
 /// - white (auto, str, none): white player; `auto` uses the game's `White` tag.
 /// - black (auto, str, none): black player; `auto` uses the `Black` tag.
 /// - year (auto, int, str, none): year; `auto` uses the `Date` tag.
-/// - caption (auto, content, none): `auto` is "Position after move …".
+/// - caption (auto, content, none): `auto` is "Position after …".
 /// - annotations (auto, bool): process `%cal` / `%csl` into arrows / highlights;
 ///   `auto` consults `set-pgn-defaults` (off by default).
 /// - flip (bool): show the board from Black's side.

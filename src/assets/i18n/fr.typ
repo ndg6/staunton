@@ -13,8 +13,8 @@
 	table-supplement: "Tableau",
 	diagram-outline-title: "Liste des diagrammes",
 	table-outline-title: "Liste des tableaux",
-	fen-caption: (num, turn) => "Position au coup " + num + ", trait aux " + (if turn == "w" { "Blancs" } else { "Noirs" }),
-	pgn-caption: move => "Position après le coup " + move,
+	fen-caption: turn => if turn == "w" { "Trait aux blancs" } else { "Trait aux noirs" },
+	pgn-caption: move => "Position après " + move,
 	// Tournament-table column headers.
 	tbl-rank: "Pl.",
 	tbl-player: "Joueur",

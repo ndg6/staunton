@@ -35,15 +35,15 @@
 // asserting them directly is faithful to what the diagrams render.
 #context {
   let fen-en = ui-string(auto, "fen-caption")
-  assert(fen-en("5", "w") == "Position at move 5, White to play", message: "en fen-caption, white to move")
-  assert(fen-en("5", "b") == "Position at move 5, Black to play", message: "en fen-caption, black to move")
-  assert((ui-string(auto, "pgn-caption"))("3. d4") == "Position after move 3. d4", message: "en pgn-caption")
+  assert(fen-en("w") == "White to move", message: "en fen-caption, white to move")
+  assert(fen-en("b") == "Black to move", message: "en fen-caption, black to move")
+  assert((ui-string(auto, "pgn-caption"))("3. d4") == "Position after 3. d4", message: "en pgn-caption")
   // explicit per-call code:
-  assert((ui-string("de", "fen-caption"))("5", "w") == "Stellung im 5. Zug, Weiß am Zug", message: "de fen-caption")
-  assert((ui-string("de", "pgn-caption"))("3. d4") == "Stellung nach Zug 3. d4", message: "de pgn-caption")
-  assert((ui-string("fr", "fen-caption"))("1", "b") == "Position au coup 1, trait aux Noirs", message: "fr fen-caption")
+  assert((ui-string("de", "fen-caption"))("w") == "Weiß am Zug", message: "de fen-caption")
+  assert((ui-string("de", "pgn-caption"))("3. d4") == "Stellung nach 3. d4", message: "de pgn-caption")
+  assert((ui-string("fr", "fen-caption"))("b") == "Trait aux noirs", message: "fr fen-caption")
   // an unknown code falls back to the English closure:
-  assert((ui-string("xx", "fen-caption"))("1", "w") == "Position at move 1, White to play", message: "unknown code -> en caption closure")
+  assert((ui-string("xx", "fen-caption"))("w") == "White to move", message: "unknown code -> en caption closure")
 }
 
 // ---- tournament-table column headers ----
@@ -112,7 +112,7 @@
   #context {
     assert(text.lang == "en", message: "main language is still English")
     assert(resolve-lang(auto) == "de", message: "chess language is German despite English prose")
-    assert((ui-string(auto, "fen-caption"))("1", "w") == "Stellung im 1. Zug, Weiß am Zug", message: "caption follows set-lang, not text.lang")
+    assert((ui-string(auto, "fen-caption"))("w") == "Weiß am Zug", message: "caption follows set-lang, not text.lang")
     assert(ui-string(auto, "tbl-player") == "Spieler", message: "table header follows set-lang, not text.lang")
   }
 ]
@@ -123,7 +123,7 @@
   #set-lang("auto")
   #context {
     assert(resolve-lang(auto) == "ru", message: "set-lang(auto) -> chess language follows text.lang (ru)")
-    assert((ui-string(auto, "pgn-caption"))("1. e4") == "Позиция после хода 1. e4", message: "auto caption follows text.lang (ru)")
+    assert((ui-string(auto, "pgn-caption"))("1. e4") == "Позиция после 1. e4", message: "auto caption follows text.lang (ru)")
     assert(ui-string(auto, "tbl-points") == "Очки", message: "auto table header follows text.lang (ru)")
   }
 ]
