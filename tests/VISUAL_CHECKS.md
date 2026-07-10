@@ -18,11 +18,16 @@ Then open the PDFs below and check the noted property. (The expected-*fail* test
 ## Board drawing
 
 - [ ] `board/highlight/highlight.pdf` — each **cross** is a complete X confined to
-      its own square (both diagonals overlap); each **circle**'s outer edge touches
-      its square border without spilling; filled squares sit under the pieces.
+      its own square (both diagonals overlap), inset ~7% from the corners; each
+      **circle** sits just inside its square border (small ~3% margin — it no
+      longer touches the border) without spilling; filled squares sit under the
+      pieces. Strokes are ~15% of the square. The **Proportional strokes** section
+      shows a circle+cross+arrow at 2/4/6 cm squares — the marks should read the
+      **same weight** at every size (not heavy when small / thin when large); the
+      overrides row shows a fat `20%` cross and a fixed `1pt` circle.
       *(This sheet hid a cross-on-the-wrong-square bug that compiled green.)*
 - [ ] `board/arrows/arrows.pdf` — arrows run centre-to-centre, scale with the
-      board, and flip with it; colors/widths as labelled.
+      board (shaft ~15% of the square), and flip with it; colors/widths as labelled.
 - [ ] `board/labeling/label_modes.pdf`, `border_themes.pdf`, `onsquare_corners.pdf`,
       `onsquare_fullwidth.pdf` — files/ranks in the right gutter/corner, themed
       bands correct, labels legible and not clashing with pieces.

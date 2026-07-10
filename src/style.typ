@@ -82,12 +82,17 @@
   highlight-transparency: 75%,              // applied to highlight-fill
   cross-color: red,           // cross highlight stroke color
   circle-color: green,        // circle highlight stroke color
-  cross-width: 2pt,           // cross stroke width
-  circle-width: 2pt,          // circle stroke width
+  // Marker strokes / margins are proportional to the square by default, so marks
+  // scale with the board. Each accepts `auto` (the default ratio shown), a ratio
+  // (e.g. `10%` of the square), or an absolute length. See `_resolve-square-dim`.
+  cross-width: auto,          // cross stroke width;   auto -> 15% of the square
+  circle-width: auto,         // circle stroke width;  auto -> 15% of the square
+  cross-margin: auto,         // cross inset from each corner; auto -> 7% of the square
+  circle-margin: auto,        // circle inset from the border; auto -> 3% of the square
   arrows: (),                 // array of arrows, each `(from, to, color)` e.g. ("f3","e5","G")
   arrow-color: default-highlight-base,  // default arrow color (opaque base)
   arrow-transparency: 85%,    // applied to the default arrow color (more transparent than highlights)
-  arrow-width: auto,          // shaft width; auto -> proportional to the square
+  arrow-width: auto,          // shaft width; auto -> 15% of the square (ratio / length also accepted)
   // In-check indicator. A radial glow (color -> transparent) on the
   // king that is in check, drawn under the piece. `check` gates it; `check-color`
   // is the glow's inner color. `check-square` is the marked square, auto-filled

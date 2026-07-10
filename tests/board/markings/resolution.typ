@@ -62,5 +62,15 @@
 #let gm = parse-pgn("[W \"a\"][B \"b\"] 1. e4 $3 $1 e5 *").first()
 #assert.eq(move-quality-mark(gm, "1w").symbol, "!!")
 
+// ---- _resolve-square-dim: proportional marker dimensions (0.2.2, topic 3) ---
+// auto -> the default ratio * square; an explicit ratio -> that fraction of the
+// square; an absolute length -> passed through unchanged.
+#import "/src/board.typ": _resolve-square-dim
+#assert.eq(_resolve-square-dim(auto, 4cm, 15%), 0.6cm)    // stroke default (15%)
+#assert.eq(_resolve-square-dim(auto, 4cm, 3%), 0.12cm)    // circle-margin default
+#assert.eq(_resolve-square-dim(auto, 2cm, 7%), 0.14cm)    // cross-margin default
+#assert.eq(_resolve-square-dim(10%, 4cm, 15%), 0.4cm)     // explicit ratio wins
+#assert.eq(_resolve-square-dim(2pt, 4cm, 15%), 2pt)       // absolute escape hatch
+
 = move-markings resolution
 All assertions passed.

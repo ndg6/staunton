@@ -10,7 +10,9 @@
 #assert(default-board-style.keys().contains("highlight-fill"), message: "highlight-fill is settable")
 #assert(default-board-style.highlight-shape == "filled", message: "filled is the default shape")
 #assert(default-board-style.highlight-transparency == 75%, message: "default transparency 75%")
-#assert(default-board-style.cross-width == 2pt and default-board-style.circle-width == 2pt, message: "default stroke 2pt")
+// 0.2.2: strokes + margins default to `auto` (proportional to the square).
+#assert(default-board-style.cross-width == auto and default-board-style.circle-width == auto, message: "default stroke is auto (proportional)")
+#assert(default-board-style.cross-margin == auto and default-board-style.circle-margin == auto, message: "default margins are auto (proportional)")
 
 #set page(width: auto, height: auto, margin: 1cm)
 #set text(font: "Libertinus Serif", size: 9pt)
@@ -22,8 +24,9 @@ convention a cross marks an EMPTY square, so the cross row uses empty squares
 (d4, f4, e3) while filled/circle sit on occupied ones (e4, e5, c4).
 
 // VISUAL REGRESSION CHECK: each cross must be a complete X CONFINED to its own
-// square (both diagonals overlap on d4/f4/e3), and each circle's outer edge must
-// touch its square border without spilling over.
+// square (both diagonals overlap on d4/f4/e3), inset ~7% from the corners; each
+// circle sits just inside its square border (a small ~3% margin — it no longer
+// touches the border) without spilling over. Strokes are ~15% of the square.
 
 #grid(columns: 3, column-gutter: 12pt,
   stack(dir: ttb, spacing: 4pt, align(center, emph("filled")),
@@ -65,4 +68,29 @@ opaque fill); a per-call override still wins on the right:
   )),
   board(test-fen, size: 4cm, labels: false, highlight: ("e4", "e5", "c4"),
     highlight-fill: rgb(60, 90, 220), highlight-transparency: 80%),
+)
+
+#set-board-defaults(cross-color: red, circle-color: green,
+  cross-width: auto, circle-width: auto, highlight-fill: green, highlight-transparency: 75%)
+
+= Proportional strokes (0.2.2)
+
+Same cross + circle + arrow at three square sizes. Strokes (~15%) and margins
+(cross ~7%, circle ~3%) scale with the square, so the marks read the same at every
+size — small boards no longer look heavy, large boards no longer look thin.
+
+#grid(columns: 3, column-gutter: 12pt, align: bottom + center,
+  ..(2cm, 4cm, 6cm).map(s => board(test-fen, size: s, labels: false,
+    highlight: ((square: "e5", shape: "circle"), (square: "d4", shape: "cross")),
+    arrows: (("c4", "f7"),))),
+)
+
+Overrides — a fat `20%` cross and a fixed `1pt` circle (ratio and absolute length
+both accepted):
+
+#grid(columns: 2, column-gutter: 14pt,
+  board(test-fen, size: 4cm, labels: false,
+    highlight: ((square: "d4", shape: "cross"),), cross-width: 20%),
+  board(test-fen, size: 4cm, labels: false,
+    highlight: ((square: "e5", shape: "circle"),), circle-width: 1pt, circle-margin: 0%),
 )

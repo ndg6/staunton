@@ -83,6 +83,18 @@
   else { c }
 }
 
+// Resolve a per-square dimension (a marker stroke width or margin) so marks scale
+// with the board by default:
+//   * `auto`    -> `default` (a ratio like 15%) times the square size `sq`;
+//   * a `ratio` -> that fraction of the square (e.g. `10%` -> 0.1 * sq);
+//   * a `length`-> used as-is (absolute escape hatch, e.g. `2pt`).
+#let _resolve-square-dim(value, sq, default) = {
+  if value == auto { default * sq }
+  else if type(value) == ratio { value * sq }
+  else if type(value) == length { value }
+  else { panic("marker dimension must be `auto`, a ratio (e.g. 10%), or a length; got " + repr(value)) }
+}
+
 // A straight arrow: a shaft plus a filled triangular head, from
 // (fx,fy) to (tx,ty) in board-canvas coordinates. Drawn by `place`ing at the
 // origin and giving absolute vertex coordinates, so it composes with the rest of
@@ -97,7 +109,7 @@
   let uy = dy / len
   let head-len = sq * 0.36
   let head-hw = sq * 0.20
-  let sw = if shaft-w == auto { sq * 0.13 } else { shaft-w }
+  let sw = _resolve-square-dim(shaft-w, sq, 15%)
   let bx = tx - ux * head-len   // base of the head (shaft stops here)
   let by = ty - uy * head-len
   let px = -uy                  // unit perpendicular
@@ -111,31 +123,40 @@
   ))
 }
 
-// Draw one highlight inside the board canvas at screen offset (dx, dy):
+// Draw one highlight inside the board canvas at screen offset (dx, dy). Stroke
+// widths and margins are resolved via `_resolve-square-dim` (auto -> a proportion
+// of the square, or a ratio / absolute length):
 //   * "filled" -> a square-filling rect in `fill`;
-//   * "circle" -> a centred circle whose OUTER stroke edge just touches the square
-//                 border (radius shrunk by half the stroke), stroked in `circle-col`;
-//   * "cross"  -> an X spanning ~95% of the square, stroked in `cross-col` with
-//                 round caps. The two diagonals are placed INDEPENDENTLY: a single
-//                 `place` holding both lines would stack them in normal flow,
-//                 dropping the second diagonal onto a lower square.
-#let _draw-highlight(shape, dx, dy, sq, fill, cross-col, circle-col, cross-w, circle-w) = {
+//   * "circle" -> a centred ring whose OUTER stroke edge sits `circle-margin`
+//                 inside the square border (margin 0 -> touches the border);
+//   * "cross"  -> an X whose endpoints are inset `cross-margin` from each corner,
+//                 stroked with round caps. The two diagonals are placed
+//                 INDEPENDENTLY: a single `place` holding both lines would stack
+//                 them in normal flow, dropping the second diagonal a square down.
+#let _draw-highlight(shape, dx, dy, sq, fill, cross-col, circle-col, cross-w, circle-w, cross-margin, circle-margin) = {
   if shape == "filled" {
     place(dx: dx, dy: dy, rect(width: sq, height: sq, fill: fill, stroke: none))
   } else if shape == "circle" {
-    // The stroke straddles the radius, so the outer edge sits at radius + w/2.
-    // Shrink the radius by w/2 and re-centre by w/2 so that outer edge lands
-    // exactly on the square border, never beyond it.
+    let w = _resolve-square-dim(circle-w, sq, 15%)
+    let m = _resolve-square-dim(circle-margin, sq, 3%)
+    // Outer stroke edge sits `m` inside the border; the stroke straddles the
+    // radius, so shrink the radius by `m + w/2` and re-centre by the same.
+    let radius = sq / 2 - m - w / 2
+    assert(radius > 0pt, message: "circle highlight: circle-width + circle-margin exceed the square; reduce one of them")
     place(
-      dx: dx + circle-w / 2,
-      dy: dy + circle-w / 2,
-      circle(radius: sq / 2 - circle-w / 2, fill: none, stroke: circle-w + circle-col),
+      dx: dx + m + w / 2,
+      dy: dy + m + w / 2,
+      circle(radius: radius, fill: none, stroke: w + circle-col),
     )
   } else if shape == "cross" {
-    let inset = sq * 0.025   // ~95% corner-to-corner
-    let str = stroke(paint: cross-col, thickness: cross-w, cap: "round")
-    place(dx: dx, dy: dy, line(start: (inset, sq - inset), end: (sq - inset, inset), stroke: str))      // LL -> UR
-    place(dx: dx, dy: dy, line(start: (inset, inset), end: (sq - inset, sq - inset), stroke: str))      // UL -> LR
+    let w = _resolve-square-dim(cross-w, sq, 15%)
+    let m = _resolve-square-dim(cross-margin, sq, 7%)
+    assert(2 * m < sq, message: "cross highlight: cross-margin too large for the square")
+    // Endpoints inset by `m` from each corner. (Round caps overshoot the geometric
+    // endpoint by ~w/2 — accepted for simplicity.)
+    let str = stroke(paint: cross-col, thickness: w, cap: "round")
+    place(dx: dx, dy: dy, line(start: (m, sq - m), end: (sq - m, m), stroke: str))      // LL -> UR
+    place(dx: dx, dy: dy, line(start: (m, m), end: (sq - m, sq - m), stroke: str))      // UL -> LR
   } else {
     panic("highlight shape must be \"filled\", \"cross\", or \"circle\"; got " + repr(shape))
   }
@@ -308,7 +329,7 @@
           let fill = if ecol == auto { hl-default-fill } else { _resolve-anno-color(ecol, st.annotation-colors, hl-default-fill) }
           let cross-c = if ecol == auto { st.cross-color } else { _resolve-anno-color(ecol, st.annotation-colors, st.cross-color) }
           let circle-c = if ecol == auto { st.circle-color } else { _resolve-anno-color(ecol, st.annotation-colors, st.circle-color) }
-          _draw-highlight(shape, o.dx, o.dy, sq, fill, cross-c, circle-c, st.cross-width, st.circle-width)
+          _draw-highlight(shape, o.dx, o.dy, sq, fill, cross-c, circle-c, st.cross-width, st.circle-width, st.cross-margin, st.circle-margin)
         }
         // in-check glow: under the pieces, over the checker/highlights.
         // `check-square` is auto-filled by `board()` for analyzable positions.
