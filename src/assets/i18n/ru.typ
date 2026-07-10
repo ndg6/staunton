@@ -14,4 +14,13 @@
 	table-supplement: "Таблица",
 	diagram-outline-title: "Список диаграмм",
 	table-outline-title: "Список таблиц",
+	fen-caption: (num, turn) => "Позиция на " + num + "-м ходу, ход " + (if turn == "w" { "белых" } else { "чёрных" }),
+	pgn-caption: move => "Позиция после хода " + move,
+	// Tournament-table column headers.
+	tbl-rank: "№",
+	tbl-player: "Игрок",
+	tbl-team: "Команда",
+	tbl-played: "И",
+	tbl-points: "Очки",
+	tbl-round-abbr: "Т",
 )

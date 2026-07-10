@@ -248,11 +248,6 @@
 #let standings-table(games, by: "player", tiebreaks: auto, match-points: (win: 2, draw: 1, loss: 0), title: none, caption: none, supplement: auto, lang: auto, ..table-args) = {
   let tbs = if tiebreaks != auto { tiebreaks } else { _default-tiebreaks(by) }
   let rows = standings(games, by: by, tiebreaks: tiebreaks, match-points: match-points)
-  let name-h = if by == "team" { "Team" } else { "Player" }
-
-  let header = (
-    [*Pos*], [*#name-h*], [*Pl*], [*+*], [*=*], [*\u{2212}*], [*Pts*],
-  ) + tbs.map(tb => [*#_tb-label.at(tb)*])
 
   let body = ()
   for r in rows {
@@ -261,13 +256,22 @@
     ) + tbs.map(tb => [#_fmt(_tb-value(r, tb))])
   }
 
-  let tbl = table(
-    columns: 7 + tbs.len(),
-    align: (col, row) => if col == 1 { left } else { center },
-    table.header(..header),
-    ..body,
-    ..table-args.named(),
-  )
+  // Column headers are language-aware, so they resolve inside a `context`
+  // (tiebreak abbreviations are internationally standardized -> not localized).
+  let tbl = context {
+    let name-h = if by == "team" { ui-string(lang, "tbl-team") } else { ui-string(lang, "tbl-player") }
+    let header = (
+      [*#ui-string(lang, "tbl-rank")*], [*#name-h*], [*#ui-string(lang, "tbl-played")*],
+      [*+*], [*=*], [*\u{2212}*], [*#ui-string(lang, "tbl-points")*],
+    ) + tbs.map(tb => [*#_tb-label.at(tb)*])
+    table(
+      columns: 7 + tbs.len(),
+      align: (col, row) => if col == 1 { left } else { center },
+      table.header(..header),
+      ..body,
+      ..table-args.named(),
+    )
+  }
   _table-figure(tbl, title, caption, supplement, lang)
 }
 
@@ -326,9 +330,7 @@
 #let crosstable-table(games, by: "player", match-points: (win: 2, draw: 1, loss: 0), title: none, caption: none, supplement: auto, lang: auto, ..table-args) = {
   let ct = crosstable(games, by: by, match-points: match-points)
   let n = ct.names.len()
-  let name-h = if by == "team" { "Team" } else { "Player" }
 
-  let header = ([*\#*], [*#name-h*],) + range(n).map(i => [*#(i + 1)*]) + ([*Pts*],)
   let body = ()
   for i in range(n) {
     body.push([#ct.ranks.at(i)])
@@ -340,13 +342,17 @@
     body.push([*#_fmt(ct.totals.at(i))*])
   }
 
-  let tbl = table(
-    columns: 2 + n + 1,
-    align: (col, row) => if col == 1 { left } else { center },
-    table.header(..header),
-    ..body,
-    ..table-args.named(),
-  )
+  let tbl = context {
+    let name-h = if by == "team" { ui-string(lang, "tbl-team") } else { ui-string(lang, "tbl-player") }
+    let header = ([*\#*], [*#name-h*],) + range(n).map(i => [*#(i + 1)*]) + ([*#ui-string(lang, "tbl-points")*],)
+    table(
+      columns: 2 + n + 1,
+      align: (col, row) => if col == 1 { left } else { center },
+      table.header(..header),
+      ..body,
+      ..table-args.named(),
+    )
+  }
   _table-figure(tbl, title, caption, supplement, lang)
 }
 
@@ -426,9 +432,7 @@
 /// -> content
 #let progress-table(games, by: "player", match-points: (win: 2, draw: 1, loss: 0), title: none, caption: none, supplement: auto, lang: auto, ..table-args) = {
   let pg = progress(games, by: by, match-points: match-points)
-  let name-h = if by == "team" { "Team" } else { "Player" }
 
-  let header = ([*\#*], [*#name-h*],) + pg.rounds.map(r => [*R#r*]) + ([*Pts*],)
   let body = ()
   for (i, nm) in pg.names.enumerate() {
     body.push([#pg.ranks.at(i)])
@@ -441,12 +445,17 @@
     body.push([*#_fmt(total)*])
   }
 
-  let tbl = table(
-    columns: 2 + pg.rounds.len() + 1,
-    align: (col, row) => if col == 1 { left } else { center },
-    table.header(..header),
-    ..body,
-    ..table-args.named(),
-  )
+  let tbl = context {
+    let name-h = if by == "team" { ui-string(lang, "tbl-team") } else { ui-string(lang, "tbl-player") }
+    let r-abbr = ui-string(lang, "tbl-round-abbr")
+    let header = ([*\#*], [*#name-h*],) + pg.rounds.map(r => [*#r-abbr#r*]) + ([*#ui-string(lang, "tbl-points")*],)
+    table(
+      columns: 2 + pg.rounds.len() + 1,
+      align: (col, row) => if col == 1 { left } else { center },
+      table.header(..header),
+      ..body,
+      ..table-args.named(),
+    )
+  }
   _table-figure(tbl, title, caption, supplement, lang)
 }

@@ -368,18 +368,20 @@
 }
 
 // Below-diagram default caption for a FEN source: position + side to move.
-#let _fen-caption(pos) = {
-  let who = if pos.turn == "w" { "White" } else { "Black" }
-  "Position at move " + str(pos.fullmove) + ", " + who + " to play"
-}
+// Language-aware: the catalog `fen-caption` closure owns the wording/grammar.
+// Must be called inside a `context` (it resolves the language).
+#let _fen-caption(pos, lang) = (_ui-string(lang, "fen-caption"))(str(pos.fullmove), pos.turn)
 
-// Below-diagram default caption for a PGN source: the last move played.
-#let _pgn-caption(game, locator) = {
+// Below-diagram default caption for a PGN source: the last move played. The move
+// reference ("5. Nf3" / "5... Nf3") is assembled here (notation convention,
+// language-neutral); the catalog `pgn-caption` closure supplies the surrounding
+// wording. Must be called inside a `context`.
+#let _pgn-caption(game, locator, lang) = {
   let at = if type(locator) == str { locator } else { locator.at("at") }
   let color = at.slice(at.len() - 1)
   let num = at.slice(0, at.len() - 1)
   let prefix = if color == "w" { num + ". " } else { num + "... " }
-  "Position after move " + prefix + move-san(game, locator)
+  (_ui-string(lang, "pgn-caption"))(prefix + move-san(game, locator))
 }
 
 // Year extracted from a PGN "Date" tag ("1972.07.11" -> "1972").
@@ -477,7 +479,10 @@
   ..args,
 ) = {
   let (board-ov, diagram-ov, fig-args) = _split-args(args.named())
-  let below = if caption != auto { caption } else if type(source) == str { _fen-caption(parse-fen(source)) } else { none }
+  let below = if caption != auto { caption } else if type(source) == str {
+    let pos = parse-fen(source)
+    context _fen-caption(pos, lang)
+  } else { none }
   let drawn = board(source, flip: flip, ..board-ov)
   _assemble(drawn, white, black, year, game-info, below, diagram-ov, lang, fig-args)
 }
@@ -535,7 +540,7 @@
 /// -> content
 #let diagram-after(game, locator, white: auto, black: auto, year: auto, caption: auto, annotations: auto, flip: false, game-info: auto, lang: auto, ..args) = {
   let pos = position-after(game, locator)
-  let cap = if caption != auto { caption } else { _pgn-caption(game, locator) }
+  let cap = if caption != auto { caption } else { context _pgn-caption(game, locator, lang) }
   let w = if white != auto { white } else { game.tags.at("White", default: none) }
   let b = if black != auto { black } else { game.tags.at("Black", default: none) }
   let y = if year != auto { year } else { _year-of(game) }

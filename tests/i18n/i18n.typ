@@ -30,6 +30,32 @@
   assert(resolve-lang(auto) == "en", message: "default global lang is en")
 }
 
+// ---- function-valued catalog entries: automatic diagram captions ----
+// `fen-caption` / `pgn-caption` are closures so each language owns its wording;
+// asserting them directly is faithful to what the diagrams render.
+#context {
+  let fen-en = ui-string(auto, "fen-caption")
+  assert(fen-en("5", "w") == "Position at move 5, White to play", message: "en fen-caption, white to move")
+  assert(fen-en("5", "b") == "Position at move 5, Black to play", message: "en fen-caption, black to move")
+  assert((ui-string(auto, "pgn-caption"))("3. d4") == "Position after move 3. d4", message: "en pgn-caption")
+  // explicit per-call code:
+  assert((ui-string("de", "fen-caption"))("5", "w") == "Stellung im 5. Zug, Weiß am Zug", message: "de fen-caption")
+  assert((ui-string("de", "pgn-caption"))("3. d4") == "Stellung nach Zug 3. d4", message: "de pgn-caption")
+  assert((ui-string("fr", "fen-caption"))("1", "b") == "Position au coup 1, trait aux Noirs", message: "fr fen-caption")
+  // an unknown code falls back to the English closure:
+  assert((ui-string("xx", "fen-caption"))("1", "w") == "Position at move 1, White to play", message: "unknown code -> en caption closure")
+}
+
+// ---- tournament-table column headers ----
+#context {
+  assert(ui-string(auto, "tbl-player") == "Player", message: "en table header: Player")
+  assert(ui-string("de", "tbl-player") == "Spieler", message: "de table header: Spieler")
+  assert(ui-string("de", "tbl-team") == "Mannschaft", message: "de table header: Mannschaft")
+  assert(ui-string("de", "tbl-points") == "Pkt", message: "de table header: Pkt")
+  assert(ui-string("fr", "tbl-team") == "Équipe", message: "fr table header: Équipe")
+  assert(ui-string("xx", "tbl-rank") == "Pos", message: "unknown code -> en table header")
+}
+
 // ---- the "auto" string follows #set text(lang:) ----
 #[
   #set text(lang: "ru")
@@ -77,5 +103,29 @@
   // German letters (so the global lang reached notation).
   assert(resolve-lang(auto) == "de", message: "notation will resolve to de via the global setting")
 }
+
+// ---- the CHESS language (set-lang) is independent of the MAIN document
+// language (#set text(lang:)). Captions and headers follow set-lang. ----
+#[
+  #set text(lang: "en")   // document prose stays English ...
+  #set-lang("de")         // ... while the chess language is German
+  #context {
+    assert(text.lang == "en", message: "main language is still English")
+    assert(resolve-lang(auto) == "de", message: "chess language is German despite English prose")
+    assert((ui-string(auto, "fen-caption"))("1", "w") == "Stellung im 1. Zug, Weiß am Zug", message: "caption follows set-lang, not text.lang")
+    assert(ui-string(auto, "tbl-player") == "Spieler", message: "table header follows set-lang, not text.lang")
+  }
+]
+
+// ---- set-lang("auto") makes the chess language follow #set text(lang:) ----
+#[
+  #set text(lang: "ru")
+  #set-lang("auto")
+  #context {
+    assert(resolve-lang(auto) == "ru", message: "set-lang(auto) -> chess language follows text.lang (ru)")
+    assert((ui-string(auto, "pgn-caption"))("1. e4") == "Позиция после хода 1. e4", message: "auto caption follows text.lang (ru)")
+    assert(ui-string(auto, "tbl-points") == "Очки", message: "auto table header follows text.lang (ru)")
+  }
+]
 
 = i18n OK

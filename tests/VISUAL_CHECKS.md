@@ -115,6 +115,13 @@ Then open the PDFs below and check the noted property. (The expected-*fail* test
       `realworld_standings.pdf`, `refs/table_refs.pdf` — columns aligned, headers
       and running totals correct, tie-breaks plausible.
 - [ ] `i18n/i18n.pdf` — supplements and piece letters match each language.
+- [ ] `i18n/localized_captions.pdf` — **verify the translations** of the automatic
+      diagram captions ("Position after move …" / "Position at move …, X to play")
+      and the tournament-table column headers (rank, player/team, played, points,
+      round) for each language. en/de are asserted in code; **es / fr / it / pt / ru
+      were proposed by Claude and need a native/expert eye** — check wording,
+      grammar, and the short column abbreviations. (Tie-break labels Bh/SB/BP are
+      left in their internationally standard form on purpose.)
 - [ ] `pgn/good/variation_move.pdf`, `nested_variation.pdf` — the board shows the
       correct (nested) variation position.
 - [ ] `pgn/chess960/frc_game.pdf` — the Chess960 start board (king on the f-file,

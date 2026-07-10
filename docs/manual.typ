@@ -1324,7 +1324,8 @@ Package *staunton* supports localisation of text-related output. At the moment w
 The `notation` / `chess-notation` functions localise the piece letters, and the `chess-diagram` / `chess-table` figures carry language-aware titles and captions. The `lang:` argument on each function overrides the document default, and the document default is set with `set-lang`.
 
 A single document *language* drives every language-aware string — diagram and
-table supplements, outline titles, and notation piece letters. Default is
+table supplements, outline titles, automatic diagram captions ("Position after
+move …"), tournament-table column headers, and notation piece letters. Default is
 English; `"auto"` follows `#set text(lang: ..)`; or pick a code:
 
 ```typ
