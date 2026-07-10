@@ -50,6 +50,25 @@ Find them with `grep -rn "0\.1\.0"` and bump each. Leave only the *historical*
 file, and past-findings notes. (Ignore the FEN/position examples, which are not
 version strings.)
 
+## README images
+
+The README shows pre-rendered PNGs (Typst Universe renders the README as plain
+markdown — it does **not** execute the code fences, so only real `![]()` images
+display). Each lives under `docs/img/` with its Typst source beside it and the
+regen command in the source header:
+
+- `gallery.typ` → `gallery.png` (the top banner);
+- `quickstart-1.typ` … `quickstart-4.typ` → one image per Quick-Start example
+  (FEN diagram, start position with metadata, manual placement, diagram from a
+  game).
+
+If you change a Quick-Start code block (or the gallery), regenerate the matching
+PNG (`typst compile --root . --format png --ppi 160 docs/img/<name>.typ docs/img/<name>.png`)
+and commit it. These sheets are **not** part of `tests/run.sh`, so nothing else
+will flag a drift between the code shown and the image. The image URLs are pinned
+to the release tag (like the manual link), so they only resolve once `vX.Y.Z` is
+pushed.
+
 ## Publishing to Universe (upload-gated — get explicit approval each time)
 
 1. Green suite: `bash tests/run.sh`.

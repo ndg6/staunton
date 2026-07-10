@@ -6,7 +6,7 @@ engine), write localized move **notation**, and generate **tournament tables** �
 all as referenceable `#figure`s, with ready-made **outlines** (lists of diagrams
 and tables).
 
-![Gallery of staunton output: chess boards and diagrams, localized move notation, and tournament tables](https://raw.githubusercontent.com/ndg6/staunton/v0.2.0/docs/img/gallery.png)
+![Gallery of staunton output: chess boards and diagrams, localized move notation, and tournament tables](https://raw.githubusercontent.com/ndg6/staunton/v0.2.1/docs/img/gallery.png)
 
 ## Features
 
@@ -43,16 +43,29 @@ and tables).
 ## Quick start
 
 ```typ
-#import "@preview/staunton:0.2.0": chess-diagram, position, starting-fen
+#import "@preview/staunton:0.2.1": chess-diagram, position, starting-fen
+```
 
-// From a FEN string (this one is 1.e4 c5 2.Nf3):
+From a FEN string (this one is 1.e4 c5 2.Nf3):
+
+```typ
 #chess-diagram("rnbqkbnr/pp1ppppp/8/2p5/4P3/5N2/PPPP1PPP/RNBQKB1R b KQkq - 1 2")
+```
 
-// The starting position, with PGN-style metadata for the caption:
+![A chess diagram of the position after 1.e4 c5 2.Nf3, with a "Position at move 2, Black to play" caption](https://raw.githubusercontent.com/ndg6/staunton/v0.2.1/docs/img/quickstart-1.png)
+
+The starting position, with PGN-style metadata for the caption:
+
+```typ
 #chess-diagram(starting-fen, white: [Carlsen], black: [Nepo], event: [Dubai], year: 2021)
+```
 
-// Manual placement: a squares dict (square -> piece). Square-name case is
-// ignored; pieces may be long names, abbreviations, or bare letters.
+![The starting position with a bold "Carlsen – Nepo (2021)" info line above and a "Position at move 1, White to play" caption](https://raw.githubusercontent.com/ndg6/staunton/v0.2.1/docs/img/quickstart-2.png)
+
+Manual placement: a squares dict (square → piece). Square-name case is ignored;
+pieces may be long names, abbreviations, or bare letters.
+
+```typ
 #chess-diagram(position((
   e1: (kind: "king", color: "white"),
   e8: (kind: "king", color: "black"),
@@ -60,10 +73,12 @@ and tables).
 )), labels: false)
 ```
 
+![A near-empty board with the two kings on e1 and e8 and a white pawn on e4, labels off and no caption](https://raw.githubusercontent.com/ndg6/staunton/v0.2.1/docs/img/quickstart-3.png)
+
 And from a game:
 
 ```typ
-#import "@preview/staunton:0.2.0": parse-pgn, diagram-after, mainline
+#import "@preview/staunton:0.2.1": parse-pgn, diagram-after, mainline
 
 #let game = parse-pgn(```
 [White "Morphy"] [Black "NN"] [Result "1-0"]
@@ -73,14 +88,16 @@ And from a game:
 #diagram-after(game, "3w")   // a diagram of the position after White's 3rd move
 ```
 
+![A chess diagram of the position after 3.d4 in a Morphy game, with a "Morphy – NN" info line and a "Position after move 3. d4" caption](https://raw.githubusercontent.com/ndg6/staunton/v0.2.1/docs/img/quickstart-4.png)
+
 ## Documentation
 
 - **User manual** — the complete reference (every function, option, and example),
   with each feature shown as the code you type beside the board it produces.
-  Download the compiled **[PDF](https://github.com/ndg6/staunton/releases/download/v0.2.0/manual.pdf)** (attached to each release), or build it yourself
-  from its Typst source, [`docs/manual.typ`](https://github.com/ndg6/staunton/blob/v0.2.0/docs/manual.typ). The manual is part
+  Download the compiled **[PDF](https://github.com/ndg6/staunton/releases/download/v0.2.1/manual.pdf)** (attached to each release), or build it yourself
+  from its Typst source, [`docs/manual.typ`](https://github.com/ndg6/staunton/blob/v0.2.1/docs/manual.typ). The manual is part
   of the repo only — it is not shipped in the package bundle.
-- **[Showcase](https://github.com/ndg6/staunton/blob/v0.2.0/docs/examples/showcase.typ)** — a runnable capability tour.
+- **[Showcase](https://github.com/ndg6/staunton/blob/v0.2.1/docs/examples/showcase.typ)** — a runnable capability tour.
 
 Compile the manual and the showcase locally with the package folder as root:
 
@@ -114,7 +131,7 @@ and [LICENSE-PIECES](LICENSE-PIECES). The package manifest declares
 A `"unicode"` glyph fallback needs no SVGs. To use other art, pass `piece-set` a
 loader (`named-piece-set` / `svg-piece-set`, or `with-fallback` for mixed and
 fairy boards) — see the *Pieces and fonts* and *Non-standard pieces* sections of
-the [manual](https://github.com/ndg6/staunton/blob/v0.2.0/docs/manual.typ).
+the [manual](https://github.com/ndg6/staunton/blob/v0.2.1/docs/manual.typ).
 (Other popular lichess sets carry non-commercial licenses and are not bundled.)
 The manual and tests also embed **CC BY-SA 4.0** fairy demo art (under `docs/` and
 `tests/`), which is *not* part of the shipped package — see [LICENSE-PIECES](LICENSE-PIECES).
@@ -153,7 +170,16 @@ header must error with that message, any other must compile. Files/dirs prefixed
 
 ## Changelog
 
-### 0.2.0 (unreleased)
+### 0.2.1 (unreleased)
+
+- **i18n**: automatic diagram captions ("Position after move …" / "Position at
+  move N, X to play") and tournament-table column headers are now localized —
+  previously they stayed English regardless of `set-lang`. The chess language
+  (`set-lang`) is independent of the document language (`#set text(lang: ..)`),
+  and `set-lang("auto")` follows the document language for these too.
+- **docs**: the README Quick-Start examples now show their rendered output.
+
+### 0.2.0
 
 - **Chess960 / Fischer Random**: variant-named `chess960-board` / `chess960-diagram`;
   start positions by Scharnagl number (`chess960-start`, `chess960-start-fen`, 0–959,
