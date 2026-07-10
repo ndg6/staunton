@@ -1452,9 +1452,10 @@ setters reject them), though their *styling* options can.
   raw("highlight-shape"), raw("\"filled\""), [default shape for plain-string highlight entries],
   [`highlight-fill` / `highlight-transparency`], [green, `75%`], [filled-highlight color and its transparency],
   [`cross-color` / `circle-color`], [red / green], [cross / circle stroke colors],
-  [`cross-width` / `circle-width`], raw("2pt"), [cross / circle stroke widths],
+  [`cross-width` / `circle-width`], raw("auto"), [cross / circle stroke widths; `auto` → 15% of the square (a `ratio` or absolute length also work)],
+  [`cross-margin` / `circle-margin`], raw("auto"), [cross / circle inset; `auto` → 7% / 3% of the square (ratio / length accepted)],
   [`arrow-color` / `arrow-transparency`], [green, `85%`], [default arrow color and its transparency],
-  raw("arrow-width"), raw("auto"), [arrow shaft width; `auto` scales with the square],
+  raw("arrow-width"), raw("auto"), [arrow shaft width; `auto` → 15% of the square (ratio / length accepted)],
   raw("check"), raw("false"), [in-check glow on the checked king (auto-located for standard positions)],
   [`check-color` / `check-square`], [red / `none`], [glow color; square to glow (`none` → auto-located)],
   raw("move-quality"), raw("false"), [move-quality badge on the last move's destination],
@@ -1479,7 +1480,8 @@ setters reject them), though their *styling* options can.
 `"it"`, `"pt"`, `"ru"`), or `"auto"` (follow `#set text(lang: ..)`).
 
 *PGN handling* (`set-pgn-defaults`): `annotations`, `nags`, `comments`, `diagrams`,
-`variations` — all `false` by default; `bold-mainline` defaults `true` (see
+`variations` — all `false` by default; `bold-mainline` and `spaced` default `true`
+(`spaced` = a space after the move number, "24. Nf3" vs. the dense "24.Nf3"; see
 #link(<pgn-handling>)[PGN handling]).
 
 // === Main functions ==========================================================

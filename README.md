@@ -52,7 +52,7 @@ From a FEN string (this one is 1.e4 c5 2.Nf3):
 #chess-diagram("rnbqkbnr/pp1ppppp/8/2p5/4P3/5N2/PPPP1PPP/RNBQKB1R b KQkq - 1 2")
 ```
 
-![A chess diagram of the position after 1.e4 c5 2.Nf3, with a "Position at move 2, Black to play" caption](https://raw.githubusercontent.com/ndg6/staunton/v0.2.1/docs/img/quickstart-1.png)
+![A chess diagram of the position after 1.e4 c5 2.Nf3, with a "Black to move" caption](https://raw.githubusercontent.com/ndg6/staunton/v0.2.1/docs/img/quickstart-1.png)
 
 The starting position, with PGN-style metadata for the caption:
 
@@ -60,7 +60,7 @@ The starting position, with PGN-style metadata for the caption:
 #chess-diagram(starting-fen, white: [Carlsen], black: [Nepo], event: [Dubai], year: 2021)
 ```
 
-![The starting position with a bold "Carlsen – Nepo (2021)" info line above and a "Position at move 1, White to play" caption](https://raw.githubusercontent.com/ndg6/staunton/v0.2.1/docs/img/quickstart-2.png)
+![The starting position with a bold "Carlsen – Nepo (2021)" info line above and a "White to move" caption](https://raw.githubusercontent.com/ndg6/staunton/v0.2.1/docs/img/quickstart-2.png)
 
 Manual placement: a squares dict (square → piece). Square-name case is ignored;
 pieces may be long names, abbreviations, or bare letters.
@@ -88,7 +88,7 @@ And from a game:
 #diagram-after(game, "3w")   // a diagram of the position after White's 3rd move
 ```
 
-![A chess diagram of the position after 3.d4 in a Morphy game, with a "Morphy – NN" info line and a "Position after move 3. d4" caption](https://raw.githubusercontent.com/ndg6/staunton/v0.2.1/docs/img/quickstart-4.png)
+![A chess diagram of the position after 3.d4 in a Morphy game, with a "Morphy – NN" info line and a "Position after 3. d4" caption](https://raw.githubusercontent.com/ndg6/staunton/v0.2.1/docs/img/quickstart-4.png)
 
 ## Documentation
 
@@ -170,7 +170,20 @@ header must error with that message, any other must compile. Files/dirs prefixed
 
 ## Changelog
 
-### 0.2.1 (unreleased)
+### 0.2.2 (unreleased)
+
+- **Proportional markers**: cross / circle / arrow strokes — and the new
+  `cross-margin` / `circle-margin` — scale with the square by default (stroke 15%,
+  cross margin 7%, circle margin 3%), so marks read the same at any board size.
+  Each is settable per call or document-wide, as a ratio or an absolute length.
+- **Notation spacing**: move numbers render spaced by default ("1. e4 e5 2. Nf3";
+  a forced Black move as "24... Nf6"). A new `spaced` option (document-settable via
+  `set-pgn-defaults`) opts back into the dense "1.e4" / "24...Nf6" form.
+- **Uniform captions**: automatic below-captions are consistent — a `diagram-after`
+  reads "Position after 24. Nf3", and a FEN `chess-diagram` reads "White to move" /
+  "Black to move" (localized).
+
+### 0.2.1
 
 - **i18n**: automatic diagram captions ("Position after move …" / "Position at
   move N, X to play") and tournament-table column headers are now localized —
