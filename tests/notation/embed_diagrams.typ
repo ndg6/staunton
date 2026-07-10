@@ -11,21 +11,21 @@
 
 #let g = parse-pgn(```
 [White "A"] [Black "B"]
-1. e4 e5 2. Nf3 {[%cal Gf1c4] #[After 2.Nf3]} Nc6 3. Bb5 {[d]} a6 4. Ba4 Nf6 *
+1. e4 e5 2. Nf3 {[%cal Gf1c4] #[After 2. Nf3]} Nc6 3. Bb5 {[d]} a6 4. Ba4 Nf6 *
 ```).first()
 
 // diagrams OFF -> plain text string (no embedding), unchanged behaviour. lang is
 // explicit so the string fast-path applies (lang: auto would consult the document
 // and yield content).
 #assert(
-  notation(g, diagrams: false, bold-mainline: false, nags: false, comments: false, variations: false, lang: "en")
-    == "1.e4 e5 2.Nf3 Nc6 3.Bb5 a6 4.Ba4 Nf6",
+  notation(g, diagrams: false, bold-mainline: false, spaced: true, nags: false, comments: false, variations: false, lang: "en")
+    == "1. e4 e5 2. Nf3 Nc6 3. Bb5 a6 4. Ba4 Nf6",
   message: "diagrams off -> plain text",
 )
 
 // a non-game source never embeds, even with diagrams: true
 #assert(
-  notation("1. e4 e5", diagrams: true, nags: false, comments: false, variations: false, bold-mainline: false, lang: "en") == "1.e4 e5",
+  notation("1. e4 e5", diagrams: true, nags: false, comments: false, variations: false, bold-mainline: false, spaced: true, lang: "en") == "1. e4 e5",
   message: "SAN source ignores diagrams",
 )
 
@@ -42,11 +42,11 @@
 // annotations on/off compare EQUAL even though they render differently.)
 #let ga = parse-pgn(```
 [White "A"] [Black "B"]
-1. e4 e5 2. Nf3 {[%cal Gf1c4] [%csl Re5] #[After 2.Nf3]} Nc6 *
+1. e4 e5 2. Nf3 {[%cal Gf1c4] [%csl Re5] #[After 2. Nf3]} Nc6 *
 ```).first()
 #let info = interpret-comment(movetext(ga).at(2).at("comment-after"))
 #assert(info.diagram != none, message: "Nf3 comment carries a diagram marker")
-#assert(info.diagram.caption == "After 2.Nf3", message: "marker caption parsed")
+#assert(info.diagram.caption == "After 2. Nf3", message: "marker caption parsed")
 #assert(info.arrows == (("f1", "c4", "G"),), message: "%cal extracted for the spliced board")
 #assert(info.highlights == (("e5", "R"),), message: "%csl extracted for the spliced board")
 

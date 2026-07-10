@@ -170,6 +170,7 @@
   diagrams:    false,  // act on embedded diagram markers (consumer: chess-notation, splices boards into the movetext)
   variations:  false,  // splice variations (RAVs) into notation output
   bold-mainline: true, // render mainline moves bold (variations stay normal)
+  spaced:      true,   // space after the move number ("24. Nf3"); false -> dense ("24.Nf3")
 )
 
 // Document-wide overrides (document-order state, like Typst's own #set).

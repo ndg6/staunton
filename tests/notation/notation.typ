@@ -14,13 +14,13 @@
 // (their `auto`/auto-value defaults consult the document buckets -> content).
 // Helper defaults them off / to English but lets a test override (e.g. nags: true,
 // lang: "de"); the override wins.
-#let s(src, ..a) = notation(src, ..((diagrams: false, bold-mainline: false, nags: false, comments: false, variations: false, lang: "en") + a.named()))
+#let s(src, ..a) = notation(src, ..((diagrams: false, bold-mainline: false, spaced: true, nags: false, comments: false, variations: false, lang: "en") + a.named()))
 
 // --- English (default) ---
-#assert(s(g) == "1.e4 e5 2.Nf3 Nc6 3.Bb5 a6 4.Ba4 Nf6 5.O-O", message: "en mainline")
+#assert(s(g) == "1. e4 e5 2. Nf3 Nc6 3. Bb5 a6 4. Ba4 Nf6 5. O-O", message: "en mainline")
 
 // --- German letters: N->S, B->L (files/castling untouched) ---
-#assert(s(g, lang: "de") == "1.e4 e5 2.Sf3 Sc6 3.Lb5 a6 4.La4 Sf6 5.O-O", message: "de letters")
+#assert(s(g, lang: "de") == "1. e4 e5 2. Sf3 Sc6 3. Lb5 a6 4. La4 Sf6 5. O-O", message: "de letters")
 
 // --- Russian (multi-char king "Кр", knight "К") localizes N/B, keeps files ---
 #let ru = s(g, lang: "ru")
@@ -33,35 +33,45 @@
 #assert(fig.contains("\u{2657}") and not fig.contains("N") and not fig.contains("B"), message: "white bishop figurine; no Latin piece letters")
 
 // --- ranges (inclusive, diagram-after locators) ---
-#assert(s(g, to: "2b") == "1.e4 e5 2.Nf3 Nc6", message: "start -> 2b")
-#assert(s(g, from: "3w") == "3.Bb5 a6 4.Ba4 Nf6 5.O-O", message: "3w -> end")
-#assert(s(g, from: "2b", to: "3b") == "2...Nc6 3.Bb5 a6", message: "Black-start slice numbers as 2...")
+#assert(s(g, to: "2b") == "1. e4 e5 2. Nf3 Nc6", message: "start -> 2b")
+#assert(s(g, from: "3w") == "3. Bb5 a6 4. Ba4 Nf6 5. O-O", message: "3w -> end")
+#assert(s(g, from: "2b", to: "3b") == "2... Nc6 3. Bb5 a6", message: "Black-start slice numbers as 2...")
 // boundary slices: single move, first only, last only, explicit full == default
-#assert(s(g, from: "2w", to: "2w") == "2.Nf3", message: "single-move slice (one White ply)")
-#assert(s(g, from: "2b", to: "2b") == "2...Nc6", message: "single-move slice (one Black ply)")
-#assert(s(g, to: "1w") == "1.e4", message: "just the first move")
-#assert(s(g, from: "5w") == "5.O-O", message: "just the last move")
+#assert(s(g, from: "2w", to: "2w") == "2. Nf3", message: "single-move slice (one White ply)")
+#assert(s(g, from: "2b", to: "2b") == "2... Nc6", message: "single-move slice (one Black ply)")
+#assert(s(g, to: "1w") == "1. e4", message: "just the first move")
+#assert(s(g, from: "5w") == "5. O-O", message: "just the last move")
 #assert(s(g, from: "1w", to: "5w") == s(g), message: "explicit full range equals the default")
 
+// --- spaced (default) vs dense move numbers (0.2.2) ---
+// The default spells "24. Nf3" / "24... Nf6" (a space after the number); the
+// opt-in dense mode restores the Lichess-style "24.Nf3" / "24...Nf6".
+#assert(s(g, spaced: false) == "1.e4 e5 2.Nf3 Nc6 3.Bb5 a6 4.Ba4 Nf6 5.O-O", message: "dense mode")
+#assert(s(g, from: "2b", to: "3b", spaced: false) == "2...Nc6 3.Bb5 a6", message: "dense black-start slice")
+// spaced defaults on and is document-settable via set-pgn-defaults (same mechanism
+// as nags/comments; the `auto` value consults this default).
+#import "/src/style.typ": default-pgn-style
+#assert(default-pgn-style.spaced == true, message: "spaced defaults to true")
+
 // --- result option appends a real result (never "*") ---
-#assert(s(g, result: true) == "1.e4 e5 2.Nf3 Nc6 3.Bb5 a6 4.Ba4 Nf6 5.O-O 1-0", message: "with result")
+#assert(s(g, result: true) == "1. e4 e5 2. Nf3 Nc6 3. Bb5 a6 4. Ba4 Nf6 5. O-O 1-0", message: "with result")
 
 // --- engine-free SAN sources: move-text string AND array ---
-#assert(s("1. e4 e5 2. Nf3") == "1.e4 e5 2.Nf3", message: "string source")
-#assert(s(("e4", "e5", "Nf3")) == "1.e4 e5 2.Nf3", message: "array source")
+#assert(s("1. e4 e5 2. Nf3") == "1. e4 e5 2. Nf3", message: "string source")
+#assert(s(("e4", "e5", "Nf3")) == "1. e4 e5 2. Nf3", message: "array source")
 #assert(s("e4 e5", move-numbers: false) == "e4 e5", message: "move-numbers off")
-#assert(s("d8=Q", lang: "de") == "1.d8=D", message: "promotion localized")
+#assert(s("d8=Q", lang: "de") == "1. d8=D", message: "promotion localized")
 
 // --- NAGs and comments (opt-in) ---
 #let gn = parse-pgn("[White \"A\"][Black \"B\"] 1. e4 $1 e5 $6 2. Nf3 {develops the knight} Nc6 *").first()
 // default off: plain movetext, no NAG glyphs, no prose
-#assert(s(gn) == "1.e4 e5 2.Nf3 Nc6", message: "nags/comments off")
+#assert(s(gn) == "1. e4 e5 2. Nf3 Nc6", message: "nags/comments off")
 // nags on: $1 -> "!", $6 -> "?!"
-#assert(s(gn, nags: true) == "1.e4! e5?! 2.Nf3 Nc6", message: "nags rendered")
+#assert(s(gn, nags: true) == "1. e4! e5?! 2. Nf3 Nc6", message: "nags rendered")
 // comments on: residual prose appended
-#assert(s(gn, comments: true) == "1.e4 e5 2.Nf3 develops the knight Nc6", message: "comments rendered")
+#assert(s(gn, comments: true) == "1. e4 e5 2. Nf3 develops the knight Nc6", message: "comments rendered")
 // SAN sources never carry nags/comments
-#assert(s("e4 e5", nags: true, comments: true) == "1.e4 e5", message: "SAN source has no nags/comments")
+#assert(s("e4 e5", nags: true, comments: true) == "1. e4 e5", message: "SAN source has no nags/comments")
 
 = Notation output
 

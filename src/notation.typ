@@ -126,11 +126,14 @@
   let num = ""
   if opts.move-numbers {
     let movenum = int((ply + 1) / 2)
-    // No space after the number (real-world publication style): "1.e4", "3...Bc5".
+    // White: "24."; a forced Black move (run start / after a variation or comment):
+    // "24...". `opts.spaced` (default) then adds a space before the SAN -> "24. Nf3"
+    // / "24... Nf6"; dense mode omits it -> "24.Nf3" / "24...Nf6".
     if white { num = str(movenum) + "." }
     else if force { num = str(movenum) + "..." }
   }
-  let tok = num + _localize-san(node.san, opts.chars, opts.figurine, white)
+  let gap = if opts.spaced and num != "" { " " } else { "" }
+  let tok = num + gap + _localize-san(node.san, opts.chars, opts.figurine, white)
   if opts.nags {
     for ng in node.at("nags", default: ()) { tok += nag-symbol(ng) }
   }
@@ -258,12 +261,13 @@
 /// (`auto` -> the document language via `set-lang`; a code like "de"; or the
 /// string "auto" to follow `#set text(lang: ..)`; unknown -> en),
 /// `move-numbers`, `result` (append the game result), `variations` /
-/// `variation-style`. `nags` / `comments` / `variations` / `bold-mainline`
-/// (default `auto`) consult the document `set-pgn-defaults`: `nags` / `comments`
-/// / `variations` are off by default, `bold-mainline` is on. When everything
-/// resolves without document state the result is a plain string; otherwise
-/// (including a bold mainline) it is content.
-#let notation(source, from: none, to: none, line: none, figurine: false, lang: auto, nags: auto, comments: auto, variations: auto, variation-style: "inline", bold-mainline: auto, move-numbers: true, result: false) = {
+/// `variation-style`, `spaced` (a space after the move number: "24. Nf3" vs the
+/// dense "24.Nf3"). `nags` / `comments` / `variations` / `bold-mainline` /
+/// `spaced` (default `auto`) consult the document `set-pgn-defaults`: `nags` /
+/// `comments` / `variations` are off by default, `bold-mainline` and `spaced` are
+/// on. When everything resolves without document state the result is a plain
+/// string; otherwise (including a bold mainline) it is content.
+#let notation(source, from: none, to: none, line: none, figurine: false, lang: auto, nags: auto, comments: auto, variations: auto, variation-style: "inline", bold-mainline: auto, move-numbers: true, spaced: auto, result: false) = {
   assert(variation-style in ("inline", "block"), message: "notation: variation-style must be \"inline\" or \"block\"; got " + repr(variation-style))
   // Which nodes to render: a mainline slice, or a variation sub-line addressed by
   // `line`. `start-ply` is the ply of the first rendered node.
@@ -286,16 +290,16 @@
     start-ply = r.lo + 1
     if result and type(source) == dictionary and "movetext-raw" in source { tail = game-result(source) }
   }
-  let mk-opts = (chars, rn, rc, rv, rb) => (
+  let mk-opts = (chars, rn, rc, rv, rb, rs) => (
     figurine: figurine, chars: chars, move-numbers: move-numbers,
     nags: rn, comments: rc, variations: rv, bold-mainline: rb,
-    variation-style: variation-style, indent: 1.2em,
+    variation-style: variation-style, indent: 1.2em, spaced: rs,
   )
   // `lang: auto` (the VALUE) consults the document `set-lang` setting; `lang:
   // "auto"` follows `#set text(lang:)`; an explicit code needs no document state.
-  // `nags`/`comments`/`variations`/`bold-mainline: auto` consult `set-pgn-defaults`.
+  // `nags`/`comments`/`variations`/`bold-mainline`/`spaced: auto` consult `set-pgn-defaults`.
   let lang-needs-state = lang == auto or lang == "auto"
-  let needs-state = lang-needs-state or nags == auto or comments == auto or variations == auto or bold-mainline == auto
+  let needs-state = lang-needs-state or nags == auto or comments == auto or variations == auto or bold-mainline == auto or spaced == auto
   if needs-state {
     context {
       let pg = default-pgn-style + pgn-style-state.get()
@@ -303,11 +307,12 @@
       let rc = if comments != auto { comments } else { pg.comments }
       let rv = if variations != auto { variations } else { pg.variations }
       let rb = if bold-mainline != auto { bold-mainline } else { pg.bold-mainline }
+      let rs = if spaced != auto { spaced } else { pg.spaced }
       let chars = lang-piece-chars(lang)
-      _render(nodes, lo, hi, start-ply, mk-opts(chars, rn, rc, rv, rb), tail)
+      _render(nodes, lo, hi, start-ply, mk-opts(chars, rn, rc, rv, rb, rs), tail)
     }
   } else {
     let chars = notation-langs.at(lang, default: notation-langs.en)
-    _render(nodes, lo, hi, start-ply, mk-opts(chars, nags, comments, variations, bold-mainline), tail)
+    _render(nodes, lo, hi, start-ply, mk-opts(chars, nags, comments, variations, bold-mainline, spaced), tail)
   }
 }
