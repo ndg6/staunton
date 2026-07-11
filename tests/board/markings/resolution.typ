@@ -68,7 +68,7 @@
 #import "/src/board.typ": _resolve-square-dim
 #assert.eq(_resolve-square-dim(auto, 4cm, 15%), 0.6cm)    // stroke default (15%)
 #assert.eq(_resolve-square-dim(auto, 4cm, 3%), 0.12cm)    // circle-margin default
-#assert.eq(_resolve-square-dim(auto, 2cm, 7%), 0.14cm)    // cross-margin default
+#assert.eq(_resolve-square-dim(auto, 2cm, 10%), 0.2cm)    // cross-margin default (corner-to-tip)
 #assert.eq(_resolve-square-dim(10%, 4cm, 15%), 0.4cm)     // explicit ratio wins
 #assert.eq(_resolve-square-dim(2pt, 4cm, 15%), 2pt)       // absolute escape hatch
 

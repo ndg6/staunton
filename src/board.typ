@@ -129,7 +129,7 @@
 //   * "filled" -> a square-filling rect in `fill`;
 //   * "circle" -> a centred ring whose OUTER stroke edge sits `circle-margin`
 //                 inside the square border (margin 0 -> touches the border);
-//   * "cross"  -> an X whose endpoints are inset `cross-margin` from each corner,
+//   * "cross"  -> an X whose round-cap TIPS sit `cross-margin` from each corner,
 //                 stroked with round caps. The two diagonals are placed
 //                 INDEPENDENTLY: a single `place` holding both lines would stack
 //                 them in normal flow, dropping the second diagonal a square down.
@@ -150,13 +150,18 @@
     )
   } else if shape == "cross" {
     let w = _resolve-square-dim(cross-w, sq, 15%)
-    let m = _resolve-square-dim(cross-margin, sq, 7%)
-    assert(2 * m < sq, message: "cross highlight: cross-margin too large for the square")
-    // Endpoints inset by `m` from each corner. (Round caps overshoot the geometric
-    // endpoint by ~w/2 — accepted for simplicity.)
+    let m = _resolve-square-dim(cross-margin, sq, 10%)
+    // `cross-margin` is the distance from each corner to the cross TIP (like
+    // board-n-pieces). Round caps extend w/2 along the diagonal, i.e. w/√8 per
+    // axis, so pull the geometric endpoints in by that offset to land the tip at
+    // exactly `m`. This gives the shorter, cleaner "×" (not a full-diagonal line).
+    let off = w / calc.sqrt(8)
+    let lo = m + off
+    let hi = sq - m - off
+    assert(lo < hi, message: "cross highlight: cross-margin (plus stroke) too large for the square")
     let str = stroke(paint: cross-col, thickness: w, cap: "round")
-    place(dx: dx, dy: dy, line(start: (m, sq - m), end: (sq - m, m), stroke: str))      // LL -> UR
-    place(dx: dx, dy: dy, line(start: (m, m), end: (sq - m, sq - m), stroke: str))      // UL -> LR
+    place(dx: dx, dy: dy, line(start: (lo, hi), end: (hi, lo), stroke: str))      // LL -> UR
+    place(dx: dx, dy: dy, line(start: (lo, lo), end: (hi, hi), stroke: str))      // UL -> LR
   } else {
     panic("highlight shape must be \"filled\", \"cross\", or \"circle\"; got " + repr(shape))
   }

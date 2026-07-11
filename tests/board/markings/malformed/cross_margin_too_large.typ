@@ -1,4 +1,4 @@
-// EXPECT: cross-margin too large for the square
+// EXPECT: cross-margin (plus stroke) too large for the square
 // A cross margin of >= 50% of the square leaves no span for the diagonals; hard
 // error rather than a degenerate / inverted cross.
 #import "/lib.typ": board

@@ -18,7 +18,8 @@ Then open the PDFs below and check the noted property. (The expected-*fail* test
 ## Board drawing
 
 - [ ] `board/highlight/highlight.pdf` — each **cross** is a complete X confined to
-      its own square (both diagonals overlap), inset ~7% from the corners; each
+      its own square (both diagonals overlap), the round-cap tips ~10% from the
+      corners (a short "×", not a full-diagonal line); each
       **circle** sits just inside its square border (small ~3% margin — it no
       longer touches the border) without spilling; filled squares sit under the
       pieces. Strokes are ~15% of the square. The **Proportional strokes** section

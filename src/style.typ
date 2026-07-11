@@ -87,7 +87,7 @@
   // (e.g. `10%` of the square), or an absolute length. See `_resolve-square-dim`.
   cross-width: auto,          // cross stroke width;   auto -> 15% of the square
   circle-width: auto,         // circle stroke width;  auto -> 15% of the square
-  cross-margin: auto,         // cross inset from each corner; auto -> 7% of the square
+  cross-margin: auto,         // corner-to-tip distance (cross length); auto -> 10% of the square
   circle-margin: auto,        // circle inset from the border; auto -> 3% of the square
   arrows: (),                 // array of arrows, each `(from, to, color)` e.g. ("f3","e5","G")
   arrow-color: default-highlight-base,  // default arrow color (opaque base)

@@ -24,7 +24,8 @@ convention a cross marks an EMPTY square, so the cross row uses empty squares
 (d4, f4, e3) while filled/circle sit on occupied ones (e4, e5, c4).
 
 // VISUAL REGRESSION CHECK: each cross must be a complete X CONFINED to its own
-// square (both diagonals overlap on d4/f4/e3), inset ~7% from the corners; each
+// square (both diagonals overlap on d4/f4/e3), the round-cap tips ~10% from the
+// corners (a short "×", not a full-diagonal line); each
 // circle sits just inside its square border (a small ~3% margin — it no longer
 // touches the border) without spilling over. Strokes are ~15% of the square.
 
@@ -76,7 +77,7 @@ opaque fill); a per-call override still wins on the right:
 = Proportional strokes (0.2.2)
 
 Same cross + circle + arrow at three square sizes. Strokes (~15%) and margins
-(cross ~7%, circle ~3%) scale with the square, so the marks read the same at every
+(cross tip ~10%, circle ~3%) scale with the square, so the marks read the same at every
 size — small boards no longer look heavy, large boards no longer look thin.
 
 #grid(columns: 3, column-gutter: 12pt, align: bottom + center,
