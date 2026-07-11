@@ -175,7 +175,8 @@ header must error with that message, any other must compile. Files/dirs prefixed
 - **Proportional markers**: cross / circle / arrow strokes — and the new
   `cross-margin` / `circle-margin` — scale with the square by default (stroke 15%,
   cross tip 10% from the corners, circle margin 3%), so marks read the same at any
-  board size.
+  board size. Default arrows are also more opaque now (35% transparency, was 85%),
+  so they no longer look faint.
   Each is settable per call or document-wide, as a ratio or an absolute length.
 - **Notation spacing**: move numbers render spaced by default ("1. e4 e5 2. Nf3";
   a forced Black move as "24... Nf6"). A new `spaced` option (document-settable via

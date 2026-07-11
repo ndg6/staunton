@@ -1454,7 +1454,7 @@ setters reject them), though their *styling* options can.
   [`cross-color` / `circle-color`], [red / green], [cross / circle stroke colors],
   [`cross-width` / `circle-width`], raw("auto"), [cross / circle stroke widths; `auto` → 15% of the square (a `ratio` or absolute length also work)],
   [`cross-margin` / `circle-margin`], raw("auto"), [cross corner-to-tip distance / circle inset; `auto` → 10% / 3% of the square (ratio / length accepted)],
-  [`arrow-color` / `arrow-transparency`], [green, `85%`], [default arrow color and its transparency],
+  [`arrow-color` / `arrow-transparency`], [green, `35%`], [default arrow color and its transparency],
   raw("arrow-width"), raw("auto"), [arrow shaft width; `auto` → 15% of the square (ratio / length accepted)],
   raw("check"), raw("false"), [in-check glow on the checked king (auto-located for standard positions)],
   [`check-color` / `check-square`], [red / `none`], [glow color; square to glow (`none` → auto-located)],

@@ -91,7 +91,7 @@
   circle-margin: auto,        // circle inset from the border; auto -> 3% of the square
   arrows: (),                 // array of arrows, each `(from, to, color)` e.g. ("f3","e5","G")
   arrow-color: default-highlight-base,  // default arrow color (opaque base)
-  arrow-transparency: 85%,    // applied to the default arrow color (more transparent than highlights)
+  arrow-transparency: 35%,    // applied to the default arrow color (thin lines need to stay clearly visible)
   arrow-width: auto,          // shaft width; auto -> 15% of the square (ratio / length also accepted)
   // In-check indicator. A radial glow (color -> transparent) on the
   // king that is in check, drawn under the piece. `check` gates it; `check-color`
