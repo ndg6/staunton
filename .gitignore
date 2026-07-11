@@ -32,3 +32,6 @@ CLAUDE.md
 
 # Per-developer local helpers (machine-specific / convenience, not shipped).
 scripts/install-local.sh
+
+# bench: regeneratable perf artifacts (huge timing traces, scratch PDFs)
+bench/out/
