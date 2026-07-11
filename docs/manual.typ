@@ -197,7 +197,7 @@
     #v(8pt)
     #link("https://github.com/ndg6/staunton")[#text(size: 11pt, fill: rgb("#555"), font: "DejaVu Sans Mono")[https://github.com/ndg6/staunton]]
     #v(8pt)
-    #text(size: 10pt, fill: rgb("#666"))[User manual · package version 0.2.1]
+    #text(size: 10pt, fill: rgb("#666"))[User manual · package version 0.2.2]
   ]
 ]
 
@@ -312,7 +312,7 @@ references*, and the *document-wide defaults*.
 manual is in scope:
 
 ```typ
-#import "@preview/staunton:0.2.1": *
+#import "@preview/staunton:0.2.2": *
 ```
 
 == How to read this manual
@@ -1594,7 +1594,7 @@ Everything else in `src/` (the position parser's internals, the SAN encoder, the
 renderer, the comment interpreter, the localization tables, …) is deliberately
 *not* re-exported from the package: those names are implementation details that
 may change between releases. If you truly need one, import it directly from its
-module — e.g. `#import "@preview/staunton:0.2.1/src/coords.typ": square-name` —
+module — e.g. `#import "@preview/staunton:0.2.2/src/coords.typ": square-name` —
 with the understanding that it carries no stability promise.
 
 == Tournament data

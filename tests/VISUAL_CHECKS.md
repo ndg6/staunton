@@ -195,7 +195,7 @@ These are not under `tests/out/`; build them separately.
       diagonally behind-right) above the title block, with **no** header, footer or
       page number. Rugged graphite look; the two pieces read as clearly separated.
       Below the tagline sits the repo link `https://github.com/ndg6/staunton`, then
-      the `User manual · package version 0.2.1` line.
+      the `User manual · package version 0.2.2` line.
       (`docs/img/cover-pawn.svg` is the single-pawn variant, kept as an alternate.)
 - [ ] `docs/manual.pdf` running chrome — on every page *after* the cover: header
       shows `staunton` (left) and the current level-1 chapter title (right); footer
