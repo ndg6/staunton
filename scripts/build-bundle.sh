@@ -42,6 +42,7 @@ git archive --format=tar HEAD | tar -x -C "$DEST"
 # (the `exclude` globs from typst.toml, plus repo-only dotfiles)
 EXCLUDE="
 tests
+bench
 docs
 scripts
 prompts
@@ -65,7 +66,7 @@ for required in typst.toml lib.typ LICENSE LICENSE-PIECES README.md \
   [ -e "$DEST/$required" ] || { echo "  MISSING: $required" >&2; fail=1; }
 done
 # these must NOT be present
-for forbidden in tests docs prompts CLAUDE.md \
+for forbidden in tests bench docs prompts CLAUDE.md \
                  src/assets/piece_sets/_incomplete \
                  src/assets/piece_sets/staunty; do
   [ -e "$DEST/$forbidden" ] && { echo "  LEAKED:  $forbidden" >&2; fail=1; } || true

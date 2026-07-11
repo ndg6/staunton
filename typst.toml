@@ -15,6 +15,7 @@ compiler = "0.15.0"
 # absent from a clean checkout; they are listed here too as belt-and-suspenders.)
 exclude = [
   "tests",
+  "bench",
   "docs",
   "scripts",
   "prompts",
