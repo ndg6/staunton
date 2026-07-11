@@ -130,8 +130,8 @@ Then open the PDFs below and check the noted property. (The expected-*fail* test
       were proposed by Claude and need a native/expert eye** — check wording,
       grammar, and the short column abbreviations. (Tie-break labels Bh/SB/BP are
       left in their internationally standard form on purpose.)
-- [ ] `pgn/good/variation_move.pdf`, `nested_variation.pdf` — the board shows the
-      correct (nested) variation position.
+- [ ] `pgn/good/variation_move.pdf` — the two boards show the correct one-step and
+      nested variation positions (side by side).
 - [ ] `pgn/chess960/frc_game.pdf` — the Chess960 start board (king on the f-file,
       knights on a/g, bishops on c/d, rooks on b/h) draws correctly, and the
       diagram after `2.O-O O-O` shows **both** kings on g-files with their rooks on

@@ -187,3 +187,19 @@ Combined with the glow, on the mate — a `!` badge on f7 and the auto-located k
 // GAME's drawn annotations are rendered (diagram-after / notation), not on a bare
 // `chess-board`, so it has no isolated board to show here — it is asserted settable
 // above and eyeballed in tests/pgn/annotations/.
+
+// --- document-order inheritance (machine-checkable) ------------------------
+// A default set through the bucket IS what a later bare board reads; `board()`
+// resolves exactly `default-board-style + board-style-state.get()`, so asserting
+// that expression is faithful. A per-call arg overrides only for its own call and
+// never writes to this state (by construction: the setters update state, `board()`
+// merges per-call args on top at call time). This is the semantics the retired
+// render-only `inheritance.typ` used to show visually.
+#import "/src/style.typ": board-style-state
+#set-board-defaults(..base)
+#set-board-defaults(piece-set: "merida", light: rgb("#eeeed2"))
+#context {
+  let resolved = default-board-style + board-style-state.get()
+  assert(resolved.piece-set == "merida", message: "document default piece-set is inherited")
+  assert(resolved.light == rgb("#eeeed2"), message: "document default light is inherited")
+}
