@@ -1,11 +1,10 @@
 # staunton
 
-**Publish chess with [Typst](https://typst.app).** staunton turns games and
-positions into publication-quality **diagrams**, **move notation**, and
-**tournament tables** — all referenceable `#figure`s. A pure-Typst legal-move
-engine reads **FEN** and **PGN**, and everything is localized to seven languages.
-It does what a board-drawing package can't: notation, tables, annotations,
-references and outlines.
+**Publish chess with [Typst](https://typst.app).** staunton goes beyond 
+board drawings and turns games and positions into publication-quality
+**diagrams**, **move notation**, and **tournament tables** — all referenceable `#figure`s.
+A move generator in pure Typst reads **FEN** and **PGN**, and everything is
+localized to seven languages.
 
 ## A game, published
 
