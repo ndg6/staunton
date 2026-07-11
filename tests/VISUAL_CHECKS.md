@@ -33,7 +33,11 @@ Then open the PDFs below and check the noted property. (The expected-*fail* test
       `onsquare_fullwidth.pdf` — files/ranks in the right gutter/corner, themed
       bands correct, labels legible and not clashing with pieces.
 - [ ] `board/orientation/flip.pdf` — a1 in the correct corner both ways; labels
-      and any marks flip with the board.
+      flip with the board. Second section: the highlights (filled e4 / circle e5 /
+      cross d5) stay on their named squares (mirrored screen position), and the
+      arrows flip too — the blue `e2→e4` arrow points **up** by default and **down**
+      when flipped (tip always at e4), and `f3→e5` / `c4→f7` keep their tips at
+      e5 / f7 in both orientations.
 - [ ] `board/size/sizes.pdf` — cells stay square at every size; nothing clipped.
 - [ ] `board/grid/grid.pdf` — 1pt grid lines sit between squares at every size.
 - [ ] `board/colors/colors.pdf` — light/dark themes render as intended.
