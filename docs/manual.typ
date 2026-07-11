@@ -722,6 +722,14 @@ the figure *caption* below it.
 )
 ```)
 
+*Automatic captions.* Omit `caption:` and staunton supplies a source-appropriate
+default. A *game* (`diagram-after`) knows the move just played, so its caption
+names it — `Position after 23... Nf6`. A bare *FEN* or *position* is only a
+snapshot, with no move history, so it can state only whose turn it is —
+`White to move` / `Black to move`. A manual squares dict has neither and gets no
+default caption. Pass your own `caption:` to override, or `caption: none` to drop
+it.
+
 `chess-diagram` is the standard-chess sugar over the generic `diagram`; both take
 the same source and overrides as `board`. Extra named arguments are forwarded to
 `figure` (e.g. `placement: top`).
