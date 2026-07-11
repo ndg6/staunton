@@ -87,7 +87,17 @@ pushed.
    it self-verifies required files are present and repo-only files didn't leak).
 5. Copy that `<name>/<version>` directory into a fork of
    [`typst/packages`](https://github.com/typst/packages) under
-   `packages/preview/` and open a PR.
+   `packages/preview/` and open a PR (prepared in the local `typst/packages` fork
+   clone that has `origin` = your fork and `upstream` = `typst/packages`).
+   - **Title:** `staunton:X.Y.Z` (the repo's `name:version` convention).
+   - **Body: use the official PR template** (`.github/pull_request_template.md`) —
+     do **not** hand-write a custom body (we did for 0.2.0/0.2.1; the maintainers
+     expect the template). For an *update* release, fill it out as the template
+     itself instructs: check `[x] an update for a package`, write a short
+     `Description:` of the package + what changed, and **delete** the
+     new-submission checklist and the template-license box (both are for new
+     packages / templates only). `gh pr create --repo typst/packages --base main`
+     picks up the template into the editor; keep the parts above and drop the rest.
 
 **Order:** land on GitHub first, then submit to Universe. **Never** push to GitHub
 or submit to Universe without explicit, per-time approval.
