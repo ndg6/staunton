@@ -1,94 +1,114 @@
 # staunton
 
-A **chess publishing** toolkit for [Typst](https://typst.app): render boards and
-pieces, build diagrams from **FEN** or **PGN** (with a pure-Typst legal-move
-engine), write localized move **notation**, and generate **tournament tables** —
-all as referenceable `#figure`s, with ready-made **outlines** (lists of diagrams
-and tables).
+**Publish chess with [Typst](https://typst.app).** staunton turns games and
+positions into publication-quality **diagrams**, **move notation**, and
+**tournament tables** — all referenceable `#figure`s. A pure-Typst legal-move
+engine reads **FEN** and **PGN**, and everything is localized to seven languages.
+It does what a board-drawing package can't: notation, tables, annotations,
+references and outlines.
 
-![Gallery of staunton output: chess boards and diagrams, localized move notation, and tournament tables](https://raw.githubusercontent.com/ndg6/staunton/v0.2.1/docs/img/gallery.png)
+## A game, published
 
-## Features
-
-- **Boards & diagrams** from a FEN string, a `position(..)` object, or a manual
-  squares dict — captioned `#figure`s with automatic game-info lines.
-- **Styling**: themes, six label placements, flip, piece sets, grid, square
-  **highlights** (filled / cross / circle) and **arrows**; size-adaptive layout.
-- **Move markings**: an in-check glow and move-quality badges (`!`, `?`, `!!`, …)
-  on diagrams.
-- **Bring-your-own & fairy pieces**: render any downloaded set through a
-  `piece-set` loader (`named-piece-set` / `svg-piece-set`), and add non-standard
-  kinds and whole variants (`define-variant`, `with-fallback`) for mixed boards.
-- **PGN**: parse multi-game files, navigate the mainline and (nested) variations
-  by locator, play "what-if" lines, export FEN. Lazy parsing stays fast on large
-  files.
-- **Chess960 / Fischer Random**: the same board, engine, PGN pipeline and notation
-  handle 960 — X-FEN castling, the FRC PGN tags (`Variant` / `SetUp` / `FEN` /
-  `FRCPosition`), and start positions by Scharnagl number.
-- **Notation**: numbered movetext with **variations** (inline or indented),
-  figurine glyphs, NAGs, comments, embedded diagrams, and **localized piece
-  letters**.
-- **Annotate & build**: add NAGs, comments and (nested) **variations** to a game
-  programmatically — without touching the PGN — then render it like any parsed one.
-- **Tournament tables**: standings, cross-tables, and progress (player or team),
-  with Buchholz / Sonneborn-Berger tie-breaks.
-- **Internationalization**: one document language drives supplements, outline
-  titles, and notation (en, de, es, fr, it, pt, ru; per-call overridable).
-- **References & outlines**: diagrams and tables are figures with distinct kinds,
-  so `@label` and dedicated "list of diagrams / tables" outlines just work.
-- **HTML export (limited)**: notation, tables, outlines, references and captioned
-  figures export to native HTML; boards and diagrams embed as inline SVG. Typst's
-  own HTML export is still experimental, so parity with PDF is partial.
-
-## Quick start
+Install the package, parse a PGN, and drop a captioned diagram of any position —
+the players, the year, and the move just played are filled in automatically:
 
 ```typ
-#import "@preview/staunton:0.2.1": chess-diagram, position, starting-fen
+#import "@preview/staunton:0.2.1": parse-pgn, diagram-after, chess-notation, standings-table
+
+#let opera = parse-pgn(```
+[White "Morphy"] [Black "Allies"] [Date "1858"]
+1. e4 e5 2. Nf3 d6 3. d4 Bg4 4. dxe5 Bxf3 5. Qxf3 dxe5 6. Bc4 Nf6 7. Qb3 Qe7
+8. Nc3 c6 9. Bg5 b5 10. Nxb5 cxb5 11. Bxb5+ Nbd7 12. O-O-O Rd8 13. Rxd7 Rxd7
+14. Rd1 Qe6 15. Bxd7+ Nxd7 16. Qb8+ Nxb8 17. Rd8# 1-0
+```).first()
+
+// The final position: roster → info line, last move → caption, check → king glow.
+#diagram-after(opera, "17w", check: true)
 ```
 
-From a FEN string (this one is 1.e4 c5 2.Nf3):
+![Morphy – Allies (1858): the final mate, the black king glowing, captioned "Position after 17. Rd8#"](https://raw.githubusercontent.com/ndg6/staunton/v0.2.1/docs/img/showcase-diagram.png)
+
+## Move notation
+
+Numbered movetext with figurine glyphs, inline **variations**, NAGs and comments,
+localized to the document language — output no board-only package produces:
+
+```typ
+#let g = parse-pgn("1. e4 e5 2. Nf3 Nc6 3. Bb5 a6 4. Ba4 Nf6 5. O-O Be7 (5... Nxe4!? 6. d4 b5) 6. Re1 b5 7. Bb3 d6 *").first()
+
+#chess-notation(g, figurine: true, variations: true, nags: true)
+```
+
+![Figurine Ruy Lopez notation with an inline variation and a “!?” annotation](https://raw.githubusercontent.com/ndg6/staunton/v0.2.1/docs/img/showcase-notation.png)
+
+## Tournament tables
+
+Standings, cross-tables and progress tables straight from the games' result tags,
+with Buchholz / Sonneborn-Berger tie-breaks:
+
+```typ
+#let games = parse-pgn(```
+[White "Carlsen"][Black "Nakamura"][Result "1-0"][Round "1"] 1-0
+[White "Caruana"][Black "Nepomniachtchi"][Result "1/2-1/2"][Round "1"] 1/2-1/2
+[White "Carlsen"][Black "Caruana"][Result "1/2-1/2"][Round "2"] 1/2-1/2
+[White "Nepomniachtchi"][Black "Nakamura"][Result "1-0"][Round "2"] 1-0
+[White "Carlsen"][Black "Nepomniachtchi"][Result "1-0"][Round "3"] 1-0
+[White "Nakamura"][Black "Caruana"][Result "0-1"][Round "3"] 0-1
+```)
+
+#standings-table(games, caption: [Final standings])
+```
+
+![A final-standings table: rank, player, played, +/=/−, points, Buchholz and Sonneborn-Berger tie-breaks](https://raw.githubusercontent.com/ndg6/staunton/v0.2.1/docs/img/showcase-table.png)
+
+## Annotated diagrams
+
+`%cal` / `%csl` drawing commands in a move's comment become arrows and highlights,
+and a `!` / `?` grade becomes a move-quality badge — composited onto the board:
+
+```typ
+#let g = parse-pgn("1. e4 e5 2. Nf3! {[%cal Gf3e5,Rf1c4][%csl Ge5]} Nc6 *").first()
+
+#diagram-after(g, "2w", annotations: true, move-quality: true)
+```
+
+![Board after 2.Nf3 with a green and a red arrow, a highlighted square, and a blue “!” badge](https://raw.githubusercontent.com/ndg6/staunton/v0.2.1/docs/img/showcase-annotations.png)
+
+## …and the basics
+
+A **bare `board`** for an inline or decorative position; a **`chess-diagram`**
+whenever you want it captioned, counted, `@`-referenceable and listed by an
+outline. Sources are the same everywhere — a FEN string, a `position(..)` object,
+or a squares dict:
 
 ```typ
 #chess-diagram("rnbqkbnr/pp1ppppp/8/2p5/4P3/5N2/PPPP1PPP/RNBQKB1R b KQkq - 1 2")
 ```
 
-![A chess diagram of the position after 1.e4 c5 2.Nf3, with a "Black to move" caption](https://raw.githubusercontent.com/ndg6/staunton/v0.2.1/docs/img/quickstart-1.png)
+![A chess diagram of the position after 1.e4 c5 2.Nf3, captioned "Black to move"](https://raw.githubusercontent.com/ndg6/staunton/v0.2.1/docs/img/quickstart-1.png)
 
-The starting position, with PGN-style metadata for the caption:
+## Features
 
-```typ
-#chess-diagram(starting-fen, white: [Carlsen], black: [Nepo], event: [Dubai], year: 2021)
-```
-
-![The starting position with a bold "Carlsen – Nepo (2021)" info line above and a "White to move" caption](https://raw.githubusercontent.com/ndg6/staunton/v0.2.1/docs/img/quickstart-2.png)
-
-Manual placement: a squares dict (square → piece). Square-name case is ignored;
-pieces may be long names, abbreviations, or bare letters.
-
-```typ
-#chess-diagram(position((
-  e1: (kind: "king", color: "white"),
-  e8: (kind: "king", color: "black"),
-  e4: "P",                                // bare letter: upper = white pawn
-)), labels: false)
-```
-
-![A near-empty board with the two kings on e1 and e8 and a white pawn on e4, labels off and no caption](https://raw.githubusercontent.com/ndg6/staunton/v0.2.1/docs/img/quickstart-3.png)
-
-And from a game:
-
-```typ
-#import "@preview/staunton:0.2.1": parse-pgn, diagram-after, mainline
-
-#let game = parse-pgn(```
-[White "Morphy"] [Black "NN"] [Result "1-0"]
-1. e4 e5 2. Nf3 d6 3. d4 *
-```).first()
-
-#diagram-after(game, "3w")   // a diagram of the position after White's 3rd move
-```
-
-![A chess diagram of the position after 3.d4 in a Morphy game, with a "Morphy – NN" info line and a "Position after 3. d4" caption](https://raw.githubusercontent.com/ndg6/staunton/v0.2.1/docs/img/quickstart-4.png)
+- **PGN engine** — parse multi-game files, navigate the mainline and (nested)
+  **variations** by locator, play "what-if" lines, and export FEN, all on a
+  pure-Typst legal-move engine (lazy parsing stays fast on large files).
+- **Notation** — numbered movetext, inline/indented variations, figurine glyphs,
+  NAGs, comments, and diagrams **embedded at markers**; localized piece letters.
+- **Tournament tables** — standings, cross-tables and progress (player or team),
+  with Buchholz / Sonneborn-Berger tie-breaks.
+- **Annotations & markings** — `%cal` / `%csl` arrows and highlights from PGN, an
+  in-check glow, and move-quality badges; add NAGs / comments / variations to a
+  game programmatically, then render it like any parsed one.
+- **Styling** — themes, six label placements, flip, piece sets, grid; proportional
+  highlights (filled / cross / circle) and arrows; size-adaptive layout.
+- **Bring-your-own & fairy pieces** — any downloaded set via a `piece-set` loader
+  (`named-piece-set` / `svg-piece-set`), plus non-standard kinds and whole variants
+  (`define-variant`, `with-fallback`).
+- **Chess960 / Fischer Random** — board, engine, PGN pipeline and notation all
+  handle 960 (X-FEN castling, the FRC PGN tags, Scharnagl start numbers).
+- **Publishing niceties** — everything is a `#figure`: `@label` cross-references,
+  dedicated **outlines** (lists of diagrams / tables), localization (en, de, es,
+  fr, it, pt, ru), and limited **HTML export**.
 
 ## Documentation
 
@@ -170,7 +190,11 @@ header must error with that message, any other must compile. Files/dirs prefixed
 
 ## Changelog
 
-### 0.2.2 (unreleased)
+<!-- RELEASE NOTE (not user-facing): the top changelog section is the version
+     currently in development. Keep its heading version-only (e.g. "### 0.2.2") —
+     never add "(unreleased)" or similar to user-visible text. -->
+
+### 0.2.2
 
 - **Proportional markers**: cross / circle / arrow strokes — and the new
   `cross-margin` / `circle-margin` — scale with the square by default (stroke 15%,

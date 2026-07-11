@@ -41,7 +41,7 @@ Then update the version string **everywhere it appears** (keep them in sync):
 | File | What |
 |------|------|
 | [`typst.toml`](typst.toml) | `version` — authoritative |
-| [`README.md`](README.md) | the `@preview/staunton:X.Y.Z` import lines; the `vX.Y.Z` tag URLs (gallery image, manual/showcase source links); and the **pinned manual download link** `releases/download/vX.Y.Z/manual.pdf` |
+| [`README.md`](README.md) | the `@preview/staunton:X.Y.Z` import lines; the `vX.Y.Z` tag URLs (showcase/quickstart images, manual/showcase source links); the **pinned manual download link** `releases/download/vX.Y.Z/manual.pdf`; and the top **changelog heading** — make it version-only (`### X.Y.Z`), **never** `(unreleased)` in user-facing text (see the HTML note above that heading) |
 | [`docs/manual.typ`](docs/manual.typ) | the `@preview/staunton:X.Y.Z` import snippets **and** the title-page "package version" line |
 | [`tests/VISUAL_CHECKS.md`](tests/VISUAL_CHECKS.md) | the cover-string eyeball item that mirrors the "package version" line |
 
@@ -57,16 +57,16 @@ markdown — it does **not** execute the code fences, so only real `![]()` image
 display). Each lives under `docs/img/` with its Typst source beside it and the
 regen command in the source header:
 
-- `gallery.typ` → `gallery.png` (the top banner);
-- `quickstart-1.typ` … `quickstart-4.typ` → one image per Quick-Start example
-  (FEN diagram, start position with metadata, manual placement, diagram from a
-  game).
+- `showcase-diagram.typ` / `showcase-notation.typ` / `showcase-table.typ` /
+  `showcase-annotations.typ` → the four showcase sections (a game diagram, move
+  notation, a standings table, an annotated diagram);
+- `quickstart-1.typ` → the "…and the basics" FEN diagram.
 
-If you change a Quick-Start code block (or the gallery), regenerate the matching
-PNG (`typst compile --root . --format png --ppi 160 docs/img/<name>.typ docs/img/<name>.png`)
-and commit it. These sheets are **not** part of `tests/run.sh`, so nothing else
-will flag a drift between the code shown and the image. The image URLs are pinned
-to the release tag (like the manual link), so they only resolve once `vX.Y.Z` is
+If you change a showcase code block, regenerate the matching PNG (`typst compile
+--root . --format png --ppi 160 docs/img/<name>.typ docs/img/<name>.png`) and
+commit it. These sheets are **not** part of `tests/run.sh`, so nothing else will
+flag a drift between the code shown and the image. The image URLs are pinned to
+the release tag (like the manual link), so they only resolve once `vX.Y.Z` is
 pushed.
 
 ## Publishing to Universe (upload-gated — get explicit approval each time)
