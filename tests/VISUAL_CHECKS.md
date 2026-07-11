@@ -6,10 +6,12 @@ that is wrong-but-valid (e.g. a highlight on the wrong square) passes silently.
 This list is the manual eyeball pass for those sheets.
 
 First render everything (expected-pass tests write their PDF, mirrored under
-`tests/out/`):
+`tests/out/`). Use `--system-fonts`: the default run passes `--ignore-system-fonts`
+for speed, which draws these sheets with fallback fonts — the eyeball pass needs
+the real ones:
 
 ```sh
-bash tests/run.sh
+bash tests/run.sh --system-fonts
 ```
 
 Then open the PDFs below and check the noted property. (The expected-*fail* tests

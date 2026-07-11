@@ -71,7 +71,10 @@ pushed.
 
 ## Publishing to Universe (upload-gated — get explicit approval each time)
 
-1. Green suite: `bash tests/run.sh`.
+1. Green suite: `bash tests/run.sh --system-fonts`. The `--system-fonts` flag is
+   required at the gate: the default run passes `--ignore-system-fonts` for speed,
+   which renders the kept visual sheets with fallback fonts — the gate must use the
+   real fonts so those sheets are correct for the eyeball pass (`tests/VISUAL_CHECKS.md`).
 2. Commit the version bump and land it on GitHub.
 3. Publish the GitHub Release, attaching the compiled manual as an asset (the PDF
    is a build artifact, gitignored — it is *not* committed). The README download

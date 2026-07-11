@@ -170,7 +170,14 @@ tests/              test suite (bash tests/run.sh)   scripts/  release bundle bu
 
 ```sh
 bash tests/run.sh        # compiles pass-cases; asserts fail-cases error as expected
+bash tests/run.sh -j1    # force serial (default: one worker per CPU)
+bash tests/run.sh --system-fonts   # real fonts (slower) — the release gate
 ```
+
+Test files are independent compiles, so the runner dispatches them across one
+worker per CPU and skips the system-font scan by default (`--ignore-system-fonts`)
+— together a multiple-times-faster suite. Fonts affect only rendered glyphs, never
+pass/fail, so the release gate re-runs with `--system-fonts` for the visual eyeball.
 
 The runner walks every `.typ` under `tests/`; a file with a `// EXPECT: <substr>`
 header must error with that message, any other must compile. Files/dirs prefixed
