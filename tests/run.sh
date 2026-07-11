@@ -63,6 +63,13 @@ durations=()          # "<ms>\t<file>" lines, for the slowest-tests summary
 # Milliseconds since epoch (coreutils date supports %N / %3N under Git Bash).
 now_ms() { date +%s%3N; }
 
+# Human-readable duration from milliseconds: "1m 07s" or "4.2s".
+fmt_ms() { # $1 = ms
+  local ms=$1 s=$(( $1 / 1000 ))
+  if [ "$s" -ge 60 ]; then printf '%dm %02ds' $((s / 60)) $((s % 60))
+  else printf '%d.%01ds' "$s" $(( (ms % 1000) / 100 )); fi
+}
+
 # Record a test's compile time and return the inline annotation (if timing on).
 note_time() { # $1 = ms, $2 = file
   compile_ms=$((compile_ms + $1))
@@ -241,7 +248,8 @@ fi
 echo "----------------------------------------"
 total=$((pass + fail))
 printf 'passed=%d  failed=%d  (%d tests)\n' "$pass" "$fail" "$total"
-printf 'compile time=%d ms   wall time=%d ms\n' "$compile_ms" "$((wall1 - wall0))"
+wall_ms=$((wall1 - wall0))
+printf 'execution time: %s  (wall %d ms; compile %d ms)\n' "$(fmt_ms "$wall_ms")" "$wall_ms" "$compile_ms"
 if [ $FOCUSED -eq 1 ]; then
   printf 'FOCUSED run: %s  (examples skipped; run without a PATH for the full gate)\n' "${FILTERS[*]}"
 fi
