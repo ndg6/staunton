@@ -10,7 +10,7 @@
 // A move that matches more than one is ambiguous -> hard error.
 // ===========================================================================
 
-#import "coords.typ": parse-square, file-letters, rank-digits
+#import "coords.typ": parse-square, square-name, file-letters, rank-digits
 #import "engine.typ": legal-moves, apply, in-check
 #import "fen.typ": parse-fen, starting-fen
 
@@ -105,6 +105,73 @@
   assert(cand.len() != 0, message: "illegal or unresolvable move \"" + san + "\" for " + color)
   assert(cand.len() == 1, message: "ambiguous move \"" + san + "\" matches " + str(cand.len()) + " legal moves")
   cand.first()
+}
+
+// Invert `_piece-map` (name -> SAN letter), e.g. "knight" -> "N".
+#let _piece-letter(piece) = {
+  for (letter, name) in _piece-map {
+    if name == piece { return letter }
+  }
+  panic("move-to-san: no SAN letter for piece kind " + repr(piece))
+}
+
+/// Encode a legal move as canonical English SAN, the inverse of `san-to-move`.
+///
+/// - position (dictionary): the position BEFORE the move.
+/// - move (dictionary): a move dict as produced by `legal-moves(position)`.
+/// -> str
+#let move-to-san(position, move) = {
+  let color = if position.turn == "w" { "white" } else { "black" }
+  let legal = legal-moves(position)
+  let matches(m) = (
+    m.from == move.from and m.to == move.to
+      and m.kind == move.kind and m.promotion == move.promotion
+  )
+  assert(
+    legal.filter(matches).len() == 1,
+    message: "move-to-san: not a legal move for " + color + ": " + repr(move),
+  )
+
+  let san = ""
+  if move.kind == "castle-k" {
+    san = "O-O"
+  } else if move.kind == "castle-q" {
+    san = "O-O-O"
+  } else if move.piece == "pawn" {
+    san = ""
+    if move.capture != none {
+      san += square-name(move.from.at(0), move.from.at(1)).slice(0, 1) + "x"
+    }
+    san += square-name(move.to.at(0), move.to.at(1))
+    if move.kind == "promotion" {
+      san += "=" + _piece-letter(move.promotion).clusters().at(0)
+    }
+  } else {
+    let letter = _piece-letter(move.piece)
+    let others = legal.filter(m =>
+      m.piece == move.piece and m.to == move.to and m.from != move.from
+    )
+    let disambig = ""
+    if others.len() > 0 {
+      let same-file = others.filter(m => m.from.at(0) == move.from.at(0)).len() > 0
+      let same-rank = others.filter(m => m.from.at(1) == move.from.at(1)).len() > 0
+      if not same-file {
+        disambig = file-letters.at(move.from.at(0))
+      } else if not same-rank {
+        disambig = rank-digits.at(move.from.at(1))
+      } else {
+        disambig = file-letters.at(move.from.at(0)) + rank-digits.at(move.from.at(1))
+      }
+    }
+    san = letter + disambig + (if move.capture != none { "x" } else { "" }) + square-name(move.to.at(0), move.to.at(1))
+  }
+
+  let opponent = if color == "white" { "black" } else { "white" }
+  let next = apply(position, move)
+  if in-check(next, opponent) {
+    san += if legal-moves(next).len() == 0 { "#" } else { "+" }
+  }
+  san
 }
 
 /// Resolve a SAN string and return the resulting position — a convenience wrapper

@@ -23,7 +23,7 @@
 #import "src/fen.typ": parse-fen, starting-fen, position-fen as _position-fen
 #import "src/chess960.typ": chess960-start-fen
 #import "src/engine.typ": legal-moves, apply, in-check, checked-king-square as _checked-king-square
-#import "src/san.typ": chess-moves
+#import "src/san.typ": chess-moves, move-to-san
 #import "src/pgn.typ": parse-pgn, movetext
 #import "src/game.typ": mainline, position-after, game-result, move-san, move-node, move-quality-mark as _move-quality-mark, with-nags, with-comments, with-variation, game-start, game-variant
 // The text core lives in src/notation.typ; lib defines `notation` /

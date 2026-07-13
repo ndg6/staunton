@@ -881,6 +881,22 @@ game: it carries no move history, roster or PGN — for those, parse a game
 )
 ```)
 
+== Naming Moves as SAN<naming-moves-san>
+
+`chess-moves` plays SAN onto a position; `move-to-san(position, move)` runs the
+engine the other way. Given a position and a concrete move dict — one produced
+by `legal-moves` or `san-to-move` — it returns canonical English SAN: minimal
+PGN-standard disambiguation, en passant written as a plain capture, side-based
+castling (Chess960-safe), and the `+`/`#` suffixes. An illegal move dict is a
+hard error. This is what lets *computed* moves be *named* — a legal-move
+listing, a puzzle solution built move by move, or movetext assembled without a
+PGN in hand:
+
+#example(```typ
+#let pos = chess-moves(none, "1. e4 e5 2. Nf3")
+#raw(legal-moves(pos).map(m => move-to-san(pos, m)).join(", "))
+```, stacked: true)
+
 == Notation Output
 
 For chess publications, notational output of the move text is as important as showing 
@@ -1609,11 +1625,13 @@ you can lay it out yourself.
 
 == Engine
 Generate and apply moves, or test for check — for puzzles, analysis, or
-conditional rendering.
+conditional rendering. `move-to-san` names a move dict as canonical SAN (see
+#link(<naming-moves-san>)[Naming Moves as SAN]).
 #show-fns((
   ("/src/engine.typ", "legal-moves"),
   ("/src/engine.typ", "apply"),
   ("/src/engine.typ", "in-check"),
+  ("/src/san.typ", "move-to-san"),
 ))
 
 == Pieces and coordinates
