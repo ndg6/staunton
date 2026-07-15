@@ -34,9 +34,34 @@ Artifacts land in `bench/out/` (gitignored — regeneratable, and traces are hug
   replay legally in Staunton.
 - `spassky_fischer.typ` — realistic 9-game bulletin (parse + replay + notation +
   drawing); the end-to-end workload.
+- `realworld_bulletin.typ` — diagram-DENSE workload (prompt 37): three long
+  games (216/217/160 plies) with a diagram every 8 plies → ~75 distinct
+  diagrams. Drives the second document-level differential in `run-bench.sh`;
+  the "real document with many diagrams" target for drawing optimisations.
 - `trace_one.typ` — single game, the tractable `--timings` target.
+
+## Measurement discipline (read before trusting a delta)
+
+Absolute ms on this box are noisy (see prompt 32 §7). Two rules keep a
+before/after comparison honest:
+
+1. **Take the min of several repeats** (`-k`), and compare runs captured
+   back-to-back, not across sessions — background load drifts.
+2. **Use an unaffected control as a live noise gauge.** Pick a measurement the
+   change *cannot* affect and watch how much IT drifts between the two trees.
+   Example (prompt 37, evaluating an assert-message optimisation): the
+   `notation-only` twin draws no boards, so a board-side change can't touch it —
+   yet it drifted +7% between runs, which is *larger* than the ~single-digit-%
+   effect being measured. Verdict: the box wasn't quiet enough to resolve the
+   signal, and the one low sample that looked like a win was noise. If your
+   control drifts as much as your effect, **do not report the delta** — quiet
+   the box or raise `-k` until the control is stable, and never treat a single
+   low reading as a win.
 
 ## Findings
 
-See `../prompts/llm_discussions/prompt32_perf_wasm_findings.md` for the Phase 0
-results and the WASM decision-gate recommendation.
+- Phase 0 (where the time goes; WASM verdict):
+  `../prompts/llm_discussions/archive/prompt32_perf_wasm_findings.md`.
+- Drawing optimisations A+C+D (memoised checker, fast square parsing, gated
+  in-check) and the B/E/F verdicts:
+  `../prompts/llm_discussions/prompt37_drawing_perf_discussion.md`.
