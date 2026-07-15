@@ -36,7 +36,7 @@
 // in, so a wrapper here would resolve relative to this library, not your
 // document. Read in your own file instead:  parse-pgn(read("game.pgn")).
 #import "src/style.typ": (
-  default-style, style-keys, set-chess-defaults, set-piece-set, chess-style,
+  default-style, style-state, style-keys, set-chess-defaults, set-piece-set, chess-style,
   default-board-style, default-diagram-style, board-style-keys, diagram-style-keys,
   board-non-default-keys,
   diagram-style-state, set-board-defaults, set-diagram-defaults,
@@ -215,7 +215,16 @@
   } else if type(source) == dictionary and "squares" in source {
     (squares: source.squares, cols: source.at("cols", default: 8), rows: source.at("rows", default: 8))
   } else if type(source) == dictionary {
-    (squares: source, cols: 8, rows: 8)
+    // Bare squares dict: keys are USER input (a documented `source` form), so
+    // validate + canonicalise them here, once per board -- `parse-square`
+    // restores the trim / case-fold / bounds-check that the fast (unvalidated)
+    // `_square-index` used by the piece-drawing hot loop relies on upstream.
+    let sq = (:)
+    for (name, piece) in source {
+      let p = parse-square(name)
+      sq.insert(_square-name(p.col, p.row), piece)
+    }
+    (squares: sq, cols: 8, rows: 8)
   } else {
     panic("board(): source must be a FEN string, a position, or a squares dict")
   }
@@ -245,16 +254,25 @@
 // auto-fill. `ov` is the resolved override dict. This is the internal seam that
 // lets `diagram-after` inject the move-quality badge (which only it may do — see
 // the public `board` guard below), while `board` itself forbids that key.
-#let _board-internal(source, flip, ov) = {
+#let _board-internal(source, flip, ov) = context {
   let b = _to-board(source)
+  // Local (re)binding: mutating the captured `ov` parameter directly is not
+  // allowed inside a `context` block, so shadow it with a local copy we can
+  // still `.insert()` into below.
+  let ov = ov
   // In-check auto-fill: locate the side-to-move king in check and pass
   // it as `check-square`, unless the caller set one. Computed only for analyzable
-  // positions; the glow itself is still gated by the `check` style switch.
+  // positions; the glow itself is still gated by the `check` style switch -- so
+  // skip the (attack-ray) detection work entirely unless the resolved `check`
+  // flag (per-call override ⊕ document default ⊕ built-in default) is true.
   if "check-square" not in ov {
-    let pos = _analyzable-position(source)
-    if pos != none {
-      let cs = _checked-king-square(pos)
-      if cs != none { ov.insert("check-square", cs) }
+    let check-on = ov.at("check", default: style-state.get().at("check", default: default-style.check))
+    if check-on {
+      let pos = _analyzable-position(source)
+      if pos != none {
+        let cs = _checked-king-square(pos)
+        if cs != none { ov.insert("check-square", cs) }
+      }
     }
   }
   // Auto-seed the glyph fallback from a custom (fairy) variant's `glyphs:` map, so
