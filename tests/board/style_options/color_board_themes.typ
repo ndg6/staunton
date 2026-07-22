@@ -26,10 +26,19 @@
 #assert.eq(builtin-color-themes.at("staunton-default"),
   (light: default-board-style.light, dark: default-board-style.dark),
   message: "staunton-default color theme must equal the factory board colors")
-#assert.eq(builtin-color-themes.keys().sorted(), ("dutch-gray", "staunton-default"),
-  message: "exactly two built-in color themes are expected")
-#assert.eq(builtin-board-themes.keys().sorted(), ("dutch-gray", "staunton-default"),
-  message: "exactly two built-in board themes are expected")
+// PROPERTY, not an exact count (the registry grows over time -- phase 2b took it
+// from 2 to 11 built-ins): the two registries must share the same key set, and
+// the two "anchor" themes must always be present.
+#assert.eq(builtin-color-themes.keys().sorted(), builtin-board-themes.keys().sorted(),
+  message: "the color-theme and board-theme registries must define the exact same set of names")
+#assert(builtin-color-themes.keys().contains("staunton-default"),
+  message: "staunton-default must exist as a built-in color theme")
+#assert(builtin-color-themes.keys().contains("dutch-gray"),
+  message: "dutch-gray must exist as a built-in color theme")
+#assert(builtin-board-themes.keys().contains("staunton-default"),
+  message: "staunton-default must exist as a built-in board theme")
+#assert(builtin-board-themes.keys().contains("dutch-gray"),
+  message: "dutch-gray must exist as a built-in board theme")
 #assert.eq(builtin-color-themes.at("dutch-gray"), (light: rgb("#ffffff"), dark: rgb("#d1d2d4")),
   message: "dutch-gray color theme values changed")
 #assert.eq(builtin-board-themes.at("dutch-gray"),
@@ -206,6 +215,27 @@
   let out = _expand-themes(case)
   assert(not "board-theme" in out, message: "board-theme key leaked for input " + repr(case))
   assert(not "color-theme" in out, message: "color-theme key leaked for input " + repr(case))
+}
+
+// --- 10. phase-2b: the nine new built-in themes actually resolve. Only the
+// registry-presence + shape is checked (not the specific hex values) -- those
+// are data a doc page also lists, and pinning them here too would double the
+// update cost for zero extra safety; the derivation guard above already covers
+// the one theme (staunton-default) whose value must track something.
+#let new-theme-names = (
+  "scid", "wikipedia", "xboard", "coral", "dusk", "emerald", "marine",
+  "sandcastle", "wheat",
+)
+#for name in new-theme-names {
+  assert(builtin-color-themes.keys().contains(name),
+    message: name + " must exist as a built-in color theme")
+  assert(builtin-board-themes.keys().contains(name),
+    message: name + " must exist as a built-in board theme")
+  let expanded = _expand-themes((color-theme: name))
+  assert("light" in expanded, message: name + " color-theme must expand to include `light`")
+  assert("dark" in expanded, message: name + " color-theme must expand to include `dark`")
+  assert(not "color-theme" in expanded, message: name + " expansion must not leak `color-theme`")
+  assert(not "board-theme" in expanded, message: name + " expansion must not leak `board-theme`")
 }
 
 // (the derivation guard for `builtin-color-themes."staunton-default"` is

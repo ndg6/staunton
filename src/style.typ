@@ -304,9 +304,26 @@
 // Built-in registries (plain dicts, not state -- these are static catalogues,
 // not document-order overrides). Derive "staunton-default" FROM the factory
 // dict so the two can never drift apart.
+//
+// The nine square-color pairs below ("scid" through "wheat") are reproduced
+// from kokopu-react (https://github.com/yo35/kokopu-react), LGPL-3.0,
+// (c) Yoann Le Montagner. Several are named for and reproduce the look of
+// external sources: "wikipedia" (Wikipedia's chess diagrams), "scid" (the
+// SCID database app), "xboard" (XBoard). Only the square COLORS are
+// borrowed -- the board chrome (labels/border) below stays staunton's own
+// house style, matching "staunton-default".
 #let builtin-color-themes = (
   "staunton-default": (light: default-board-style.light, dark: default-board-style.dark),
   "dutch-gray": (light: rgb("#ffffff"), dark: rgb("#d1d2d4")),
+  "scid": (light: rgb("#f3f3f3"), dark: rgb("#7389b6")),
+  "wikipedia": (light: rgb("#ffce9e"), dark: rgb("#d18b47")),
+  "xboard": (light: rgb("#c8c365"), dark: rgb("#77a26d")),
+  "coral": (light: rgb(177, 228, 185), dark: rgb(112, 162, 163)),
+  "dusk": (light: rgb(204, 183, 174), dark: rgb(112, 102, 119)),
+  "emerald": (light: rgb(173, 189, 143), dark: rgb(111, 143, 114)),
+  "marine": (light: rgb(157, 172, 255), dark: rgb(111, 115, 210)),
+  "sandcastle": (light: rgb(227, 193, 111), dark: rgb(184, 139, 74)),
+  "wheat": (light: rgb(234, 240, 206), dark: rgb(187, 190, 100)),
 )
 
 // INVARIANT: every built-in board-theme sets the SAME key set (currently
@@ -322,6 +339,51 @@
     border: default-board-style.border,
   ),
   "dutch-gray": (color-theme: "dutch-gray", labels: false, border: none),
+  "scid": (
+    color-theme: "scid",
+    labels: default-board-style.labels,
+    border: default-board-style.border,
+  ),
+  "wikipedia": (
+    color-theme: "wikipedia",
+    labels: default-board-style.labels,
+    border: default-board-style.border,
+  ),
+  "xboard": (
+    color-theme: "xboard",
+    labels: default-board-style.labels,
+    border: default-board-style.border,
+  ),
+  "coral": (
+    color-theme: "coral",
+    labels: default-board-style.labels,
+    border: default-board-style.border,
+  ),
+  "dusk": (
+    color-theme: "dusk",
+    labels: default-board-style.labels,
+    border: default-board-style.border,
+  ),
+  "emerald": (
+    color-theme: "emerald",
+    labels: default-board-style.labels,
+    border: default-board-style.border,
+  ),
+  "marine": (
+    color-theme: "marine",
+    labels: default-board-style.labels,
+    border: default-board-style.border,
+  ),
+  "sandcastle": (
+    color-theme: "sandcastle",
+    labels: default-board-style.labels,
+    border: default-board-style.border,
+  ),
+  "wheat": (
+    color-theme: "wheat",
+    labels: default-board-style.labels,
+    border: default-board-style.border,
+  ),
 )
 
 // Build a copy of `d` without the given keys. Deliberately NOT `d.remove(..)`:

@@ -380,6 +380,88 @@ contrasting label color:
 with `set-board-defaults(border-theme: ..)` / `set-chess-defaults` (see
 @document-style). It only takes effect with `label-mode: "border"`.
 
+== Color and Board Themes <themes>
+
+Beyond setting `light`/`dark` (and the other board options) one at a time,
+*staunton* bundles reusable "looks" into two kinds of themes:
+
+- `color-theme(light: .., dark: ..)` bundles just the two square colors.
+- `board-theme(..)` bundles a whole board look — any board style field (fonts,
+  labels, border, grid, …), plus a nested `color-theme`.
+
+Both accept either a *built-in name* (a string — see the catalogue below) or a
+value from the constructor. Themes are ordinary values: define your own with
+`#let mine = color-theme(light: rgb("#eeeed2"), dark: rgb("#769656"))` and reuse
+it wherever a color theme is accepted — there is no name registry for
+user-defined themes; only the built-ins are reachable by string name.
+
+Two new board style fields put themes to work — `color-theme` and
+`board-theme` — usable everywhere board style is set: per call on `board(..)`
+(and `chess-board`/`diagram`/`chess-diagram`), or document-wide via
+`set-board-defaults` / `set-chess-defaults` (see @document-style).
+
+#example(```typ
+#board(
+  "8/5k2/8/8/3Q4/8/4K3/8",
+  board-theme: "dutch-gray",
+  size: 3.8cm,
+)
+```)
+
+When a `board-theme`, an explicit `color-theme`, and explicit individual
+fields (like `dark: ..`) are all given together, the more specific one wins —
+same rule as everywhere else in *staunton*: `board-theme`'s fields lose to an
+explicit `color-theme`, which in turn loses to explicit individual fields; and
+per-call still beats a document default, which beats the factory default.
+
+=== Built-In Catalogue
+
+Eleven names are available as both a `color-theme` and a matching
+`board-theme` (the board-theme version additionally sets the board's chrome):
+
+#table(
+  columns: (1.3fr, 3.7fr),
+  inset: 5pt, align: left + horizon, stroke: 0.5pt + rgb("#d9d9d2"),
+  table.header([*name*], [*look*]),
+  raw("\"staunton-default\""), [the house style — same colors as the factory default],
+  raw("\"dutch-gray\""), [white and light-grey squares; as a board-theme, also turns labels off and drops the border],
+  raw("\"scid\""), [reproduces the SCID database app],
+  raw("\"wikipedia\""), [reproduces Wikipedia's chess diagrams],
+  raw("\"xboard\""), [reproduces XBoard],
+  raw("\"coral\""), [a green-and-teal pairing],
+  raw("\"dusk\""), [a muted rose-and-plum pairing],
+  raw("\"emerald\""), [a sage-and-forest-green pairing],
+  raw("\"marine\""), [a periwinkle-and-indigo pairing],
+  raw("\"sandcastle\""), [a warm gold-and-umber pairing],
+  raw("\"wheat\""), [a pale wheat-and-olive pairing],
+)
+
+For all but `"dutch-gray"`#footnote[The `dutch-gray` theme reproduces the
+minimal look of in-text analysis diagrams in printed chess magazines — white
+and light-grey squares, no frame, no coordinates. The colors were sampled
+from a New In Chess publication; *staunton* is not affiliated with or
+endorsed by New In Chess.], the `board-theme` keeps *staunton*'s own chrome
+(labels on, the usual border) and changes only the square colors; only
+`"dutch-gray"` also strips labels and border, matching the minimal in-text
+diagrams it's modeled on.
+
+#example(```typ
+#for name in (
+  "staunton-default", "dutch-gray", "scid", "wikipedia", "xboard",
+  "coral", "dusk", "emerald", "marine", "sandcastle", "wheat",
+) {
+  box(board((:), board-theme: name, size: 1.6cm))
+}
+```)
+
+The square colors of the nine themes `"scid"`, `"wikipedia"`, `"xboard"`,
+`"coral"`, `"dusk"`, `"emerald"`, `"marine"`, `"sandcastle"`, and `"wheat"` are
+reproduced from
+#link("https://github.com/yo35/kokopu-react")[kokopu-react], LGPL-3.0,
+© Yoann Le Montagner. `"wikipedia"`, `"scid"`, and `"xboard"` are named for —
+and reproduce the look of — Wikipedia's chess diagrams, the SCID database
+app, and XBoard, respectively.
+
 == Highlights
 
 `highlight` marks squares; each entry is a square name (drawn with
@@ -1464,6 +1546,8 @@ setters reject them), though their *styling* options can.
   table.header([*option*], [*default*], [*meaning*]),
   raw("size"), raw("auto"), [board size: a `length`, a `ratio` of the width, or `auto`],
   [`light` / `dark`], [tan theme], [the two square fill colors],
+  raw("color-theme"), raw("none"), [a built-in name or `color-theme(..)` value bundling `light`/`dark` — see @themes],
+  raw("board-theme"), raw("none"), [a built-in name or `board-theme(..)` value bundling a full board look — see @themes],
   raw("labels"), raw("true"), [show rank/file labels],
   raw("label-font"), [`("Arial", "DejaVu Sans Mono")`], [label font — a family or a fallback list],
   raw("label-mode"), raw("\"on-square\""), [`"on-square"` / `"outside"` / `"border"`],
@@ -1583,6 +1667,13 @@ source docstring: its signature, then every parameter with its type and default.
   ("/lib.typ", "chess-diagram-outline"),
   ("/lib.typ", "chess-table-outline"),
   ("/lib.typ", "chess-outlines"),
+))
+
+== Themes
+See @themes for the built-in catalogue and the precedence rule.
+#show-fns((
+  ("/src/style.typ", "color-theme"),
+  ("/src/style.typ", "board-theme"),
 ))
 
 == Document Defaults

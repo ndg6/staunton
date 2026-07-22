@@ -210,6 +210,16 @@ header must error with that message, any other must compile. Files/dirs prefixed
   (was a very dark near-black brown). ⚠️ This changes how existing documents
   using `border-theme: "brown"` look — the frame is visibly lighter. Set the old
   color explicitly if you need the previous appearance.
+- **Color and board themes**: `color-theme(light:, dark:)` bundles a square-color
+  pairing, and `board-theme(..)` bundles a full board look (any board style field
+  plus a nested color theme). Both accept a built-in name or a constructor value,
+  and are set via the new `color-theme` / `board-theme` board style fields
+  (per-call or document-wide). Eleven built-ins ship: `"staunton-default"`,
+  `"dutch-gray"`, and nine themes reproduced from kokopu-react (`"scid"`,
+  `"wikipedia"`, `"xboard"`, `"coral"`, `"dusk"`, `"emerald"`, `"marine"`,
+  `"sandcastle"`, `"wheat"`), whose square colors are reproduced from
+  [kokopu-react](https://github.com/yo35/kokopu-react) (LGPL-3.0, © Yoann Le
+  Montagner). See the manual for the full catalogue and the precedence rule.
 
 ### 0.2.2
 
