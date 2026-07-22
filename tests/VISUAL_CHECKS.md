@@ -33,7 +33,12 @@ Then open the PDFs below and check the noted property. (The expected-*fail* test
       board (shaft ~15% of the square), and flip with it; colors/widths as labelled.
 - [ ] `board/labeling/label_modes.pdf`, `border_themes.pdf`, `onsquare_corners.pdf`,
       `onsquare_fullwidth.pdf` — files/ranks in the right gutter/corner, themed
-      bands correct, labels legible and not clashing with pieces.
+      bands correct, labels legible and not clashing with pieces. In
+      `border_themes.pdf` the five `border-theme` looks are each visually
+      distinguishable from one another and legible (no band/label color clash)
+      — the exact theme -> color wiring is now pinned by the asserting test
+      `board/labeling/border_theme_colors.typ`, so this is just a legibility
+      check, not a color-matching one.
 - [ ] `board/orientation/flip.pdf` — a1 in the correct corner both ways; labels
       flip with the board. Second section: the highlights (filled e4 / circle e5 /
       cross d5) stay on their named squares (mirrored screen position), and the
@@ -158,10 +163,13 @@ These are not under `tests/out/`; build them separately.
         the `"brown"` theme (dark-brown band, creme labels). Left is normal
         orientation, right is `flip: true`; confirm `a1` moves from lower-left to
         upper-right so the coordinate flip is obvious.
-      - *The Board → Labels*: the three `border-theme` looks read as described —
-        `"square"` blends with the board, `"brown"` is dark-brown + creme, `"dark"`
-        is charcoal + light-grey (only the `"brown"` one is rendered inline; the
-        prose describes the others).
+      - *The Board → Labels*: the five `border-theme` looks read as described —
+        `"square"` blends with the board, `"brown"` is espresso-brown + creme
+        (now visibly lighter than the old darker brown), `"creme"` is creme +
+        saddle-brown (a different brown from `"brown"`, not its mirror), `"dark"`
+        is charcoal + light-grey, `"light"` is light-grey + charcoal (the mirror
+        of `"dark"`) (only the `"brown"` one is rendered inline; the prose
+        describes the others).
       - *The Board → Piece Sets and Fonts → Using your own downloaded piece set*:
         the new subsection reads cleanly — the `piece-loader` code block is not
         clipped or overflowing, and the lichess link renders.

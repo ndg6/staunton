@@ -371,8 +371,10 @@ contrasting label color:
 
 - `"square"` (default) — the band reuses the board's own `dark` square color with
   `light`-colored labels, so the border blends into the board;
-- `"brown"` — a very dark-brown band with creme labels (a warm, classic frame);
-- `"dark"` — a charcoal band with light-grey labels (suits dark backgrounds).
+- `"brown"` — an espresso-brown band with creme labels (a warm, classic frame);
+- `"creme"` — a creme band with saddle-brown labels (a light, paper-like frame);
+- `"dark"` — a charcoal band with light-grey labels (suits dark backgrounds);
+- `"light"` — a light-grey band with charcoal labels, the mirror of `"dark"`.
 
 `border-theme` is a normal board option: set it per call as above, or document-wide
 with `set-board-defaults(border-theme: ..)` / `set-chess-defaults` (see
@@ -1467,7 +1469,7 @@ setters reject them), though their *styling* options can.
   raw("label-mode"), raw("\"on-square\""), [`"on-square"` / `"outside"` / `"border"`],
   [`file-side` / `rank-side`], [`bottom` / `right`], [which edge files / ranks sit on],
   [`file-label-corner` / `rank-label-corner`], [`left` / `right`], [on-square label corner],
-  raw("border-theme"), raw("\"square\""), [`"border"` band theme: `"square"` / `"brown"` / `"dark"`],
+  raw("border-theme"), raw("\"square\""), [`"border"` band theme: `"square"` / `"brown"` / `"creme"` / `"dark"` / `"light"`],
   raw("border"), [`0.5pt + luma(40)`], [thin board outline (`none` to drop)],
   raw("grid"), raw("false"), [1pt grid lines between squares],
   raw("piece-set"), raw("\"cburnett\""), [SVG set name, or `"unicode"` for the glyph fallback],

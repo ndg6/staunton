@@ -21,8 +21,10 @@
 //     gutter), at a fixed font fraction that does NOT change with board size.
 //   * "outside": label strips in a gutter outside the board (the classic look).
 //   * "border": a band of `label-border-ratio` width around the board. The band
-//     fill / label color follow `border-theme` ("square" = dark band + light
-//     labels, "brown" = dark-brown band + creme labels).
+//     fill / label color follow `border-theme`, resolved by `_band-colors`:
+//     "square" = dark band + light labels, "brown" = espresso band + creme
+//     labels, "creme" = creme band + saddle labels, "dark" = charcoal band +
+//     light-grey labels, "light" = the mirror of "dark".
 // `labels: false` suppresses all of them. Board labels always use a fixed
 // sans-serif font, independent of the document / diagram font.
 //
@@ -37,7 +39,7 @@
 
 #import "coords.typ": file-letter, parse-square, is-dark-square, _square-index
 #import "pieces.typ": square-piece
-#import "style.typ": default-style, style-state, border-brown, border-creme, border-dark, border-dark-label
+#import "style.typ": default-style, style-state, border-brown, border-creme, border-saddle, border-dark, border-dark-label
 
 #let default-board-size = 6.4cm
 
@@ -63,6 +65,25 @@
   } else {
     (dx: col * sq, dy: (rows - 1 - row) * sq)
   }
+}
+
+// Resolve a "border"-mode label band to its `(fill, label)` color pair.
+// Pure (everything arrives through parameters) so it is directly unit-testable:
+// the rendered band is a plain `rect`, which Typst cannot `query()`, so this
+// function is the ONLY machine-checkable form of the theme -> color mapping.
+// `light` / `dark` are the board's own square colors, used by the "square" theme.
+//
+// NOTE: "creme" is NOT a mirrored "brown" -- they use two deliberately different
+// browns (#4a3319 band vs #6b4423 label). "light" IS the exact mirror of "dark".
+// Callers must have validated `theme` already; an unknown value falls back to
+// the "square" pair rather than erroring (the assert in `render-board` is the
+// gate that makes that unreachable in practice).
+#let _band-colors(theme, light, dark) = {
+  if theme == "brown" { (border-brown, border-creme) }
+  else if theme == "creme" { (border-creme, border-saddle) }
+  else if theme == "dark" { (border-dark, border-dark-label) }
+  else if theme == "light" { (border-dark-label, border-dark) }
+  else { (dark, light) }
 }
 
 // Draw the checkerboard squares. Pure (closes over no context/style value --
@@ -276,7 +297,7 @@
     assert(st.rank-label-corner == left or st.rank-label-corner == right, message: "rank-label-corner must be `left` or `right`")
     let modes = ("on-square", "outside", "border")
     assert(modes.contains(st.label-mode), message: "label-mode must be one of " + repr(modes) + "; got " + repr(st.label-mode))
-    let themes = ("square", "brown", "dark")
+    let themes = ("square", "brown", "creme", "dark", "light")
     assert(themes.contains(st.border-theme), message: "border-theme must be one of " + repr(themes) + "; got " + repr(st.border-theme))
 
     let labels = st.labels
@@ -434,8 +455,7 @@
         // from the board, regardless of the `border` outline.
         let total-w = bw + 2 * g
         let total-h = bh + 2 * g
-        let band-fill = if st.border-theme == "brown" { border-brown } else if st.border-theme == "dark" { border-dark } else { st.dark }
-        let band-label = if st.border-theme == "brown" { border-creme } else if st.border-theme == "dark" { border-dark-label } else { st.light }
+        let (band-fill, band-label) = _band-colors(st.border-theme, st.light, st.dark)
         box(width: total-w, height: total-h, {
           place(rect(width: total-w, height: total-h, fill: band-fill, stroke: none))
           place(dx: g, dy: g, board-canvas)

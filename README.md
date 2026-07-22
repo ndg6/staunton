@@ -200,6 +200,17 @@ header must error with that message, any other must compile. Files/dirs prefixed
      currently in development. Keep its heading version-only (e.g. "### 0.2.2") —
      never add "(unreleased)" or similar to user-visible text. -->
 
+### 0.3.0
+
+- **More border themes**: `border-theme` (the `label-mode: "border"` band) gains
+  `"creme"` (creme band, saddle-brown labels) and `"light"` (light-grey band,
+  charcoal labels — the mirror of `"dark"`), joining `"square"`, `"brown"` and
+  `"dark"`.
+- **`"brown"` border theme retuned**: its band is now a lighter espresso brown
+  (was a very dark near-black brown). ⚠️ This changes how existing documents
+  using `border-theme: "brown"` look — the frame is visibly lighter. Set the old
+  color explicitly if you need the previous appearance.
+
 ### 0.2.2
 
 - **Proportional markers**: cross / circle / arrow strokes — and the new

@@ -27,11 +27,15 @@
 // is applied separately by the renderer via `highlight-transparency` /
 // `arrow-transparency`, so this base is stored fully opaque.
 #let default-highlight-base = rgb(60, 130, 90)
-// "border" mode label themes: the "brown" and "dark" themes.
-#let border-brown = rgb("#2c1d0e")        // very dark brown band
-#let border-creme = rgb("#f3ecd8")        // creme-white labels (brown theme)
-#let border-dark = rgb("#2b2b2b")         // charcoal band (dark-mode theme)
-#let border-dark-label = rgb("#e8e8e8")   // light-grey labels (dark theme)
+// "border" mode label themes: the "brown", "creme", "dark" and "light" themes.
+// NOTE: `border-brown` (the brown theme's BAND) and `border-saddle` (the creme
+// theme's LABEL) are two DIFFERENT browns and must stay separate constants --
+// brown/creme are deliberately not a mirrored pair, unlike dark/light.
+#let border-brown = rgb("#4a3319")        // "espresso" brown band (brown theme)
+#let border-creme = rgb("#f3ecd8")        // creme-white: brown-theme labels, creme-theme band
+#let border-saddle = rgb("#6b4423")       // "saddle" brown labels (creme theme)
+#let border-dark = rgb("#2b2b2b")         // charcoal: dark-theme band, light-theme labels
+#let border-dark-label = rgb("#e8e8e8")   // light-grey: dark-theme labels, light-theme band
 
 // ---- board style ----------------------------------------------------------
 #let default-board-style = (
@@ -55,9 +59,12 @@
   file-label-corner: left,    // left | right
   rank-label-corner: right,   // right | left
   // "border" mode theme: "square" = dark-square band with
-  // light-square labels (default); "brown" = very-dark-brown band, creme labels;
-  // "dark" = charcoal band, light-grey labels (a neutral dark-mode look).
-  border-theme: "square",     // "square" | "brown" | "dark"
+  // light-square labels (default); "brown" = espresso-brown band, creme labels;
+  // "creme" = creme band, saddle-brown labels; "dark" = charcoal band, light-grey
+  // labels (a neutral dark-mode look); "light" = light-grey band, charcoal labels
+  // (the mirror of "dark"). Note "creme" is NOT a mirrored "brown": the two use
+  // different browns by design.
+  border-theme: "square",     // "square" | "brown" | "creme" | "dark" | "light"
   border: 0.5pt + luma(40),   // thin board outline (none to drop)
   grid: false,                // 1pt grid lines between squares
   piece-set: default-piece-set, // SVG set name, or "unicode" for the glyph fallback
