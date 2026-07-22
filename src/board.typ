@@ -39,7 +39,7 @@
 
 #import "coords.typ": file-letter, parse-square, is-dark-square, _square-index
 #import "pieces.typ": square-piece
-#import "style.typ": default-style, style-state, border-brown, border-creme, border-saddle, border-dark, border-dark-label
+#import "style.typ": default-style, style-state, border-brown, border-creme, border-saddle, border-dark, border-dark-label, _expand-themes
 
 #let default-board-size = 6.4cm
 
@@ -287,7 +287,10 @@
   assert(type(squares) == dictionary, message: "render-board expects a squares dict (square -> (kind, color)); got " + repr(type(squares)))
 
   context {
-    let st = default-style + style-state.get() + overrides.named()
+    // Per-call `color-theme` / `board-theme` are expanded here, same as the
+    // defaults setters (see `_expand-themes` in style.typ) -- an explicit
+    // individual field in THIS call must win over a theme in THIS call.
+    let st = default-style + style-state.get() + _expand-themes(overrides.named())
     // Labels use `st.label-font` (configurable); shadow the helper so the call
     // sites below pick it up without threading the font through each one.
     let _label-text = (body, size, fill) => text(font: st.label-font, size: size, fill: fill, body)

@@ -43,6 +43,7 @@
   default-table-style, table-style-state, table-style-keys, set-table-defaults,
   default-i18n-style, i18n-style-state, i18n-style-keys, set-lang,
   default-pgn-style, pgn-style-state, pgn-style-keys, set-pgn-defaults,
+  color-theme, board-theme,
 )
 #import "src/i18n.typ": ui-string as _ui-string
 #import "src/board.typ": render-board as _render-board
