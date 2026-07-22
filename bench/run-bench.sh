@@ -119,6 +119,40 @@ awk -v a="$t_note" -v b="$t_full" -v n="$ndia" 'BEGIN{
 rm -f "$NB"
 echo
 
+# Second document-level differential: the diagram-DENSE real-document workload
+# (prompt 37). Three long games (216/217/160 plies) with a diagram every 8 plies
+# => ~75 distinct diagrams. This is the "real document with many diagrams" target
+# the drawing optimisations are measured against. Same differential method.
+echo "== drawing cost (document-level differential) — realworld_bulletin (dense) =="
+RWB="$OUT/_rw_noboards.typ"
+cat > "$RWB" <<'TYP'
+#import "/lib.typ": parse-pgn, mainline, notation
+#set page(paper: "a4", margin: 2cm)
+#set text(size: 10pt)
+#let game-ids = (1012928, 1125843, 1281900)
+#for id in game-ids {
+  let game = parse-pgn(read("/tests/pgn/realworld/game_" + str(id) + ".pgn")).first()
+  pagebreak(weak: true)
+  heading(level: 2)[Game #id]
+  block(notation(game))
+}
+TYP
+t_note=$(min_ms "$RWB" 0)
+t_full=$(min_ms bench/realworld_bulletin.typ 0)
+# diagram count: every 8th ply plus the final, per game.
+ndia=$(typst eval --root "$ROOT" --input x=1 \
+  'import "/lib.typ": parse-pgn, mainline; (1012928,1125843,1281900).map(id => { let p = mainline(parse-pgn(read("/tests/pgn/realworld/game_" + str(id) + ".pgn")).first()).len(); range(8, p, step: 8).len() + 1 }).sum()' 2>/dev/null)
+[ -z "$ndia" ] && ndia="?"
+echo "  notation only : ${t_note} ms"
+echo "  full (+diagr) : ${t_full} ms   (${ndia} diagrams)"
+awk -v a="$t_note" -v b="$t_full" -v n="$ndia" 'BEGIN{
+  if (n=="?" || n+0==0) { print "  per-diagram   : n/a"; exit }
+  d=b-a; if (d<=0) { print "  per-diagram   : noise (raise -k)"; exit }
+  printf "  per-diagram   : %.0f ms   (drawing = %.0f%% of full-doc time)\n", d/n, 100*d/b
+}'
+rm -f "$RWB"
+echo
+
 # End-to-end realistic doc: full 9-game bulletin, plain wall-clock total (the
 # "how long does a real Staunton document take" number). No --timings here: the
 # 9-game trace is ~600 MB and impractical to open.

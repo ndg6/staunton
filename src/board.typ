@@ -35,7 +35,7 @@
 //   max(cols, rows)), so a non-square board is sized by its longer side.
 // ===========================================================================
 
-#import "coords.typ": file-letter, parse-square, is-dark-square
+#import "coords.typ": file-letter, parse-square, is-dark-square, _square-index
 #import "pieces.typ": square-piece
 #import "style.typ": default-style, style-state, border-brown, border-creme, border-dark, border-dark-label
 
@@ -62,6 +62,23 @@
     (dx: (cols - 1 - col) * sq, dy: row * sq)
   } else {
     (dx: col * sq, dy: (rows - 1 - row) * sq)
+  }
+}
+
+// Draw the checkerboard squares. Pure (closes over no context/style value --
+// everything comes through its parameters), so Typst can memoise it: a
+// document whose diagrams share geometry+size+colors builds the checker once
+// instead of per board.
+#let _checker(cols, rows, sq, orientation, light, dark) = {
+  for row in range(rows) {
+    for col in range(cols) {
+      let o = _screen(col, row, sq, orientation, cols, rows)
+      place(dx: o.dx, dy: o.dy, rect(
+        width: sq, height: sq,
+        fill: if is-dark-square(col, row) { dark } else { light },
+        stroke: none,
+      ))
+    }
   }
 }
 
@@ -301,16 +318,7 @@
 
       let board-canvas = box(width: bw, height: bh, {
         // checker
-        for row in range(rows) {
-          for col in range(cols) {
-            let o = _screen(col, row, sq, orient, cols, rows)
-            place(dx: o.dx, dy: o.dy, rect(
-              width: sq, height: sq,
-              fill: if is-dark-square(col, row) { st.dark } else { st.light },
-              stroke: none,
-            ))
-          }
-        }
+        _checker(cols, rows, sq, orient, st.light, st.dark)
         // highlights (under the pieces, over the checker). Each entry is a square
         // name (uses highlight-shape + highlight-fill), a (square, color) pair
         // (filled, explicit color -- e.g. PGN %csl), or a dict (square:, shape:,
@@ -356,7 +364,9 @@
         // pieces -- the renderer no longer knows about baselines: square-piece
         // returns a square-sized cell positioned correctly for its piece set.
         for (name, piece) in squares {
-          let p = parse-square(name, cols: cols, rows: rows)
+          // `squares` keys are always well-formed (produced by the position
+          // layer), so the trusted/unvalidated fast path is safe here.
+          let p = _square-index(name, cols: cols, rows: rows)
           let o = _screen(p.col, p.row, sq, orient, cols, rows)
           place(dx: o.dx, dy: o.dy, square-piece(
             piece.kind, piece.color, sq,

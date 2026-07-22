@@ -56,6 +56,20 @@
   (col: col, row: row)
 }
 
+// Module-level O(1) file-letter index (avoids the `.position` scan that
+// `parse-square` does). Internal use only.
+#let _file-index = (a: 0, b: 1, c: 2, d: 3, e: 4, f: 5, g: 6, h: 7, i: 8, j: 9, k: 10, l: 11, m: 12, n: 13, o: 14, p: 15, q: 16, r: 17, s: 18, t: 19, u: 20, v: 21, w: 22, x: 23, y: 24, z: 25)
+
+// Fast (col, row) for a TRUSTED, well-formed square name -- no validation, no
+// regex. For internal call sites whose square names are guaranteed well-formed
+// (produced by `square-name` / the position layer), not user input. Callers
+// handling user-supplied square strings must keep using `parse-square`, which
+// validates and gives proper error messages.
+#let _square-index(square, cols: 8, rows: 8) = {
+  let s = lower(square)
+  (col: _file-index.at(s.first()), row: int(s.slice(1)) - 1)
+}
+
 /// Inverse of `parse-square`: `(col, row)` → `"e4"`. Geometry-agnostic (the
 /// indices already encode the position); validates only against the 26-file
 /// alphabet.
