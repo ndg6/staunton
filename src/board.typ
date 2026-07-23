@@ -86,17 +86,42 @@
   else { (dark, light) }
 }
 
+// Resolve a single square's fill given its dark/light-ness, the theme's own
+// colors, and the theme's `pattern`. Pure (everything arrives through
+// parameters) so it is directly unit-testable: the rendered square is a plain
+// `rect`, which Typst cannot `query()`, so this function is the ONLY
+// machine-checkable form of the pattern -> fill mapping.
+// Light squares are never patterned -- only dark squares get the tiling fill,
+// and only when `pattern == "diagonal-stripes"`; otherwise both stay flat.
+#let _square-fill(is-dark, light, dark, pattern) = {
+  if is-dark and pattern == "diagonal-stripes" {
+    // Each shape needs its OWN `place` at the tile origin -- a shared block
+    // stacks its children in normal flow instead of overlaying them (same
+    // trap as `_draw-highlight`'s cross lines above), which silently drops
+    // the diagonal line below the tile's clip bounds and renders as a flat
+    // fill with no visible stripe.
+    tiling(size: (10pt, 10pt), relative: "parent", {
+      place(dx: 0pt, dy: 0pt, rect(width: 10pt, height: 10pt, fill: dark, stroke: none))
+      place(dx: 0pt, dy: 0pt, line(start: (0pt, 10pt), end: (10pt, 0pt), stroke: 4pt + light))
+    })
+  } else if is-dark {
+    dark
+  } else {
+    light
+  }
+}
+
 // Draw the checkerboard squares. Pure (closes over no context/style value --
 // everything comes through its parameters), so Typst can memoise it: a
-// document whose diagrams share geometry+size+colors builds the checker once
-// instead of per board.
-#let _checker(cols, rows, sq, orientation, light, dark) = {
+// document whose diagrams share geometry+size+colors+pattern builds the
+// checker once instead of per board.
+#let _checker(cols, rows, sq, orientation, light, dark, pattern) = {
   for row in range(rows) {
     for col in range(cols) {
       let o = _screen(col, row, sq, orientation, cols, rows)
       place(dx: o.dx, dy: o.dy, rect(
         width: sq, height: sq,
-        fill: if is-dark-square(col, row) { dark } else { light },
+        fill: _square-fill(is-dark-square(col, row), light, dark, pattern),
         stroke: none,
       ))
     }
@@ -342,7 +367,7 @@
 
       let board-canvas = box(width: bw, height: bh, {
         // checker
-        _checker(cols, rows, sq, orient, st.light, st.dark)
+        _checker(cols, rows, sq, orient, st.light, st.dark, st.pattern)
         // highlights (under the pieces, over the checker). Each entry is a square
         // name (uses highlight-shape + highlight-fill), a (square, color) pair
         // (filled, explicit color -- e.g. PGN %csl), or a dict (square:, shape:,

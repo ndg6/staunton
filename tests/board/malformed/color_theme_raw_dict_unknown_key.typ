@@ -1,4 +1,4 @@
-// EXPECT: unknown color theme option: "bogus" (expected one of ("light", "dark"))
+// EXPECT: unknown color theme option: "bogus" (expected one of ("light", "dark", "pattern"))
 // board() - the RAW-DICT bypass: a hand-rolled dict passed directly as
 // `color-theme: (..)` (NOT built via the `color-theme(..)` constructor, which
 // would have caught this before it ever reached here) must still be validated at

@@ -76,6 +76,13 @@
   // `color-theme`: a built-in name (see `builtin-color-themes`) or a dict from
   // `color-theme(..)` (light/dark only, for now).
   color-theme: none,
+  // Algorithmic square-fill pattern applied to DARK squares only (light squares
+  // always stay a flat fill). `none` = today's flat fill (default, unchanged);
+  // "diagonal-stripes" = a tiling fill alternating the theme's own light/dark
+  // colors. Normally set via `color-theme(.., pattern: ..)` rather than
+  // directly, but it lives here as a plain board-style field so it flows
+  // through the same three-layer merge as `light`/`dark`.
+  pattern: none,          // none | "diagonal-stripes"
   // `board-theme`: a built-in name (see `builtin-board-themes`) or a dict from
   // `board-theme(..)` (any board style field, plus `color-theme`).
   board-theme: none,
@@ -241,7 +248,7 @@
 
 // Keep the allowed-key list named so later phases (brightness/contrast/pattern)
 // can extend it in one place.
-#let color-theme-keys = ("light", "dark")
+#let color-theme-keys = ("light", "dark", "pattern")
 
 // Validate a color-theme fields dict -- shared by the `color-theme(..)`
 // constructor AND `_resolve-color-theme` (a hand-rolled dict passed straight as
@@ -258,12 +265,19 @@
         message: "color theme `" + k + "` must be a color; got " + repr(f.at(k)))
     }
   }
+  if "pattern" in f {
+    let p = f.at("pattern")
+    assert(p == none or p == "diagonal-stripes",
+      message: "unknown pattern: " + repr(p) + " (expected `none` or \"diagonal-stripes\")")
+  }
 }
 
-/// Bundle a reusable color pairing (currently just `light` / `dark`) for use as
-/// `color-theme:` on `board()`, `set-board-defaults`, or inside a `board-theme`.
+/// Bundle a reusable color pairing (`light` / `dark`, plus `pattern`) for use
+/// as `color-theme:` on `board()`, `set-board-defaults`, or inside a
+/// `board-theme`.
 ///
-/// - ..fields (arguments): `light` and/or `dark` colors; unknown keys error.
+/// - ..fields (arguments): `light` and/or `dark` colors; `pattern` (`none` or
+///   `"diagonal-stripes"`, dark squares only); unknown keys error.
 /// -> dictionary
 #let color-theme(..fields) = {
   let f = fields.named()

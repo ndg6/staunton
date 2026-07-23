@@ -395,6 +395,28 @@ value from the constructor. Themes are ordinary values: define your own with
 it wherever a color theme is accepted — there is no name registry for
 user-defined themes; only the built-ins are reachable by string name.
 
+`color-theme(..)` also takes a `pattern` field, for a square fill other than a
+flat color:
+
+- `none` (default) — flat `light`/`dark` fills, as above.
+- `"diagonal-stripes"` — dark squares are filled with a diagonal-stripe
+  tiling built from the theme's own `light` and `dark` colors, instead of a
+  flat `dark` fill. Light squares are always flat `light`, regardless of
+  `pattern` — stripes only ever apply to dark squares.
+
+An unknown `pattern` value raises a clear error.
+
+#example(```typ
+#board(
+  "8/5k2/8/8/3Q4/8/4K3/8",
+  color-theme: color-theme(
+    light: rgb("#eeeed2"), dark: rgb("#769656"),
+    pattern: "diagonal-stripes",
+  ),
+  size: 3.8cm,
+)
+```)
+
 Two new board style fields put themes to work — `color-theme` and
 `board-theme` — usable everywhere board style is set: per call on `board(..)`
 (and `chess-board`/`diagram`/`chess-diagram`), or document-wide via
