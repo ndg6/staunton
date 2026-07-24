@@ -55,6 +55,15 @@ Then open the PDFs below and check the noted property. (The expected-*fail* test
       pinned by the asserting test `board/style_options/color_theme_pattern.typ`;
       this is just the "does it actually look like diagonal stripes at real
       board size" check.)
+- [ ] `board/colors/brightness_contrast.pdf` (prompt 38 §2/§12/§13) — versus the
+      baseline board, `brightness: 30%` visibly lightens BOTH squares and
+      `brightness: -30%` visibly darkens both; `contrast: 50%` visibly spreads
+      the gap between the light and dark squares wider. The last board
+      (`contrast: -100%`) sits at the 5%-separation floor: the two squares
+      should stay just barely distinguishable from each other, not collapse
+      into one flat color. (The lightness math itself is pinned by the
+      asserting test `board/style_options/color_theme_brightness_contrast.typ`;
+      this is just the "does it actually look right" check.)
 - [ ] `board/piece_sets/existing/all_piece_sets.pdf`, `custom_user_set.pdf`,
       `unicode_fallback.pdf` — every piece glyph present, centred, correct color
       (including the Unicode glyph fallback).

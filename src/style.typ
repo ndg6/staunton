@@ -83,6 +83,14 @@
   // directly, but it lives here as a plain board-style field so it flows
   // through the same three-layer merge as `light`/`dark`.
   pattern: none,          // none | "diagonal-stripes"
+  // Lightness nudges applied to the theme's resolved `light`/`dark` pair
+  // (HSL lightness only; hue/saturation pass through unchanged), each a signed
+  // ratio in [-100%, +100%] (silently clamped outside it). `auto` = no
+  // adjustment. Normally set via `color-theme(.., brightness: .., contrast: ..)`
+  // rather than directly, but they live here as plain board-style fields so
+  // they flow through the same three-layer merge as `light`/`dark`/`pattern`.
+  brightness: auto,      // auto | ratio -- shift both squares lighter/darker
+  contrast: auto,        // auto | ratio -- spread/compress the light-dark gap
   // `board-theme`: a built-in name (see `builtin-board-themes`) or a dict from
   // `board-theme(..)` (any board style field, plus `color-theme`).
   board-theme: none,
@@ -248,7 +256,7 @@
 
 // Keep the allowed-key list named so later phases (brightness/contrast/pattern)
 // can extend it in one place.
-#let color-theme-keys = ("light", "dark", "pattern")
+#let color-theme-keys = ("light", "dark", "pattern", "brightness", "contrast")
 
 // Validate a color-theme fields dict -- shared by the `color-theme(..)`
 // constructor AND `_resolve-color-theme` (a hand-rolled dict passed straight as
@@ -270,19 +278,90 @@
     assert(p == none or p == "diagonal-stripes",
       message: "unknown pattern: " + repr(p) + " (expected `none` or \"diagonal-stripes\")")
   }
+  for k in ("brightness", "contrast") {
+    if k in f {
+      let v = f.at(k)
+      assert(v == auto or type(v) == ratio,
+        message: "color theme `" + k + "` must be `auto` or a ratio; got " + repr(v))
+    }
+  }
 }
 
-/// Bundle a reusable color pairing (`light` / `dark`, plus `pattern`) for use
-/// as `color-theme:` on `board()`, `set-board-defaults`, or inside a
-/// `board-theme`.
+/// Bundle a reusable color pairing (`light` / `dark`, plus `pattern`,
+/// `brightness`, `contrast`) for use as `color-theme:` on `board()`,
+/// `set-board-defaults`, or inside a `board-theme`.
 ///
 /// - ..fields (arguments): `light` and/or `dark` colors; `pattern` (`none` or
-///   `"diagonal-stripes"`, dark squares only); unknown keys error.
+///   `"diagonal-stripes"`, dark squares only); `brightness` and `contrast`
+///   (each `auto` or a signed ratio, e.g. `10%`/`-5%`, default `auto` = no
+///   adjustment) nudge the resolved `light`/`dark` pair's HSL lightness --
+///   `brightness` shifts both squares lighter/darker together, `contrast`
+///   spreads or compresses the gap between them, around their own midpoint.
+///   Hue/saturation are untouched. Values outside `[-100%, +100%]` are
+///   silently clamped, and the pair is always held at least 5% apart
+///   (lightness-wise), with `light` staying the lighter of the two; unknown
+///   keys error.
 /// -> dictionary
 #let color-theme(..fields) = {
   let f = fields.named()
   _validate-color-theme-fields(f)
   f
+}
+
+// ---- brightness / contrast adjustment ----------------------------------
+// Pure HSL-lightness math (see prompt-38 §2/§12/§13). Applied ONCE, by
+// `render-board`, to the final resolved `light`/`dark` pair -- NOT inside
+// `_resolve-color-theme`/`_expand-themes`, which stay pure merge/lookup.
+
+// `c` (a color) -> (h: angle, s: ratio, l: float in 0..1). `l` is unwrapped to
+// a plain float so it can take part in the arithmetic below; `h`/`s` are kept
+// as-is since they only ever pass through unchanged.
+#let _rgb-to-hsl(c) = {
+  let (h, s, l, ..) = c.hsl().components()
+  (h: h, s: s, l: l / 100%)
+}
+
+// (h: angle, s: ratio, l: float in 0..1) -> color, the inverse of `_rgb-to-hsl`.
+#let _hsl-to-rgb(h, s, l) = rgb(color.hsl(h, s, l * 100%))
+
+// Nudge a resolved `light`/`dark` color pair's lightness by `brightness`
+// (shift both together) and `contrast` (spread/compress the gap around their
+// own midpoint), each `auto` (no-op) or a signed ratio silently clamped to
+// [-100%, +100%]. Hue/saturation of each color pass through unchanged. The
+// result is always held at least 5% apart in lightness, with `light` forced
+// to stay the lighter of the two. When both inputs are `auto` (or both `0%`)
+// and the pair is already >= 5% apart, this is an exact identity.
+// -> (light: color, dark: color)
+#let _adjust-color-pair(light, dark, brightness, contrast) = {
+  let b = if brightness == auto { 0.0 } else { calc.clamp(brightness / 100%, -1.0, 1.0) }
+  let c = if contrast == auto { 0.0 } else { calc.clamp(contrast / 100%, -1.0, 1.0) }
+
+  let (h: h-light, s: s-light, l: l-light) = _rgb-to-hsl(light)
+  let (h: h-dark, s: s-dark, l: l-dark) = _rgb-to-hsl(dark)
+
+  // Step 2: brightness, applied independently to each lightness.
+  let brighten(l) = if b >= 0 { l + b * (1 - l) } else { l + b * l }
+  let l1-light = brighten(l-light)
+  let l1-dark = brighten(l-dark)
+
+  // Step 3: contrast, around the midpoint of the post-brightness values.
+  let m1 = (l1-light + l1-dark) / 2
+  let l2-light = m1 + (l1-light - m1) * (1 + c)
+  let l2-dark = m1 - (m1 - l1-dark) * (1 + c)
+
+  // Step 4: enforce the 5%-separation floor and [0,1] bounds together, with
+  // `light` forced to be the lighter of the pair (field identity, not
+  // magnitude).
+  let m2 = (l2-light + l2-dark) / 2
+  let half = calc.max((l2-light - l2-dark) / 2, 0.025)
+  let m3 = calc.clamp(m2, half, 1 - half)
+  let l3-light = m3 + half
+  let l3-dark = m3 - half
+
+  (
+    light: _hsl-to-rgb(h-light, s-light, l3-light),
+    dark: _hsl-to-rgb(h-dark, s-dark, l3-dark),
+  )
 }
 
 // Validate a board-theme fields dict -- shared by the `board-theme(..)`

@@ -417,6 +417,37 @@ An unknown `pattern` value raises a clear error.
 )
 ```)
 
+`color-theme(..)` also takes `brightness` and `contrast` fields, for nudging
+an existing theme's colors without picking new ones by hand. Both default to
+`auto` (no adjustment) or take a signed ratio such as `10%`/`-5%`:
+
+- `brightness` shifts the `light` and `dark` squares' lightness together —
+  positive tints both toward white, negative shades both toward black.
+- `contrast` spreads or compresses the lightness gap *between* `light` and
+  `dark`, around their own midpoint — positive pulls them further apart,
+  negative pulls them closer together.
+
+Both only touch each color's HSL lightness; hue and saturation pass through
+unchanged. Values outside `[-100%, +100%]` are silently clamped, and the pair
+is always held at least 5% apart in lightness — an extreme setting (e.g.
+`contrast: -100%`) is pushed back apart rather than collapsing or inverting
+the checkerboard, and `light` always ends up the lighter of the two.
+
+#example(```typ
+#board(
+  "8/5k2/8/8/3Q4/8/4K3/8",
+  color-theme: "dutch-gray",
+  brightness: 10%,
+  size: 3.8cm,
+)
+#board(
+  "8/5k2/8/8/3Q4/8/4K3/8",
+  color-theme: "dutch-gray",
+  contrast: -30%,
+  size: 3.8cm,
+)
+```)
+
 Two new board style fields put themes to work — `color-theme` and
 `board-theme` — usable everywhere board style is set: per call on `board(..)`
 (and `chess-board`/`diagram`/`chess-diagram`), or document-wide via

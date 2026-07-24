@@ -1,5 +1,5 @@
-// EXPECT: unknown color theme option: "brightness" (expected one of ("light", "dark", "pattern"))
-// color-theme() - only accepts `light` / `dark` for now; any other key must be
-// rejected, not silently ignored.
+// EXPECT: unknown color theme option: "border-radius" (expected one of (
+// color-theme() - only accepts light/dark/pattern/brightness/contrast for now;
+// any other key must be rejected, not silently ignored.
 #import "/lib.typ": color-theme
-#color-theme(brightness: 5%)
+#color-theme(border-radius: 5%)

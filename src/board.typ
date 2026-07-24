@@ -39,7 +39,7 @@
 
 #import "coords.typ": file-letter, parse-square, is-dark-square, _square-index
 #import "pieces.typ": square-piece
-#import "style.typ": default-style, style-state, border-brown, border-creme, border-saddle, border-dark, border-dark-label, _expand-themes
+#import "style.typ": default-style, style-state, border-brown, border-creme, border-saddle, border-dark, border-dark-label, _expand-themes, _adjust-color-pair
 
 #let default-board-size = 6.4cm
 
@@ -316,6 +316,13 @@
     // defaults setters (see `_expand-themes` in style.typ) -- an explicit
     // individual field in THIS call must win over a theme in THIS call.
     let st = default-style + style-state.get() + _expand-themes(overrides.named())
+    // Apply the `brightness`/`contrast` lightness nudges once, here, to the
+    // final resolved `light`/`dark` pair -- everything downstream (checker,
+    // labels, border band) reads `st.light`/`st.dark` and must see the
+    // adjusted colors.
+    let (light: st-light, dark: st-dark) = _adjust-color-pair(st.light, st.dark, st.brightness, st.contrast)
+    st.light = st-light
+    st.dark = st-dark
     // Labels use `st.label-font` (configurable); shadow the helper so the call
     // sites below pick it up without threading the font through each one.
     let _label-text = (body, size, fill) => text(font: st.label-font, size: size, fill: fill, body)
