@@ -290,29 +290,6 @@
   }
 }
 
-/// Bundle a reusable color pairing (`light` / `dark`, plus `pattern`,
-/// `brightness`, `contrast`) for use as `color-theme:` on `board()`,
-/// `set-board-defaults`, or inside a `board-theme`.
-///
-/// - ..fields (arguments): `light` and/or `dark` colors; `pattern` (`none`,
-///   `"stripes"` (dark squares only), or `"marble"`/`"wood"` -- accepted but
-///   currently no-ops that render a visible warning notice instead);
-///   `brightness` and `contrast`
-///   (each `auto` or a signed ratio, e.g. `10%`/`-5%`, default `auto` = no
-///   adjustment) nudge the resolved `light`/`dark` pair's HSL lightness --
-///   `brightness` shifts both squares lighter/darker together, `contrast`
-///   spreads or compresses the gap between them, around their own midpoint.
-///   Hue/saturation are untouched. Values outside `[-100%, +100%]` are
-///   silently clamped, and the pair is always held at least 5% apart
-///   (lightness-wise), with `light` staying the lighter of the two; unknown
-///   keys error.
-/// -> dictionary
-#let color-theme(..fields) = {
-  let f = fields.named()
-  _validate-color-theme-fields(f)
-  f
-}
-
 // ---- brightness / contrast adjustment ----------------------------------
 // Pure HSL-lightness math (see prompt-38 §2/§12/§13). Applied ONCE, by
 // `render-board`, to the final resolved `light`/`dark` pair -- NOT inside
@@ -382,21 +359,6 @@
   for k in f.keys() {
     assert(board-style-keys.contains(k), message: "unknown board theme option: " + k)
   }
-}
-
-/// Bundle a reusable board "look" -- any board style field, plus a nested
-/// `color-theme` -- for use as `board-theme:` on `board()` or
-/// `set-board-defaults`. `flip`/`orientation`, the position-specific
-/// `highlight`/`arrows`/`move-quality-mark`, and a nested `board-theme` are all
-/// rejected (a board-theme is flat; compose colors via `color-theme`).
-///
-/// - ..fields (arguments): named board style options, plus `color-theme`;
-///   unknown keys error.
-/// -> dictionary
-#let board-theme(..fields) = {
-  let f = fields.named()
-  _validate-board-theme-fields(f)
-  f
 }
 
 // Built-in registries (plain dicts, not state -- these are static catalogues,
@@ -539,6 +501,66 @@
     }
   }
   bt
+}
+
+/// Bundle a reusable color pairing (`light` / `dark`, plus `pattern`,
+/// `brightness`, `contrast`) for use as `color-theme:` on `board()`,
+/// `set-board-defaults`, or inside a `board-theme`.
+///
+/// - ..fields (arguments): `light` and/or `dark` colors; `pattern` (`none`,
+///   `"stripes"` (dark squares only), or `"marble"`/`"wood"` -- accepted but
+///   currently no-ops that render a visible warning notice instead);
+///   `brightness` and `contrast`
+///   (each `auto` or a signed ratio, e.g. `10%`/`-5%`, default `auto` = no
+///   adjustment) nudge the resolved `light`/`dark` pair's HSL lightness --
+///   `brightness` shifts both squares lighter/darker together, `contrast`
+///   spreads or compresses the gap between them, around their own midpoint.
+///   Hue/saturation are untouched. Values outside `[-100%, +100%]` are
+///   silently clamped, and the pair is always held at least 5% apart
+///   (lightness-wise), with `light` staying the lighter of the two; `base`
+///   (a built-in color-theme name or another color-theme value to derive
+///   from; its fields are merged in first, then this call's own fields
+///   override them); unknown keys error.
+/// -> dictionary
+#let color-theme(..fields) = {
+  let f = fields.named()
+  if "base" in f {
+    let basev = f.at("base")
+    f = _without-keys(f, ("base",))
+    f = _resolve-color-theme(basev) + f
+  }
+  _validate-color-theme-fields(f)
+  f
+}
+
+/// Bundle a reusable board "look" -- any board style field, plus a nested
+/// `color-theme` -- for use as `board-theme:` on `board()` or
+/// `set-board-defaults`. `flip`/`orientation`, the position-specific
+/// `highlight`/`arrows`/`move-quality-mark`, and a nested `board-theme` are all
+/// rejected (a board-theme is flat; compose colors via `color-theme`).
+///
+/// - ..fields (arguments): named board style options, plus `color-theme`;
+///   also `base` (a built-in board-theme name or another board-theme value
+///   to derive from; its fields are merged in first, then this call's own
+///   fields override them -- this composes with the nested `color-theme`
+///   derivation above); unknown keys error.
+/// -> dictionary
+#let board-theme(..fields) = {
+  let f = fields.named()
+  if "color-theme" in f {
+    let ctv = f.at("color-theme")
+    f = _without-keys(f, ("color-theme",))
+    if ctv != none {
+      f = _resolve-color-theme(ctv) + f
+    }
+  }
+  if "base" in f {
+    let basev = f.at("base")
+    f = _without-keys(f, ("base",))
+    f = _resolve-board-theme(basev) + f
+  }
+  _validate-board-theme-fields(f)
+  f
 }
 
 /// Expand `board-theme` / `color-theme` keys in a style layer into the fields

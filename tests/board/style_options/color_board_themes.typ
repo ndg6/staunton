@@ -16,9 +16,15 @@
 #assert.eq(board-theme(labels: false, border: none),
   (labels: false, border: none),
   message: "board-theme should just collect named board-style overrides")
+// `board-theme(..)` now expands a nested `color-theme` EAGERLY at
+// construction time (precedence-bug fix: the call's own `color-theme` must
+// be expanded to direct fields before `base:` is merged in underneath, or a
+// later `base:` can incorrectly win over an explicit override -- see
+// board_theme_base.typ for the regression coverage), so the raw
+// `color-theme` key does not survive into the result.
 #assert.eq(board-theme(color-theme: "dutch-gray", labels: false),
-  (color-theme: "dutch-gray", labels: false),
-  message: "board-theme should pass a nested color-theme through unresolved")
+  (light: rgb("#ffffff"), dark: rgb("#d1d2d4"), labels: false),
+  message: "board-theme should eagerly resolve a nested color-theme to its light/dark fields, not pass it through unresolved")
 
 // --- 2. built-in registries ---------------------------------------------------
 // "staunton-default" must be DERIVED from the factory colors, never retyped, so

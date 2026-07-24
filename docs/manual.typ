@@ -520,6 +520,59 @@ reproduced from
 and reproduce the look of — Wikipedia's chess diagrams, the SCID database
 app, and XBoard, respectively.
 
+=== Deriving Themes with `base`
+
+Both `color-theme(..)` and `board-theme(..)` accept a `base` argument: a
+built-in theme name (a string) or another value from the matching
+constructor. `base`'s fields are merged in first, and this call's own
+explicit fields win over anything inherited from `base` — the same
+later-wins rule used everywhere else in *staunton*. This makes it easy to
+start from a built-in look and tweak just a few fields, instead of
+re-specifying the whole theme by hand.
+
+#example(```typ
+#let my-dutch-gray = color-theme(base: "dutch-gray", contrast: 10%)
+#board(
+  "8/5k2/8/8/3Q4/8/4K3/8",
+  color-theme: my-dutch-gray,
+  size: 3.8cm,
+)
+```)
+
+A `board-theme`'s `base` can also be layered with that same call's own
+nested `color-theme` field — the nested `color-theme` always wins over
+anything the base contributed, so it can override just the square colors
+while keeping the base's chrome (labels, border, and so on):
+
+#example(```typ
+#board(
+  "8/5k2/8/8/3Q4/8/4K3/8",
+  board-theme: board-theme(
+    base: "dutch-gray",
+    color-theme: (light: rgb("#ffe0e0")),
+  ),
+  size: 3.8cm,
+)
+```)
+
+Because `base` accepts a constructor value as well as a built-in name, themes
+can also be derived from a previously derived theme, chaining any number of
+steps:
+
+```typ
+#let my-look = board-theme(base: "dutch-gray", labels: false)
+#let my-look2 = board-theme(base: my-look, border-theme: "creme")
+```
+
+`base` is consumed when the constructor runs and never appears in the
+resulting theme value.
+
+`base` is a named argument understood only by the `color-theme(..)` and
+`board-theme(..)` constructors themselves — a hand-rolled dict passed
+directly as a `color-theme`/`board-theme` field (e.g.
+`color-theme: (base: "dutch-gray")`, skipping the constructor call) does not
+support it and raises "unknown color theme option".
+
 == Highlights
 
 `highlight` marks squares; each entry is a square name (drawn with
