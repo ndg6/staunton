@@ -49,11 +49,12 @@ Then open the PDFs below and check the noted property. (The expected-*fail* test
 - [ ] `board/grid/grid.pdf` — 1pt grid lines sit between squares at every size.
 - [ ] `board/colors/colors.pdf` — light/dark themes render as intended.
 - [ ] `board/colors/pattern_diagonal_stripes.pdf` (prompt 38 §3a) — dark squares
-      show visible diagonal stripes alternating the theme's own light/dark
-      colors; light squares stay a flat fill (no stripes). (The pattern -> fill
-      mapping is pinned by the asserting test
-      `board/style_options/color_theme_pattern.typ`; this is just the "does it
-      actually look like diagonal stripes at real board size" check.)
+      show visible thin BLACK diagonal stripes (fine, closely-spaced, tile
+      4pt / stroke 0.5pt) over the theme's own dark background color; light
+      squares stay a flat fill (no stripes). (The pattern -> fill mapping is
+      pinned by the asserting test `board/style_options/color_theme_pattern.typ`;
+      this is just the "does it actually look like diagonal stripes at real
+      board size" check.)
 - [ ] `board/piece_sets/existing/all_piece_sets.pdf`, `custom_user_set.pdf`,
       `unicode_fallback.pdf` — every piece glyph present, centred, correct color
       (including the Unicode glyph fallback).

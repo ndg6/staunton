@@ -100,9 +100,9 @@
     // trap as `_draw-highlight`'s cross lines above), which silently drops
     // the diagonal line below the tile's clip bounds and renders as a flat
     // fill with no visible stripe.
-    tiling(size: (10pt, 10pt), relative: "parent", {
-      place(dx: 0pt, dy: 0pt, rect(width: 10pt, height: 10pt, fill: dark, stroke: none))
-      place(dx: 0pt, dy: 0pt, line(start: (0pt, 10pt), end: (10pt, 0pt), stroke: 4pt + light))
+    tiling(size: (4pt, 4pt), relative: "parent", {
+      place(dx: 0pt, dy: 0pt, rect(width: 4pt, height: 4pt, fill: dark, stroke: none))
+      place(dx: 0pt, dy: 0pt, line(start: (0pt, 4pt), end: (4pt, 0pt), stroke: 0.5pt + black))
     })
   } else if is-dark {
     dark
