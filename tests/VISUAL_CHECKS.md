@@ -48,13 +48,19 @@ Then open the PDFs below and check the noted property. (The expected-*fail* test
 - [ ] `board/size/sizes.pdf` — cells stay square at every size; nothing clipped.
 - [ ] `board/grid/grid.pdf` — 1pt grid lines sit between squares at every size.
 - [ ] `board/colors/colors.pdf` — light/dark themes render as intended.
-- [ ] `board/colors/pattern_diagonal_stripes.pdf` (prompt 38 §3a) — dark squares
-      show visible thin BLACK diagonal stripes (fine, closely-spaced, tile
-      4pt / stroke 0.5pt) over the theme's own dark background color; light
-      squares stay a flat fill (no stripes). (The pattern -> fill mapping is
-      pinned by the asserting test `board/style_options/color_theme_pattern.typ`;
-      this is just the "does it actually look like diagonal stripes at real
-      board size" check.)
+- [ ] `board/colors/pattern_stripes.pdf` (prompt 38 §3a, renamed prompt 40 §1) —
+      dark squares show visible thin BLACK diagonal stripes (fine,
+      closely-spaced, tile 4pt / stroke 0.5pt) over the theme's own dark
+      background color; light squares stay a flat fill (no stripes). (The
+      pattern -> fill mapping is pinned by the asserting test
+      `board/style_options/color_theme_pattern.typ`; this is just the "does it
+      actually look like diagonal stripes at real board size" check.)
+- [ ] `board/colors/pattern_marble_wood.pdf` (prompt 40 §1) — both boards
+      (`pattern: "marble"` and `pattern: "wood"`) render with a plain flat
+      dark-square fill (no stripes, no texture — both patterns are
+      not-yet-implemented no-ops) AND a small red warning notice is visible on
+      top of each board, legible, correctly names the pattern
+      ("marble"/"wood" respectively), and does not obscure the board itself.
 - [ ] `board/colors/brightness_contrast.pdf` (prompt 38 §2/§12/§13) — versus the
       baseline board, `brightness: 30%` visibly lightens BOTH squares and
       `brightness: -30%` visibly darkens both; `contrast: 50%` visibly spreads

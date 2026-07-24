@@ -78,11 +78,14 @@
   color-theme: none,
   // Algorithmic square-fill pattern applied to DARK squares only (light squares
   // always stay a flat fill). `none` = today's flat fill (default, unchanged);
-  // "diagonal-stripes" = a tiling fill alternating the theme's own light/dark
-  // colors. Normally set via `color-theme(.., pattern: ..)` rather than
-  // directly, but it lives here as a plain board-style field so it flows
-  // through the same three-layer merge as `light`/`dark`.
-  pattern: none,          // none | "diagonal-stripes"
+  // "stripes" = a tiling fill alternating the theme's own light/dark
+  // colors. "marble" and "wood" are accepted but currently no-ops (dark
+  // squares stay flat, same as `none`) -- they render a visible in-document
+  // warning notice instead, since Typst script has no console warning().
+  // Normally set via `color-theme(.., pattern: ..)` rather than directly,
+  // but it lives here as a plain board-style field so it flows through the
+  // same three-layer merge as `light`/`dark`.
+  pattern: none,          // none | "stripes" | "marble" | "wood"
   // Lightness nudges applied to the theme's resolved `light`/`dark` pair
   // (HSL lightness only; hue/saturation pass through unchanged), each a signed
   // ratio in [-100%, +100%] (silently clamped outside it). `auto` = no
@@ -275,8 +278,8 @@
   }
   if "pattern" in f {
     let p = f.at("pattern")
-    assert(p == none or p == "diagonal-stripes",
-      message: "unknown pattern: " + repr(p) + " (expected `none` or \"diagonal-stripes\")")
+    assert(p == none or p == "stripes" or p == "marble" or p == "wood",
+      message: "unknown pattern: " + repr(p) + " (expected `none`, \"stripes\", \"marble\", or \"wood\")")
   }
   for k in ("brightness", "contrast") {
     if k in f {
@@ -291,8 +294,10 @@
 /// `brightness`, `contrast`) for use as `color-theme:` on `board()`,
 /// `set-board-defaults`, or inside a `board-theme`.
 ///
-/// - ..fields (arguments): `light` and/or `dark` colors; `pattern` (`none` or
-///   `"diagonal-stripes"`, dark squares only); `brightness` and `contrast`
+/// - ..fields (arguments): `light` and/or `dark` colors; `pattern` (`none`,
+///   `"stripes"` (dark squares only), or `"marble"`/`"wood"` -- accepted but
+///   currently no-ops that render a visible warning notice instead);
+///   `brightness` and `contrast`
 ///   (each `auto` or a signed ratio, e.g. `10%`/`-5%`, default `auto` = no
 ///   adjustment) nudge the resolved `light`/`dark` pair's HSL lightness --
 ///   `brightness` shifts both squares lighter/darker together, `contrast`

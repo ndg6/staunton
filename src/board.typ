@@ -92,9 +92,9 @@
 // `rect`, which Typst cannot `query()`, so this function is the ONLY
 // machine-checkable form of the pattern -> fill mapping.
 // Light squares are never patterned -- only dark squares get the tiling fill,
-// and only when `pattern == "diagonal-stripes"`; otherwise both stay flat.
+// and only when `pattern == "stripes"`; otherwise both stay flat.
 #let _square-fill(is-dark, light, dark, pattern) = {
-  if is-dark and pattern == "diagonal-stripes" {
+  if is-dark and pattern == "stripes" {
     // Each shape needs its OWN `place` at the tile origin -- a shared block
     // stacks its children in normal flow instead of overlaying them (same
     // trap as `_draw-highlight`'s cross lines above), which silently drops
@@ -108,6 +108,19 @@
     dark
   } else {
     light
+  }
+}
+
+// Pure: returns a small in-document warning notice when `pattern` names a
+// not-yet-implemented pattern ("marble" or "wood"), else `none`. Typst script
+// has no console warning() builtin, so a visible notice on the board is the
+// agreed substitute. Kept pure (no side effects, plain content/none return)
+// so it is directly unit-testable like `_square-fill`.
+#let _pattern-warning(pattern) = {
+  if pattern == "marble" or pattern == "wood" {
+    text(size: 6pt, fill: red, weight: "bold")[⚠ pattern: "#pattern" not yet implemented]
+  } else {
+    none
   }
 }
 
@@ -375,6 +388,12 @@
       let board-canvas = box(width: bw, height: bh, {
         // checker
         _checker(cols, rows, sq, orient, st.light, st.dark, st.pattern)
+        // Visible notice when `pattern` names a not-yet-implemented pattern
+        // (marble/wood); own `place()` call so it overlays rather than
+        // disrupting the checker's normal flow.
+        if _pattern-warning(st.pattern) != none {
+          place(top + left, dx: 2pt, dy: 2pt, _pattern-warning(st.pattern))
+        }
         // highlights (under the pieces, over the checker). Each entry is a square
         // name (uses highlight-shape + highlight-fill), a (square, color) pair
         // (filled, explicit color -- e.g. PGN %csl), or a dict (square:, shape:,
