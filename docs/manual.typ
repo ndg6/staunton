@@ -277,10 +277,14 @@ Package *staunton* aims to provide a complete, convenient and flexible solution
 for chess publications. It provides a full set of features, including:
 
 - *boards and diagrams* — bare boards with labels, highlights, arrows, an optional grid,
-  flexible sizing, custom colors plus reusable color/board themes (brightness/contrast tweaks, theme derivation, and stripe/marble/wood square patterns), and bundled SVG piece sets (or a Unicode fallback); and building on that diagrams with captions, figure counters, and referenceable labels;
-- *games from PGN* — a sophisticated parser creates single games or an array of games from a PGN file,  
-  from which you create positions by using move "locators" (mainline and variations). You can also 
-  play out moves from start positions and export resulting positions as FEN strings;
+  flexible sizing, custom colors plus reusable color/board themes (brightness/contrast
+  tweaks, theme derivation, and various patterns), and bundled SVG piece sets (or a
+  Unicode fallback); and building on that diagrams with captions, figure counters, and
+  referenceable labels;
+- *games from PGN* — a sophisticated parser creates game structures (single or array)
+  from a PGN file, from which you create positions using move "locators" (mainline and
+  variations). You can also play out moves from start positions and export resulting
+  positions as FEN strings;
 - *move notation* — from parsed games you create move text output with localized piece letters,
   figurine glyphs, NAGs (numeric annotation glyphs, the standard `$n` move-assessment codes), comments and diagrams embedded inline;
 - *tournament tables* — we can create standings, cross-tables and progress charts from a PGN's
@@ -388,13 +392,16 @@ with `set-board-defaults(border-theme: ..)` / `set-chess-defaults` (see
 @document-style). It only takes effect with `label-mode: "border"`.
 
 The two material themes are the ones that repay a look — here is `"marble"`, whose
-veining is composited over the bottle-green band:
+veining is composited over the bottle-green band. A material band wants square
+colors that agree with it, so pair it with a matching `color-theme`; the
+green-on-green combination below uses `"emerald"`:
 
 #example(```typ
 #board(
   "8/5k2/8/8/3Q4/8/4K3/8",
   label-mode: "border",
   border-theme: "marble",
+  color-theme: "emerald",
   size: 3.8cm,
 )
 ```)
@@ -499,7 +506,7 @@ the checkerboard, and `light` always ends up the lighter of the two.
 #board(
   "8/5k2/8/8/3Q4/8/4K3/8",
   color-theme: "dutch-gray",
-  contrast: -30%,
+  contrast: 30%,
   size: 3.8cm,
 )
 ```)
