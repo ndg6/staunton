@@ -33,7 +33,50 @@ Then open the PDFs below and check the noted property. (The expected-*fail* test
       board (shaft ~15% of the square), and flip with it; colors/widths as labelled.
 - [ ] `board/labeling/label_modes.pdf`, `border_themes.pdf`, `onsquare_corners.pdf`,
       `onsquare_fullwidth.pdf` — files/ranks in the right gutter/corner, themed
-      bands correct, labels legible and not clashing with pieces.
+      bands correct, labels legible and not clashing with pieces. In
+      `border_themes.pdf` all seven `border-theme` looks are each visually
+      distinguishable from one another and legible (no band/label color clash)
+      — the exact theme -> color wiring is now pinned by the asserting test
+      `board/labeling/border_theme_colors.typ`, so this is just a legibility
+      check, not a color-matching one.
+- [ ] `board/labeling/border_themes.pdf` — the new **wood** and **marble**
+      border-theme bands specifically:
+      - the wood grain / marble veining texture actually APPEARS in the band
+        (not a flat color) — a silently missing overlay is the exact failure
+        mode this repo has hit before (`_stripes-overlay`'s tiling seam bug);
+      - the band reads as ONE continuous material all the way around, with
+        no repeating cell structure — the band is now drawn as a single
+        image spanning the whole band rect (not tiled per square, unlike the
+        square overlays below), which is the specific regression this fixes:
+        Frank had reported the earlier tiled band looked "segmented like it
+        was a stripe of squares" (the asset-path mapping itself is pinned by
+        the asserting test `board/labeling/border_theme_material.typ`, but
+        "does it actually look continuous" is a render-only check);
+      - the file/rank labels stay legible against both textured bands;
+      - **OPEN QUESTION for Frank (tuning)**: the band assets
+        (`wood_band.svg`/`marble_band.svg`) are a first pass at 10x the
+        square assets' noise frequency (needed because one image now spans
+        the whole ~7.3cm band instead of one ~0.8cm square). Whether that
+        grain/veining scale actually looks right at the band's ~4.5mm width
+        is his call — it's a two-number change (`baseFrequency`) in the SVG
+        if not.
+      - **OPEN QUESTION for Frank (color)**: on a rendered check the
+        **marble** band came out noticeably paler and greyer than its
+        `#2d4a3e` bottle-green backdrop suggests — `marble_band.svg`'s light
+        veining layer was authored for dark SQUARES and washes the backdrop
+        out when it covers the whole band. The band reads sage-grey rather
+        than bottle green, ends up lighter than the emerald squares beside
+        it, and (see the label-color flag right below) the creme labels lose
+        contrast against it. Candidate remedies: reduce the veining layer's
+        alpha in the band asset, darken the backdrop, or change the label
+        color — his call which.
+      - **PROVISIONAL, needs Frank's decision**: the marble theme's label
+        color is currently `border-creme` (reused from the "brown"/"wood"
+        themes) — eyeball whether creme reads well on the (currently
+        pale/washed-out, see above) marble band, or whether marble needs its
+        own lighter/different label color constant. This is a design call,
+        not a pass/fail check, and is connected to the washing-out note
+        above rather than a separate issue.
 - [ ] `board/orientation/flip.pdf` — a1 in the correct corner both ways; labels
       flip with the board. Second section: the highlights (filled e4 / circle e5 /
       cross d5) stay on their named squares (mirrored screen position), and the
@@ -43,6 +86,40 @@ Then open the PDFs below and check the noted property. (The expected-*fail* test
 - [ ] `board/size/sizes.pdf` — cells stay square at every size; nothing clipped.
 - [ ] `board/grid/grid.pdf` — 1pt grid lines sit between squares at every size.
 - [ ] `board/colors/colors.pdf` — light/dark themes render as intended.
+- [ ] `board/colors/pattern_stripes.pdf` (prompt 38 §3a, renamed prompt 40 §1) —
+      dark squares show visible thin BLACK diagonal stripes (fine,
+      closely-spaced, ~4pt spacing / stroke 0.5pt) over the theme's own dark
+      background color; light squares stay a flat fill (no stripes). The
+      diagonals must be CONTINUOUS, uniform lines, not dashed and not tapered
+      at intervals — drawn as one continuous stroke per line clipped to the
+      square (`_stripes-overlay`), which replaced an earlier `tiling()` fill
+      that dashed the diagonals at cell boundaries (fixed 2026-07-25). (The
+      pattern -> fill mapping is pinned by the asserting test
+      `board/style_options/color_theme_pattern.typ`; this is just the "does it
+      actually look like diagonal stripes at real board size" check.)
+- [ ] `board/colors/pattern_marble_wood.pdf` (materials, prompt 40 §1 follow-up) —
+      for the **marble** board, BOTH squares show soft, fuzzy marble veining
+      (dark squares green with light veins, light squares a quiet cream stone
+      with faint grey veins), and the grain/veins vary per square rather than
+      reading as an obvious repeating tile. For the **wood** board, DARK
+      squares show linear, slightly-bendy vertical (upright) wood grain (with
+      both darker lines and lighter streaks), while the light (maple) squares
+      stay a flat fill. In both boards the texture should read as composited over
+      the theme's own colors (green/cream, walnut/maple) rather than
+      replacing them. (The pattern → overlay mapping itself — which SVG per
+      pattern/square-color, and the per-square rotation/mirror policy — is
+      pinned by the asserting test `board/style_options/color_theme_pattern.typ`;
+      this is just the "does it actually look like the intended material"
+      check.)
+- [ ] `board/colors/brightness_contrast.pdf` (prompt 38 §2/§12/§13) — versus the
+      baseline board, `brightness: 30%` visibly lightens BOTH squares and
+      `brightness: -30%` visibly darkens both; `contrast: 50%` visibly spreads
+      the gap between the light and dark squares wider. The last board
+      (`contrast: -100%`) sits at the 5%-separation floor: the two squares
+      should stay just barely distinguishable from each other, not collapse
+      into one flat color. (The lightness math itself is pinned by the
+      asserting test `board/style_options/color_theme_brightness_contrast.typ`;
+      this is just the "does it actually look right" check.)
 - [ ] `board/piece_sets/existing/all_piece_sets.pdf`, `custom_user_set.pdf`,
       `unicode_fallback.pdf` — every piece glyph present, centred, correct color
       (including the Unicode glyph fallback).
@@ -158,10 +235,13 @@ These are not under `tests/out/`; build them separately.
         the `"brown"` theme (dark-brown band, creme labels). Left is normal
         orientation, right is `flip: true`; confirm `a1` moves from lower-left to
         upper-right so the coordinate flip is obvious.
-      - *The Board → Labels*: the three `border-theme` looks read as described —
-        `"square"` blends with the board, `"brown"` is dark-brown + creme, `"dark"`
-        is charcoal + light-grey (only the `"brown"` one is rendered inline; the
-        prose describes the others).
+      - *The Board → Labels*: the five `border-theme` looks read as described —
+        `"square"` blends with the board, `"brown"` is espresso-brown + creme
+        (now visibly lighter than the old darker brown), `"creme"` is creme +
+        saddle-brown (a different brown from `"brown"`, not its mirror), `"dark"`
+        is charcoal + light-grey, `"light"` is light-grey + charcoal (the mirror
+        of `"dark"`) (only the `"brown"` one is rendered inline; the prose
+        describes the others).
       - *The Board → Piece Sets and Fonts → Using your own downloaded piece set*:
         the new subsection reads cleanly — the `piece-loader` code block is not
         clipped or overflowing, and the lichess link renders.

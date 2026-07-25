@@ -39,3 +39,9 @@ fairy-art-dabbaba:
     type: web
     title: Wikimedia Commons
   url: https://commons.wikimedia.org/wiki/File:Black_dabbaba.svg
+
+kokopu-react:
+  type: repository
+  title: "kokopu-react — chess-related React components (source of nine built-in square-color themes), LGPL-3.0"
+  author: "Le Montagner, Yoann"
+  url: https://github.com/yo35/kokopu-react

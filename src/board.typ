@@ -21,8 +21,12 @@
 //     gutter), at a fixed font fraction that does NOT change with board size.
 //   * "outside": label strips in a gutter outside the board (the classic look).
 //   * "border": a band of `label-border-ratio` width around the board. The band
-//     fill / label color follow `border-theme` ("square" = dark band + light
-//     labels, "brown" = dark-brown band + creme labels).
+//     fill / label color follow `border-theme`, resolved by `_band-colors`:
+//     "square" = dark band + light labels, "brown" = espresso band + creme
+//     labels, "creme" = creme band + saddle labels, "dark" = charcoal band +
+//     light-grey labels, "light" = the mirror of "dark". "wood" and "marble"
+//     additionally composite a material texture on top of their backdrop
+//     color, via `_band-material`.
 // `labels: false` suppresses all of them. Board labels always use a fixed
 // sans-serif font, independent of the document / diagram font.
 //
@@ -37,7 +41,7 @@
 
 #import "coords.typ": file-letter, parse-square, is-dark-square, _square-index
 #import "pieces.typ": square-piece
-#import "style.typ": default-style, style-state, border-brown, border-creme, border-dark, border-dark-label
+#import "style.typ": default-style, style-state, border-brown, border-creme, border-saddle, border-dark, border-dark-label, border-marble, _expand-themes, _adjust-color-pair
 
 #let default-board-size = 6.4cm
 
@@ -65,19 +69,148 @@
   }
 }
 
+// Resolve a "border"-mode label band to its `(fill, label)` color pair.
+// Pure (everything arrives through parameters) so it is directly unit-testable:
+// the rendered band is a plain `rect`, which Typst cannot `query()`, so this
+// function is the ONLY machine-checkable form of the theme -> color mapping.
+// `light` / `dark` are the board's own square colors, used by the "square" theme.
+//
+// NOTE: "creme" is NOT a mirrored "brown" -- they use two deliberately different
+// browns (#4a3319 band vs #6b4423 label). "light" IS the exact mirror of "dark".
+// Callers must have validated `theme` already; an unknown value falls back to
+// the "square" pair rather than erroring (the assert in `render-board` is the
+// gate that makes that unreachable in practice).
+// "wood" and "marble" also return a `(fill, label)` pair, but for those two
+// themes the returned `fill` is only the BACKDROP color: a material texture
+// (see `_band-material`) is composited on top of it, so the pair alone does
+// not fully describe the rendered band.
+#let _band-colors(theme, light, dark) = {
+  if theme == "brown" { (border-brown, border-creme) }
+  else if theme == "creme" { (border-creme, border-saddle) }
+  else if theme == "dark" { (border-dark, border-dark-label) }
+  else if theme == "light" { (border-dark-label, border-dark) }
+  else if theme == "wood" { (border-brown, border-creme) }
+  else if theme == "marble" { (border-marble, border-creme) }
+  else { (dark, light) }
+}
+
+// Resolve a single square's BASE fill: always the flat theme color for its
+// dark/light-ness. Every `pattern` (stripes / marble / wood) is drawn as a
+// SEPARATE per-square overlay on top in `_checker` -- the base fill never
+// changes. Pure and directly unit-testable (`pattern` no longer affects the
+// return, kept in the signature for call-site stability).
+#let _square-fill(is-dark, light, dark, pattern) = {
+  if is-dark { dark } else { light }
+}
+
+// Pure: the diagonal-stripe overlay for one dark square, size `sq`. Drawn as a
+// set of CONTINUOUS 45-degree strokes (`x + y = k*step`), each a single line
+// with butt ends clipped to the square. This replaces the old `tiling()` fill,
+// which dashed the diagonals: a tiling anti-aliases each cell independently, so
+// where a diagonal crossed a cell boundary the two clipped edges did not sum to
+// fully opaque -- a faint seam every `step` that read as tapered gaps. One
+// continuous stroke per line has no interior boundary and stays uniform.
+// `step` is the c-spacing (perpendicular gap = step / sqrt(2)); matches the old
+// 4pt tile density.
+#let _stripes-overlay(sq, step: 4pt, sw: 0.5pt) = box(width: sq, height: sq, clip: true, {
+  let n = calc.ceil(2 * sq / step)
+  for k in range(1, n) {
+    let cc = k * step
+    let (p1, p2) = if cc <= sq { ((0pt, cc), (cc, 0pt)) } else { ((cc - sq, sq), (sq, cc - sq)) }
+    place(line(start: p1, end: p2, stroke: sw + black))
+  }
+})
+
+// Pure: resolves the source-relative SVG path for a "marble"/"wood" pattern
+// overlay on a given square, or `none` when the pattern has no overlay
+// (`none`, "stripes", or an unknown value) -- same convention as
+// src/pieces.typ's `image(...)` calls, resolved relative to this source
+// file and packaging-safe. Wood only patterns dark squares; marble patterns
+// both.
+#let _material-asset(pattern, is-dark) = {
+  if pattern == "marble" {
+    if is-dark { "assets/patterns/marble_dark.svg" } else { "assets/patterns/marble_light.svg" }
+  } else if pattern == "wood" {
+    if is-dark { "assets/patterns/wood.svg" } else { none }
+  } else {
+    none
+  }
+}
+
+// Pure: a deterministic per-square (rot, mirror) pair for the material
+// overlay, so the identical SVG tile doesn't look uniformly repeated across
+// the board. Marble varies freely (8-way: any 90deg rotation, mirrored or
+// not). Wood is axis-preserving (4-way: only 0/180deg, never 90/270, which
+// would turn the vertical grain horizontal).
+#let _material-orientation(pattern, row, col) = {
+  let h = calc.rem(row * 73 + col * 179 + row * col * 13 + 7, 1009)
+  if pattern == "marble" {
+    let k = calc.rem(h, 8)
+    (rot: calc.rem(k, 4) * 90deg, mirror: k >= 4)
+  } else if pattern == "wood" {
+    let k = calc.rem(h, 4)
+    (rot: calc.rem(k, 2) * 180deg, mirror: k >= 2)
+  } else {
+    (rot: 0deg, mirror: false)
+  }
+}
+
+// Apply a mirror then a rotation to `body` with reflow disabled, so the
+// square footprint is preserved (a square under 90deg-multiple rotations /
+// axis mirrors stays exactly square, so placement is unaffected).
+#let _oriented(body, rot, mirror) = {
+  let m = if mirror { scale(x: -100%, reflow: false, body) } else { body }
+  rotate(rot, reflow: false, m)
+}
+
+// Resolve a "border"-mode label band's material texture: the source-relative
+// SVG path for the "wood"/"marble" border-themes, or `none` for the five
+// themes that stay a flat color. Pure and directly unit-testable (like
+// `_band-colors`, since the rendered band is a plain `rect`/`image` stack,
+// which Typst cannot `query()`).
+//
+// Deliberately does NOT delegate to `_material-asset`: the band is drawn as a
+// SINGLE image spanning the whole band rect, not a tiled grid of squares, so
+// it needs its own band-scale assets (`wood_band.svg`/`marble_band.svg`)
+// authored at roughly 10x the noise frequency of the square assets -- without
+// that, one image stretched over the full band (~7.3cm vs. ~0.8cm for a
+// square) would lose its material character (wood degenerating into large
+// blobs, marble washing out to a near-flat white). This is why the returned
+// path no longer agrees with `_material-asset("wood"/"marble", ..)`.
+#let _band-material(theme) = {
+  if theme == "wood" { "assets/patterns/wood_band.svg" }
+  else if theme == "marble" { "assets/patterns/marble_band.svg" }
+  else { none }
+}
+
 // Draw the checkerboard squares. Pure (closes over no context/style value --
 // everything comes through its parameters), so Typst can memoise it: a
-// document whose diagrams share geometry+size+colors builds the checker once
-// instead of per board.
-#let _checker(cols, rows, sq, orientation, light, dark) = {
+// document whose diagrams share geometry+size+colors+pattern builds the
+// checker once instead of per board.
+#let _checker(cols, rows, sq, orientation, light, dark, pattern) = {
+  // The stripe overlay is identical for every dark square (depends only on sq),
+  // so build it once and reuse rather than per square.
+  let stripes = if pattern == "stripes" { _stripes-overlay(sq) } else { none }
   for row in range(rows) {
     for col in range(cols) {
+      let is-d = is-dark-square(col, row)
       let o = _screen(col, row, sq, orientation, cols, rows)
       place(dx: o.dx, dy: o.dy, rect(
         width: sq, height: sq,
-        fill: if is-dark-square(col, row) { dark } else { light },
+        fill: _square-fill(is-d, light, dark, pattern),
         stroke: none,
       ))
+      // Pattern overlay on top of the flat fill: stripes (dark squares) or a
+      // material SVG (marble both squares / wood dark only).
+      if is-d and stripes != none {
+        place(dx: o.dx, dy: o.dy, stripes)
+      } else {
+        let _asset = _material-asset(pattern, is-d)
+        if _asset != none {
+          let _ori = _material-orientation(pattern, row, col)
+          place(dx: o.dx, dy: o.dy, _oriented(image(_asset, width: sq, height: sq), _ori.rot, _ori.mirror))
+        }
+      }
     }
   }
 }
@@ -266,7 +399,17 @@
   assert(type(squares) == dictionary, message: "render-board expects a squares dict (square -> (kind, color)); got " + repr(type(squares)))
 
   context {
-    let st = default-style + style-state.get() + overrides.named()
+    // Per-call `color-theme` / `board-theme` are expanded here, same as the
+    // defaults setters (see `_expand-themes` in style.typ) -- an explicit
+    // individual field in THIS call must win over a theme in THIS call.
+    let st = default-style + style-state.get() + _expand-themes(overrides.named())
+    // Apply the `brightness`/`contrast` lightness nudges once, here, to the
+    // final resolved `light`/`dark` pair -- everything downstream (checker,
+    // labels, border band) reads `st.light`/`st.dark` and must see the
+    // adjusted colors.
+    let (light: st-light, dark: st-dark) = _adjust-color-pair(st.light, st.dark, st.brightness, st.contrast)
+    st.light = st-light
+    st.dark = st-dark
     // Labels use `st.label-font` (configurable); shadow the helper so the call
     // sites below pick it up without threading the font through each one.
     let _label-text = (body, size, fill) => text(font: st.label-font, size: size, fill: fill, body)
@@ -276,7 +419,7 @@
     assert(st.rank-label-corner == left or st.rank-label-corner == right, message: "rank-label-corner must be `left` or `right`")
     let modes = ("on-square", "outside", "border")
     assert(modes.contains(st.label-mode), message: "label-mode must be one of " + repr(modes) + "; got " + repr(st.label-mode))
-    let themes = ("square", "brown", "dark")
+    let themes = ("square", "brown", "creme", "dark", "light", "wood", "marble")
     assert(themes.contains(st.border-theme), message: "border-theme must be one of " + repr(themes) + "; got " + repr(st.border-theme))
 
     let labels = st.labels
@@ -318,7 +461,7 @@
 
       let board-canvas = box(width: bw, height: bh, {
         // checker
-        _checker(cols, rows, sq, orient, st.light, st.dark)
+        _checker(cols, rows, sq, orient, st.light, st.dark, st.pattern)
         // highlights (under the pieces, over the checker). Each entry is a square
         // name (uses highlight-shape + highlight-fill), a (square, color) pair
         // (filled, explicit color -- e.g. PGN %csl), or a dict (square:, shape:,
@@ -434,10 +577,17 @@
         // from the board, regardless of the `border` outline.
         let total-w = bw + 2 * g
         let total-h = bh + 2 * g
-        let band-fill = if st.border-theme == "brown" { border-brown } else if st.border-theme == "dark" { border-dark } else { st.dark }
-        let band-label = if st.border-theme == "brown" { border-creme } else if st.border-theme == "dark" { border-dark-label } else { st.light }
+        let (band-fill, band-label) = _band-colors(st.border-theme, st.light, st.dark)
+        // "wood"/"marble" composite a single continuous material image over
+        // the flat backdrop, sized exactly to the band so no clipping is
+        // needed. Like the flat backdrop, it also covers the interior, which
+        // the board canvas placed right after then hides.
+        let _band-mat = _band-material(st.border-theme)
         box(width: total-w, height: total-h, {
           place(rect(width: total-w, height: total-h, fill: band-fill, stroke: none))
+          if _band-mat != none {
+            place(image(_band-mat, width: total-w, height: total-h))
+          }
           place(dx: g, dy: g, board-canvas)
           place(dx: g, dy: g, rect(width: bw, height: bh, fill: none, stroke: 0.5pt + black))
           let file-dy = if st.file-side == bottom { g + bh } else { 0pt }

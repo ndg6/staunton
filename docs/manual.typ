@@ -276,11 +276,15 @@
 Package *staunton* aims to provide a complete, convenient and flexible solution
 for chess publications. It provides a full set of features, including:
 
-- *boards and diagrams* — bare boards with labels, highlights, arrows, an optional grid, 
-  flexible sizing, custom colors, and bundled SVG piece sets (or a Unicode fallback); and building on that diagrams with captions, figure counters, and referenceable labels;
-- *games from PGN* — a sophisticated parser creates single games or an array of games from a PGN file,  
-  from which you create positions by using move "locators" (mainline and variations). You can also 
-  play out moves from start positions and export resulting positions as FEN strings;
+- *boards and diagrams* — bare boards with labels, highlights, arrows, an optional grid,
+  flexible sizing, custom colors plus reusable color/board themes (brightness/contrast
+  tweaks, theme derivation, and various patterns), and bundled SVG piece sets (or a
+  Unicode fallback); and building on that diagrams with captions, figure counters, and
+  referenceable labels;
+- *games from PGN* — a sophisticated parser creates game structures (single or array)
+  from a PGN file, from which you create positions using move "locators" (mainline and
+  variations). You can also play out moves from start positions and export resulting
+  positions as FEN strings;
 - *move notation* — from parsed games you create move text output with localized piece letters,
   figurine glyphs, NAGs (numeric annotation glyphs, the standard `$n` move-assessment codes), comments and diagrams embedded inline;
 - *tournament tables* — we can create standings, cross-tables and progress charts from a PGN's
@@ -288,7 +292,7 @@ for chess publications. It provides a full set of features, including:
 - *Chess960 / Fischer Random Chess* — the same board, engine, PGN pipeline and notation
   handle chess960, with X-FEN castling, the FRC PGN tags, and start-by-number instead of FEN (see @chess960);
 - *outlines and references* — diagrams and tables get their own counters and lists;
-- *document-wide styling* and *localization* (six languages, easily extended);
+- *document-wide styling* and *localization* (seven languages, easily extended);
 - *limited HTML export* — notation, tables, outlines, references and captioned
   figures become native HTML, with boards and diagrams embedded as inline SVG
   (see @html-export).
@@ -366,17 +370,266 @@ themed band, styled by `border-theme`). `labels: false` suppresses labels comple
 )
 ```)
 
-In `"border"` mode, `border-theme` picks the band's look — the fill color and the
-contrasting label color:
+In `"border"` mode, `border-theme` picks the band's look — the fill color, the
+contrasting label color, and for two themes a material texture composited
+over the band:
 
 - `"square"` (default) — the band reuses the board's own `dark` square color with
   `light`-colored labels, so the border blends into the board;
-- `"brown"` — a very dark-brown band with creme labels (a warm, classic frame);
-- `"dark"` — a charcoal band with light-grey labels (suits dark backgrounds).
+- `"brown"` — an espresso-brown band with creme labels (a warm, classic frame);
+- `"creme"` — a creme band with saddle-brown labels (a light, paper-like frame);
+- `"dark"` — a charcoal band with light-grey labels (suits dark backgrounds);
+- `"light"` — a light-grey band with charcoal labels, the mirror of `"dark"`;
+- `"wood"` — the same espresso-brown band and creme labels as `"brown"`, plus a
+  wood-grain texture overlay — the band counterpart of the `"wood"` square
+  `pattern` (@themes), for matching a wood-patterned board;
+- `"marble"` — a bottle-green band with creme labels and a marble-veining
+  texture overlay — the band counterpart of the `"marble"` square `pattern`
+  (@themes).
 
 `border-theme` is a normal board option: set it per call as above, or document-wide
 with `set-board-defaults(border-theme: ..)` / `set-chess-defaults` (see
 @document-style). It only takes effect with `label-mode: "border"`.
+
+The two material themes are the ones that repay a look — here is `"marble"`, whose
+veining is composited over the bottle-green band. A material band wants square
+colors that agree with it, so pair it with a matching `color-theme`; the
+green-on-green combination below uses `"emerald"`:
+
+#example(```typ
+#board(
+  "8/5k2/8/8/3Q4/8/4K3/8",
+  label-mode: "border",
+  border-theme: "marble",
+  color-theme: "emerald",
+  size: 3.8cm,
+)
+```)
+
+== Color and Board Themes <themes>
+
+Beyond setting `light`/`dark` (and the other board options) one at a time,
+*staunton* bundles reusable "looks" into two kinds of themes:
+
+- `color-theme(light: .., dark: ..)` bundles just the two square colors.
+- `board-theme(..)` bundles a whole board look — any board style field (fonts,
+  labels, border, grid, …), plus a nested `color-theme`.
+
+Both accept either a *built-in name* (a string — see the catalogue below) or a
+value from the constructor. Themes are ordinary values: define your own with
+`#let mine = color-theme(light: rgb("#eeeed2"), dark: rgb("#769656"))` and reuse
+it wherever a color theme is accepted — there is no name registry for
+user-defined themes; only the built-ins are reachable by string name.
+
+`color-theme(..)` also takes a `pattern` field, for a square fill other than a
+flat color:
+
+- `none` (default) — flat `light`/`dark` fills, as above.
+- `"stripes"` — dark squares get thin black diagonal stripes drawn on top of
+  the flat `dark` fill (continuous lines, evenly spaced). Light squares are
+  always flat `light`, regardless of `pattern` — stripes only ever apply to
+  dark squares.
+- `"marble"` — a transparent marble-texture overlay is composited on top of
+  *both* squares' flat fills: a green-marble texture on dark squares, a
+  quieter light-stone texture on light squares.
+- `"wood"` — a transparent wood-grain overlay (linear, slightly bendy grain)
+  is composited on top of dark squares only; light squares stay flat, same
+  as `pattern: none`.
+
+Both material overlays are drawn *on top of* the theme's own `light`/`dark`
+colors and never change them — the overlay only adds texture, so the actual
+look still depends on the colors you pick via `color-theme`. Each square's
+overlay is also rotated/mirrored by a per-square orientation, so the
+texture doesn't read as one obviously repeating tile across the board.
+
+An unknown `pattern` value raises a clear error.
+
+#example(```typ
+#board(
+  "8/5k2/8/8/3Q4/8/4K3/8",
+  color-theme: color-theme(
+    light: rgb("#eeeed2"), dark: rgb("#769656"),
+    pattern: "stripes",
+  ),
+  size: 3.8cm,
+)
+```)
+
+Since the material overlays don't set colors themselves, pick a `light`/`dark`
+pair that suits the material. Two pairings that work well:
+
+#example(```typ
+#board(
+  "8/5k2/8/8/3Q4/8/4K3/8",
+  color-theme: color-theme(
+    light: rgb("#eeeed2"), dark: rgb("#3f6b4a"),
+    pattern: "marble",
+  ),
+  size: 3.8cm,
+)
+```)
+
+#example(```typ
+#board(
+  "8/5k2/8/8/3Q4/8/4K3/8",
+  color-theme: color-theme(
+    light: rgb("#d9b98a"), dark: rgb("#6b4a2f"),
+    pattern: "wood",
+  ),
+  size: 3.8cm,
+)
+```)
+
+`color-theme(..)` also takes `brightness` and `contrast` fields, for nudging
+an existing theme's colors without picking new ones by hand. Both default to
+`auto` (no adjustment) or take a signed ratio such as `10%`/`-5%`:
+
+- `brightness` shifts the `light` and `dark` squares' lightness together —
+  positive tints both toward white, negative shades both toward black.
+- `contrast` spreads or compresses the lightness gap *between* `light` and
+  `dark`, around their own midpoint — positive pulls them further apart,
+  negative pulls them closer together.
+
+Both only touch each color's HSL lightness; hue and saturation pass through
+unchanged. Values outside `[-100%, +100%]` are silently clamped, and the pair
+is always held at least 5% apart in lightness — an extreme setting (e.g.
+`contrast: -100%`) is pushed back apart rather than collapsing or inverting
+the checkerboard, and `light` always ends up the lighter of the two.
+
+#example(```typ
+#board(
+  "8/5k2/8/8/3Q4/8/4K3/8",
+  color-theme: "dutch-gray",
+  brightness: 10%,
+  size: 3.8cm,
+)
+#board(
+  "8/5k2/8/8/3Q4/8/4K3/8",
+  color-theme: "dutch-gray",
+  contrast: 30%,
+  size: 3.8cm,
+)
+```)
+
+Two new board style fields put themes to work — `color-theme` and
+`board-theme` — usable everywhere board style is set: per call on `board(..)`
+(and `chess-board`/`diagram`/`chess-diagram`), or document-wide via
+`set-board-defaults` / `set-chess-defaults` (see @document-style).
+
+#example(```typ
+#board(
+  "8/5k2/8/8/3Q4/8/4K3/8",
+  board-theme: "dutch-gray",
+  size: 3.8cm,
+)
+```)
+
+When a `board-theme`, an explicit `color-theme`, and explicit individual
+fields (like `dark: ..`) are all given together, the more specific one wins —
+same rule as everywhere else in *staunton*: `board-theme`'s fields lose to an
+explicit `color-theme`, which in turn loses to explicit individual fields; and
+per-call still beats a document default, which beats the factory default.
+
+=== Built-In Catalogue
+
+Eleven names are available as both a `color-theme` and a matching
+`board-theme` (the board-theme version additionally sets the board's chrome):
+
+#table(
+  columns: (1.3fr, 3.7fr),
+  inset: 5pt, align: left + horizon, stroke: 0.5pt + rgb("#d9d9d2"),
+  table.header([*name*], [*look*]),
+  raw("\"staunton-default\""), [the house style — same colors as the factory default],
+  raw("\"dutch-gray\""), [white and light-grey squares; as a board-theme, also turns labels off and drops the border],
+  raw("\"scid\""), [reproduces the SCID database app],
+  raw("\"wikipedia\""), [reproduces Wikipedia's chess diagrams],
+  raw("\"xboard\""), [reproduces XBoard],
+  raw("\"coral\""), [a green-and-teal pairing],
+  raw("\"dusk\""), [a muted rose-and-plum pairing],
+  raw("\"emerald\""), [a sage-and-forest-green pairing],
+  raw("\"marine\""), [a periwinkle-and-indigo pairing],
+  raw("\"sandcastle\""), [a warm gold-and-umber pairing],
+  raw("\"wheat\""), [a pale wheat-and-olive pairing],
+)
+
+For all but `"dutch-gray"`#footnote[The `dutch-gray` theme reproduces the
+minimal look of in-text analysis diagrams in printed chess magazines — white
+and light-grey squares, no frame, no coordinates. The colors were sampled
+from a New In Chess publication; *staunton* is not affiliated with or
+endorsed by New In Chess.], the `board-theme` keeps *staunton*'s own chrome
+(labels on, the usual border) and changes only the square colors; only
+`"dutch-gray"` also strips labels and border, matching the minimal in-text
+diagrams it's modeled on.
+
+#example(```typ
+#for name in (
+  "staunton-default", "dutch-gray", "scid", "wikipedia", "xboard",
+  "coral", "dusk", "emerald", "marine", "sandcastle", "wheat",
+) {
+  box(board((:), board-theme: name, size: 1.6cm))
+}
+```)
+
+The square colors of the nine themes `"scid"`, `"wikipedia"`, `"xboard"`,
+`"coral"`, `"dusk"`, `"emerald"`, `"marine"`, `"sandcastle"`, and `"wheat"` are
+reproduced from
+#link("https://github.com/yo35/kokopu-react")[kokopu-react] @kokopu-react,
+LGPL-3.0, © Yoann Le Montagner. `"wikipedia"`, `"scid"`, and `"xboard"` are named for —
+and reproduce the look of — Wikipedia's chess diagrams, the SCID database
+app, and XBoard, respectively.
+
+=== Deriving Themes with `base`
+
+Both `color-theme(..)` and `board-theme(..)` accept a `base` argument: a
+built-in theme name (a string) or another value from the matching
+constructor. `base`'s fields are merged in first, and this call's own
+explicit fields win over anything inherited from `base` — the same
+later-wins rule used everywhere else in *staunton*. This makes it easy to
+start from a built-in look and tweak just a few fields, instead of
+re-specifying the whole theme by hand.
+
+#example(```typ
+#let my-dutch-gray = color-theme(base: "dutch-gray", contrast: 10%)
+#board(
+  "8/5k2/8/8/3Q4/8/4K3/8",
+  color-theme: my-dutch-gray,
+  size: 3.8cm,
+)
+```)
+
+A `board-theme`'s `base` can also be layered with that same call's own
+nested `color-theme` field — the nested `color-theme` always wins over
+anything the base contributed, so it can override just the square colors
+while keeping the base's chrome (labels, border, and so on):
+
+#example(```typ
+#board(
+  "8/5k2/8/8/3Q4/8/4K3/8",
+  board-theme: board-theme(
+    base: "dutch-gray",
+    color-theme: (light: rgb("#ffe0e0")),
+  ),
+  size: 3.8cm,
+)
+```)
+
+Because `base` accepts a constructor value as well as a built-in name, themes
+can also be derived from a previously derived theme, chaining any number of
+steps:
+
+```typ
+#let my-look = board-theme(base: "dutch-gray", labels: false)
+#let my-look2 = board-theme(base: my-look, border-theme: "creme")
+```
+
+`base` is consumed when the constructor runs and never appears in the
+resulting theme value.
+
+`base` is a named argument understood only by the `color-theme(..)` and
+`board-theme(..)` constructors themselves — a hand-rolled dict passed
+directly as a `color-theme`/`board-theme` field (e.g.
+`color-theme: (base: "dutch-gray")`, skipping the constructor call) does not
+support it and raises "unknown color theme option".
 
 == Highlights
 
@@ -1343,7 +1596,7 @@ diagram and table buckets; the umbrella routes them to *diagram*, so use
 
 == Language
 
-Package *staunton* supports localisation of text-related output. At the moment we support six different languages; apart from the standard English, we offer German, French, Spanish, Italian, Portuguese, and Russian. We can easily extend the list of supported languages by adding new translation files. 
+Package *staunton* supports localisation of text-related output. At the moment we support seven different languages; apart from the standard English, we offer German, French, Spanish, Italian, Portuguese, and Russian. We can easily extend the list of supported languages by adding new translation files.
 
 The `notation` / `chess-notation` functions localise the piece letters, and the `chess-diagram` / `chess-table` figures carry language-aware titles and captions. The `lang:` argument on each function overrides the document default, and the document default is set with `set-lang`.
 
@@ -1462,12 +1715,14 @@ setters reject them), though their *styling* options can.
   table.header([*option*], [*default*], [*meaning*]),
   raw("size"), raw("auto"), [board size: a `length`, a `ratio` of the width, or `auto`],
   [`light` / `dark`], [tan theme], [the two square fill colors],
+  raw("color-theme"), raw("none"), [a built-in name or `color-theme(..)` value bundling `light`/`dark` — see @themes],
+  raw("board-theme"), raw("none"), [a built-in name or `board-theme(..)` value bundling a full board look — see @themes],
   raw("labels"), raw("true"), [show rank/file labels],
   raw("label-font"), [`("Arial", "DejaVu Sans Mono")`], [label font — a family or a fallback list],
   raw("label-mode"), raw("\"on-square\""), [`"on-square"` / `"outside"` / `"border"`],
   [`file-side` / `rank-side`], [`bottom` / `right`], [which edge files / ranks sit on],
   [`file-label-corner` / `rank-label-corner`], [`left` / `right`], [on-square label corner],
-  raw("border-theme"), raw("\"square\""), [`"border"` band theme: `"square"` / `"brown"` / `"dark"`],
+  raw("border-theme"), raw("\"square\""), [`"border"` band theme: `"square"` / `"brown"` / `"creme"` / `"dark"` / `"light"` / `"wood"` / `"marble"`],
   raw("border"), [`0.5pt + luma(40)`], [thin board outline (`none` to drop)],
   raw("grid"), raw("false"), [1pt grid lines between squares],
   raw("piece-set"), raw("\"cburnett\""), [SVG set name, or `"unicode"` for the glyph fallback],
@@ -1583,6 +1838,13 @@ source docstring: its signature, then every parameter with its type and default.
   ("/lib.typ", "chess-outlines"),
 ))
 
+== Themes
+See @themes for the built-in catalogue and the precedence rule.
+#show-fns((
+  ("/src/style.typ", "color-theme"),
+  ("/src/style.typ", "board-theme"),
+))
+
 == Document Defaults
 #show-fns((
   ("/src/style.typ", "set-chess-defaults"),
@@ -1674,5 +1936,8 @@ set for mixed boards.
 = Acknowledgements
 
 The Typst package #link("https://typst.app/universe/package/boards-n-pieces")[boards-n-pieces]
-was an inspiration for some of staunton's features. This package and its manual
-were developed with assistance from Claude (Opus 4.8) by Anthropic.
+was an inspiration for some of staunton's features. The square colors of nine of
+the built-in color themes are reproduced from
+#link("https://github.com/yo35/kokopu-react")[kokopu-react] (LGPL-3.0) by Yoann
+Le Montagner (see @themes). This package and its manual were developed with
+assistance from Claude (Opus 4.8) by Anthropic.

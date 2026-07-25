@@ -200,6 +200,32 @@ header must error with that message, any other must compile. Files/dirs prefixed
      currently in development. Keep its heading version-only (e.g. "### 0.2.2") —
      never add "(unreleased)" or similar to user-visible text. -->
 
+### 0.3.0
+
+- **More border themes**: `border-theme` (the `label-mode: "border"` band) gains
+  `"creme"` (creme band, saddle-brown labels) and `"light"` (light-grey band,
+  charcoal labels — the mirror of `"dark"`), joining `"square"`, `"brown"` and
+  `"dark"`.
+- **Material border themes**: `border-theme` also gains `"wood"` and `"marble"`,
+  the band counterparts of the `"wood"` / `"marble"` square `pattern`s — a
+  wood-grain or marble-veining texture composited over the band, for matching
+  a wood- or marble-patterned board. `"wood"` reuses `"brown"`'s exact band and
+  label colors; `"marble"` is a bottle-green band with creme labels.
+- **`"brown"` border theme retuned**: its band is now a lighter espresso brown
+  (was a very dark near-black brown). ⚠️ This changes how existing documents
+  using `border-theme: "brown"` look — the frame is visibly lighter. Set the old
+  color explicitly if you need the previous appearance.
+- **Color and board themes**: `color-theme(light:, dark:)` bundles a square-color
+  pairing, and `board-theme(..)` bundles a full board look (any board style field
+  plus a nested color theme). Both accept a built-in name or a constructor value,
+  and are set via the new `color-theme` / `board-theme` board style fields
+  (per-call or document-wide). Eleven built-ins ship: `"staunton-default"`,
+  `"dutch-gray"`, and nine themes reproduced from kokopu-react (`"scid"`,
+  `"wikipedia"`, `"xboard"`, `"coral"`, `"dusk"`, `"emerald"`, `"marine"`,
+  `"sandcastle"`, `"wheat"`), whose square colors are reproduced from
+  [kokopu-react](https://github.com/yo35/kokopu-react) (LGPL-3.0, © Yoann Le
+  Montagner). See the manual for the full catalogue and the precedence rule.
+
 ### 0.2.2
 
 - **Proportional markers**: cross / circle / arrow strokes — and the new
