@@ -11,28 +11,33 @@
 // replace, the render sheets `board/colors/pattern_stripes.typ` and
 // `board/colors/pattern_marble_wood.typ`.
 #import "/lib.typ": color-theme
-#import "/src/board.typ": _square-fill, _material-asset, _material-orientation
+#import "/src/board.typ": _square-fill, _material-asset, _material-orientation, _stripes-overlay
 
 #let stand-in-light = rgb("#040506")
 #let stand-in-dark = rgb("#010203")
 
-// 1. dark square + "stripes" -> a tiling fill, not a plain color.
-#assert.eq(str(type(_square-fill(true, stand-in-light, stand-in-dark, "stripes"))), "tiling",
-  message: "a dark square with pattern: \"stripes\" must produce a tiling fill")
+// 1. `_square-fill` is now ALWAYS the flat theme color -- every pattern
+// (stripes / marble / wood) is drawn as a separate per-square overlay on top,
+// so the base fill never depends on `pattern`. dark -> dark, regardless of
+// pattern; light -> light.
+#assert.eq(_square-fill(true, stand-in-light, stand-in-dark, "stripes"), stand-in-dark,
+  message: "a dark square's base fill must be the plain `dark` color (stripes are a separate overlay now, not a tiling fill)")
+#assert.eq(_square-fill(false, stand-in-light, stand-in-dark, "stripes"), stand-in-light,
+  message: "a light square must stay a flat `light` fill (stripes never apply to light squares)")
+
+// 1b. `_stripes-overlay(sq)` is the dark-square diagonal-stripe overlay --
+// content (a box of continuous diagonal lines), not none. This replaced the
+// old `tiling()` fill (which dashed the diagonals at cell boundaries).
+#assert(str(type(_stripes-overlay(4pt))) == "content",
+  message: "_stripes-overlay(sq) must return drawable content (the diagonal-line overlay)")
 
 // 2. dark square + pattern: none -> the plain dark color, unchanged.
 #assert.eq(_square-fill(true, stand-in-light, stand-in-dark, none), stand-in-dark,
   message: "a dark square with pattern: none must return the plain `dark` color unchanged")
 
-// 3. light square + "stripes" -> the plain light color, unchanged --
-// stripes never apply to light squares regardless of pattern.
-#assert.eq(_square-fill(false, stand-in-light, stand-in-dark, "stripes"), stand-in-light,
-  message: "a light square must stay a flat fill even when pattern: \"stripes\" is set")
-
-// 4. "marble" and "wood" still return the plain flat color from
-// `_square-fill` -- the material texture is now a SEPARATE image overlay
-// (via `_material-asset` / `_material-orientation`), not part of the base
-// square fill.
+// 4. "marble" and "wood" also return the plain flat color from `_square-fill`
+// -- the material texture is a SEPARATE image overlay (via `_material-asset` /
+// `_material-orientation`), not part of the base square fill.
 #assert.eq(_square-fill(true, stand-in-light, stand-in-dark, "marble"), stand-in-dark,
   message: "a dark square with pattern: \"marble\" must still return the plain `dark` color from `_square-fill` (the texture is a separate overlay)")
 #assert.eq(_square-fill(true, stand-in-light, stand-in-dark, "wood"), stand-in-dark,

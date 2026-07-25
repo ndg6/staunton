@@ -86,36 +86,32 @@
   else { (dark, light) }
 }
 
-// Resolve a single square's fill given its dark/light-ness, the theme's own
-// colors, and the theme's `pattern`. Pure (everything arrives through
-// parameters) so it is directly unit-testable: the rendered square is a plain
-// `rect`, which Typst cannot `query()`, so this function is the ONLY
-// machine-checkable form of the pattern -> fill mapping.
-// Light squares are never patterned -- only dark squares get the tiling fill,
-// and only when `pattern == "stripes"`; otherwise both stay flat.
+// Resolve a single square's BASE fill: always the flat theme color for its
+// dark/light-ness. Every `pattern` (stripes / marble / wood) is drawn as a
+// SEPARATE per-square overlay on top in `_checker` -- the base fill never
+// changes. Pure and directly unit-testable (`pattern` no longer affects the
+// return, kept in the signature for call-site stability).
 #let _square-fill(is-dark, light, dark, pattern) = {
-  if is-dark and pattern == "stripes" {
-    // Each shape needs its OWN `place` at the tile origin -- a shared block
-    // stacks its children in normal flow instead of overlaying them (same
-    // trap as `_draw-highlight`'s cross lines above), which silently drops
-    // the diagonal line below the tile's clip bounds and renders as a flat
-    // fill with no visible stripe.
-    tiling(size: (4pt, 4pt), relative: "parent", {
-      place(dx: 0pt, dy: 0pt, rect(width: 4pt, height: 4pt, fill: dark, stroke: none))
-      // The diagonal is drawn OVERHANGING the 4pt tile (endpoints 2pt beyond
-      // each corner) so that when Typst clips the motif to the tile cell, the
-      // stroke fully covers the tile boundary. A corner-to-corner line instead
-      // gets its stroke clipped right at the cell edge, leaving a periodic gap
-      // where consecutive cells' segments meet -- the diagonals then render as
-      // dashed rather than continuous stripes.
-      place(dx: 0pt, dy: 0pt, line(start: (-2pt, 6pt), end: (6pt, -2pt), stroke: 0.5pt + black))
-    })
-  } else if is-dark {
-    dark
-  } else {
-    light
-  }
+  if is-dark { dark } else { light }
 }
+
+// Pure: the diagonal-stripe overlay for one dark square, size `sq`. Drawn as a
+// set of CONTINUOUS 45-degree strokes (`x + y = k*step`), each a single line
+// with butt ends clipped to the square. This replaces the old `tiling()` fill,
+// which dashed the diagonals: a tiling anti-aliases each cell independently, so
+// where a diagonal crossed a cell boundary the two clipped edges did not sum to
+// fully opaque -- a faint seam every `step` that read as tapered gaps. One
+// continuous stroke per line has no interior boundary and stays uniform.
+// `step` is the c-spacing (perpendicular gap = step / sqrt(2)); matches the old
+// 4pt tile density.
+#let _stripes-overlay(sq, step: 4pt, sw: 0.5pt) = box(width: sq, height: sq, clip: true, {
+  let n = calc.ceil(2 * sq / step)
+  for k in range(1, n) {
+    let cc = k * step
+    let (p1, p2) = if cc <= sq { ((0pt, cc), (cc, 0pt)) } else { ((cc - sq, sq), (sq, cc - sq)) }
+    place(line(start: p1, end: p2, stroke: sw + black))
+  }
+})
 
 // Pure: resolves the source-relative SVG path for a "marble"/"wood" pattern
 // overlay on a given square, or `none` when the pattern has no overlay
@@ -164,18 +160,28 @@
 // document whose diagrams share geometry+size+colors+pattern builds the
 // checker once instead of per board.
 #let _checker(cols, rows, sq, orientation, light, dark, pattern) = {
+  // The stripe overlay is identical for every dark square (depends only on sq),
+  // so build it once and reuse rather than per square.
+  let stripes = if pattern == "stripes" { _stripes-overlay(sq) } else { none }
   for row in range(rows) {
     for col in range(cols) {
+      let is-d = is-dark-square(col, row)
       let o = _screen(col, row, sq, orientation, cols, rows)
       place(dx: o.dx, dy: o.dy, rect(
         width: sq, height: sq,
-        fill: _square-fill(is-dark-square(col, row), light, dark, pattern),
+        fill: _square-fill(is-d, light, dark, pattern),
         stroke: none,
       ))
-      let _asset = _material-asset(pattern, is-dark-square(col, row))
-      if _asset != none {
-        let _ori = _material-orientation(pattern, row, col)
-        place(dx: o.dx, dy: o.dy, _oriented(image(_asset, width: sq, height: sq), _ori.rot, _ori.mirror))
+      // Pattern overlay on top of the flat fill: stripes (dark squares) or a
+      // material SVG (marble both squares / wood dark only).
+      if is-d and stripes != none {
+        place(dx: o.dx, dy: o.dy, stripes)
+      } else {
+        let _asset = _material-asset(pattern, is-d)
+        if _asset != none {
+          let _ori = _material-orientation(pattern, row, col)
+          place(dx: o.dx, dy: o.dy, _oriented(image(_asset, width: sq, height: sq), _ori.rot, _ori.mirror))
+        }
       }
     }
   }

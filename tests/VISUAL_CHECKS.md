@@ -50,11 +50,12 @@ Then open the PDFs below and check the noted property. (The expected-*fail* test
 - [ ] `board/colors/colors.pdf` — light/dark themes render as intended.
 - [ ] `board/colors/pattern_stripes.pdf` (prompt 38 §3a, renamed prompt 40 §1) —
       dark squares show visible thin BLACK diagonal stripes (fine,
-      closely-spaced, tile 4pt / stroke 0.5pt) over the theme's own dark
+      closely-spaced, ~4pt spacing / stroke 0.5pt) over the theme's own dark
       background color; light squares stay a flat fill (no stripes). The
-      diagonals must be CONTINUOUS lines, not dashed — the stroke is drawn
-      overhanging the tile so per-tile clipping leaves no periodic gap where
-      cells meet (this dashing was a real bug, fixed 2026-07-25). (The
+      diagonals must be CONTINUOUS, uniform lines, not dashed and not tapered
+      at intervals — drawn as one continuous stroke per line clipped to the
+      square (`_stripes-overlay`), which replaced an earlier `tiling()` fill
+      that dashed the diagonals at cell boundaries (fixed 2026-07-25). (The
       pattern -> fill mapping is pinned by the asserting test
       `board/style_options/color_theme_pattern.typ`; this is just the "does it
       actually look like diagonal stripes at real board size" check.)
