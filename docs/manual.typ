@@ -1166,10 +1166,9 @@ show move text exactly as it was recorded in the PGN, you often want to amend an
 
 To support different chess variants in the future`notation(..)` is the *variant-agnostic* primitive and `chess-notation(..)` is the *standard-western-chess* wrapper over it — identical
 output today, but `chess-notation` fixes the variant and rejects a source of a
-non-standard `variant`. The split is deliberate and forward-looking: staunton is
-*variant-forward*, so a future variant gets its own name — a planned
-`xiangqi-notation`, `shogi-notation`, … — each a thin wrapper over the same
-generic `notation` core, while `chess-notation` stays western-chess-specific. The
+non-standard `variant`. The split is deliberate: staunton is *variant-forward*, so any
+further variant would get its own name — a thin wrapper over the same generic
+`notation` core — while `chess-notation` stays western-chess-specific. The
 same pairing runs through the package's drawing and notation entry points —
 `board`/`chess-board`, `diagram`/`chess-diagram`, `notation`/`chess-notation`:
 reach for the `chess-` name for ordinary chess, and the generic one only when you

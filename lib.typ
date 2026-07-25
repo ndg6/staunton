@@ -290,8 +290,8 @@
 
 /// Draw a bare board — no caption, no figure — the variant-agnostic drawing
 /// primitive that every diagram builds on. The variant (if any) rides on
-/// `source`; the variant-named wrappers (`chess-board`, a future `xiangqi-board`,
-/// …) are thin sugar over this.
+/// `source`; the variant-named wrappers (`chess-board`, …) are thin sugar over
+/// this.
 ///
 /// - source (str, dictionary): the position to draw — a *FEN string*, a
 ///   *position* dict (from `position` / `parse-fen`), or a bare *squares* dict
@@ -326,8 +326,7 @@
 
 /// Standard western-chess board — the variant-named sugar over `board`, and the
 /// everyday entry point. Identical rendering, but it documents the variant and
-/// rejects a non-standard `source`. (Other variants get their own entry, e.g. a
-/// future `xiangqi-board`.)
+/// rejects a non-standard `source`. (Another variant would get its own entry.)
 ///
 /// - source (str, dictionary): a standard-chess position — a FEN string, a
 ///   position dict, or a squares dict.
@@ -342,7 +341,7 @@
 /// Chess960 / Fischer Random board — the variant-named entry point for 960.
 /// Rendering is identical to `chess-board` (960 shares the standard board,
 /// pieces and position model); the distinct name documents intent and rejects a
-/// genuinely different variant (e.g. a xiangqi position). The 960-ness of a
+/// genuinely different variant. The 960-ness of a
 /// position lives in its (arbitrary) placement and generalised castling, not in
 /// a separate piece set.
 ///
@@ -466,7 +465,7 @@
 }
 
 /// A board wrapped in a `#figure` — the variant-agnostic diagram, and the generic
-/// primitive under `chess-diagram` (and a future `xiangqi-diagram`). Draws an
+/// primitive under `chess-diagram`. Draws an
 /// automatic "White – Black (Year)" line above when both players are known, and a
 /// default caption below for a FEN source ("White to move" / "Black to move").
 ///

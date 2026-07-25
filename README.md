@@ -208,8 +208,6 @@ header must error with that message, any other must compile. Files/dirs prefixed
   (supplement, alignment) — currently only possible as a snippet in your own
   document, because a rule installed from inside the package would break
   `@` cross-references.
-- More **chess variants**: non-western variants (e.g. xiangqi) are a more distant
-  goal (0.5.0); the `position` / `board` pipeline is already variant-aware.
 
 ## Changelog
 
