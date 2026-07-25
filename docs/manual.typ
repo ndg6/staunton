@@ -399,10 +399,10 @@ user-defined themes; only the built-ins are reachable by string name.
 flat color:
 
 - `none` (default) — flat `light`/`dark` fills, as above.
-- `"stripes"` — dark squares are filled with a diagonal-stripe
-  tiling built from the theme's own `light` and `dark` colors, instead of a
-  flat `dark` fill. Light squares are always flat `light`, regardless of
-  `pattern` — stripes only ever apply to dark squares.
+- `"stripes"` — dark squares get thin black diagonal stripes drawn on top of
+  the flat `dark` fill (continuous lines, evenly spaced). Light squares are
+  always flat `light`, regardless of `pattern` — stripes only ever apply to
+  dark squares.
 - `"marble"` — a transparent marble-texture overlay is composited on top of
   *both* squares' flat fills: a green-marble texture on dark squares, a
   quieter light-stone texture on light squares.
