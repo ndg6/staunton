@@ -34,11 +34,30 @@ Then open the PDFs below and check the noted property. (The expected-*fail* test
 - [ ] `board/labeling/label_modes.pdf`, `border_themes.pdf`, `onsquare_corners.pdf`,
       `onsquare_fullwidth.pdf` — files/ranks in the right gutter/corner, themed
       bands correct, labels legible and not clashing with pieces. In
-      `border_themes.pdf` the five `border-theme` looks are each visually
+      `border_themes.pdf` all seven `border-theme` looks are each visually
       distinguishable from one another and legible (no band/label color clash)
       — the exact theme -> color wiring is now pinned by the asserting test
       `board/labeling/border_theme_colors.typ`, so this is just a legibility
       check, not a color-matching one.
+- [ ] `board/labeling/border_themes.pdf` — the new **wood** and **marble**
+      border-theme bands specifically:
+      - the wood grain / marble veining texture actually APPEARS in the band
+        (not a flat color) — a silently missing overlay is the exact failure
+        mode this repo has hit before (`_stripes-overlay`'s tiling seam bug);
+      - no visible seams or dashing where the texture tiles meet along the
+        band;
+      - the grain/veining does not read as obviously, uniformly repeating —
+        each cell gets a deterministic rotation/mirror (same mechanism as the
+        square overlays, pinned for squares by
+        `board/style_options/color_theme_pattern.typ`; the border band's own
+        asset-path mapping is pinned by `board/labeling/border_theme_material.typ`,
+        but the rotation/mirror actually looking varied is a render-only check);
+      - the file/rank labels stay legible against both textured bands;
+      - **PROVISIONAL, needs Frank's decision**: the marble theme's label
+        color is currently `border-creme` (reused from the "brown"/"wood"
+        themes) — eyeball whether creme reads well on the bottle-green marble
+        band, or whether marble needs its own lighter/different label color
+        constant. This is a design call, not a pass/fail check.
 - [ ] `board/orientation/flip.pdf` — a1 in the correct corner both ways; labels
       flip with the board. Second section: the highlights (filled e4 / circle e5 /
       cross d5) stay on their named squares (mirrored screen position), and the

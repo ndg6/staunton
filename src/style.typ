@@ -27,7 +27,8 @@
 // is applied separately by the renderer via `highlight-transparency` /
 // `arrow-transparency`, so this base is stored fully opaque.
 #let default-highlight-base = rgb(60, 130, 90)
-// "border" mode label themes: the "brown", "creme", "dark" and "light" themes.
+// "border" mode label themes: the "brown", "creme", "dark", "light", "wood"
+// and "marble" themes.
 // NOTE: `border-brown` (the brown theme's BAND) and `border-saddle` (the creme
 // theme's LABEL) are two DIFFERENT browns and must stay separate constants --
 // brown/creme are deliberately not a mirrored pair, unlike dark/light.
@@ -36,6 +37,7 @@
 #let border-saddle = rgb("#6b4423")       // "saddle" brown labels (creme theme)
 #let border-dark = rgb("#2b2b2b")         // charcoal: dark-theme band, light-theme labels
 #let border-dark-label = rgb("#e8e8e8")   // light-grey: dark-theme labels, light-theme band
+#let border-marble = rgb("#2d4a3e")       // bottle-green ("Flaschengrün") marble band (marble theme)
 
 // ---- board style ----------------------------------------------------------
 #let default-board-style = (
@@ -62,9 +64,11 @@
   // light-square labels (default); "brown" = espresso-brown band, creme labels;
   // "creme" = creme band, saddle-brown labels; "dark" = charcoal band, light-grey
   // labels (a neutral dark-mode look); "light" = light-grey band, charcoal labels
-  // (the mirror of "dark"). Note "creme" is NOT a mirrored "brown": the two use
-  // different browns by design.
-  border-theme: "square",     // "square" | "brown" | "creme" | "dark" | "light"
+  // (the mirror of "dark"); "wood" = espresso-brown band with a wood-grain
+  // texture and creme labels; "marble" = bottle-green band with a marble
+  // texture and creme labels. Note "creme" is NOT a mirrored "brown": the two
+  // use different browns by design.
+  border-theme: "square",     // "square" | "brown" | "creme" | "dark" | "light" | "wood" | "marble"
   border: 0.5pt + luma(40),   // thin board outline (none to drop)
   // Two-layer theme fields. Both are expanded EAGERLY by the defaults setters
   // and the per-call override layer (see `_expand-themes`) whenever a caller

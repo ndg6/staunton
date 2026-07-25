@@ -24,7 +24,9 @@
 //     fill / label color follow `border-theme`, resolved by `_band-colors`:
 //     "square" = dark band + light labels, "brown" = espresso band + creme
 //     labels, "creme" = creme band + saddle labels, "dark" = charcoal band +
-//     light-grey labels, "light" = the mirror of "dark".
+//     light-grey labels, "light" = the mirror of "dark". "wood" and "marble"
+//     additionally composite a material texture on top of their backdrop
+//     color, via `_band-material`.
 // `labels: false` suppresses all of them. Board labels always use a fixed
 // sans-serif font, independent of the document / diagram font.
 //
@@ -39,7 +41,7 @@
 
 #import "coords.typ": file-letter, parse-square, is-dark-square, _square-index
 #import "pieces.typ": square-piece
-#import "style.typ": default-style, style-state, border-brown, border-creme, border-saddle, border-dark, border-dark-label, _expand-themes, _adjust-color-pair
+#import "style.typ": default-style, style-state, border-brown, border-creme, border-saddle, border-dark, border-dark-label, border-marble, _expand-themes, _adjust-color-pair
 
 #let default-board-size = 6.4cm
 
@@ -78,11 +80,17 @@
 // Callers must have validated `theme` already; an unknown value falls back to
 // the "square" pair rather than erroring (the assert in `render-board` is the
 // gate that makes that unreachable in practice).
+// "wood" and "marble" also return a `(fill, label)` pair, but for those two
+// themes the returned `fill` is only the BACKDROP color: a material texture
+// (see `_band-material`) is composited on top of it, so the pair alone does
+// not fully describe the rendered band.
 #let _band-colors(theme, light, dark) = {
   if theme == "brown" { (border-brown, border-creme) }
   else if theme == "creme" { (border-creme, border-saddle) }
   else if theme == "dark" { (border-dark, border-dark-label) }
   else if theme == "light" { (border-dark-label, border-dark) }
+  else if theme == "wood" { (border-brown, border-creme) }
+  else if theme == "marble" { (border-marble, border-creme) }
   else { (dark, light) }
 }
 
@@ -154,6 +162,47 @@
   let m = if mirror { scale(x: -100%, reflow: false, body) } else { body }
   rotate(rot, reflow: false, m)
 }
+
+// Resolve a "border"-mode label band's material texture: the source-relative
+// SVG path for the "wood"/"marble" border-themes, or `none` for the five
+// themes that stay a flat color. Pure and directly unit-testable (like
+// `_band-colors`, since the rendered band is a plain `rect`/`image` stack,
+// which Typst cannot `query()`).
+//
+// Delegates to `_material-asset` so asset paths stay single-sourced. NOTE the
+// deliberate coincidence: the border-theme names "wood"/"marble" are identical
+// to the material PATTERN names accepted by `_material-asset`/
+// `_material-orientation`, which is why `theme` can be passed straight through
+// as the pattern argument below -- a future rename of either enum must keep
+// this in sync or update both call sites.
+#let _band-material(theme) = {
+  if theme == "wood" { _material-asset("wood", true) }
+  else if theme == "marble" { _material-asset("marble", true) }
+  else { none }
+}
+
+// Draw the tiled, clipped material overlay for a "border"-mode band. Pure
+// (closes over no context/style value -- everything comes through its
+// parameters), so Typst can memoise it: a document whose bordered boards
+// share geometry+theme builds the tiled overlay once instead of per board,
+// same rationale as `_checker` below. `mat` is the resolved asset path from
+// `_band-material`; `theme` doubles as the `_material-orientation` pattern
+// argument (see the coincidence note on `_band-material`).
+#let _band-overlay(mat, total-w, total-h, sq, theme) = box(width: total-w, height: total-h, clip: true, {
+  // Tiles the FULL total-w x total-h box rather than only the visible ring
+  // (the board canvas placed on top covers the interior, same as the flat
+  // backdrop already does) -- INTENTIONAL overdraw: roughly 64 of ~100 tiles
+  // sit entirely under the opaque board canvas (~2.8x the work the visible
+  // band alone needs). Do not "optimize" this away without re-checking the
+  // simpler full-rect tiling assumption it relies on.
+  for j in range(calc.ceil(total-h / sq)) {
+    for i in range(calc.ceil(total-w / sq)) {
+      let _ori = _material-orientation(theme, j, i)
+      place(dx: i * sq, dy: j * sq,
+        _oriented(image(mat, width: sq, height: sq), _ori.rot, _ori.mirror))
+    }
+  }
+})
 
 // Draw the checkerboard squares. Pure (closes over no context/style value --
 // everything comes through its parameters), so Typst can memoise it: a
@@ -391,7 +440,7 @@
     assert(st.rank-label-corner == left or st.rank-label-corner == right, message: "rank-label-corner must be `left` or `right`")
     let modes = ("on-square", "outside", "border")
     assert(modes.contains(st.label-mode), message: "label-mode must be one of " + repr(modes) + "; got " + repr(st.label-mode))
-    let themes = ("square", "brown", "creme", "dark", "light")
+    let themes = ("square", "brown", "creme", "dark", "light", "wood", "marble")
     assert(themes.contains(st.border-theme), message: "border-theme must be one of " + repr(themes) + "; got " + repr(st.border-theme))
 
     let labels = st.labels
@@ -550,8 +599,14 @@
         let total-w = bw + 2 * g
         let total-h = bh + 2 * g
         let (band-fill, band-label) = _band-colors(st.border-theme, st.light, st.dark)
+        // "wood"/"marble" composite a material texture over the flat backdrop,
+        // via the memoizable `_band-overlay` helper (see its doc comment).
+        let _band-mat = _band-material(st.border-theme)
         box(width: total-w, height: total-h, {
           place(rect(width: total-w, height: total-h, fill: band-fill, stroke: none))
+          if _band-mat != none {
+            place(_band-overlay(_band-mat, total-w, total-h, sq, st.border-theme))
+          }
           place(dx: g, dy: g, board-canvas)
           place(dx: g, dy: g, rect(width: bw, height: bh, fill: none, stroke: 0.5pt + black))
           let file-dy = if st.file-side == bottom { g + bh } else { 0pt }

@@ -206,6 +206,11 @@ header must error with that message, any other must compile. Files/dirs prefixed
   `"creme"` (creme band, saddle-brown labels) and `"light"` (light-grey band,
   charcoal labels — the mirror of `"dark"`), joining `"square"`, `"brown"` and
   `"dark"`.
+- **Material border themes**: `border-theme` also gains `"wood"` and `"marble"`,
+  the band counterparts of the `"wood"` / `"marble"` square `pattern`s — a
+  wood-grain or marble-veining texture composited over the band, for matching
+  a wood- or marble-patterned board. `"wood"` reuses `"brown"`'s exact band and
+  label colors; `"marble"` is a bottle-green band with creme labels.
 - **`"brown"` border theme retuned**: its band is now a lighter espresso brown
   (was a very dark near-black brown). ⚠️ This changes how existing documents
   using `border-theme: "brown"` look — the frame is visibly lighter. Set the old

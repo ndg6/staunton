@@ -366,19 +366,38 @@ themed band, styled by `border-theme`). `labels: false` suppresses labels comple
 )
 ```)
 
-In `"border"` mode, `border-theme` picks the band's look — the fill color and the
-contrasting label color:
+In `"border"` mode, `border-theme` picks the band's look — the fill color, the
+contrasting label color, and for two themes a material texture composited
+over the band:
 
 - `"square"` (default) — the band reuses the board's own `dark` square color with
   `light`-colored labels, so the border blends into the board;
 - `"brown"` — an espresso-brown band with creme labels (a warm, classic frame);
 - `"creme"` — a creme band with saddle-brown labels (a light, paper-like frame);
 - `"dark"` — a charcoal band with light-grey labels (suits dark backgrounds);
-- `"light"` — a light-grey band with charcoal labels, the mirror of `"dark"`.
+- `"light"` — a light-grey band with charcoal labels, the mirror of `"dark"`;
+- `"wood"` — the same espresso-brown band and creme labels as `"brown"`, plus a
+  wood-grain texture overlay — the band counterpart of the `"wood"` square
+  `pattern` (@themes), for matching a wood-patterned board;
+- `"marble"` — a bottle-green band with creme labels and a marble-veining
+  texture overlay — the band counterpart of the `"marble"` square `pattern`
+  (@themes).
 
 `border-theme` is a normal board option: set it per call as above, or document-wide
 with `set-board-defaults(border-theme: ..)` / `set-chess-defaults` (see
 @document-style). It only takes effect with `label-mode: "border"`.
+
+The two material themes are the ones that repay a look — here is `"marble"`, whose
+veining is composited over the bottle-green band:
+
+#example(```typ
+#board(
+  "8/5k2/8/8/3Q4/8/4K3/8",
+  label-mode: "border",
+  border-theme: "marble",
+  size: 3.8cm,
+)
+```)
 
 == Color and Board Themes <themes>
 
@@ -1696,7 +1715,7 @@ setters reject them), though their *styling* options can.
   raw("label-mode"), raw("\"on-square\""), [`"on-square"` / `"outside"` / `"border"`],
   [`file-side` / `rank-side`], [`bottom` / `right`], [which edge files / ranks sit on],
   [`file-label-corner` / `rank-label-corner`], [`left` / `right`], [on-square label corner],
-  raw("border-theme"), raw("\"square\""), [`"border"` band theme: `"square"` / `"brown"` / `"creme"` / `"dark"` / `"light"`],
+  raw("border-theme"), raw("\"square\""), [`"border"` band theme: `"square"` / `"brown"` / `"creme"` / `"dark"` / `"light"` / `"wood"` / `"marble"`],
   raw("border"), [`0.5pt + luma(40)`], [thin board outline (`none` to drop)],
   raw("grid"), raw("false"), [1pt grid lines between squares],
   raw("piece-set"), raw("\"cburnett\""), [SVG set name, or `"unicode"` for the glyph fallback],
