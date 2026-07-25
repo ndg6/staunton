@@ -77,8 +77,8 @@
   // `color-theme(..)` (light/dark only, for now).
   color-theme: none,
   // Square-fill pattern. `none` = flat fill (default, unchanged); "stripes" =
-  // a tiling fill on DARK squares only (light squares stay flat), alternating
-  // the theme's own light/dark colors. "marble"/"wood" = transparent material
+  // thin black diagonal stripes drawn as an overlay on DARK squares only (light
+  // squares stay flat). "marble"/"wood" = transparent material
   // SVG overlays composited ON TOP of the flat square colors (they never change
   // the theme colors): "marble" patterns BOTH squares (a green-marble overlay on
   // dark, a light-stone overlay on light), "wood" patterns DARK squares only.
@@ -510,8 +510,8 @@
 /// `set-board-defaults`, or inside a `board-theme`.
 ///
 /// - ..fields (arguments): `light` and/or `dark` colors; `pattern` (`none`;
-///   `"stripes"`, a tiling on dark squares only; `"marble"`, a material overlay
-///   on both squares; or `"wood"`, a material overlay on dark squares only --
+///   `"stripes"`, diagonal stripes on dark squares only; `"marble"`, a material
+///   overlay on both squares; or `"wood"`, a material overlay on dark squares only --
 ///   the material overlays are composited over the theme colors, never
 ///   replacing them); `brightness` and `contrast`
 ///   (each `auto` or a signed ratio, e.g. `10%`/`-5%`, default `auto` = no

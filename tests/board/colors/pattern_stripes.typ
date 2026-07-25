@@ -1,9 +1,10 @@
 // Render-only sheet (no asserts): `color-theme(pattern: "stripes")`
-// at real board size, for the human eyeball pass. The fill mapping itself is
+// at real board size, for the human eyeball pass. The mapping itself is
 // pinned by the asserting test `board/style_options/color_theme_pattern.typ`
-// (the pure `_square-fill` helper) -- this sheet exists only so Frank can
-// confirm the stripes actually look like diagonal stripes, and that light
-// squares stay flat. See tests/VISUAL_CHECKS.md.
+// (the pure `_square-fill` base fill + the `_stripes-overlay` helper) -- this
+// sheet exists only so Frank can confirm the stripes actually look like
+// continuous diagonal stripes, and that light squares stay flat.
+// See tests/VISUAL_CHECKS.md.
 #import "/lib.typ": board, color-theme
 #import "/tests/board/_fixture.typ": test-fen
 
