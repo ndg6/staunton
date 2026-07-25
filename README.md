@@ -98,12 +98,18 @@ or a squares dict:
 - **Notation** — numbered movetext, inline/indented variations, figurine glyphs,
   NAGs, comments, and diagrams **embedded at markers**; localized piece letters.
 - **Tournament tables** — standings, cross-tables and progress (player or team),
-  with Buchholz / Sonneborn-Berger tie-breaks.
+  with Buchholz / Sonneborn-Berger tie-breaks, and a curated set of styling
+  options (rule presets, header / body fills including zebra rows, alignment,
+  winner highlighting) settable per call or document-wide.
 - **Annotations & markings** — `%cal` / `%csl` arrows and highlights from PGN, an
   in-check glow, and move-quality badges; add NAGs / comments / variations to a
   game programmatically, then render it like any parsed one.
-- **Styling** — themes, six label placements, flip, piece sets, grid; proportional
-  highlights (filled / cross / circle) and arrows; size-adaptive layout.
+- **Styling** — reusable `color-theme` / `board-theme` values (11 built-ins each,
+  derivable from one another), brightness / contrast adjustment, square patterns
+  (stripes, marble, wood), seven `"border"`-mode band looks including wood and
+  marble material frames, six label placements, flip, piece sets, grid;
+  proportional highlights (filled / cross / circle) and arrows; size-adaptive
+  layout.
 - **Bring-your-own & fairy pieces** — any downloaded set via a `piece-set` loader
   (`named-piece-set` / `svg-piece-set`), plus non-standard kinds and whole variants
   (`define-variant`, `with-fallback`).
@@ -122,7 +128,9 @@ or a squares dict:
   of the repo only — it is not shipped in the package bundle.
 - **[Showcase](https://github.com/ndg6/staunton/blob/v0.2.2/docs/examples/showcase.typ)** — a runnable capability tour.
 
-Compile the manual and the showcase locally with the package folder as root:
+Compile the manual and the showcase locally with the package folder as root
+(the manual's own styling uses a 0.15 builtin, so *building* it needs Typst
+0.15+ even though *using* the package does not):
 
 ```sh
 typst compile --root . docs/manual.typ docs/manual.pdf
@@ -140,6 +148,8 @@ typst compile --root . docs/examples/showcase.typ showcase.pdf
 | notation | `chess-notation`, `notation` |
 | tables | `standings-table`, `crosstable-table`, `progress-table`, `games-by-event` (+ compute: `standings`, `crosstable`, `progress`) |
 | outlines | `chess-diagram-outline`, `chess-table-outline`, `chess-outlines` |
+| themes | `color-theme`, `board-theme` |
+| engine | `legal-moves`, `apply`, `in-check`, `move-to-san` |
 | defaults | `set-chess-defaults`, `set-board-defaults`, `set-diagram-defaults`, `set-table-defaults`, `set-pgn-defaults`, `set-lang`, `set-piece-set` |
 
 ## Pieces & licensing
@@ -165,7 +175,7 @@ The manual and tests also embed **CC BY-SA 4.0** fairy demo art (under `docs/` a
 typst.toml          package manifest          LICENSE / LICENSE-PIECES  MIT / GPLv2+
 lib.typ             public API + figure wrapper
 src/                engine, FEN/PGN/SAN, notation, tournament, board renderer, i18n
-src/assets/         piece-set SVGs (cburnett, merida) + i18n language files
+src/assets/         piece-set SVGs (cburnett, merida), square/band pattern SVGs, i18n files
 docs/manual.typ     user manual (-> PDF)      docs/examples/  runnable showcase
 tests/              test suite (bash tests/run.sh)   scripts/  release bundle build
 ```
@@ -189,12 +199,15 @@ header must error with that message, any other must compile. Files/dirs prefixed
 
 ## Roadmap
 
-- **Tournament tables**: read results from non-PGN sources, and richer styling
-  options for the standings / cross / progress tables.
-- A **move→SAN encoder** — name an engine-generated move (`legal-moves` / `apply`)
-  from a bare position; the inverse of the SAN parser, so movetext can be produced
-  without a pre-existing PGN (puzzle solutions, generated lines, legal-move lists).
+- **Tournament tables**: read results from non-PGN sources (JSON / structured
+  input), so standings can be published without a PGN at all.
+- A **`table-theme(..)` value object**, bundling the table styling fields the way
+  `color-theme` / `board-theme` bundle the board ones.
 - Engine **performance** (the narrow `legal-moves` / `apply` seam can swap to WASM).
+- An opt-in **show-rule hook** for styling staunton's own figure captions
+  (supplement, alignment) — currently only possible as a snippet in your own
+  document, because a rule installed from inside the package would break
+  `@` cross-references.
 - More **chess variants**: non-western variants (e.g. xiangqi) are a more distant
   goal (0.5.0); the `position` / `board` pipeline is already variant-aware.
 
@@ -206,6 +219,14 @@ header must error with that message, any other must compile. Files/dirs prefixed
 
 ### 0.3.0
 
+- **`move-to-san`**: names an engine-generated move from a bare position — the
+  inverse of the SAN parser, with the same disambiguation, check / mate suffix
+  and castling rules. Movetext can now be produced without a pre-existing PGN
+  (puzzle solutions, generated lines, legal-move listings).
+- **Faster board rendering**: the checkerboard is memoized, so diagrams sharing
+  geometry and colors build it once instead of per board; square parsing has a
+  fast path, and the in-check probe is gated so it only runs when a glow is
+  actually requested.
 - **Lower compiler floor — Typst 0.14.2**: the manifest previously required
   0.15. The library's only hard 0.15 dependency was the HTML-export path
   (`target()` / `html.frame`), which is now guarded on `sys.version`, so paged

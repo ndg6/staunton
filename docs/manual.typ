@@ -288,7 +288,9 @@ for chess publications. It provides a full set of features, including:
 - *move notation* — from parsed games you create move text output with localized piece letters,
   figurine glyphs, NAGs (numeric annotation glyphs, the standard `$n` move-assessment codes), comments and diagrams embedded inline;
 - *tournament tables* — we can create standings, cross-tables and progress charts from a PGN's
-  results, by player or by team;
+  results, by player or by team, with a curated set of styling options (rule
+  presets, header and body fills, alignment, winner highlighting) settable per
+  call or document-wide;
 - *Chess960 / Fischer Random Chess* — the same board, engine, PGN pipeline and notation
   handle chess960, with X-FEN castling, the FRC PGN tags, and start-by-number instead of FEN (see @chess960);
 - *outlines and references* — diagrams and tables get their own counters and lists;
