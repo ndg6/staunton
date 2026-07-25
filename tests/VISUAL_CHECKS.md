@@ -51,7 +51,10 @@ Then open the PDFs below and check the noted property. (The expected-*fail* test
 - [ ] `board/colors/pattern_stripes.pdf` (prompt 38 §3a, renamed prompt 40 §1) —
       dark squares show visible thin BLACK diagonal stripes (fine,
       closely-spaced, tile 4pt / stroke 0.5pt) over the theme's own dark
-      background color; light squares stay a flat fill (no stripes). (The
+      background color; light squares stay a flat fill (no stripes). The
+      diagonals must be CONTINUOUS lines, not dashed — the stroke is drawn
+      overhanging the tile so per-tile clipping leaves no periodic gap where
+      cells meet (this dashing was a real bug, fixed 2026-07-25). (The
       pattern -> fill mapping is pinned by the asserting test
       `board/style_options/color_theme_pattern.typ`; this is just the "does it
       actually look like diagonal stripes at real board size" check.)
@@ -60,9 +63,9 @@ Then open the PDFs below and check the noted property. (The expected-*fail* test
       (dark squares green with light veins, light squares a quiet cream stone
       with faint grey veins), and the grain/veins vary per square rather than
       reading as an obvious repeating tile. For the **wood** board, DARK
-      squares show linear, slightly-bendy horizontal wood grain (with both
-      darker lines and lighter streaks), while the light (maple) squares stay
-      a flat fill. In both boards the texture should read as composited over
+      squares show linear, slightly-bendy vertical (upright) wood grain (with
+      both darker lines and lighter streaks), while the light (maple) squares
+      stay a flat fill. In both boards the texture should read as composited over
       the theme's own colors (green/cream, walnut/maple) rather than
       replacing them. (The pattern → overlay mapping itself — which SVG per
       pattern/square-color, and the per-square rotation/mirror policy — is

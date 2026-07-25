@@ -102,7 +102,13 @@
     // fill with no visible stripe.
     tiling(size: (4pt, 4pt), relative: "parent", {
       place(dx: 0pt, dy: 0pt, rect(width: 4pt, height: 4pt, fill: dark, stroke: none))
-      place(dx: 0pt, dy: 0pt, line(start: (0pt, 4pt), end: (4pt, 0pt), stroke: 0.5pt + black))
+      // The diagonal is drawn OVERHANGING the 4pt tile (endpoints 2pt beyond
+      // each corner) so that when Typst clips the motif to the tile cell, the
+      // stroke fully covers the tile boundary. A corner-to-corner line instead
+      // gets its stroke clipped right at the cell edge, leaving a periodic gap
+      // where consecutive cells' segments meet -- the diagonals then render as
+      // dashed rather than continuous stripes.
+      place(dx: 0pt, dy: 0pt, line(start: (-2pt, 6pt), end: (6pt, -2pt), stroke: 0.5pt + black))
     })
   } else if is-dark {
     dark
@@ -131,7 +137,7 @@
 // overlay, so the identical SVG tile doesn't look uniformly repeated across
 // the board. Marble varies freely (8-way: any 90deg rotation, mirrored or
 // not). Wood is axis-preserving (4-way: only 0/180deg, never 90/270, which
-// would turn the horizontal grain vertical).
+// would turn the vertical grain horizontal).
 #let _material-orientation(pattern, row, col) = {
   let h = calc.rem(row * 73 + col * 179 + row * col * 13 + 7, 1009)
   if pattern == "marble" {

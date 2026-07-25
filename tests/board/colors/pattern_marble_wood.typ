@@ -23,7 +23,7 @@ repeating tile):
   color-theme: color-theme(light: rgb("#eeeed2"), dark: rgb("#3f6b4a"), pattern: "marble"))
 
 `pattern: "wood"` over a walnut/maple theme -- dark squares should show
-linear, slightly-bendy horizontal wood grain (both darker lines and lighter
-streaks), while light (maple) squares stay a flat fill:
+linear, slightly-bendy vertical (upright) wood grain (both darker lines and
+lighter streaks), while light (maple) squares stay a flat fill:
 #board(test-fen, size: 6cm,
   color-theme: color-theme(light: rgb("#d9b98a"), dark: rgb("#6b4a2f"), pattern: "wood"))
