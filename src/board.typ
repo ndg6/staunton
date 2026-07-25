@@ -169,40 +169,19 @@
 // `_band-colors`, since the rendered band is a plain `rect`/`image` stack,
 // which Typst cannot `query()`).
 //
-// Delegates to `_material-asset` so asset paths stay single-sourced. NOTE the
-// deliberate coincidence: the border-theme names "wood"/"marble" are identical
-// to the material PATTERN names accepted by `_material-asset`/
-// `_material-orientation`, which is why `theme` can be passed straight through
-// as the pattern argument below -- a future rename of either enum must keep
-// this in sync or update both call sites.
+// Deliberately does NOT delegate to `_material-asset`: the band is drawn as a
+// SINGLE image spanning the whole band rect, not a tiled grid of squares, so
+// it needs its own band-scale assets (`wood_band.svg`/`marble_band.svg`)
+// authored at roughly 10x the noise frequency of the square assets -- without
+// that, one image stretched over the full band (~7.3cm vs. ~0.8cm for a
+// square) would lose its material character (wood degenerating into large
+// blobs, marble washing out to a near-flat white). This is why the returned
+// path no longer agrees with `_material-asset("wood"/"marble", ..)`.
 #let _band-material(theme) = {
-  if theme == "wood" { _material-asset("wood", true) }
-  else if theme == "marble" { _material-asset("marble", true) }
+  if theme == "wood" { "assets/patterns/wood_band.svg" }
+  else if theme == "marble" { "assets/patterns/marble_band.svg" }
   else { none }
 }
-
-// Draw the tiled, clipped material overlay for a "border"-mode band. Pure
-// (closes over no context/style value -- everything comes through its
-// parameters), so Typst can memoise it: a document whose bordered boards
-// share geometry+theme builds the tiled overlay once instead of per board,
-// same rationale as `_checker` below. `mat` is the resolved asset path from
-// `_band-material`; `theme` doubles as the `_material-orientation` pattern
-// argument (see the coincidence note on `_band-material`).
-#let _band-overlay(mat, total-w, total-h, sq, theme) = box(width: total-w, height: total-h, clip: true, {
-  // Tiles the FULL total-w x total-h box rather than only the visible ring
-  // (the board canvas placed on top covers the interior, same as the flat
-  // backdrop already does) -- INTENTIONAL overdraw: roughly 64 of ~100 tiles
-  // sit entirely under the opaque board canvas (~2.8x the work the visible
-  // band alone needs). Do not "optimize" this away without re-checking the
-  // simpler full-rect tiling assumption it relies on.
-  for j in range(calc.ceil(total-h / sq)) {
-    for i in range(calc.ceil(total-w / sq)) {
-      let _ori = _material-orientation(theme, j, i)
-      place(dx: i * sq, dy: j * sq,
-        _oriented(image(mat, width: sq, height: sq), _ori.rot, _ori.mirror))
-    }
-  }
-})
 
 // Draw the checkerboard squares. Pure (closes over no context/style value --
 // everything comes through its parameters), so Typst can memoise it: a
@@ -599,13 +578,15 @@
         let total-w = bw + 2 * g
         let total-h = bh + 2 * g
         let (band-fill, band-label) = _band-colors(st.border-theme, st.light, st.dark)
-        // "wood"/"marble" composite a material texture over the flat backdrop,
-        // via the memoizable `_band-overlay` helper (see its doc comment).
+        // "wood"/"marble" composite a single continuous material image over
+        // the flat backdrop, sized exactly to the band so no clipping is
+        // needed. Like the flat backdrop, it also covers the interior, which
+        // the board canvas placed right after then hides.
         let _band-mat = _band-material(st.border-theme)
         box(width: total-w, height: total-h, {
           place(rect(width: total-w, height: total-h, fill: band-fill, stroke: none))
           if _band-mat != none {
-            place(_band-overlay(_band-mat, total-w, total-h, sq, st.border-theme))
+            place(image(_band-mat, width: total-w, height: total-h))
           }
           place(dx: g, dy: g, board-canvas)
           place(dx: g, dy: g, rect(width: bw, height: bh, fill: none, stroke: 0.5pt + black))

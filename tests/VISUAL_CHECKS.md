@@ -44,20 +44,39 @@ Then open the PDFs below and check the noted property. (The expected-*fail* test
       - the wood grain / marble veining texture actually APPEARS in the band
         (not a flat color) — a silently missing overlay is the exact failure
         mode this repo has hit before (`_stripes-overlay`'s tiling seam bug);
-      - no visible seams or dashing where the texture tiles meet along the
-        band;
-      - the grain/veining does not read as obviously, uniformly repeating —
-        each cell gets a deterministic rotation/mirror (same mechanism as the
-        square overlays, pinned for squares by
-        `board/style_options/color_theme_pattern.typ`; the border band's own
-        asset-path mapping is pinned by `board/labeling/border_theme_material.typ`,
-        but the rotation/mirror actually looking varied is a render-only check);
+      - the band reads as ONE continuous material all the way around, with
+        no repeating cell structure — the band is now drawn as a single
+        image spanning the whole band rect (not tiled per square, unlike the
+        square overlays below), which is the specific regression this fixes:
+        Frank had reported the earlier tiled band looked "segmented like it
+        was a stripe of squares" (the asset-path mapping itself is pinned by
+        the asserting test `board/labeling/border_theme_material.typ`, but
+        "does it actually look continuous" is a render-only check);
       - the file/rank labels stay legible against both textured bands;
+      - **OPEN QUESTION for Frank (tuning)**: the band assets
+        (`wood_band.svg`/`marble_band.svg`) are a first pass at 10x the
+        square assets' noise frequency (needed because one image now spans
+        the whole ~7.3cm band instead of one ~0.8cm square). Whether that
+        grain/veining scale actually looks right at the band's ~4.5mm width
+        is his call — it's a two-number change (`baseFrequency`) in the SVG
+        if not.
+      - **OPEN QUESTION for Frank (color)**: on a rendered check the
+        **marble** band came out noticeably paler and greyer than its
+        `#2d4a3e` bottle-green backdrop suggests — `marble_band.svg`'s light
+        veining layer was authored for dark SQUARES and washes the backdrop
+        out when it covers the whole band. The band reads sage-grey rather
+        than bottle green, ends up lighter than the emerald squares beside
+        it, and (see the label-color flag right below) the creme labels lose
+        contrast against it. Candidate remedies: reduce the veining layer's
+        alpha in the band asset, darken the backdrop, or change the label
+        color — his call which.
       - **PROVISIONAL, needs Frank's decision**: the marble theme's label
         color is currently `border-creme` (reused from the "brown"/"wood"
-        themes) — eyeball whether creme reads well on the bottle-green marble
-        band, or whether marble needs its own lighter/different label color
-        constant. This is a design call, not a pass/fail check.
+        themes) — eyeball whether creme reads well on the (currently
+        pale/washed-out, see above) marble band, or whether marble needs its
+        own lighter/different label color constant. This is a design call,
+        not a pass/fail check, and is connected to the washing-out note
+        above rather than a separate issue.
 - [ ] `board/orientation/flip.pdf` — a1 in the correct corner both ways; labels
       flip with the board. Second section: the highlights (filled e4 / circle e5 /
       cross d5) stay on their named squares (mirrored screen position), and the
