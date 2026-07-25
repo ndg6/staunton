@@ -76,12 +76,14 @@
   // `color-theme`: a built-in name (see `builtin-color-themes`) or a dict from
   // `color-theme(..)` (light/dark only, for now).
   color-theme: none,
-  // Algorithmic square-fill pattern applied to DARK squares only (light squares
-  // always stay a flat fill). `none` = today's flat fill (default, unchanged);
-  // "stripes" = a tiling fill alternating the theme's own light/dark
-  // colors. "marble" and "wood" are accepted but currently no-ops (dark
-  // squares stay flat, same as `none`) -- they render a visible in-document
-  // warning notice instead, since Typst script has no console warning().
+  // Square-fill pattern. `none` = flat fill (default, unchanged); "stripes" =
+  // a tiling fill on DARK squares only (light squares stay flat), alternating
+  // the theme's own light/dark colors. "marble"/"wood" = transparent material
+  // SVG overlays composited ON TOP of the flat square colors (they never change
+  // the theme colors): "marble" patterns BOTH squares (a green-marble overlay on
+  // dark, a light-stone overlay on light), "wood" patterns DARK squares only.
+  // Each square's overlay is rotated/mirrored by a deterministic per-square
+  // orientation so the tile doesn't look uniformly repeated.
   // Normally set via `color-theme(.., pattern: ..)` rather than directly,
   // but it lives here as a plain board-style field so it flows through the
   // same three-layer merge as `light`/`dark`.
@@ -507,10 +509,11 @@
 /// `brightness`, `contrast`) for use as `color-theme:` on `board()`,
 /// `set-board-defaults`, or inside a `board-theme`.
 ///
-/// - ..fields (arguments): `light` and/or `dark` colors; `pattern` (`none`,
-///   `"stripes"` (dark squares only), or `"marble"`/`"wood"` -- accepted but
-///   currently no-ops that render a visible warning notice instead);
-///   `brightness` and `contrast`
+/// - ..fields (arguments): `light` and/or `dark` colors; `pattern` (`none`;
+///   `"stripes"`, a tiling on dark squares only; `"marble"`, a material overlay
+///   on both squares; or `"wood"`, a material overlay on dark squares only --
+///   the material overlays are composited over the theme colors, never
+///   replacing them); `brightness` and `contrast`
 ///   (each `auto` or a signed ratio, e.g. `10%`/`-5%`, default `auto` = no
 ///   adjustment) nudge the resolved `light`/`dark` pair's HSL lightness --
 ///   `brightness` shifts both squares lighter/darker together, `contrast`

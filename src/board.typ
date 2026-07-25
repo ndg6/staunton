@@ -111,17 +111,46 @@
   }
 }
 
-// Pure: returns a small in-document warning notice when `pattern` names a
-// not-yet-implemented pattern ("marble" or "wood"), else `none`. Typst script
-// has no console warning() builtin, so a visible notice on the board is the
-// agreed substitute. Kept pure (no side effects, plain content/none return)
-// so it is directly unit-testable like `_square-fill`.
-#let _pattern-warning(pattern) = {
-  if pattern == "marble" or pattern == "wood" {
-    text(size: 6pt, fill: red, weight: "bold")[⚠ pattern: "#pattern" not yet implemented]
+// Pure: resolves the source-relative SVG path for a "marble"/"wood" pattern
+// overlay on a given square, or `none` when the pattern has no overlay
+// (`none`, "stripes", or an unknown value) -- same convention as
+// src/pieces.typ's `image(...)` calls, resolved relative to this source
+// file and packaging-safe. Wood only patterns dark squares; marble patterns
+// both.
+#let _material-asset(pattern, is-dark) = {
+  if pattern == "marble" {
+    if is-dark { "assets/patterns/marble_dark.svg" } else { "assets/patterns/marble_light.svg" }
+  } else if pattern == "wood" {
+    if is-dark { "assets/patterns/wood.svg" } else { none }
   } else {
     none
   }
+}
+
+// Pure: a deterministic per-square (rot, mirror) pair for the material
+// overlay, so the identical SVG tile doesn't look uniformly repeated across
+// the board. Marble varies freely (8-way: any 90deg rotation, mirrored or
+// not). Wood is axis-preserving (4-way: only 0/180deg, never 90/270, which
+// would turn the horizontal grain vertical).
+#let _material-orientation(pattern, row, col) = {
+  let h = calc.rem(row * 73 + col * 179 + row * col * 13 + 7, 1009)
+  if pattern == "marble" {
+    let k = calc.rem(h, 8)
+    (rot: calc.rem(k, 4) * 90deg, mirror: k >= 4)
+  } else if pattern == "wood" {
+    let k = calc.rem(h, 4)
+    (rot: calc.rem(k, 2) * 180deg, mirror: k >= 2)
+  } else {
+    (rot: 0deg, mirror: false)
+  }
+}
+
+// Apply a mirror then a rotation to `body` with reflow disabled, so the
+// square footprint is preserved (a square under 90deg-multiple rotations /
+// axis mirrors stays exactly square, so placement is unaffected).
+#let _oriented(body, rot, mirror) = {
+  let m = if mirror { scale(x: -100%, reflow: false, body) } else { body }
+  rotate(rot, reflow: false, m)
 }
 
 // Draw the checkerboard squares. Pure (closes over no context/style value --
@@ -137,6 +166,11 @@
         fill: _square-fill(is-dark-square(col, row), light, dark, pattern),
         stroke: none,
       ))
+      let _asset = _material-asset(pattern, is-dark-square(col, row))
+      if _asset != none {
+        let _ori = _material-orientation(pattern, row, col)
+        place(dx: o.dx, dy: o.dy, _oriented(image(_asset, width: sq, height: sq), _ori.rot, _ori.mirror))
+      }
     }
   }
 }
@@ -388,12 +422,6 @@
       let board-canvas = box(width: bw, height: bh, {
         // checker
         _checker(cols, rows, sq, orient, st.light, st.dark, st.pattern)
-        // Visible notice when `pattern` names a not-yet-implemented pattern
-        // (marble/wood); own `place()` call so it overlays rather than
-        // disrupting the checker's normal flow.
-        if _pattern-warning(st.pattern) != none {
-          place(top + left, dx: 2pt, dy: 2pt, _pattern-warning(st.pattern))
-        }
         // highlights (under the pieces, over the checker). Each entry is a square
         // name (uses highlight-shape + highlight-fill), a (square, color) pair
         // (filled, explicit color -- e.g. PGN %csl), or a dict (square:, shape:,

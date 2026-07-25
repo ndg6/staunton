@@ -403,11 +403,18 @@ flat color:
   tiling built from the theme's own `light` and `dark` colors, instead of a
   flat `dark` fill. Light squares are always flat `light`, regardless of
   `pattern` — stripes only ever apply to dark squares.
-- `"marble"`, `"wood"` — reserved for future pattern fills. They are accepted
-  today but not yet implemented: dark squares stay flat (same as
-  `pattern: none`), and the board additionally draws a small warning notice
-  near a corner noting that the pattern isn't implemented yet. Don't rely on
-  these for a real look until they're implemented.
+- `"marble"` — a transparent marble-texture overlay is composited on top of
+  *both* squares' flat fills: a green-marble texture on dark squares, a
+  quieter light-stone texture on light squares.
+- `"wood"` — a transparent wood-grain overlay (linear, slightly bendy grain)
+  is composited on top of dark squares only; light squares stay flat, same
+  as `pattern: none`.
+
+Both material overlays are drawn *on top of* the theme's own `light`/`dark`
+colors and never change them — the overlay only adds texture, so the actual
+look still depends on the colors you pick via `color-theme`. Each square's
+overlay is also rotated/mirrored by a per-square orientation, so the
+texture doesn't read as one obviously repeating tile across the board.
 
 An unknown `pattern` value raises a clear error.
 
@@ -417,6 +424,31 @@ An unknown `pattern` value raises a clear error.
   color-theme: color-theme(
     light: rgb("#eeeed2"), dark: rgb("#769656"),
     pattern: "stripes",
+  ),
+  size: 3.8cm,
+)
+```)
+
+Since the material overlays don't set colors themselves, pick a `light`/`dark`
+pair that suits the material. Two pairings that work well:
+
+#example(```typ
+#board(
+  "8/5k2/8/8/3Q4/8/4K3/8",
+  color-theme: color-theme(
+    light: rgb("#eeeed2"), dark: rgb("#3f6b4a"),
+    pattern: "marble",
+  ),
+  size: 3.8cm,
+)
+```)
+
+#example(```typ
+#board(
+  "8/5k2/8/8/3Q4/8/4K3/8",
+  color-theme: color-theme(
+    light: rgb("#d9b98a"), dark: rgb("#6b4a2f"),
+    pattern: "wood",
   ),
   size: 3.8cm,
 )
