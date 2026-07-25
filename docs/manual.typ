@@ -288,7 +288,7 @@ for chess publications. It provides a full set of features, including:
 - *Chess960 / Fischer Random Chess* — the same board, engine, PGN pipeline and notation
   handle chess960, with X-FEN castling, the FRC PGN tags, and start-by-number instead of FEN (see @chess960);
 - *outlines and references* — diagrams and tables get their own counters and lists;
-- *document-wide styling* and *localization* (six languages, easily extended);
+- *document-wide styling* and *localization* (seven languages, easily extended);
 - *limited HTML export* — notation, tables, outlines, references and captioned
   figures become native HTML, with boards and diagrams embedded as inline SVG
   (see @html-export).
@@ -1570,7 +1570,7 @@ diagram and table buckets; the umbrella routes them to *diagram*, so use
 
 == Language
 
-Package *staunton* supports localisation of text-related output. At the moment we support six different languages; apart from the standard English, we offer German, French, Spanish, Italian, Portuguese, and Russian. We can easily extend the list of supported languages by adding new translation files. 
+Package *staunton* supports localisation of text-related output. At the moment we support seven different languages; apart from the standard English, we offer German, French, Spanish, Italian, Portuguese, and Russian. We can easily extend the list of supported languages by adding new translation files.
 
 The `notation` / `chess-notation` functions localise the piece letters, and the `chess-diagram` / `chess-table` figures carry language-aware titles and captions. The `lang:` argument on each function overrides the document default, and the document default is set with `set-lang`.
 
