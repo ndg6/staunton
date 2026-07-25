@@ -52,31 +52,25 @@ Then open the PDFs below and check the noted property. (The expected-*fail* test
         was a stripe of squares" (the asset-path mapping itself is pinned by
         the asserting test `board/labeling/border_theme_material.typ`, but
         "does it actually look continuous" is a render-only check);
-      - the file/rank labels stay legible against both textured bands;
-      - **OPEN QUESTION for Frank (tuning)**: the band assets
-        (`wood_band.svg`/`marble_band.svg`) are a first pass at 10x the
-        square assets' noise frequency (needed because one image now spans
-        the whole ~7.3cm band instead of one ~0.8cm square). Whether that
-        grain/veining scale actually looks right at the band's ~4.5mm width
-        is his call — it's a two-number change (`baseFrequency`) in the SVG
-        if not.
-      - **OPEN QUESTION for Frank (color)**: on a rendered check the
-        **marble** band came out noticeably paler and greyer than its
-        `#2d4a3e` bottle-green backdrop suggests — `marble_band.svg`'s light
-        veining layer was authored for dark SQUARES and washes the backdrop
-        out when it covers the whole band. The band reads sage-grey rather
-        than bottle green, ends up lighter than the emerald squares beside
-        it, and (see the label-color flag right below) the creme labels lose
-        contrast against it. Candidate remedies: reduce the veining layer's
-        alpha in the band asset, darken the backdrop, or change the label
-        color — his call which.
-      - **PROVISIONAL, needs Frank's decision**: the marble theme's label
-        color is currently `border-creme` (reused from the "brown"/"wood"
-        themes) — eyeball whether creme reads well on the (currently
-        pale/washed-out, see above) marble band, or whether marble needs its
-        own lighter/different label color constant. This is a design call,
-        not a pass/fail check, and is connected to the washing-out note
-        above rather than a separate issue.
+      - the file/rank labels stay legible against both textured bands
+        (marble keeps `border-creme`, reused from "brown"/"wood").
+
+      _Settled 2026-07-25 — these were open design questions and Frank has
+      since signed off on the rendered result; they are listed here only so a
+      future change knows what was deliberate, not as pending decisions:_
+      - the band assets (`wood_band.svg` / `marble_band.svg`) carry 10x the
+        square assets' noise frequency. That is not arbitrary: one image now
+        spans the whole ~7.3cm band instead of one ~0.8cm square, and at the
+        square-scale frequency wood degenerated into large blobs and marble
+        into a near-flat wash. The resulting grain/veining scale at the
+        band's ~4.5mm width was reviewed and approved.
+      - `marble_band.svg`'s veining layer additionally has its alpha halved
+        (peak 0.20 instead of marble_dark.svg's 0.40). The near-white layer
+        was authored for dark SQUARES; at full strength across the whole band
+        it washed the `#2d4a3e` bottle-green backdrop out to a pale sage
+        grey, left the band lighter than the squares beside it, and cost the
+        creme labels contrast. At 0.20 the backdrop colour survives and the
+        labels read cleanly — confirmed on a rendered board.
 - [ ] `board/orientation/flip.pdf` — a1 in the correct corner both ways; labels
       flip with the board. Second section: the highlights (filled e4 / circle e5 /
       cross d5) stay on their named squares (mirrored screen position), and the
