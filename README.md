@@ -225,6 +225,25 @@ header must error with that message, any other must compile. Files/dirs prefixed
   `"sandcastle"`, `"wheat"`), whose square colors are reproduced from
   [kokopu-react](https://github.com/yo35/kokopu-react) (LGPL-3.0, © Yoann Le
   Montagner). See the manual for the full catalogue and the precedence rule.
+- **Square patterns**: `color-theme(.., pattern: ..)` lays a texture over the
+  squares — `"stripes"` (diagonal hatching on dark squares), `"marble"` (both
+  squares) or `"wood"` (dark squares only). The overlay composites *over* the
+  theme's own colors and never replaces them, so the result still follows the
+  `light` / `dark` pair you pick.
+- **Brightness and contrast**: `color-theme(.., brightness: .., contrast: ..)`
+  post-adjusts a square-color pair — `brightness` shifts both toward white or
+  black, `contrast` spreads or compresses the lightness gap between them. Both
+  take signed ratios, are clamped to ±100%, and the pair is always held at least
+  5% apart in lightness, so an extreme setting cannot collapse or invert the
+  checkerboard.
+- **Tournament-table styling**: standings tables, cross-tables and progress
+  charts gain eight styling options — `grid` (`"complete"` / `"no-outer"` /
+  `"header-rule"`), `header-align`, `header-fill`, `body-align`, `body-fill`
+  (including `"zebra"` rows), `table-align`, `caption-bold` and
+  `highlight-winners`. Each is settable per call or document-wide via the new
+  `set-table-defaults(..)`, and raw `#table` arguments passed straight through
+  still override any preset. Table headers now also repeat when a table breaks
+  across a page boundary.
 
 ### 0.2.2
 
