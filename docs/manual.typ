@@ -1275,8 +1275,15 @@ The defaults below reproduce the classic look shown earlier in this chapter.
 #set-table-defaults(grid: "header-rule", header-fill: "gray", body-fill: "zebra")
 ```
 
+// Justification off for this table only: the columns are narrow enough that the
+// document-wide `par(justify: true)` tears visible gaps into short cells.
+#[
+#set par(justify: false)
 #table(
-  columns: (auto, auto, 1fr),
+  // `values` is a fraction, not `auto`: left to size itself it claimed whatever
+  // its longest entry needed and squeezed `effect` to an unreadable ribbon.
+  // Wrapping inside `values` is fine, `effect` is the column that must breathe.
+  columns: (auto, 0.85fr, 1.45fr),
   inset: 6pt,
   align: (left, left, left),
   stroke: 0.5pt + rgb("#d9d9d2"),
@@ -1290,6 +1297,7 @@ The defaults below reproduce the classic look shown earlier in this chapter.
   [`caption-bold`], [`false` (default) / `true`], [bold the caption text],
   [`highlight-winners`], [`true` (default) / `false`], [bold the rank-1 entity's name and points],
 )
+]
 
 The default standings table again, for comparison:
 
@@ -1331,6 +1339,29 @@ caption always stays centered at full page width. Aligning the caption to a
 left/right table would require wrapping the figure, which Typst's model does not
 allow without breaking table cross-references (`@my-table`), so the caption is
 left centered by design._]
+
+`caption-bold` bolds *your* caption text. It deliberately leaves the automatic
+`Table N:` prefix alone, because a figure's supplement is the same value Typst
+prints for a cross-reference — bolding it here would also bold every `@my-table`
+in running text. If you want the prefix to match a bold caption, add a show rule
+to your own document. Yours is the one place it can live: a rule inside the
+package would have to wrap the figure, and that breaks the cross-references.
+
+```typ
+#import "@preview/staunton:0.2.2": chess-table-kind
+
+#show figure.caption: it => {
+  if it.kind == chess-table-kind {
+    strong[#it.supplement #context it.counter.display(it.numbering)#it.separator]
+    it.body
+  } else { it }
+}
+```
+
+The `kind` test keeps this to staunton's tables — ordinary figures, diagrams and
+every cross-reference stay exactly as they were. Swap `chess-table-kind` for
+`chess-kind` to do the same for diagrams, or drop the test to style all captions
+alike.
 
 Headers always repeat when a table breaks across a page boundary. For anything
 these fields don't cover, pass raw `#table` arguments straight through — they
