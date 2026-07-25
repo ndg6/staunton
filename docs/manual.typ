@@ -276,8 +276,8 @@
 Package *staunton* aims to provide a complete, convenient and flexible solution
 for chess publications. It provides a full set of features, including:
 
-- *boards and diagrams* — bare boards with labels, highlights, arrows, an optional grid, 
-  flexible sizing, custom colors, and bundled SVG piece sets (or a Unicode fallback); and building on that diagrams with captions, figure counters, and referenceable labels;
+- *boards and diagrams* — bare boards with labels, highlights, arrows, an optional grid,
+  flexible sizing, custom colors plus reusable color/board themes (brightness/contrast tweaks, theme derivation, and stripe/marble/wood square patterns), and bundled SVG piece sets (or a Unicode fallback); and building on that diagrams with captions, figure counters, and referenceable labels;
 - *games from PGN* — a sophisticated parser creates single games or an array of games from a PGN file,  
   from which you create positions by using move "locators" (mainline and variations). You can also 
   play out moves from start positions and export resulting positions as FEN strings;
@@ -547,8 +547,8 @@ diagrams it's modeled on.
 The square colors of the nine themes `"scid"`, `"wikipedia"`, `"xboard"`,
 `"coral"`, `"dusk"`, `"emerald"`, `"marine"`, `"sandcastle"`, and `"wheat"` are
 reproduced from
-#link("https://github.com/yo35/kokopu-react")[kokopu-react], LGPL-3.0,
-© Yoann Le Montagner. `"wikipedia"`, `"scid"`, and `"xboard"` are named for —
+#link("https://github.com/yo35/kokopu-react")[kokopu-react] @kokopu-react,
+LGPL-3.0, © Yoann Le Montagner. `"wikipedia"`, `"scid"`, and `"xboard"` are named for —
 and reproduce the look of — Wikipedia's chess diagrams, the SCID database
 app, and XBoard, respectively.
 
@@ -1910,5 +1910,8 @@ set for mixed boards.
 = Acknowledgements
 
 The Typst package #link("https://typst.app/universe/package/boards-n-pieces")[boards-n-pieces]
-was an inspiration for some of staunton's features. This package and its manual
-were developed with assistance from Claude (Opus 4.8) by Anthropic.
+was an inspiration for some of staunton's features. The square colors of nine of
+the built-in color themes are reproduced from
+#link("https://github.com/yo35/kokopu-react")[kokopu-react] (LGPL-3.0) by Yoann
+Le Montagner (see @themes). This package and its manual were developed with
+assistance from Claude (Opus 4.8) by Anthropic.
