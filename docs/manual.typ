@@ -319,6 +319,12 @@ manual is in scope:
 #import "@preview/staunton:0.2.2": *
 ```
 
+*staunton* needs *Typst 0.14.2 or newer* — with one exception: HTML export
+(@html-export) relies on compiler features introduced in 0.15, so boards,
+diagrams and tables only reach an HTML target from 0.15 onwards. Paged output
+(PDF, PNG, SVG) is unaffected and every other feature in this manual works on
+0.14.2.
+
 == How to read this manual
 
 In every framed example, the left side is *the code you type* and the right side
@@ -1739,6 +1745,10 @@ themselves — see @pgn-handling. `set-pgn-defaults` sets them document-wide, an
 = HTML Export<html-export>
 
 Besides paged output (PDF / PNG), *staunton* also supports Typst's *HTML export*.
+This is the one part of the library that needs *Typst 0.15 or newer*: it is built
+on `target()` and `html.frame`, neither of which exists in 0.14. On 0.14.2 the
+library still renders paged output normally — HTML export is simply unavailable.
+
 Compile with the `html` feature and target:
 
 ```sh

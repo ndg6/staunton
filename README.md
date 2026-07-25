@@ -6,6 +6,10 @@ board drawings and turns games and positions into publication-quality
 A move generator in pure Typst reads **FEN** and **PGN**, and everything is
 localized to seven languages.
 
+Requires **Typst 0.14.2+**. HTML export is the one exception — it builds on
+compiler features added in 0.15, so it needs **0.15+**; paged output (PDF, PNG,
+SVG) and every other feature work on 0.14.2.
+
 ## A game, published
 
 Install the package, parse a PGN, and drop a captioned diagram of any position —
@@ -202,6 +206,13 @@ header must error with that message, any other must compile. Files/dirs prefixed
 
 ### 0.3.0
 
+- **Lower compiler floor — Typst 0.14.2**: the manifest previously required
+  0.15. The library's only hard 0.15 dependency was the HTML-export path
+  (`target()` / `html.frame`), which is now guarded on `sys.version`, so paged
+  output works on 0.14.2. Verified on both compilers: 175/175 on 0.15.1, and on
+  0.14.2 the only gaps are the two HTML-export tests plus two expected-fail
+  fixtures whose asserted *error wording* differs between compiler versions —
+  no behavioural difference in the library. ⚠️ HTML export still requires 0.15+.
 - **More border themes**: `border-theme` (the `label-mode: "border"` band) gains
   `"creme"` (creme band, saddle-brown labels) and `"light"` (light-grey band,
   charcoal labels — the mirror of `"dark"`), joining `"square"`, `"brown"` and

@@ -22,6 +22,17 @@
 
 #import "pieces.typ": default-white-fill, default-black-fill, default-piece-fonts, default-piece-set
 
+// Are we rendering for an HTML target? `target()` and `html.frame` are Typst
+// 0.15+, and they are the library's ONLY hard dependency on 0.15 -- everything
+// else renders on 0.14. Testing `sys.version` first means `target()` is never
+// evaluated on an older compiler (`and` short-circuits), so paged (PDF/PNG)
+// output keeps working there while HTML export stays a 0.15+ feature.
+//
+// Shared by every renderer that has an HTML-specific branch, so the version
+// predicate exists exactly once: board.typ (wraps the board in `html.frame`)
+// and tournament.typ (skips `align`, which native HTML export does not support).
+#let _html-target() = (sys.version.at(0) > 0 or sys.version.at(1) >= 15) and target() == "html"
+
 // Shared base color for the default highlight fill AND the default arrow color
 // (arrows default to the highlight color). The transparency
 // is applied separately by the renderer via `highlight-transparency` /

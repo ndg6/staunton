@@ -19,7 +19,7 @@
 // (standings); cross-table and progress come next.
 // ===========================================================================
 
-#import "style.typ": default-table-style, table-style-state, validate-table-style
+#import "style.typ": default-table-style, table-style-state, validate-table-style, _html-target
 #import "i18n.typ": ui-string
 
 // The 8 table-styling fields a `*-table` call accepts alongside the raw
@@ -147,7 +147,7 @@
   let aligned-body = context {
     let st = default-table-style + table-style-state.get() + style-over
     validate-table-style(st)
-    if target() == "html" { body } else { align(st.table-align, body) }
+    if _html-target() { body } else { align(st.table-align, body) }
   }
   // `caption-bold` bolds the caller's caption text, resolved the same way --
   // inside a context node passed as `caption:`'s VALUE, never via a `show

@@ -41,7 +41,7 @@
 
 #import "coords.typ": file-letter, parse-square, is-dark-square, _square-index
 #import "pieces.typ": square-piece
-#import "style.typ": default-style, style-state, border-brown, border-creme, border-saddle, border-dark, border-dark-label, border-marble, _expand-themes, _adjust-color-pair
+#import "style.typ": default-style, style-state, border-brown, border-creme, border-saddle, border-dark, border-dark-label, border-marble, _expand-themes, _adjust-color-pair, _html-target
 
 #let default-board-size = 6.4cm
 
@@ -637,6 +637,6 @@
     // which HTML export drops. Under an HTML target, wrap the deferred board in
     // `html.frame`: it lays the board out into a self-contained inline SVG that
     // renders in a browser. Paged (PDF/PNG) export takes the board unchanged.
-    if target() == "html" { html.frame(rendered) } else { rendered }
+    if _html-target() { html.frame(rendered) } else { rendered }
   }
 }
