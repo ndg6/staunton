@@ -1262,6 +1262,84 @@ above the table), `supplement`, and `lang`. The compute functions (`standings`,
 layouts. *Team* mode groups games by the `Round = "round.board"` convention into
 matches.
 
+== Styling
+
+The three `*-table` renderers share a curated set of styling fields. Each is
+settable *per call* (as a keyword argument on `standings-table`,
+`crosstable-table`, or `progress-table`) or *document-wide* via
+`set-table-defaults(..)` (see @document-style) — a per-call value always wins.
+The defaults below reproduce the classic look shown earlier in this chapter.
+
+```typ
+// document-wide, affects every table rendered from here on:
+#set-table-defaults(grid: "header-rule", header-fill: "gray", body-fill: "zebra")
+```
+
+#table(
+  columns: (auto, auto, 1fr),
+  inset: 6pt,
+  align: (left, left, left),
+  stroke: 0.5pt + rgb("#d9d9d2"),
+  table.header([*field*], [*values*], [*effect*]),
+  [`grid`], [`"complete"` (default) / `"no-outer"` / `"header-rule"`], [rule preset: full grid / inner lines only, no outer border / a single rule between header and body],
+  [`header-align`], [`center` (default) / `left` / `right`], [alignment of the header row],
+  [`header-fill`], [`none` (default) / `"gray"` / a color], [header row fill],
+  [`body-align`], [`center` (default) / `left` / `right`], [alignment of the data columns (the name column stays left-aligned)],
+  [`body-fill`], [`none` (default) / `"zebra"` / a color], [body row fill: `"zebra"` alternates light-gray rows; a plain color is used *as* the alternating shade (not a solid body fill). On a crosstable the self/self diagonal gets a distinct light-blue tint instead, so it stays legible],
+  [`table-align`], [`center` (default) / `left` / `right`], [page alignment of the *table* (the caption stays centered at full page width — see note below)],
+  [`caption-bold`], [`false` (default) / `true`], [bold the caption text],
+  [`highlight-winners`], [`true` (default) / `false`], [bold the rank-1 entity's name and points],
+)
+
+The default standings table again, for comparison:
+
+#example(```typ
+#standings-table(games, by: "player", caption: [Default styling.])
+```, stacked: true)
+
+A single header rule instead of a full grid, with a shaded header row:
+
+#example(```typ
+#standings-table(
+  games, by: "player",
+  grid: "header-rule", header-fill: "gray",
+  caption: [Header rule + shaded header.],
+)
+```, stacked: true)
+
+Zebra body rows on a crosstable (note the self/self diagonal keeps its own
+light-blue tint so it stays legible):
+
+#example(```typ
+#crosstable-table(games, by: "player", body-fill: "zebra", caption: [Zebra body rows.])
+```, stacked: true)
+
+A left-aligned table (the caption stays centered) with a bold caption, and
+`highlight-winners` turned off so the winner's name and points are no longer
+bolded:
+
+#example(```typ
+#standings-table(
+  games, by: "player",
+  table-align: left, caption-bold: true, highlight-winners: false,
+  caption: [Left-aligned, bold caption, no winner highlight.],
+)
+```, stacked: true)
+
+#block(inset: (left: 1em))[_Note: `table-align` moves the table itself; the
+caption always stays centered at full page width. Aligning the caption to a
+left/right table would require wrapping the figure, which Typst's model does not
+allow without breaking table cross-references (`@my-table`), so the caption is
+left centered by design._]
+
+Headers always repeat when a table breaks across a page boundary. For anything
+these fields don't cover, pass raw `#table` arguments straight through — they
+override any preset:
+
+```typ
+#standings-table(games, by: "player", stroke: 2pt + red, caption: [..])
+```
+
 // === Outlines and references =================================================
 
 = Outlines and References<outlines-references>

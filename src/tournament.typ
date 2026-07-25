@@ -19,8 +19,95 @@
 // (standings); cross-table and progress come next.
 // ===========================================================================
 
-#import "style.typ": default-table-style, table-style-state
+#import "style.typ": default-table-style, table-style-state, validate-table-style
 #import "i18n.typ": ui-string
+
+// The 8 table-styling fields a `*-table` call accepts alongside the raw
+// `#table` pass-through (see `_split-table-style`). Kept distinct from
+// `title`/`caption`/`supplement`/`lang`, which every renderer already has as
+// named parameters.
+#let table-render-style-keys = (
+  "grid", "header-align", "header-fill", "body-align", "body-fill",
+  "table-align", "caption-bold", "highlight-winners",
+)
+
+// Split a `*-table` call's `..table-args.named()` into `(style-over, raw)`:
+// a key goes to `style-over` iff it is one of `table-render-style-keys`, else
+// it is a raw `#table` argument (and, per `_table-style-args`'s callers, wins
+// over the presets).
+#let _split-table-style(named) = {
+  let style-over = (:)
+  let raw = (:)
+  for (k, v) in named {
+    if table-render-style-keys.contains(k) { style-over.insert(k, v) } else { raw.insert(k, v) }
+  }
+  (style-over, raw)
+}
+
+// Pure builder for the `#table` styling args (`stroke`/`fill`/`align`) from a
+// resolved style dictionary `st` (defaults + document state + per-call
+// overrides). `cols`/`nrows` are the table's total column/row counts
+// (including the header row); `name-col` is the column index holding the
+// entity name (always 1, per the "exactly one name column" design decision).
+// Kept pure (no state reads) so tests can pin its output directly.
+#let _table-style-args(st, cols, nrows, name-col) = {
+  let stroke = if st.grid == "complete" {
+    (x, y) => (
+      left: if x == 0 { 1pt } else { 0.5pt },
+      top: if y == 0 { 1pt } else { 0.5pt },
+      right: if x == cols - 1 { 1pt } else { none },
+      bottom: if y == nrows - 1 { 1pt } else { none },
+    )
+  } else if st.grid == "no-outer" {
+    (x, y) => (
+      left: if x == 0 { none } else { 0.5pt },
+      top: if y == 0 { none } else { 0.5pt },
+      right: none,
+      bottom: none,
+    )
+  } else {
+    // "header-rule"
+    (x, y) => (
+      top: if y == 1 { 1pt } else { none },
+      left: none, right: none, bottom: none,
+    )
+  }
+
+  let header-fill = if st.header-fill == none { none }
+    else if st.header-fill == "gray" { luma(230) }
+    else { st.header-fill }
+  let zebra-active = st.body-fill != none
+  let zebra-shade = if st.body-fill == "zebra" { luma(245) } else { st.body-fill }
+  let fill = (x, y) => {
+    if y == 0 { header-fill }
+    else if zebra-active and calc.even(y) { zebra-shade }
+    else { none }
+  }
+
+  let align = (x, y) => {
+    if y == 0 { st.header-align }
+    else if x == name-col { left }
+    else { st.body-align }
+  }
+
+  (stroke: stroke, fill: fill, align: align)
+}
+
+// Whether a given cell (at `col`) of a rank-1 row should be bolded for the
+// "highlight-winners" feature: on, the entity is ranked 1st, and the cell is
+// either the name column or the points/totals column (`name-col`/`pts-col`
+// are per-renderer -- see each `*-table`'s call site). Pure (no state reads)
+// so a test can pin it directly, same pattern as `_table-style-args`.
+#let _winner-bold(highlight-winners, rank, col, name-col, pts-col) = {
+  highlight-winners and rank == 1 and (col == name-col or col == pts-col)
+}
+
+// The crosstable's self/self diagonal cell fill: a distinct legible blue when
+// the body zebra fill is active (it would otherwise wash the diagonal out on
+// odd rows), else the original neutral gray. Pure.
+#let _crosstable-diagonal-fill(body-fill) = {
+  if body-fill != none { rgb("#c9d6e5") } else { luma(220) }
+}
 
 // The figure `kind` for tournament tables. Distinct from diagrams' "chess" so the
 // two get separate counters and separate outlines. Public (re-exported by lib).
@@ -33,7 +120,7 @@
 // `set-table-defaults` value; else (auto) the language-aware default
 // ("Table"/"Tabelle"/...). `lang` (default auto -> document language) selects
 // that localized default. The figure carries `kind: chess-table-kind`.
-#let _table-figure(tbl, title, caption, supplement, lang) = {
+#let _table-figure(tbl, title, caption, supplement, lang, style-over) = {
   let body = if title == none { tbl } else {
     context {
       let gap = (default-table-style + table-style-state.get()).title-gap
@@ -46,9 +133,42 @@
       if s == auto { ui-string(lang, "table-supplement") } else { s }
     }
   }
+  // `table-align` resolves inside a CONTEXT NODE passed as `figure(..)`'s
+  // `body:` ARGUMENT, not by wrapping the returned `figure(..)` call itself in
+  // `context {}`/`show {..}`/`align(..)` -- any of those would make
+  // `_table-figure` return an opaque wrapper node (context/styled/sequence/
+  // align) instead of the figure element itself, which breaks BOTH `@label`
+  // refs (a label can only attach to the figure directly) and native-HTML
+  // table export (verified: even a bare `show`+`figure(..)` sibling pair, or
+  // `align(.., figure(..))`, turns the return value into an unlabelable
+  // "styled"/"align" node). Native HTML export doesn't support `align`
+  // either, so skip it under `target() == "html"` (it would otherwise emit an
+  // "align ignored" warning there).
+  let aligned-body = context {
+    let st = default-table-style + table-style-state.get() + style-over
+    validate-table-style(st)
+    if target() == "html" { body } else { align(st.table-align, body) }
+  }
+  // `caption-bold` bolds the caller's caption text, resolved the same way --
+  // inside a context node passed as `caption:`'s VALUE, never via a `show
+  // figure.caption` rule (which, to affect the figure this call returns,
+  // would have to be a sibling statement ahead of `figure(..)` in this same
+  // block -- exactly the wrapping this function must avoid; see above).
+  // Consequence: only the caller's caption text is boldable this way, not the
+  // figure's own auto "Table N:" prefix (which Typst composes internally, out
+  // of reach without that same forbidden `show` rule); a caption-align knob
+  // (matching `table-align`) was spiked and hits the identical wall, so it is
+  // NOT implemented -- the caption keeps its default position/alignment.
+  let styled-caption = if caption == none { none } else {
+    context {
+      let st = default-table-style + table-style-state.get() + style-over
+      validate-table-style(st)
+      if st.caption-bold { strong(caption) } else { caption }
+    }
+  }
   // A caption-less table is referenceable but unlisted (see the `caption`
   // docstring): gate `outlined` on the caption so it leaves no blank outline row.
-  figure(body, kind: chess-table-kind, supplement: supp, caption: caption, outlined: caption != none)
+  figure(aligned-body, kind: chess-table-kind, supplement: supp, caption: styled-caption, outlined: caption != none)
 }
 
 // "1-0"/"0-1"/"1/2-1/2" -> (white, black) scores; anything else (e.g. "*") -> none.
@@ -248,31 +368,39 @@
 #let standings-table(games, by: "player", tiebreaks: auto, match-points: (win: 2, draw: 1, loss: 0), title: none, caption: none, supplement: auto, lang: auto, ..table-args) = {
   let tbs = if tiebreaks != auto { tiebreaks } else { _default-tiebreaks(by) }
   let rows = standings(games, by: by, tiebreaks: tiebreaks, match-points: match-points)
-
-  let body = ()
-  for r in rows {
-    body += (
-      [#r.rank], [#r.name], [#r.played], [#r.wins], [#r.draws], [#r.losses], [#_fmt(r.score)],
-    ) + tbs.map(tb => [#_fmt(_tb-value(r, tb))])
-  }
+  let (style-over, raw) = _split-table-style(table-args.named())
+  let cols = 7 + tbs.len()
+  let nrows = rows.len() + 1
 
   // Column headers are language-aware, so they resolve inside a `context`
   // (tiebreak abbreviations are internationally standardized -> not localized).
   let tbl = context {
+    let st = default-table-style + table-style-state.get() + style-over
+    validate-table-style(st)
+    let sa = _table-style-args(st, cols, nrows, 1)
+
+    let body = ()
+    for r in rows {
+      let name-cell = if _winner-bold(st.highlight-winners, r.rank, 1, 1, 6) { strong[#r.name] } else { [#r.name] }
+      let pts-cell = if _winner-bold(st.highlight-winners, r.rank, 6, 1, 6) { strong[#_fmt(r.score)] } else { [#_fmt(r.score)] }
+      body += (
+        [#r.rank], name-cell, [#r.played], [#r.wins], [#r.draws], [#r.losses], pts-cell,
+      ) + tbs.map(tb => [#_fmt(_tb-value(r, tb))])
+    }
+
     let name-h = if by == "team" { ui-string(lang, "tbl-team") } else { ui-string(lang, "tbl-player") }
     let header = (
       [*#ui-string(lang, "tbl-rank")*], [*#name-h*], [*#ui-string(lang, "tbl-played")*],
       [*+*], [*=*], [*\u{2212}*], [*#ui-string(lang, "tbl-points")*],
     ) + tbs.map(tb => [*#_tb-label.at(tb)*])
     table(
-      columns: 7 + tbs.len(),
-      align: (col, row) => if col == 1 { left } else { center },
-      table.header(..header),
+      columns: cols,
+      ..(stroke: sa.stroke, fill: sa.fill, align: sa.align) + raw,
+      table.header(repeat: true, ..header),
       ..body,
-      ..table-args.named(),
     )
   }
-  _table-figure(tbl, title, caption, supplement, lang)
+  _table-figure(tbl, title, caption, supplement, lang, style-over)
 }
 
 // ---- cross-table (round-robin only) ---------------------------------------
@@ -330,30 +458,45 @@
 #let crosstable-table(games, by: "player", match-points: (win: 2, draw: 1, loss: 0), title: none, caption: none, supplement: auto, lang: auto, ..table-args) = {
   let ct = crosstable(games, by: by, match-points: match-points)
   let n = ct.names.len()
-
-  let body = ()
-  for i in range(n) {
-    body.push([#ct.ranks.at(i)])
-    body.push([#(i + 1) #h(0.4em) #ct.names.at(i)])
-    for j in range(n) {
-      if i == j { body.push(table.cell(fill: luma(220))[]) }
-      else { body.push([#_fmt(ct.matrix.at(i).at(j))]) }
-    }
-    body.push([*#_fmt(ct.totals.at(i))*])
-  }
+  let (style-over, raw) = _split-table-style(table-args.named())
+  let cols = 2 + n + 1
+  let nrows = n + 1
 
   let tbl = context {
+    let st = default-table-style + table-style-state.get() + style-over
+    validate-table-style(st)
+    let sa = _table-style-args(st, cols, nrows, 1)
+    // The self/self diagonal fill overrides the table-level zebra fill (which
+    // would otherwise wash it out on odd rows), keeping it legible.
+    let diag-fill = _crosstable-diagonal-fill(st.body-fill)
+
+    let body = ()
+    for i in range(n) {
+      let name-cell = if _winner-bold(st.highlight-winners, ct.ranks.at(i), 1, 1, 2 + n) {
+        strong[#(i + 1) #h(0.4em) #ct.names.at(i)]
+      } else {
+        [#(i + 1) #h(0.4em) #ct.names.at(i)]
+      }
+      body.push([#ct.ranks.at(i)])
+      body.push(name-cell)
+      for j in range(n) {
+        if i == j { body.push(table.cell(fill: diag-fill)[]) }
+        else { body.push([#_fmt(ct.matrix.at(i).at(j))]) }
+      }
+      // Totals cell is already `strong` regardless of `highlight-winners`.
+      body.push([*#_fmt(ct.totals.at(i))*])
+    }
+
     let name-h = if by == "team" { ui-string(lang, "tbl-team") } else { ui-string(lang, "tbl-player") }
     let header = ([*\#*], [*#name-h*],) + range(n).map(i => [*#(i + 1)*]) + ([*#ui-string(lang, "tbl-points")*],)
     table(
-      columns: 2 + n + 1,
-      align: (col, row) => if col == 1 { left } else { center },
-      table.header(..header),
+      columns: cols,
+      ..(stroke: sa.stroke, fill: sa.fill, align: sa.align) + raw,
+      table.header(repeat: true, ..header),
       ..body,
-      ..table-args.named(),
     )
   }
-  _table-figure(tbl, title, caption, supplement, lang)
+  _table-figure(tbl, title, caption, supplement, lang, style-over)
 }
 
 // ---- progress (round by round) --------------------------------------------
@@ -432,30 +575,38 @@
 /// -> content
 #let progress-table(games, by: "player", match-points: (win: 2, draw: 1, loss: 0), title: none, caption: none, supplement: auto, lang: auto, ..table-args) = {
   let pg = progress(games, by: by, match-points: match-points)
-
-  let body = ()
-  for (i, nm) in pg.names.enumerate() {
-    body.push([#pg.ranks.at(i)])
-    body.push(nm)
-    for c in pg.cells.at(i) {
-      if c.score == none { body.push([\u{2013}]) }
-      else { body.push([#_fmt(c.score) #text(fill: luma(120), size: 0.8em)[(#_fmt(c.cumulative))]]) }
-    }
-    let total = pg.cells.at(i).fold(0.0, (a, c) => a + (if c.score == none { 0.0 } else { c.score }))
-    body.push([*#_fmt(total)*])
-  }
+  let (style-over, raw) = _split-table-style(table-args.named())
+  let cols = 2 + pg.rounds.len() + 1
+  let nrows = pg.names.len() + 1
 
   let tbl = context {
+    let st = default-table-style + table-style-state.get() + style-over
+    validate-table-style(st)
+    let sa = _table-style-args(st, cols, nrows, 1)
+
+    let body = ()
+    for (i, nm) in pg.names.enumerate() {
+      let bold = _winner-bold(st.highlight-winners, pg.ranks.at(i), 1, 1, 2 + pg.rounds.len())
+      body.push([#pg.ranks.at(i)])
+      body.push(if bold { strong[#nm] } else { [#nm] })
+      for c in pg.cells.at(i) {
+        if c.score == none { body.push([\u{2013}]) }
+        else { body.push([#_fmt(c.score) #text(fill: luma(120), size: 0.8em)[(#_fmt(c.cumulative))]]) }
+      }
+      let total = pg.cells.at(i).fold(0.0, (a, c) => a + (if c.score == none { 0.0 } else { c.score }))
+      // Total cell is already `strong` regardless of `highlight-winners`.
+      body.push([*#_fmt(total)*])
+    }
+
     let name-h = if by == "team" { ui-string(lang, "tbl-team") } else { ui-string(lang, "tbl-player") }
     let r-abbr = ui-string(lang, "tbl-round-abbr")
     let header = ([*\#*], [*#name-h*],) + pg.rounds.map(r => [*#r-abbr#r*]) + ([*#ui-string(lang, "tbl-points")*],)
     table(
-      columns: 2 + pg.rounds.len() + 1,
-      align: (col, row) => if col == 1 { left } else { center },
-      table.header(..header),
+      columns: cols,
+      ..(stroke: sa.stroke, fill: sa.fill, align: sa.align) + raw,
+      table.header(repeat: true, ..header),
       ..body,
-      ..table-args.named(),
     )
   }
-  _table-figure(tbl, title, caption, supplement, lang)
+  _table-figure(tbl, title, caption, supplement, lang, style-over)
 }
