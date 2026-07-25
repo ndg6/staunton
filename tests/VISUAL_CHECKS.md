@@ -206,6 +206,27 @@ Then open the PDFs below and check the noted property. (The expected-*fail* test
 - [ ] `tournament/standings.pdf`, `crosstable_progress.pdf`,
       `realworld_standings.pdf`, `refs/table_refs.pdf` — columns aligned, headers
       and running totals correct, tie-breaks plausible.
+- [ ] `tournament/styling.pdf` (prompt 42, table styling) — the new
+      `*-table` styling options. Section 1 (default): complete grid with a
+      visibly **thicker outer border** than the inner rules; header **bold +
+      centered**; name column **left**; rank-1 (A)'s name + points **bold**.
+      Section 2: `grid: "no-outer"` drops all four border lines but keeps the
+      inner grid; `grid: "header-rule"` keeps only the single rule under the
+      header. Section 3: `header-fill: "gray"` shades the header row light
+      gray. Section 4: `body-fill: "zebra"` alternates plain / light-gray body
+      rows. Section 5: the crosstable with zebra — confirm the self/self
+      diagonal is **recolored to a distinct light-blue tint** (not the zebra
+      gray) so it stays legible against the alternating rows. Section 6:
+      `table-align: left` / `right` move the **table** to that margin; the
+      **caption stays centered** at full page width (it does NOT follow the
+      table — a Typst figure/reference limitation, documented in the manual).
+      Section 7: `caption-bold: true` renders the caption text bold. Section
+      8: `highlight-winners: false` — A's name/points should NOT be bold
+      (contrast with section 1). Section 9: a short fixed page height forces
+      the standings table to spill onto a second page — confirm the header
+      row **repeats** at the top of page 2. (The pure `stroke`/`fill`/`align`
+      mapping behind all of this is pinned machine-checkably in
+      `tournament/table_style_args.typ`; this sheet is the eyeball pass only.)
 - [ ] `i18n/i18n.pdf` — supplements and piece letters match each language.
 - [ ] `i18n/localized_captions.pdf` — **verify the translations** of the automatic
       diagram captions ("Position after …" for PGN / "White to move" · "Black to

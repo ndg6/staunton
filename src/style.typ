@@ -200,6 +200,14 @@
   supplement: auto,           // figure supplement (auto -> localized "Table")
   outline-title: auto,        // chess-table-outline title (auto -> "List of Tables")
   title-gap: 0.6em,           // gap between an above-table `title` and the table
+  grid: "complete",           // rule preset: "complete" | "no-outer" | "header-rule"
+  header-align: center,       // alignment of the header row
+  header-fill: none,          // header fill: none | "gray" | a color
+  body-align: center,         // alignment of body data columns (the name column stays left)
+  body-fill: none,            // body fill: none | "zebra" | a color
+  table-align: center,        // page alignment of the table (+ title); does NOT move the caption (Typst API wall, see _table-figure)
+  caption-bold: false,        // bold the caller's caption text (not the figure's auto "Table N:" prefix; same wall)
+  highlight-winners: true,    // bold the rank-1 entity's name + points
 )
 
 // ---- PGN handling ---------------------------------------------
@@ -637,17 +645,57 @@
   diagram-style-state.update(s => s + f)
 }
 
+// Validate a (possibly partial) table style dictionary, erroring with a clear
+// message on the first bad value. Called both from `set-table-defaults` (so a
+// document-wide default is caught early) and at render time on the merged
+// style (so a bad per-call value is caught too).
+#let _valid-grids = ("complete", "no-outer", "header-rule")
+#let _valid-aligns = (left, center, right)
+
+#let validate-table-style(st) = {
+  if "grid" in st {
+    assert(_valid-grids.contains(st.grid),
+      message: "unknown table grid: " + repr(st.grid) + " (expected \"complete\", \"no-outer\", or \"header-rule\")")
+  }
+  for k in ("header-align", "body-align", "table-align") {
+    if k in st {
+      assert(_valid-aligns.contains(st.at(k)),
+        message: "unknown table " + k + ": " + repr(st.at(k)) + " (expected left, center, or right)")
+    }
+  }
+  if "header-fill" in st {
+    let v = st.header-fill
+    assert(v == none or v == "gray" or str(type(v)) == "color",
+      message: "unknown table header-fill: " + repr(v) + " (expected none, \"gray\", or a color)")
+  }
+  if "body-fill" in st {
+    let v = st.body-fill
+    assert(v == none or v == "zebra" or str(type(v)) == "color",
+      message: "unknown table body-fill: " + repr(v) + " (expected none, \"zebra\", or a color)")
+  }
+  for k in ("caption-bold", "highlight-winners") {
+    if k in st {
+      assert(type(st.at(k)) == bool,
+        message: "unknown table " + k + ": " + repr(st.at(k)) + " (expected true or false)")
+    }
+  }
+}
+
 /// Set default *table* style fields (the `#figure` wrapper around tournament
-/// tables) for subsequent `*-table` renderers.
+/// tables, plus rules/fills/alignment for the `*-table` renderers) for
+/// subsequent `*-table` renderers.
 ///
-/// - ..fields (arguments): named table style options — currently `supplement`
-///   (default "Table"), `outline-title`, `title-gap`; unknown keys error.
+/// - ..fields (arguments): named table style options — `supplement`
+///   (default "Table"), `outline-title`, `title-gap`, `grid`, `header-align`,
+///   `header-fill`, `body-align`, `body-fill`, `table-align`, `caption-bold`,
+///   `highlight-winners`; unknown keys error.
 /// -> content
 #let set-table-defaults(..fields) = {
   let f = fields.named()
   for k in f.keys() {
     assert(table-style-keys.contains(k), message: "unknown table style option: " + k)
   }
+  validate-table-style(f)
   table-style-state.update(s => s + f)
 }
 
