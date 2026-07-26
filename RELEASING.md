@@ -103,6 +103,24 @@ pushed.
 4. Build the bundle: `bash scripts/build-bundle.sh` → `dist/preview/staunton/<version>/`
    (built from a clean `git archive` of HEAD, then the `exclude` globs removed;
    it self-verifies required files are present and repo-only files didn't leak).
+4a. **Smoke-test the bundle as a real package.** Step 4's checks are a file-tree
+    diff — they cannot catch a broken relative path, a computed-at-runtime asset
+    lookup, or anything else that only breaks once the bundle is actually
+    *imported and rendered* the way a staunton user would. Run
+    `bash scripts/install-local.sh`, which builds the same bundle straight into
+    the local Typst package cache
+    (`C:\Users\fralip\AppData\Local\typst\packages\preview\staunton\<version>\`),
+    then compile a small scratch import test against it (e.g.
+    `out/pkg_smoke_test.typ`, gitignored):
+    ```typ
+    #import "@preview/staunton:<version>": *
+    #board("8/8/8/3k4/3K4/8/8/8")
+    ```
+    `typst compile out/pkg_smoke_test.typ out/pkg_smoke_test.pdf` must succeed
+    clean. This resolves `@preview/staunton:<version>` from the installed package
+    exactly as Typst Universe would (no `/lib.typ` root-relative shortcut, no
+    dev-tree fallback), so it is the closest local approximation of what a real
+    user's first import does. Any failure here is a release blocker.
 5. Copy that `<name>/<version>` directory into a fork of
    [`typst/packages`](https://github.com/typst/packages) under
    `packages/preview/` and open a PR (prepared in the local `typst/packages` fork
