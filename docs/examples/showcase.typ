@@ -8,6 +8,7 @@
 #import "/lib.typ": (
   parse-pgn, diagram-after, board, chess-diagram, chess-diagram-outline,
   mainline, game-result, position-after, chess-moves, set-chess-defaults, starting-fen,
+  color-theme, standings-table,
 )
 
 #set page(paper: "a4", margin: 2cm)
@@ -139,4 +140,41 @@ After `set-chess-defaults`, subsequent diagrams inherit the green theme:
 #grid(columns: 2, gutter: 14pt,
   diagram-after(g-main, "10w", size: 4.5cm),
   diagram-after(g-main, "14w", size: 4.5cm),
+)
+
+= Themed boards  (reusable `color-theme` / `board-theme`, patterns, material borders)
+
+Eleven built-in color/board themes, square patterns (stripes / marble / wood),
+and a matching material band around the board via `border-theme`. Set per call
+here, but equally valid as document-wide defaults through `set-board-defaults`.
+
+#grid(
+  columns: 3, gutter: 10pt, align: horizon,
+  board(position-after(g-main, "8w"), size: 3.6cm,
+    color-theme: "marine"),
+  board(position-after(g-main, "8w"), size: 3.6cm,
+    color-theme: color-theme(light: rgb("#d9b98a"), dark: rgb("#6b4a2f"), pattern: "wood")),
+  board(position-after(g-main, "8w"), size: 3.6cm,
+    label-mode: "border", border-theme: "marble",
+    color-theme: color-theme(base: "emerald", pattern: "marble", brightness: -15%, contrast: 30%)),
+)
+
+= Tournament-table styling  (zebra rows, winner highlighting, and more)
+
+#let mini = parse-pgn(```
+[White "Alice"][Black "Bob"][Result "1-0"][Round "1"]
+1. e4 e5 2. Nf3 Nc6 3. Bb5 1-0
+[White "Carol"][Black "Dan"][Result "0-1"][Round "1"]
+1. d4 d5 2. c4 e6 0-1
+[White "Alice"][Black "Carol"][Result "1/2-1/2"][Round "2"]
+1. e4 c5 2. Nf3 d6 1/2-1/2
+[White "Bob"][Black "Dan"][Result "1-0"][Round "2"]
+1. c4 c5 2. Nc3 Nc6 1-0
+```)
+
+#standings-table(
+  mini,
+  caption: [Synthetic mini-tournament, zebra rows and highlighted winners],
+  body-fill: "zebra",
+  highlight-winners: true,
 )

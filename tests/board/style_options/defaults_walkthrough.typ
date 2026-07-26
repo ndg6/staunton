@@ -47,7 +47,8 @@
 // Every option this sheet drives through `set-board-defaults` IS a settable board
 // default — i.e. a real board key that is NOT position-specific.
 #let demoed-keys = (
-  "size", "light", "dark", "labels", "label-font", "label-mode", "label-color",
+  "size", "light", "dark", "pattern", "brightness", "contrast", "color-theme",
+  "board-theme", "labels", "label-font", "label-mode", "label-color",
   "label-border-ratio", "file-side", "rank-side", "file-label-corner",
   "rank-label-corner", "border-theme", "border", "grid", "piece-set",
   "piece-scale", "highlight-shape", "highlight-fill", "highlight-transparency",
@@ -107,6 +108,21 @@ Baseline (`size: 3cm`, all else factory default), for comparison:
 #demo("set-board-defaults(\n  light: rgb(\"#eeeed2\"), dark: rgb(\"#769656\"),\n)",
   light: rgb("#eeeed2"), dark: rgb("#769656"))
 
+= Square patterns  (`pattern`, normally set via `color-theme(.., pattern: ..)`)
+`"marble"`/`"wood"` are transparent material overlays -- pick a `light`/`dark`
+pair that suits the material (shown here; the manual has the same pairings).
+#demo("set-board-defaults(pattern: \"stripes\")", pattern: "stripes")
+#demo(
+  "set-board-defaults(\n  pattern: \"marble\",\n  light: rgb(\"#eeeed2\"), dark: rgb(\"#3f6b4a\"),\n)",
+  pattern: "marble", light: rgb("#eeeed2"), dark: rgb("#3f6b4a"))
+#demo(
+  "set-board-defaults(\n  pattern: \"wood\",\n  light: rgb(\"#d9b98a\"), dark: rgb(\"#6b4a2f\"),\n)",
+  pattern: "wood", light: rgb("#d9b98a"), dark: rgb("#6b4a2f"))
+
+= Brightness / contrast  (nudge a pair's lightness without picking new colors)
+#demo("set-board-defaults(brightness: -20%)", brightness: -20%)
+#demo("set-board-defaults(contrast: 40%)", contrast: 40%)
+
 = Labels
 #demo("set-board-defaults(labels: false)", labels: false)
 #demo("set-board-defaults(\n  label-mode: \"outside\", label-color: rgb(\"#b58863\"),\n)",
@@ -119,9 +135,32 @@ Baseline (`size: 3cm`, all else factory default), for comparison:
   file-label-corner: right, rank-label-corner: left)
 
 = Border  (`border-theme` band / `border` outline)
-#demo("set-board-defaults(border-theme: \"dark\")", border-theme: "dark")
+The band only shows under `label-mode: "border"`; `border` (the outline
+stroke, below) is independent and shows under any label mode.
+#demo("set-board-defaults(\n  label-mode: \"border\", border-theme: \"dark\",\n)",
+  label-mode: "border", border-theme: "dark")
+#demo("set-board-defaults(\n  label-mode: \"border\", border-theme: \"creme\",\n)",
+  label-mode: "border", border-theme: "creme")
+#demo("set-board-defaults(\n  label-mode: \"border\", border-theme: \"light\",\n)",
+  label-mode: "border", border-theme: "light")
+#demo(
+  "set-board-defaults(\n  label-mode: \"border\", border-theme: \"wood\",\n  pattern: \"wood\", light: rgb(\"#d9b98a\"), dark: rgb(\"#6b4a2f\"),\n)",
+  label-mode: "border", border-theme: "wood",
+  pattern: "wood", light: rgb("#d9b98a"), dark: rgb("#6b4a2f"))
+#demo(
+  "set-board-defaults(\n  label-mode: \"border\", border-theme: \"marble\",\n  color-theme: \"emerald\",\n)",
+  label-mode: "border", border-theme: "marble", color-theme: "emerald")
 #demo("set-board-defaults(border: 2.5pt + rgb(\"#8b0000\"))", border: 2.5pt + rgb("#8b0000"))
 #demo("set-board-defaults(border: none)", border: none)
+
+= Reusable `color-theme` / `board-theme` values  (shorthand for the fields above)
+`color-theme` bundles `light`/`dark`/`pattern`/`brightness`/`contrast`;
+`board-theme` bundles a full board look (any board style field, plus a nested
+color theme). Both accept a built-in name or a constructor value; setting
+either as a document default expands it into the individual fields above.
+#demo("set-board-defaults(color-theme: \"marine\")", color-theme: "marine")
+#demo("set-board-defaults(board-theme: \"dutch-gray\")  // also sets labels: false, border: none",
+  board-theme: "dutch-gray")
 
 = Grid
 #demo("set-board-defaults(grid: true)", grid: true)

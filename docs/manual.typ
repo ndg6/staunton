@@ -143,6 +143,16 @@
   fill: rgb("#f0f0ec"), inset: (x: 3pt, y: 0pt), outset: (y: 3pt), radius: 2pt, it,
 )
 
+// Links and cross-references get the same light tint so they stand out from
+// running prose at a glance, without relying on color alone (still underlined
+// by Typst's default `link`/`ref` styling).
+#show link: it => box(
+  fill: rgb("#f0f0ec"), inset: (x: 3pt, y: 0pt), outset: (y: 3pt), radius: 2pt, it,
+)
+#show ref: it => box(
+  fill: rgb("#f0f0ec"), inset: (x: 3pt, y: 0pt), outset: (y: 3pt), radius: 2pt, it,
+)
+
 // Running chapter title for the header (right side): the FIRST level-1 heading
 // that starts on the current page; if none starts here, the LAST one seen on an
 // earlier page. So a page carrying "Introduction" then "The Board" shows
@@ -197,7 +207,7 @@
     #v(8pt)
     #link("https://github.com/ndg6/staunton")[#text(size: 11pt, fill: rgb("#555"), font: "DejaVu Sans Mono")[https://github.com/ndg6/staunton]]
     #v(8pt)
-    #text(size: 10pt, fill: rgb("#666"))[User manual · package version 0.2.2]
+    #text(size: 10pt, fill: rgb("#666"))[User manual · package version 0.3.0]
   ]
 ]
 
@@ -273,31 +283,7 @@
 
 = Introduction<introduction>
 
-Package *staunton* aims to provide a complete, convenient and flexible solution
-for chess publications. It provides a full set of features, including:
-
-- *boards and diagrams* — bare boards with labels, highlights, arrows, an optional grid,
-  flexible sizing, custom colors plus reusable color/board themes (brightness/contrast
-  tweaks, theme derivation, and various patterns), and bundled SVG piece sets (or a
-  Unicode fallback); and building on that diagrams with captions, figure counters, and
-  referenceable labels;
-- *games from PGN* — a sophisticated parser creates game structures (single or array)
-  from a PGN file, from which you create positions using move "locators" (mainline and
-  variations). You can also play out moves from start positions and export resulting
-  positions as FEN strings;
-- *move notation* — from parsed games you create move text output with localized piece letters,
-  figurine glyphs, NAGs (numeric annotation glyphs, the standard `$n` move-assessment codes), comments and diagrams embedded inline;
-- *tournament tables* — we can create standings, cross-tables and progress charts from a PGN's
-  results, by player or by team, with a curated set of styling options (rule
-  presets, header and body fills, alignment, winner highlighting) settable per
-  call or document-wide;
-- *Chess960 / Fischer Random Chess* — the same board, engine, PGN pipeline and notation
-  handle chess960, with X-FEN castling, the FRC PGN tags, and start-by-number instead of FEN (see @chess960);
-- *outlines and references* — diagrams and tables get their own counters and lists;
-- *document-wide styling* and *localization* (seven languages, easily extended);
-- *limited HTML export* — notation, tables, outlines, references and captioned
-  figures become native HTML, with boards and diagrams embedded as inline SVG
-  (see @html-export).
+Typst package *staunton* aims to deliver a complete, convenient and flexible solution for all your chess publishing needs. While you can perfectly use it standalone, it's also meant to be a _toolkit_ used in templates for chess books and articles.
 
 #example(```typ
 #chess-diagram(
@@ -306,6 +292,34 @@ for chess publications. It provides a full set of features, including:
   size: 4cm,
 )
 ```)
+
+Staunton provides a full set of features, including:
+
+- *boards and diagrams* — draw bare #link(<board>)[boards] with labels, highlights, arrows and an optional grid
+  using flexible sizing, custom colors plus reusable color/board themes (brightness/contrast
+  tweaks, theme derivation, and various patterns). Use the bundled SVG piece sets (or a
+  Unicode fallback) or provide your own piece sets. Building on that foundation create diagrams with captions, figure counters, and referenceable labels.
+- *games from PGN* — let a sophisticated parser create #link(<games>)[game] structures (single or array)
+  from a PGN file and From you create positions using move "locators" (mainline and
+  variations). You can also play out moves from arbitrary start positions and export resulting
+  positions as FEN strings.
+- *Chess960 / Fischer Random Chess* — with the same board, engine, PGN pipeline and notation
+  you easily handle _Chess960_ a.k.a _Fischer Random Chess_, complete with X-FEN castling, the FRC PGN tags, and start-by-number instead of FEN (see @chess960).
+- *move notation* — from parsed games you create move text output with localized piece letters,
+  figurine glyphs, NAGs (numeric annotation glyphs, the standard `$n` move-assessment codes), comments and diagrams embedded inline.
+- *tournament tables* — you can create standings, cross-tables and progress charts from a PGN's
+  results, by player or by team, with a curated set of styling options (rule
+  presets, header and body fills, alignment, winner highlighting) settable per
+  call or document-wide.
+- *outlines and references* — diagrams and tables are embedded in figures with their own captions
+  and numbering _kind_, which you can reference from text and also use in outlines.
+- *document-wide styling* — influence the appearance of diagrams and tables on a per-call basis
+  or style them once and reuse them throughout the document.
+- *localization* — create output of move notation, PGN tags, and tournament tables in seven languag
+  (English, French, German, Italian, Spanish, Russian and Chinese). This list can be extended if demand arises.
+- *limited HTML export* — notation, tables, outlines, references and captioned
+  figures become native HTML, with boards and diagrams embedded as inline SVG
+  (see @html-export).
 
 This manual is bottom-up. The *board* is the drawing primitive; a *diagram* wraps
 a board in a referenceable figure; a *position* is the data a board draws; *games*
@@ -318,7 +332,7 @@ references*, and the *document-wide defaults*.
 manual is in scope:
 
 ```typ
-#import "@preview/staunton:0.2.2": *
+#import "@preview/staunton:0.3.0": *
 ```
 
 *staunton* needs *Typst 0.14.2 or newer* — with one exception: HTML export
@@ -1334,7 +1348,15 @@ For Chess960 positions `to-fen` emits *X-FEN* — a rook-file castling letter wh
 PGN comments can carry drawing annotations — `[%cal …]` for arrows, `[%csl …]`
 for highlights. Processing is *off by default*; opt in per call with
 `annotations: true` (or document-wide with `set-pgn-defaults` — see @pgn-handling).
-The demo game annotates its 2nd move:
+
+*Syntax.* Both are lichess / chess.com conventions, embedded verbatim in the move
+comment. `[%cal <entries>]` draws arrows: each entry is `<color><from><to>` — e.g.
+`Gf3e5` is a green arrow from f3 to e5. `[%csl <entries>]` highlights squares: each
+entry is `<color><square>` — e.g. `Re5` is a red highlight on e5. Either command
+takes several comma-separated entries in one bracket, e.g. `[%cal Gf3e5,Rf1c4]`
+draws two arrows. The color letter is one of `G`/`R`/`Y`/`B`/`O`
+(green/red/yellow/blue/orange), resolved through `annotation-colors` below. The
+demo game annotates its 2nd move:
 
 #example(```typ
 // move 2: {[%cal Gf3e5] [%csl Re5]}
@@ -1362,9 +1384,12 @@ and the circle on `d4` are added programmatically:
 
 *With embedded diagrams.* The `diagrams` switch (PGN handling) makes
 `notation(diagrams: true)` splice a board after each move whose comment carries a
-diagram marker. If that *same* comment also holds `%cal`/`%csl` *and*
-`annotations` is on, the spliced board shows those arrows/highlights too — the two
-switches compose:
+diagram marker. staunton recognizes several conventions, any one of them anywhere
+in the comment: ChessBase's `#` or `#[<caption>]` (caption optional, shown below
+the spliced board — the form used just below), Scid's `[d]` / `[D]`, and
+the literal `\diagram` / `%%diagram` markers some LaTeX/Markdown converters emit.
+If that *same* comment also holds `%cal`/`%csl` *and* `annotations` is on, the
+spliced board shows those arrows/highlights too — the two switches compose:
 
 ```typ
 // 2. Nf3 {[%cal Gf1c4] [%csl Re5] #[After 2.Nf3]} Nc6 ...
@@ -1375,6 +1400,26 @@ switches compose:
 `diagrams` decides *whether* a board appears; `annotations` decides whether it
 carries the marks. The marker and the `%cal`/`%csl` must be in the *same* move's
 comment. (Only mainline moves are addressed — `notation` renders the mainline.)
+
+*The convenience payoff.* Push every switch at once, and a single
+`#chess-notation(game)` on a *fully annotated* PGN (one already carrying diagram
+markers, `%cal`/`%csl`, NAGs, comments and variations — say, exported from
+lichess, ChessBase or Scid) reproduces the whole illustrated, annotated game:
+boards spliced in at the marked moves, arrows and highlights drawn, `!`/`?`
+glyphs rendered, variations and prose included — without you writing any
+per-move code at all:
+
+```typ
+#set-pgn-defaults(
+  diagrams: true, annotations: true, nags: true, comments: true, variations: true,
+)
+#chess-notation(game)
+```
+
+This is an *extreme* case (most publications want a curated subset, which is
+exactly why these switches default off), but it makes the point: staunton's job
+is turning what is already *in* the PGN into typeset output, not making you
+re-describe it in Typst.
 
 == PGN Handling <pgn-handling>
 
@@ -1608,7 +1653,7 @@ to your own document. Yours is the one place it can live: a rule inside the
 package would have to wrap the figure, and that breaks the cross-references.
 
 ```typ
-#import "@preview/staunton:0.2.2": chess-table-kind
+#import "@preview/staunton:0.3.0": chess-table-kind
 
 #show figure.caption: it => {
   if it.kind == chess-table-kind {
@@ -1992,7 +2037,7 @@ Everything else in `src/` (the position parser's internals, the SAN encoder, the
 renderer, the comment interpreter, the localization tables, …) is deliberately
 *not* re-exported from the package: those names are implementation details that
 may change between releases. If you truly need one, import it directly from its
-module — e.g. `#import "@preview/staunton:0.2.2/src/coords.typ": square-name` —
+module — e.g. `#import "@preview/staunton:0.3.0/src/coords.typ": square-name` —
 with the understanding that it carries no stability promise.
 
 == Tournament data
