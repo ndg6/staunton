@@ -5,7 +5,7 @@
 // the king (king crisp on top, glow radiates from beneath); (2) badges are tied to
 // a MOVE and therefore come ONLY from a game (`diagram-after`) — never from a bare
 // position or an empty square.
-#import "/lib.typ": chess-board, diagram-after, parse-pgn, with-nags
+#import "/lib.typ": board, diagram-after, parse-pgn, with-nags
 
 #set page(width: 16cm, height: auto, margin: 1cm)
 #set text(font: "Libertinus Serif", size: 10pt)
@@ -17,17 +17,17 @@ Auto-detected from the position (side-to-move king). Left: Black in check
 stays crisp *on top*; the red glow radiates from underneath.
 
 #grid(columns: 2, gutter: 1cm,
-  chess-board("rnb1kbnr/pppp1Qpp/8/4p3/2B1P3/8/PPPP1PPP/RNB1K1NR b KQkq - 0 4",
+  board("rnb1kbnr/pppp1Qpp/8/4p3/2B1P3/8/PPPP1PPP/RNB1K1NR b KQkq - 0 4",
     check: true, size: 5cm),
-  chess-board("4k3/8/8/8/8/6b1/8/4K2r w - - 0 1", check: true, size: 5cm),
+  board("4k3/8/8/8/8/6b1/8/4K2r w - - 0 1", check: true, size: 5cm),
 )
 
 `check: false` (default) hides it even when a king is in check; a custom
 `check-color` re-tints the glow:
 
 #grid(columns: 2, gutter: 1cm,
-  chess-board("rnb1kbnr/pppp1Qpp/8/4p3/2B1P3/8/PPPP1PPP/RNB1K1NR b KQkq - 0 4", size: 5cm),
-  chess-board("rnb1kbnr/pppp1Qpp/8/4p3/2B1P3/8/PPPP1PPP/RNB1K1NR b KQkq - 0 4",
+  board("rnb1kbnr/pppp1Qpp/8/4p3/2B1P3/8/PPPP1PPP/RNB1K1NR b KQkq - 0 4", size: 5cm),
+  board("rnb1kbnr/pppp1Qpp/8/4p3/2B1P3/8/PPPP1PPP/RNB1K1NR b KQkq - 0 4",
     check: true, check-color: rgb("#2b6cff"), size: 5cm),
 )
 

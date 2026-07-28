@@ -2,7 +2,7 @@
 // the mainline in parentheses, correctly numbered and side-aware -- a white-first
 // variation is "N. ...", a black-first one "N... ...", and the resumed mainline
 // move re-shows its number (a Black move as "N..."). Nesting recurses.
-#import "/lib.typ": parse-pgn, notation, chess-notation, set-pgn-defaults, default-pgn-style, pgn-style-state
+#import "/lib.typ": parse-pgn, notation, set-pgn-defaults, default-pgn-style, pgn-style-state
 
 #set page(width: auto, height: auto, margin: 1cm)
 #set text(font: "Libertinus Serif", size: 10pt)
@@ -77,7 +77,7 @@
 // bold-mainline defaults ON: a bare call (default resolves through set-pgn-defaults)
 // therefore yields content, not a plain string.
 #assert(default-pgn-style.bold-mainline == true, message: "bold-mainline defaults on")
-#assert(type(chess-notation(g1, lang: "en")) == content, message: "default bold-mainline -> content")
+#assert(type(notation(g1, lang: "en")) == content, message: "default bold-mainline -> content")
 
 // --- document-wide switch via set-pgn-defaults ------------------------------
 // A call relying on the document default resolves through `context` (so returns
@@ -87,6 +87,6 @@
 
 = Variations — inline and block
 // with the document default now on, a bare call splices variations:
-#chess-notation(g1)
+#notation(g1)
 
-#chess-notation(g3, variations: true, variation-style: "block")
+#notation(g3, variations: true, variation-style: "block")

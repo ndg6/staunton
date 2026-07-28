@@ -1,15 +1,15 @@
-// A caption-less chess-diagram stays referenceable but UNLISTED: its `outlined`
+// A caption-less diagram stays referenceable but UNLISTED: its `outlined`
 // flag (which drives chess-diagram-outline membership) must default to whether it
 // carries a caption, so bare positions don't leave blank rows in the outline. An
 // explicit `outlined:` still wins. Asserting test — no rendering to eyeball.
-#import "/lib.typ": chess-diagram, starting-fen
+#import "/lib.typ": diagram, starting-fen
 
 #set page(width: 12cm, height: auto, margin: 1cm)
 
-#chess-diagram(starting-fen, size: 2cm, caption: [Listed])              // -> outlined
-#chess-diagram(starting-fen, size: 2cm)                                 // FEN auto-caption -> outlined
-#chess-diagram(starting-fen, size: 2cm, caption: none)                  // caption-less -> unlisted
-#chess-diagram(starting-fen, size: 2cm, caption: [Kept out], outlined: false)  // override -> unlisted
+#diagram(starting-fen, size: 2cm, caption: [Listed])              // -> outlined
+#diagram(starting-fen, size: 2cm)                                 // FEN auto-caption -> outlined
+#diagram(starting-fen, size: 2cm, caption: none)                  // caption-less -> unlisted
+#diagram(starting-fen, size: 2cm, caption: [Kept out], outlined: false)  // override -> unlisted
 
 #context {
   let figs = query(figure.where(kind: "chess"))

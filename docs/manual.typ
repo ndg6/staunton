@@ -286,7 +286,7 @@
 Typst package *staunton* aims to deliver a complete, convenient and flexible solution for all your chess publishing needs. While you can perfectly use it standalone, it's also meant to be a _toolkit_ used in templates for chess books and articles.
 
 #example(```typ
-#chess-diagram(
+#diagram(
   "r1bqkbnr/pppp1ppp/2n5/4p3/4P3/5N2/PPPP1PPP/RNBQKB1R",
   caption: [The Ruy Lopez, three moves in.],
   size: 4cm,
@@ -989,7 +989,7 @@ automatically as `"<White> – <Black> (<Year>)"` when both players are known) a
 the figure *caption* below it.
 
 #example(```typ
-#chess-diagram(
+#diagram(
   "r1bqkbnr/pppp1ppp/2n5/4p3/4P3/5N2/PPPP1PPP/RNBQKB1R",
   white: "Morphy", black: "NN", year: 1858,
   caption: [After 2...Nc6],
@@ -1025,7 +1025,7 @@ dict*, or a *string form*. In a squares dict the piece can be a long name, a kin
 abbreviation, or a bare letter (UPPER = white, lower = black):
 
 #example(```typ
-#chess-diagram(
+#diagram(
   position((
     e1: (kind: "king", color: "white"), // long
     d8: (kind: "q", color: "black"),    // kind
@@ -1042,7 +1042,7 @@ rectangular-only (this is what lets a board be non-8×8) and rejects characters
 that aren't a valid piece abbreviation or `.`:
 
 #example(````typ
-#chess-diagram(
+#diagram(
   position(```
     ....r...
     ........
@@ -1094,7 +1094,7 @@ for a position. So a tournament file read only for results and never tokenises m
 `chess-diagram`) of the position at a locator:
 
 #example(```typ
-#chess-notation(game)
+#notation(game)
 ```, stacked: true)
 
 #example(```typ
@@ -1150,8 +1150,8 @@ game: it carries no move history, roster or PGN — for those, parse a game
 (@games).
 
 #example(```typ
-#chess-diagram(
-  chess-moves(none, "1. e4 e5 2. Nf3 Nc6 3. Bb5 a6"),
+#diagram(
+  play(none, "1. e4 e5 2. Nf3 Nc6 3. Bb5 a6"),
   size: 4cm,
 )
 ```)
@@ -1168,7 +1168,7 @@ listing, a puzzle solution built move by move, or movetext assembled without a
 PGN in hand:
 
 #example(```typ
-#let pos = chess-moves(none, "1. e4 e5 2. Nf3")
+#let pos = play(none, "1. e4 e5 2. Nf3")
 #raw(legal-moves(pos).map(m => move-to-san(pos, m)).join(", "))
 ```, stacked: true)
 
@@ -1196,11 +1196,11 @@ game, a move-text string, or a SAN array; it localises the piece letters and
 renders figurine glyphs:
 
 #example(```typ
-#chess-notation(game, lang: "de")
+#notation(game, lang: "de")
 ```, stacked: true)
 
 #example(```typ
-#chess-notation(game, figurine: true)
+#notation(game, figurine: true)
 ```, stacked: true)
 
 `from` / `to` restrict output to an *inclusive* slice of moves. Both are the
@@ -1208,7 +1208,7 @@ simple `"8b"` / `"12w"` locators; `from` defaults to the first move, `to` to the
 last:
 
 #example(```typ
-#chess-notation(game, from: "2w", to: "3b")
+#notation(game, from: "2w", to: "3b")
 ```, stacked: true)
 
 `from` / `to` bound a slice of the *mainline*: they are the simple `"8b"` /
@@ -1231,7 +1231,7 @@ white-first line reads `3.Bc4 …`, a black-first line `3...Bc5 …`, and the re
 mainline move re-shows its number:
 
 #example(```typ
-#chess-notation(
+#notation(
   parse-pgn(
     "1. e4 e5 2. Nf3 Nc6 3. Bb5 (3. Bc4 Bc5) a6 *",
   ).first(),
@@ -1246,7 +1246,7 @@ that ends on a nested line closes with a `)` on its own line) — the analysis-v
 layout:
 
 #example(```typ
-#chess-notation(
+#notation(
   parse-pgn(
     "1. e4 (1. d4 d5 (1... Nf6 2. c4)) e5 *",
   ).first(),
@@ -1265,7 +1265,7 @@ write it in analysis:
   "1. e4 e5 2. Nf3 Nc6 (2... d6 3. d4) 3. Bb5 *",
 ).first()
 // the 2...d6 side line, on its own:
-#chess-notation(g, line: ((at: "2b", into: 0),))
+#notation(g, line: ((at: "2b", into: 0),))
 ```, stacked: true)
 
 Each hop is `(at: "<move>", into: <n>)` — nest hops to reach a deeper line. The
@@ -1284,7 +1284,7 @@ so they compose:
 #let g = parse-pgn(
   "1. e4 e5 2. Nf3 Nc6 3. Bb5 (3. Bc4 Bc5) a6 *",
 ).first()
-#chess-notation(
+#notation(
   with-comments(
     with-nags(g, ("3w": "!")),
     (((line: ((at: "3w", into: 0),), at: "3w"), "a sharp try"),),
@@ -1316,7 +1316,7 @@ plain SAN run like `"Bc4 Bc5"` is the simplest case:
 
 #example(```typ
 #let g = parse-pgn("1. e4 e5 2. Nf3 Nc6 3. Bb5 a6 *").first()
-#chess-notation(
+#notation(
   with-variation(g, at: "3w",
     moves: "3. Bc4 Bc5! (3... Nf6 4. d4) {a sharp alternative}"),
   variations: true, nags: true, comments: true,
@@ -1337,7 +1337,7 @@ of the lazy model.
 locator. Standard 8×8 positions round-trip exactly:
 
 #example(```typ
-#raw(to-fen(chess-moves(none, "1. e4 e5 2. Nf3")))
+#raw(to-fen(play(none, "1. e4 e5 2. Nf3")))
 ```, stacked: true)
 
 For Chess960 positions `to-fen` emits *X-FEN* — a rook-file castling letter when
@@ -1394,7 +1394,7 @@ spliced board shows those arrows/highlights too — the two switches compose:
 ```typ
 // 2. Nf3 {[%cal Gf1c4] [%csl Re5] #[After 2.Nf3]} Nc6 ...
 #set-pgn-defaults(diagrams: true, annotations: true)
-#chess-notation(game)   // ...text, then a board after 2.Nf3 with the arrow + highlight
+#notation(game)   // ...text, then a board after 2.Nf3 with the arrow + highlight
 ```
 
 `diagrams` decides *whether* a board appears; `annotations` decides whether it
@@ -1413,7 +1413,7 @@ per-move code at all:
 #set-pgn-defaults(
   diagrams: true, annotations: true, nags: true, comments: true, variations: true,
 )
-#chess-notation(game)
+#notation(game)
 ```
 
 This is an *extreme* case (most publications want a curated subset, which is
@@ -1489,7 +1489,7 @@ the 960 back-rank arrangements @scharnagl, running `0`–`959` (`518` is standar
 chess) — with `chess960-start` (a position) or `chess960-start-fen` (its FEN):
 
 #example(```typ
-#chess960-diagram(chess960-start(356), size: 4cm)
+#diagram(chess960-start(356), size: 4cm)
 ```)
 
 == X-FEN castling
@@ -1689,7 +1689,7 @@ Diagrams and tables each carry a distinct figure `kind` (`"chess"` /
 #chess-table-outline()       // list of tournament tables
 #chess-outlines()            // both, diagrams then tables
 
-#chess-diagram(starting-fen, caption: [Start]) <start>
+#diagram(starting-fen, caption: [Start]) <start>
 As shown in @start, ...
 ```
 
@@ -1737,7 +1737,7 @@ Every default is equivalently a per-call argument — the same green theme,
 set once above vs. passed to one diagram:
 
 #example(```typ
-#chess-diagram(
+#diagram(
   "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR",
   light: rgb("#eeeed2"), dark: rgb("#769656"),
   size: 4cm,
@@ -1940,11 +1940,7 @@ source docstring: its signature, then every parameter with its type and default.
 == Boards and Diagrams
 #show-fns((
   ("/lib.typ", "board"),
-  ("/lib.typ", "chess-board"),
-  ("/lib.typ", "chess960-board"),
   ("/lib.typ", "diagram"),
-  ("/lib.typ", "chess-diagram"),
-  ("/lib.typ", "chess960-diagram"),
 ))
 
 == Positions
@@ -1972,7 +1968,7 @@ source docstring: its signature, then every parameter with its type and default.
   ("/lib.typ", "diagram-after"),
   ("/src/game.typ", "move-san"),
   ("/src/game.typ", "move-node"),
-  ("/src/san.typ", "chess-moves"),
+  ("/src/san.typ", "play"),
 ))
 
 == Annotate and Build
@@ -1985,7 +1981,6 @@ source docstring: its signature, then every parameter with its type and default.
 == Notation
 #show-fns((
   ("/lib.typ", "notation"),
-  ("/lib.typ", "chess-notation"),
 ))
 
 == Tournament Tables

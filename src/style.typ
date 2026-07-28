@@ -6,7 +6,7 @@
 //     labels, piece set, highlights, grid, arrows, ...  Consumed by `board()` /
 //     `render-board`.
 //   * DIAGRAM style -- the #figure wrapper around a board: the above game-info
-//     line (bold? gap?) and the figure supplement. Consumed by `chess-diagram`.
+//     line (bold? gap?) and the figure supplement. Consumed by `diagram`.
 //   * TABLE style   -- the #figure wrapper around a tournament table (supplement,
 //     outline title, title gap). Consumed by the `*-table` renderers.
 //   * I18N          -- the document language for all language-aware strings.
@@ -230,7 +230,7 @@
   annotations: false,  // process %cal/%csl comment commands -> arrows/highlights
   nags:        false,  // render NAGs ("Nf3!", "d4⩲") in notation
   comments:    false,  // include comment prose in notation
-  diagrams:    false,  // act on embedded diagram markers (consumer: chess-notation, splices boards into the movetext)
+  diagrams:    false,  // act on embedded diagram markers (consumer: notation, splices boards into the movetext)
   variations:  false,  // splice variations (RAVs) into notation output
   bold-mainline: true, // render mainline moves bold (variations stay normal)
   spaced:      true,   // space after the move number ("24. Nf3"); false -> dense ("24.Nf3")

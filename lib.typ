@@ -23,12 +23,11 @@
 #import "src/fen.typ": parse-fen, starting-fen, position-fen as _position-fen
 #import "src/chess960.typ": chess960-start-fen
 #import "src/engine.typ": legal-moves, apply, in-check, checked-king-square as _checked-king-square
-#import "src/san.typ": chess-moves, move-to-san
+#import "src/san.typ": play, move-to-san
 #import "src/pgn.typ": parse-pgn, movetext
 #import "src/game.typ": mainline, position-after, game-result, move-san, move-node, move-quality-mark as _move-quality-mark, with-nags, with-comments, with-variation, game-start, game-variant
-// The text core lives in src/notation.typ; lib defines `notation` /
-// `chess-notation` on top so they can also embed diagrams (which needs the
-// lib-level `chess-diagram`).
+// The text core lives in src/notation.typ; lib defines `notation` on top so
+// it can also embed diagrams (which needs the lib-level `diagram`).
 #import "src/notation.typ": notation as _notation-text
 
 // NOTE on reading external files: there is intentionally no `read-pgn(path)`
@@ -141,7 +140,7 @@
 
   // FEN auto-detect: a single string/raw positional that contains "/" is a FEN
   // (rank separators), so delegate to parse-fen. This keeps position(fen),
-  // board(fen) and chess-moves(fen, ..) consistent. The string ROW form never
+  // board(fen) and play(fen, ..) consistent. The string ROW form never
   // uses "/", so there is no clash. (parse-fen sets turn/castling/etc itself.)
   if pos.len() == 1 {
     let p0 = pos.first()
@@ -198,7 +197,7 @@
 
 /// The Chess960 / Fischer Random starting *position* for a position number
 /// (0–959), via Scharnagl's numbering scheme — a ready-to-draw position (feed it
-/// to `chess960-board` / `chess960-diagram`, or `to-fen` it). `518` is the
+/// to `board` / `diagram`, or `to-fen` it). `518` is the
 /// standard start. The companion `chess960-start-fen` returns the FEN string.
 ///
 /// - n (int): the position number, 0–959.
@@ -289,9 +288,10 @@
 }
 
 /// Draw a bare board — no caption, no figure — the variant-agnostic drawing
-/// primitive that every diagram builds on. The variant (if any) rides on
-/// `source`; the variant-named wrappers (`chess-board`, …) are thin sugar over
-/// this.
+/// primitive that every diagram builds on, and the everyday entry point. The
+/// variant (if any) rides on `source`; nothing here restricts it — a fairy or
+/// non-standard position is legitimate input to the renderer, unlike to the
+/// rules engine.
 ///
 /// - source (str, dictionary): the position to draw — a *FEN string*, a
 ///   *position* dict (from `position` / `parse-fen`), or a bare *squares* dict
@@ -309,50 +309,9 @@
   // `_board-internal`. A bare position has no move, so setting `move-quality-mark`
   // here is a category error (it could otherwise badge an empty square).
   assert("move-quality-mark" not in ov,
-    message: "move-quality badges are derived from a game move; set `move-quality: true` on `diagram-after` (or annotate the move with `with-nags`) — a bare `board`/`chess-board` cannot carry one")
+    message: "move-quality badges are derived from a game move; set `move-quality: true` on `diagram-after` (or annotate the move with `with-nags`) — a bare `board` cannot carry one")
   // Fairy glyph-fallback seeding now lives in `_board-internal`, the shared seam.
   _board-internal(source, flip, ov)
-}
-
-// Variant guard for the *-board / *-diagram wrappers: a position source must
-// already be of the expected variant (catches e.g. chess-board(xiangqi-pos)).
-#let _assert-variant(fname, variant, source) = {
-  if type(source) == dictionary and "variant" in source {
-    let got = if type(source.variant) == str { source.variant } else { "custom" }
-    assert(source.variant == variant,
-      message: fname + ": expected a \"" + variant + "\" position, got a \"" + got + "\" one")
-  }
-}
-
-/// Standard western-chess board — the variant-named sugar over `board`, and the
-/// everyday entry point. Identical rendering, but it documents the variant and
-/// rejects a non-standard `source`. (Another variant would get its own entry.)
-///
-/// - source (str, dictionary): a standard-chess position — a FEN string, a
-///   position dict, or a squares dict.
-/// - flip (bool): show the board from Black's side.
-/// - ..overrides (arguments): any board *style* option (as for `board`).
-/// -> content
-#let chess-board(source, flip: false, ..overrides) = {
-  _assert-variant("chess-board", "standard", source)
-  board(source, flip: flip, ..overrides.named())
-}
-
-/// Chess960 / Fischer Random board — the variant-named entry point for 960.
-/// Rendering is identical to `chess-board` (960 shares the standard board,
-/// pieces and position model); the distinct name documents intent and rejects a
-/// genuinely different variant. The 960-ness of a
-/// position lives in its (arbitrary) placement and generalised castling, not in
-/// a separate piece set.
-///
-/// - source (str, dictionary): a Chess960 position — a FEN / X-FEN string, a
-///   position dict, or a squares dict.
-/// - flip (bool): show the board from Black's side.
-/// - ..overrides (arguments): any board *style* option (as for `board`).
-/// -> content
-#let chess960-board(source, flip: false, ..overrides) = {
-  _assert-variant("chess960-board", "standard", source)
-  board(source, flip: flip, ..overrides.named())
 }
 
 /// Export a position as a FEN string — the inverse of `parse-fen`. Serialises
@@ -464,8 +423,8 @@
   figure(body, kind: chess-kind, supplement: supp, caption: below, ..((outlined: below != none) + fig-args))
 }
 
-/// A board wrapped in a `#figure` — the variant-agnostic diagram, and the generic
-/// primitive under `chess-diagram`. Draws an
+/// A board wrapped in a `#figure` — the variant-agnostic diagram, and the
+/// everyday entry point. Draws an
 /// automatic "White – Black (Year)" line above when both players are known, and a
 /// default caption below for a FEN source ("White to move" / "Black to move").
 ///
@@ -504,35 +463,6 @@
   } else { none }
   let drawn = board(source, flip: flip, ..board-ov)
   _assemble(drawn, white, black, year, game-info, below, diagram-ov, lang, fig-args)
-}
-
-/// Standard western-chess diagram — the variant-named sugar over `diagram` and
-/// the everyday entry point. Same behaviour, but it documents the variant and
-/// rejects a non-standard `source`.
-///
-/// - source (str, dictionary): a standard-chess position (FEN, position dict, or
-///   squares dict).
-/// - ..args (arguments): everything `diagram` accepts (players, `caption`,
-///   `game-info`, `flip`, `lang`, style options, and `#figure` arguments).
-/// -> content
-#let chess-diagram(source, ..args) = {
-  _assert-variant("chess-diagram", "standard", source)
-  diagram(source, ..args)
-}
-
-/// Chess960 / Fischer Random diagram — the variant-named sugar over `diagram` for
-/// 960. Same behaviour and rendering as `chess-diagram`; the name documents the
-/// variant and rejects a genuinely different one. Pair with `game-variant` to
-/// pick this entry point when a parsed game is Chess960.
-///
-/// - source (str, dictionary): a Chess960 position (FEN / X-FEN, position dict,
-///   or squares dict).
-/// - ..args (arguments): everything `diagram` accepts (players, `caption`,
-///   `game-info`, `flip`, `lang`, style options, and `#figure` arguments).
-/// -> content
-#let chess960-diagram(source, ..args) = {
-  _assert-variant("chess960-diagram", "standard", source)
-  diagram(source, ..args)
 }
 
 /// A chess diagram for the position at `locator` within a parsed game. Players
@@ -619,11 +549,11 @@
 }
 
 /// Render move notation as text, and — when `diagrams` is on and the source is a
-/// game — splice a `chess-diagram` into the flow after each move whose comment
+/// game — splice a `diagram` into the flow after each move whose comment
 /// carries a diagram marker (ChessBase `#` / `#[caption]`, Scid `[d]` / `[D]`,
 /// `\diagram`, `%%diagram`). Embedded diagrams are made in a context, so they are
-/// not individually referenceable. The variant-agnostic formatter under
-/// `chess-notation`.
+/// not individually referenceable. The variant-agnostic formatter, and the
+/// everyday entry point.
 ///
 /// - source (dictionary, str, array): a parsed *game*, a *move-text string*, or a
 ///   *SAN array*.
@@ -680,7 +610,7 @@
           let cap = if info.diagram.caption == none { none } else { [#info.diagram.caption] }
           let arr = if process-anno { info.arrows } else { () }
           let hl = if process-anno { info.highlights } else { () }
-          parts.push(chess-diagram(position-after(source, _loc-of-index(idx)), caption: cap, arrows: arr, highlight: hl))
+          parts.push(diagram(position-after(source, _loc-of-index(idx)), caption: cap, arrows: arr, highlight: hl))
           run-start = idx + 1
         }
       }
@@ -692,21 +622,6 @@
       body
     }
   }
-}
-
-/// Standard western-chess notation — the variant-named sugar over `notation` and
-/// the everyday entry point. Same behaviour, but it rejects a non-standard
-/// `source` variant.
-///
-/// - source (dictionary, str, array): a parsed game, a move-text string, or a SAN
-///   array (standard chess).
-/// - ..args (arguments): everything `notation` accepts.
-/// -> content
-#let chess-notation(source, ..args) = {
-  if type(source) == dictionary and source.at("variant", default: "standard") != "standard" {
-    panic("chess-notation: expected standard chess; got variant " + repr(source.variant))
-  }
-  notation(source, ..args)
 }
 
 // Resolve an outline title: explicit per-call `title` wins; else the document

@@ -67,8 +67,10 @@
 /// `"chess960"` for `[Variant "Chess960"]` / `[Variant "Fischerrandom"]` (and
 /// spelling/spacing variants like `"Fischer Random"`), otherwise `"standard"`.
 /// Chess960 games share the standard rules engine — only the start position and
-/// (generalised) castling differ — so this is for the caller's benefit (e.g.
-/// choosing `chess960-diagram`), not an engine switch.
+/// (generalised) castling differ — so this is for the caller's benefit: with no
+/// variant-named entry points, `game-variant` is the only way to tell a Chess960
+/// game from a standard one (e.g. to caption or label it accordingly), not an
+/// engine switch.
 ///
 /// - game (dictionary): a parsed game (from `parse-pgn`).
 /// -> str

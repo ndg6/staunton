@@ -1,6 +1,6 @@
 // PGN (good) - boards for positions INSIDE variations, addressed by path locators:
 // a one-step variation (RAV) and a two-step NESTED variation. Locator correctness
-// is asserted in variation_locators.typ (cross-checked against chess-moves); this
+// is asserted in variation_locators.typ (cross-checked against play); this
 // sheet is the visual confirmation that the drawn board matches.
 #import "/lib.typ": parse-pgn, diagram-after
 

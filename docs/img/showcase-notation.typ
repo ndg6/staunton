@@ -1,7 +1,7 @@
 // Source for the README showcase #2 (move notation). Keep in sync with its README
 // code block. Regenerate with:
 //   typst compile --root . --format png --ppi 160 docs/img/showcase-notation.typ docs/img/showcase-notation.png
-#import "/lib.typ": parse-pgn, chess-notation
+#import "/lib.typ": parse-pgn, notation
 
 #set page(width: 11cm, height: auto, margin: 12pt, fill: white)
 #set text(font: "Libertinus Serif", size: 12pt)
@@ -12,4 +12,4 @@
 ```).first()
 
 // Figurine glyphs, the variation inline, and the NAG on 5...Nxe4.
-#chess-notation(game, figurine: true, variations: true, nags: true)
+#notation(game, figurine: true, variations: true, nags: true)

@@ -2,7 +2,7 @@
 // factory default, a document-order default (setter), and a key set. This test
 // covers the contract + the two explicit setters and the umbrella.
 #import "/lib.typ": (
-  board, chess-diagram, starting-fen,
+  board, diagram, starting-fen,
   default-board-style, default-diagram-style, board-style-keys, diagram-style-keys,
   set-board-defaults, set-diagram-defaults, set-chess-defaults,
 )
@@ -27,8 +27,8 @@
 After `set-board-defaults` (green/border) + `set-diagram-defaults` (info not
 bold, supplement "Stellung"):
 
-#chess-diagram(starting-fen, size: 4cm, white: [A], black: [B], year: 2024)
+#diagram(starting-fen, size: 4cm, white: [A], black: [B], year: 2024)
 
 The umbrella `set-chess-defaults` routes keys to both buckets at once:
 #set-chess-defaults(dark: rgb("#4b7399"), info-gap: 1.2em)
-#chess-diagram(starting-fen, size: 4cm, white: [C], black: [D])
+#diagram(starting-fen, size: 4cm, white: [C], black: [D])

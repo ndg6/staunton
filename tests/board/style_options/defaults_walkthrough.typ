@@ -2,7 +2,7 @@
 // from manual chapter 11.2 (@board-options), driven ENTIRELY through the
 // DOCUMENT-WIDE setter `set-board-defaults(..)` — never per-call. Each demo resets
 // to a common baseline, sets ONE option (group) as a document default, prints the
-// exact call, then renders a bare `chess-board(<fen>)` that reads that default.
+// exact call, then renders a bare `board(<fen>)` that reads that default.
 //
 // NOT every board option is a legal default: the position-specific ones
 // (`board-non-default-keys`) are rejected by the setters — `highlight` / `arrows`
@@ -18,7 +18,7 @@
 // Claude owns the asserts (the settable / rejected key contract + the derived
 // mark); the user eyeballs the rendered options — see tests/VISUAL_CHECKS.md.
 #import "/lib.typ": (
-  chess-board, diagram-after, parse-pgn, to-fen, with-nags,
+  board, diagram-after, parse-pgn, to-fen, with-nags,
   set-board-defaults, default-board-style, board-style-keys, board-non-default-keys,
 )
 #import "/src/game.typ": move-quality-mark
@@ -82,7 +82,7 @@
 
 // demo(code, ..opts): reset to `base`, apply `opts` as document defaults, then show
 // the printed `code` snippet next to the resulting board. `fen:` overrides the
-// source; `call:` are per-CALL args passed to `chess-board` (for `highlight` /
+// source; `call:` are per-CALL args passed to `board` (for `highlight` /
 // `arrows`, which cannot be defaults).
 #let demo(code, fen: main-fen, call: (:), ..opts) = {
   set-board-defaults(..base)
@@ -90,7 +90,7 @@
   block(above: 1em, breakable: false, grid(
     columns: (1fr, auto), gutter: 0.7cm, align: (left + horizon, right),
     raw(code),
-    chess-board(fen, ..call),
+    board(fen, ..call),
   ))
 }
 
@@ -99,7 +99,7 @@
 ])
 
 Baseline (`size: 3cm`, all else factory default), for comparison:
-#block(above: 0.8em, chess-board(main-fen))
+#block(above: 0.8em, board(main-fen))
 
 = Sizing
 #demo("set-board-defaults(size: 4cm)", size: 4cm)
@@ -171,23 +171,23 @@ either as a document default expands it into the individual fields above.
 
 = Highlight *styling* (the `highlight` LIST stays per-call)
 Colors, shapes and widths are document defaults; the squares are not, so the
-`highlight:` list is passed to `chess-board` per call.
+`highlight:` list is passed to `board` per call.
 #demo(
-  "set-board-defaults(\n  highlight-fill: blue, highlight-transparency: 45%,\n)\nchess-board(fen, highlight: (\"e4\", \"c6\", \"d5\"))",
+  "set-board-defaults(\n  highlight-fill: blue, highlight-transparency: 45%,\n)\nboard(fen, highlight: (\"e4\", \"c6\", \"d5\"))",
   call: (highlight: ("e4", "c6", "d5")),
   highlight-fill: blue, highlight-transparency: 45%)
 #demo(
-  "set-board-defaults(\n  highlight-shape: \"circle\",\n  circle-color: orange, circle-width: 3.5pt,\n)\nchess-board(fen, highlight: (\"e5\",))",
+  "set-board-defaults(\n  highlight-shape: \"circle\",\n  circle-color: orange, circle-width: 3.5pt,\n)\nboard(fen, highlight: (\"e5\",))",
   call: (highlight: ("e5",)),
   highlight-shape: "circle", circle-color: orange, circle-width: 3.5pt)
 #demo(
-  "set-board-defaults(\n  highlight-shape: \"cross\",\n  cross-color: purple, cross-width: 4pt,\n)\nchess-board(fen, highlight: (\"f3\",))",
+  "set-board-defaults(\n  highlight-shape: \"cross\",\n  cross-color: purple, cross-width: 4pt,\n)\nboard(fen, highlight: (\"f3\",))",
   call: (highlight: ("f3",)),
   highlight-shape: "cross", cross-color: purple, cross-width: 4pt)
 
 = Arrow *styling* (the `arrows` LIST stays per-call)
 #demo(
-  "set-board-defaults(\n  arrow-color: teal,\n  arrow-transparency: 20%, arrow-width: 10pt,\n)\nchess-board(fen, arrows: ((\"f1\", \"b5\"),))",
+  "set-board-defaults(\n  arrow-color: teal,\n  arrow-transparency: 20%, arrow-width: 10pt,\n)\nboard(fen, arrows: ((\"f1\", \"b5\"),))",
   call: (arrows: (("f1", "b5"),)),
   arrow-color: teal, arrow-transparency: 20%, arrow-width: 10pt)
 
@@ -224,7 +224,7 @@ Combined with the glow, on the mate — a `!` badge on f7 and the auto-located k
 
 // `annotation-colors` (PGN %cal/%csl color-letter -> color) only takes effect when a
 // GAME's drawn annotations are rendered (diagram-after / notation), not on a bare
-// `chess-board`, so it has no isolated board to show here — it is asserted settable
+// `board`, so it has no isolated board to show here — it is asserted settable
 // above and eyeballed in tests/pgn/annotations/.
 
 // --- document-order inheritance (machine-checkable) ------------------------

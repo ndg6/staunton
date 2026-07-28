@@ -1,8 +1,8 @@
 // Chess960 PGN end-to-end: a game tagged [Variant "Fischerrandom"][SetUp "1"]
 // [FEN <X-FEN start>] is recognised as chess960, starts from the FEN tag, and
 // replays through the shared engine (incl. Chess960 castling). The parsed-game
-// replay must agree with chess-moves applied to the same start + SAN list.
-#import "/lib.typ": parse-pgn, game-variant, game-start, position-after, to-fen, chess-moves, chess960-board, chess960-diagram
+// replay must agree with play applied to the same start + SAN list.
+#import "/lib.typ": parse-pgn, game-variant, game-start, position-after, to-fen, play, board, diagram
 
 #set page(width: auto, height: auto, margin: 1cm)
 #set text(font: "Libertinus Serif", size: 9pt)
@@ -18,9 +18,9 @@
 #assert(game-variant(g) == "chess960", message: "variant: " + game-variant(g))
 #assert(to-fen(game-start(g)) == start960, message: "start: " + to-fen(game-start(g)))
 
-// --- replay: parsed game agrees with chess-moves from the same start ---
-#let via-cm = chess-moves(start960, "Nf3 Nf6 O-O O-O")
-#assert(position-after(g, "2b").squares == via-cm.squares, message: "pgn replay != chess-moves")
+// --- replay: parsed game agrees with play from the same start ---
+#let via-cm = play(start960, "Nf3 Nf6 O-O O-O")
+#assert(position-after(g, "2b").squares == via-cm.squares, message: "pgn replay != play")
 
 // After both sides castle king-side: kings on g, rooks on f, castling gone.
 #assert(
@@ -30,6 +30,6 @@
 
 = Chess960 game replay
 
-#chess960-board(start960, size: 4cm)
-#chess960-diagram(position-after(g, "2b"), size: 4cm,
+#board(start960, size: 4cm)
+#diagram(position-after(g, "2b"), size: 4cm,
   caption: [After 2.O-O O-O — both kings castled from the f-file start.])

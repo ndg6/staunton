@@ -1,8 +1,8 @@
 // PGN (good) - path LOCATORS into variations, asserted. Each variation position
-// from `position-after` is cross-checked against an INDEPENDENT `chess-moves` of
+// from `position-after` is cross-checked against an INDEPENDENT `play` of
 // the same line (two separate code paths must agree), and `to-fen`'s game+locator
 // form is checked to delegate to `position-after`.
-#import "/lib.typ": parse-pgn, position-after, to-fen, chess-moves
+#import "/lib.typ": parse-pgn, position-after, to-fen, play
 
 #set page(width: auto, height: auto, margin: 1cm)
 #set text(font: "Libertinus Serif", size: 9pt)
@@ -15,11 +15,11 @@
 1. e4 (1. d4 d5 (1... Nf6 2. c4)) (1. c4 e5) 1... e5 2. Nf3 *
 ```).first()
 
-// A path locator's position must equal an independent chess-moves of `line`.
+// A path locator's position must equal an independent play of `line`.
 #let same(loc, line) = {
   assert(
-    position-after(game, loc).squares == chess-moves(none, line).squares,
-    message: "locator " + repr(loc) + " != chess-moves(" + line + ")",
+    position-after(game, loc).squares == play(none, line).squares,
+    message: "locator " + repr(loc) + " != play(" + line + ")",
   )
 }
 

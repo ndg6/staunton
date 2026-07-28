@@ -174,14 +174,6 @@
   san
 }
 
-/// Resolve a SAN string and return the resulting position — a convenience wrapper
-/// for `apply(position, san-to-move(position, san))`.
-///
-/// - position (dictionary): the position to play the move in.
-/// - san (str): a SAN token.
-/// -> dictionary
-#let play-san(position, san) = apply(position, san-to-move(position, san))
-
 // Tokenize free move text into a flat SAN list. Drops move numbers ("3." /
 // "3..." and glued "3.e4" / "3...Nf6") and result tokens ("1-0", "*", ...).
 // Comments {..}, NAGs ($n) and variations (..) are NOT supported here -- they
@@ -194,7 +186,7 @@
     if t == "" { continue }
     assert(
       not (t.contains("{") or t.contains("}") or t.contains("(") or t.contains(")") or t.starts-with(";") or t.starts-with("$")),
-      message: "chess-moves: comments, NAGs and variations are not supported in move text (use parse-pgn); got " + repr(t),
+      message: "play: comments, NAGs and variations are not supported in move text (use parse-pgn); got " + repr(t),
     )
     if _results.contains(t) { continue }
     if t.match(regex("^[0-9]+\.+$")) != none { continue }   // bare move number
@@ -220,15 +212,15 @@
 ///   numbers and a trailing result are tolerated and stripped), or an array of
 ///   SAN tokens.
 /// -> dictionary
-#let chess-moves(source, moves) = {
+#let play(source, moves) = {
   let pos = if source == none { parse-fen(starting-fen) }
     else if type(source) == str { parse-fen(source) }
     else if type(source) == dictionary and "squares" in source { source }
-    else { panic("chess-moves: source must be none, a FEN string, or a position; got " + repr(type(source))) }
+    else { panic("play: source must be none, a FEN string, or a position; got " + repr(type(source))) }
   let sans = if type(moves) == array { moves }
     else if type(moves) == str { _split-movetext(moves) }
     else if type(moves) == content and moves.func() == raw { _split-movetext(moves.text) }
-    else { panic("chess-moves: moves must be a SAN array, a move-text string, or a raw block; got " + repr(type(moves))) }
+    else { panic("play: moves must be a SAN array, a move-text string, or a raw block; got " + repr(type(moves))) }
   for s in sans {
     pos = apply(pos, san-to-move(pos, s))
   }

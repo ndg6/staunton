@@ -7,12 +7,10 @@
 // SAN from positions/moves would need a move->SAN encoder, which does not exist
 // yet; this module only FORMATS SAN we already hold.)
 //
-// `notation` is the variant-agnostic formatter. The public, variant-named sugar
-// `chess-notation` (mirroring board/diagram, chess-moves) lives in lib.typ, layered
-// on top so it can also embed diagrams. A future `xiangqi-notation` would be a
-// different formatter entirely.
+// `notation` is the variant-agnostic formatter; the public entry point lives in
+// lib.typ, layered on top so it can also embed diagrams.
 //
-// Source forms (consistent with `chess-moves`):
+// Source forms (consistent with `play`):
 //   * a parsed game            -> its mainline SAN;
 //   * a move-text string       -> tokenised with `_split-movetext`;
 //   * a SAN array              -> used directly.
