@@ -138,19 +138,21 @@
 #set heading(numbering: "1.1")
 #show raw: set text(font: "DejaVu Sans Mono", size: 9pt)
 
-// Inline code and the `argument` cells read better lightly tinted.
-#show raw.where(block: false): it => box(
-  fill: rgb("#f0f0ec"), inset: (x: 3pt, y: 0pt), outset: (y: 3pt), radius: 2pt, it,
+// Inline code and the `argument` cells read better lightly tinted. `highlight`
+// (not `box`) so a long identifier can still wrap mid-line instead of forcing
+// the whole justified line to stretch around one unbreakable token.
+#show raw.where(block: false): it => highlight(
+  fill: rgb("#f0f0ec"), stroke: none, radius: 2pt, extent: 2pt, it,
 )
 
 // Links and cross-references get the same light tint so they stand out from
 // running prose at a glance, without relying on color alone (still underlined
 // by Typst's default `link`/`ref` styling).
-#show link: it => box(
-  fill: rgb("#f0f0ec"), inset: (x: 3pt, y: 0pt), outset: (y: 3pt), radius: 2pt, it,
+#show link: it => highlight(
+  fill: rgb("#f0f0ec"), stroke: none, radius: 2pt, extent: 2pt, it,
 )
-#show ref: it => box(
-  fill: rgb("#f0f0ec"), inset: (x: 3pt, y: 0pt), outset: (y: 3pt), radius: 2pt, it,
+#show ref: it => highlight(
+  fill: rgb("#f0f0ec"), stroke: none, radius: 2pt, extent: 2pt, it,
 )
 
 // Running chapter title for the header (right side): the FIRST level-1 heading
@@ -368,14 +370,14 @@ primary building block every diagram builds on. `source` is one of: a *FEN strin
 )
 ```)
 
-`board` is the variant-agnostic primitive; `chess-board` is the standard-chess
-sugar over it (same rendering, but it documents the variant and rejects a
-non-standard source). Use `board` inline in text or inside your own layout; reach
-for a *diagram* (@diagrams) when you want a captioned, referenceable figure.
+`board` is variant-agnostic: it draws standard chess by default, and also draws
+Chess960 and fairy positions (any `define-variant`-registered kinds) from the
+same call. Use `board` inline in text or inside your own layout; reach for a
+*diagram* (@diagrams) when you want a captioned, referenceable figure.
 
 The rest of this chapter covers the board's drawing options: labels, highlights,
 arrows, the grid, coordinates, size, colors, orientation, and piece sets — all of
-which a `chess-diagram` accepts too.
+which a `diagram` accepts too.
 
 == Labels
 
@@ -535,7 +537,7 @@ the checkerboard, and `light` always ends up the lighter of the two.
 
 Two new board style fields put themes to work — `color-theme` and
 `board-theme` — usable everywhere board style is set: per call on `board(..)`
-(and `chess-board`/`diagram`/`chess-diagram`), or document-wide via
+(and `diagram(..)`), or document-wide via
 `set-board-defaults` / `set-chess-defaults` (see @document-style).
 
 #example(```typ
@@ -707,7 +709,7 @@ piece and spills slightly into the neighbours; recolor the categories with
 
 A badge is tied to a *move*, so it is only available when you draw *from a game*:
 `diagram-after` derives it from the addressed move itself and places it on that
-move's destination. (A bare `board` / `chess-board` has no move, so it cannot carry
+move's destination. (A bare `board` has no move, so it cannot carry
 a badge — setting `move-quality-mark` there is an error.) The assessment is read
 identically whether written as a literal `?!` suffix, a PGN NAG, or set with
 `with-nags`. Here the mate `4.Qxf7#` glows on the Black king and, tagged `!`
@@ -979,7 +981,7 @@ typically a character from a font you embed with `set text(font: ..)`:
 
 = Diagrams<diagrams>
 
-`chess-diagram(source, ..)` wraps a board in a `#figure` (kind `"chess"`), so —
+`diagram(source, ..)` wraps a board in a `#figure` (kind `"chess"`), so —
 unlike a bare `board` — it is captioned, counted, referenceable, and listed by an
 outline. `source` is the same FEN / position / squares the board takes, and it
 accepts every board option documented in @board.
@@ -1005,14 +1007,14 @@ snapshot, with no move history, so it can state only whose turn it is —
 default caption. Pass your own `caption:` to override, or `caption: none` to drop
 it.
 
-`chess-diagram` is the standard-chess sugar over the generic `diagram`; both take
-the same source and overrides as `board`. Extra named arguments are forwarded to
-`figure` (e.g. `placement: top`).
+`diagram` takes the same source and overrides as `board`, plus its own
+figure-level options. Extra named arguments are forwarded to `figure` (e.g.
+`placement: top`).
 
 The distinction matters: a bare `board` is plain content — it has *no* caption,
 *no* figure counter, does *not* resolve `@`-references, and is *not* listed by
 `chess-diagram-outline`. Only a *diagram* is a figure. So draw a `board` for an
-inline or decorative position, and a `chess-diagram` whenever you want to caption
+inline or decorative position, and a `diagram` whenever you want to caption
 it, cross-reference it (`@label`), or list it — see *Outlines and references*.
 
 // === Positions ===============================================================
@@ -1089,9 +1091,9 @@ Parsing is *lazy*: the roster (`tags`), the `result`, and the verbatim
 `movetext(game)`; the move parser / generator engine runs only when you ask
 for a position. So a tournament file read only for results and never tokenises movetext.
 
-`chess-notation(game)` renders the moves (as text) the game already holds, and
+`notation(game)` renders the moves (as text) the game already holds, and
 `diagram-after(game, loc)` renders a *diagram* (a referenceable `#figure`, like
-`chess-diagram`) of the position at a locator:
+`diagram`) of the position at a locator:
 
 #example(```typ
 #notation(game)
@@ -1142,7 +1144,7 @@ move past the end of its line is a hard error.
 == Playing Moves onto a Position
 
 To explore a *new* line, or build a position from a FEN plus some moves, use
-`chess-moves(source, moves)`. `source` is `none` (the standard start), a FEN
+`play(source, moves)`. `source` is `none` (the standard start), a FEN
 string, or a position; `moves` is move text or a SAN array. It resolves each move
 against the legal moves (illegal/ambiguous is a hard error) and returns the
 *final* position, never mutating the source. The result is a *position*, not a
@@ -1158,7 +1160,7 @@ game: it carries no move history, roster or PGN — for those, parse a game
 
 == Naming Moves as SAN<naming-moves-san>
 
-`chess-moves` plays SAN onto a position; `move-to-san(position, move)` runs the
+`play` plays SAN onto a position; `move-to-san(position, move)` runs the
 engine the other way. Given a position and a concrete move dict — one produced
 by `legal-moves` or `san-to-move` — it returns canonical English SAN: minimal
 PGN-standard disambiguation, en passant written as a plain capture, side-based
@@ -1178,18 +1180,14 @@ For chess publications, notational output of the move text is as important as sh
 board positions. This output has to be flexible and localisable. While you sometimes want to 
 show move text exactly as it was recorded in the PGN, you often want to amend and reformat the move text for your own purposes. The `notation(..)` function is the workhorse for this. It takes a game, a move-text string, or a SAN array and produces a formatted move text output. It can localise the piece letters and render figurine glyphs, and it can include or exclude move numbers, results, NAGs, comments, and embedded diagrams.
 
-To support different chess variants in the future`notation(..)` is the *variant-agnostic* primitive and `chess-notation(..)` is the *standard-western-chess* wrapper over it — identical
-output today, but `chess-notation` fixes the variant and rejects a source of a
-non-standard `variant`. The split is deliberate: staunton is *variant-forward*, so any
-further variant would get its own name — a thin wrapper over the same generic
-`notation` core — while `chess-notation` stays western-chess-specific. The
-same pairing runs through the package's drawing and notation entry points —
-`board`/`chess-board`, `diagram`/`chess-diagram`, `notation`/`chess-notation`:
-reach for the `chess-` name for ordinary chess, and the generic one only when you
-are deliberately variant-agnostic. Two functions stand slightly apart: `position`
-is variant-parameterised (the variant rides on its source or `variant:` argument,
-so there is no separate `chess-position`), and `chess-moves` is chess-only today
-(the engine does standard chess, so there is no generic `moves`). Both this manual and everyday use favour `chess-notation`.
+`notation(..)` is *variant-agnostic*: it renders standard chess by default, and
+also handles Chess960 and fairy games (any `define-variant`-registered kinds) via
+the same call. This mirrors the package's other drawing and notation entry
+points — `board`, `diagram`, `notation` — each a single name that covers
+standard chess, Chess960 and fairy positions alike, rather than a separate name
+per variant. `position` works the same way (the variant rides on its source or
+`variant:` argument). `play` is chess-only today (the engine does standard
+chess, so there is no generic `moves`).
 
 Either formats move text the game already holds — no engine. Its `source` is a
 game, a move-text string, or a SAN array; it localises the piece letters and
@@ -1402,7 +1400,7 @@ carries the marks. The marker and the `%cal`/`%csl` must be in the *same* move's
 comment. (Only mainline moves are addressed — `notation` renders the mainline.)
 
 *The convenience payoff.* Push every switch at once, and a single
-`#chess-notation(game)` on a *fully annotated* PGN (one already carrying diagram
+`#notation(game)` on a *fully annotated* PGN (one already carrying diagram
 markers, `%cal`/`%csl`, NAGs, comments and variations — say, exported from
 lichess, ChessBase or Scid) reproduces the whole illustrated, annotated game:
 boards spliced in at the marked moves, arrows and highlights drawn, `!`/`?`
@@ -1482,11 +1480,11 @@ chapter covers just the 960-specific pieces.
 
 == Boards and start positions
 
-`chess960-board` and `chess960-diagram` are the variant-named entry points —
-identical rendering to `chess-board` / `chess-diagram`, but they document the
-variant. Get a start position by its Scharnagl *number* — the standard indexing of
+Draw a Chess960 board or diagram with the same `board` / `diagram` entry points
+used throughout this manual — pass a Chess960 position or FEN and it renders like
+any other. Get a start position by its Scharnagl *number* — the standard indexing of
 the 960 back-rank arrangements @scharnagl, running `0`–`959` (`518` is standard
-chess) — with `chess960-start` (a position) or `chess960-start-fen` (its FEN):
+chess) — with `chess960-start` (a Chess960 position number) or `chess960-start-fen` (its FEN):
 
 #example(```typ
 #diagram(chess960-start(356), size: 4cm)
@@ -1519,7 +1517,7 @@ tag, or a position number in an `[FRCPosition N]` / `[Chess960Position N]` tag
 #game-variant(frc)
 ```, stacked: true)
 
-Everything else is unchanged — locators, `chess-notation`, `diagram-after`, move
+Everything else is unchanged — locators, `notation`, `diagram-after`, move
 play-out and FEN export all behave as in @games. Here is the position right after
 White castles king-side: the king lands on g1 and the g1-rook on f1, the
 generalised 960 castling (the h1-rook stays put):
@@ -1697,7 +1695,7 @@ Only figures that carry a *caption* appear in an outline (a caption-less figure 
 still referenceable but unlisted, matching Typst). Titles are language-aware by
 default and settable per call (`title:`, `lang:`) or document-wide
 (`set-diagram-defaults(outline-title: ..)` — see @document-style). Remember that a bare `board` is not a
-figure, so it can be neither referenced nor listed — use a `chess-diagram`.
+figure, so it can be neither referenced nor listed — use a `diagram`.
 
 // === Document-wide style =====================================================
 
@@ -1759,7 +1757,7 @@ diagram and table buckets; the umbrella routes them to *diagram*, so use
 
 Package *staunton* supports localisation of text-related output. At the moment we support seven different languages; apart from the standard English, we offer German, French, Spanish, Italian, Portuguese, and Russian. We can easily extend the list of supported languages by adding new translation files.
 
-The `notation` / `chess-notation` functions localise the piece letters, and the `chess-diagram` / `chess-table` figures carry language-aware titles and captions. The `lang:` argument on each function overrides the document default, and the document default is set with `set-lang`.
+The `notation` function localises the piece letters, and the `diagram` / `chess-table` figures carry language-aware titles and captions. The `lang:` argument on each function overrides the document default, and the document default is set with `set-lang`.
 
 A single document *language* drives every language-aware string — diagram and
 table supplements, outline titles, automatic diagram captions ("Position after
@@ -1772,7 +1770,7 @@ English; `"auto"` follows `#set text(lang: ..)`; or pick a code:
 ```
 
 Every localizable string is also per-call overridable (the `lang:` argument seen
-on `chess-notation` above). Adding a language is a no-code change: drop a
+on `notation` above). Adding a language is a no-code change: drop a
 `src/assets/i18n/<code>.typ` and register it in `src/i18n.typ`.
 
 == PGN Handling
@@ -1836,12 +1834,12 @@ pass".
 A few arguments accept more than one shape and recur across functions, so they are
 described once here.
 
-/ `source`: for `board`, `chess-board`, `diagram`, `chess-diagram`, `position` —
+/ `source`: for `board`, `diagram`, `position` —
   a *FEN string* `"rnbqkbnr/…"`; a *position* dict (from `position` / `parse-fen`);
   a *squares* dict `(e1: "K", d8: (kind: "q", color: "black"), e4: "P")` (piece as a
   long name, kind abbreviation, or bare letter — UPPER white, lower black); or the
   *string form* (rank-per-line rows, `.` = empty; one raw block or several row
-  strings). `chess-*` reject a non-standard `variant`.
+  strings).
 
 / `locator`: for `position-after`, `diagram-after`, `to-fen`, `move-san`,
   `move-node`, and builder addresses — a *mainline* string `"12w"` / `"12b"`, or a
@@ -1868,7 +1866,7 @@ described once here.
 
 == Board Style Options <board-options>
 
-Accepted by `board` / `chess-board` / `diagram` / `chess-diagram` per call, and by
+Accepted by `board` / `diagram` per call, and by
 `set-board-defaults` / `set-chess-defaults` document-wide (see @document-style) —
 *except* the three *position-specific* ones marked _(per call only)_ below:
 `highlight`, `arrows` and `move-quality-mark` cannot be document defaults (the
