@@ -232,6 +232,37 @@ header must error with that message, any other must compile. Files/dirs prefixed
      currently in development. Keep its heading version-only (e.g. "### 0.3.0") —
      never add "(unreleased)" or similar to user-visible text. -->
 
+### 1.0.0
+
+**Breaking.** 1.0.0 deliberately *narrows* scope to western chess — standard
+play, Chess960, non-standard boards and limited fairy pieces. Other traditions
+(xiangqi, shogi, …) are out of scope and belong in their own packages.
+
+- **Simpler API**: with one variant family to serve, the variant-named wrappers
+  bought nothing, so `chess-board`, `chess960-board`, `chess-diagram`,
+  `chess960-diagram` and `chess-notation` are **removed** — use the
+  variant-agnostic `board`, `diagram` and `notation`, which accept Chess960 and
+  fairy positions just as happily. `chess-moves` is renamed **`play`**.
+  Unchanged: `chess-diagram-outline`, `chess-table-outline`, `chess-outlines`,
+  `set-chess-defaults` (there the `chess-` prefix is a namespace, not a variant
+  marker) and `game-variant`, now the way to tell a 960 game from a standard one.
+- **Reworked wood and marble**: both materials are redrawn from scratch. The old
+  textures were pure noise, which cannot produce the *structure* these materials
+  have — wood now has real flowing grain with cathedral figure, and marble a
+  branching, multi-scale vein network. The artwork is monochrome by design: it
+  carries light and shadow only, so the hue comes from your `color-theme` and the
+  same texture reads correctly on any palette.
+- **Wood patterns light squares too** — a wood board now reads as *inlaid* light
+  and dark timber rather than texture on half the squares. This changes how
+  existing `pattern: "wood"` documents look; set **`pattern-light: false`** for
+  the previous dark-squares-only behaviour. (The new field works for `"marble"`
+  too, which always patterned both.)
+- **Material bands follow the theme**: the `"wood"` and `"marble"` `border-theme`
+  bands no longer use a fixed espresso / bottle-green. They derive from the
+  board's own colors — the dark square darkened, with the light square as the
+  label — so the band belongs to whatever `color-theme` is in play instead of
+  clashing with it.
+
 ### 0.3.0
 
 - **More border themes**: `border-theme` (the `label-mode: "border"` band) gains

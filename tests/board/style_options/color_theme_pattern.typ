@@ -64,15 +64,29 @@
   message: "color-theme(..) must accept and collect pattern: \"wood\"",
 )
 
-// 6. `_material-asset` maps (pattern, is-dark) -> asset path / none, exactly.
-#assert.eq(_material-asset("marble", true), "assets/patterns/marble_dark.svg",
-  message: "_material-asset(\"marble\", true) must point at the dark-square marble SVG")
-#assert.eq(_material-asset("marble", false), "assets/patterns/marble_light.svg",
-  message: "_material-asset(\"marble\", false) must point at the light-square marble SVG")
+// 6. `_material-asset` maps (pattern, is-dark, variant) -> asset path / none.
+// Marble is a RASTER (its figure is stochastic and multi-scale, which vector
+// authoring cannot fake); wood stays vector (its figure is a few describable
+// curves). Both now cover BOTH square colors -- wood's light-square overlay is
+// new in 1.0.0, gated by the `pattern-light` style field.
+#assert.eq(_material-asset("marble", true), "assets/patterns/marble_dark1.png",
+  message: "_material-asset(\"marble\", true) must default to marble variant 1 (dark)")
+#assert.eq(_material-asset("marble", false), "assets/patterns/marble_light1.png",
+  message: "_material-asset(\"marble\", false) must default to marble variant 1 (light)")
+#assert.eq(_material-asset("marble", true, variant: 2), "assets/patterns/marble_dark2.png",
+  message: "_material-asset(\"marble\", true, variant: 2) must select the second dark variant")
+#assert.eq(_material-asset("marble", false, variant: 2), "assets/patterns/marble_light2.png",
+  message: "_material-asset(\"marble\", false, variant: 2) must select the second light variant")
 #assert.eq(_material-asset("wood", true), "assets/patterns/wood.svg",
   message: "_material-asset(\"wood\", true) must point at the wood-grain SVG")
-#assert.eq(_material-asset("wood", false), none,
-  message: "_material-asset(\"wood\", false) must be none -- wood has no light-square overlay")
+#assert.eq(_material-asset("wood", false), "assets/patterns/wood_light.svg",
+  message: "_material-asset(\"wood\", false) must point at the light-square wood SVG -- " +
+    "wood patterns BOTH square colors since 1.0.0; returning `none` here is the pre-1.0 behaviour")
+// Wood ignores `variant`: it ships one artwork per square color. A real board is
+// separately cut squares, so per-square grain variation is expected anyway, and
+// its figure is far less distinctive than a vein network.
+#assert.eq(_material-asset("wood", true, variant: 2), "assets/patterns/wood.svg",
+  message: "wood has no variants -- `variant` must not change its asset")
 #assert.eq(_material-asset("stripes", true), none,
   message: "_material-asset(\"stripes\", true) must be none -- stripes is drawn in `_square-fill`, not as an overlay")
 #assert.eq(_material-asset("stripes", false), none,

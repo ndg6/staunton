@@ -404,21 +404,20 @@ over the band:
 - `"creme"` — a creme band with saddle-brown labels (a light, paper-like frame);
 - `"dark"` — a charcoal band with light-grey labels (suits dark backgrounds);
 - `"light"` — a light-grey band with charcoal labels, the mirror of `"dark"`;
-- `"wood"` — the same espresso-brown band and creme labels as `"brown"`, plus a
-  wood-grain texture overlay — the band counterpart of the `"wood"` square
-  `pattern` (@themes), for matching a wood-patterned board;
-- `"marble"` — a bottle-green band with creme labels and a marble-veining
-  texture overlay — the band counterpart of the `"marble"` square `pattern`
-  (@themes).
+- `"wood"` — a wood-grain band, the counterpart of the `"wood"` square `pattern`
+  (@themes), for framing a wood-patterned board;
+- `"marble"` — a marble-veined band, the counterpart of the `"marble"` square
+  `pattern` (@themes).
 
 `border-theme` is a normal board option: set it per call as above, or document-wide
 with `set-board-defaults(border-theme: ..)` / `set-chess-defaults` (see
 @document-style). It only takes effect with `label-mode: "border"`.
 
-The two material themes are the ones that repay a look — here is `"marble"`, whose
-veining is composited over the bottle-green band. A material band wants square
-colors that agree with it, so pair it with a matching `color-theme`; the
-green-on-green combination below uses `"emerald"`:
+The two material themes work differently from the five above. Rather than
+imposing a fixed color, they *derive* the band from the board's own colors — the
+dark square darkened, with the light square as the label — and composite the
+material texture over that. So a material band follows whatever `color-theme` is
+in play instead of fighting it, and needs no separate palette of its own:
 
 #example(```typ
 #board(
@@ -453,18 +452,33 @@ flat color:
   the flat `dark` fill (continuous lines, evenly spaced). Light squares are
   always flat `light`, regardless of `pattern` — stripes only ever apply to
   dark squares.
-- `"marble"` — a transparent marble-texture overlay is composited on top of
-  *both* squares' flat fills: a green-marble texture on dark squares, a
-  quieter light-stone texture on light squares.
-- `"wood"` — a transparent wood-grain overlay (linear, slightly bendy grain)
-  is composited on top of dark squares only; light squares stay flat, same
-  as `pattern: none`.
+- `"marble"` — a transparent marble-veining overlay is composited on top of
+  *both* squares' flat fills, lighter veins on the dark squares and darker ones
+  on the light.
+- `"wood"` — a transparent wood-grain overlay, likewise on *both* squares, so
+  the board reads as inlaid light and dark timber.
 
 Both material overlays are drawn *on top of* the theme's own `light`/`dark`
-colors and never change them — the overlay only adds texture, so the actual
-look still depends on the colors you pick via `color-theme`. Each square's
-overlay is also rotated/mirrored by a per-square orientation, so the
-texture doesn't read as one obviously repeating tile across the board.
+colors and never change them. The artwork carries only light and shadow — no
+color of its own — which is what lets the same overlay sit correctly on any
+palette: the hue always comes from your `color-theme`. Each square's overlay is
+rotated/mirrored by a per-square orientation (and marble alternates between two
+artworks), so the texture doesn't read as one obviously repeating tile.
+
+To pattern the dark squares only — which is what `"wood"` did before 1.0.0 —
+set `pattern-light: false`:
+
+#example(```typ
+#board(
+  "8/5k2/8/8/3Q4/8/4K3/8",
+  color-theme: color-theme(
+    light: rgb("#d9b98a"), dark: rgb("#6b4a2f"),
+    pattern: "wood",
+  ),
+  pattern-light: false,
+  size: 3.8cm,
+)
+```)
 
 An unknown `pattern` value raises a clear error.
 
@@ -1886,6 +1900,7 @@ setters reject them), though their *styling* options can.
   [`file-side` / `rank-side`], [`bottom` / `right`], [which edge files / ranks sit on],
   [`file-label-corner` / `rank-label-corner`], [`left` / `right`], [on-square label corner],
   raw("border-theme"), raw("\"square\""), [`"border"` band theme: `"square"` / `"brown"` / `"creme"` / `"dark"` / `"light"` / `"wood"` / `"marble"`],
+  raw("pattern-light"), raw("true"), [also draw a material `pattern` on light squares; `false` = dark squares only],
   raw("border"), [`0.5pt + luma(40)`], [thin board outline (`none` to drop)],
   raw("grid"), raw("false"), [1pt grid lines between squares],
   raw("piece-set"), raw("\"cburnett\""), [SVG set name, or `"unicode"` for the glyph fallback],

@@ -38,8 +38,11 @@
 // is applied separately by the renderer via `highlight-transparency` /
 // `arrow-transparency`, so this base is stored fully opaque.
 #let default-highlight-base = rgb(60, 130, 90)
-// "border" mode label themes: the "brown", "creme", "dark", "light", "wood"
-// and "marble" themes.
+// "border" mode label themes: the FIXED-color themes "brown", "creme", "dark"
+// and "light". The two MATERIAL themes ("wood", "marble") have no constants
+// here on purpose -- they derive their band and label from the board's own
+// colors (see `_band-colors` in src/board.typ), so they follow `color-theme`
+// instead of fighting it.
 // NOTE: `border-brown` (the brown theme's BAND) and `border-saddle` (the creme
 // theme's LABEL) are two DIFFERENT browns and must stay separate constants --
 // brown/creme are deliberately not a mirrored pair, unlike dark/light.
@@ -48,7 +51,6 @@
 #let border-saddle = rgb("#6b4423")       // "saddle" brown labels (creme theme)
 #let border-dark = rgb("#2b2b2b")         // charcoal: dark-theme band, light-theme labels
 #let border-dark-label = rgb("#e8e8e8")   // light-grey: dark-theme labels, light-theme band
-#let border-marble = rgb("#2d4a3e")       // bottle-green ("Flaschengrün") marble band (marble theme)
 
 // ---- board style ----------------------------------------------------------
 #let default-board-style = (
@@ -75,10 +77,12 @@
   // light-square labels (default); "brown" = espresso-brown band, creme labels;
   // "creme" = creme band, saddle-brown labels; "dark" = charcoal band, light-grey
   // labels (a neutral dark-mode look); "light" = light-grey band, charcoal labels
-  // (the mirror of "dark"); "wood" = espresso-brown band with a wood-grain
-  // texture and creme labels; "marble" = bottle-green band with a marble
-  // texture and creme labels. Note "creme" is NOT a mirrored "brown": the two
-  // use different browns by design.
+  // (the mirror of "dark"). The two MATERIAL themes differ from those five: they
+  // take no fixed colors at all -- "wood" and "marble" derive their band from
+  // the board's own palette (dark square darkened 32%, light square as the
+  // label) and composite a grain/veining texture over it, so the band follows
+  // `color-theme` instead of clashing with it. Note "creme" is NOT a mirrored
+  // "brown": the two use different browns by design.
   border-theme: "square",     // "square" | "brown" | "creme" | "dark" | "light" | "wood" | "marble"
   border: 0.5pt + luma(40),   // thin board outline (none to drop)
   // Two-layer theme fields. Both are expanded EAGERLY by the defaults setters
@@ -93,16 +97,24 @@
   color-theme: none,
   // Square-fill pattern. `none` = flat fill (default, unchanged); "stripes" =
   // thin black diagonal stripes drawn as an overlay on DARK squares only (light
-  // squares stay flat). "marble"/"wood" = transparent material
-  // SVG overlays composited ON TOP of the flat square colors (they never change
-  // the theme colors): "marble" patterns BOTH squares (a green-marble overlay on
-  // dark, a light-stone overlay on light), "wood" patterns DARK squares only.
+  // squares stay flat). "marble"/"wood" = transparent material overlays
+  // composited ON TOP of the flat square colors (they never change the theme
+  // colors) -- both pattern BOTH square colors, using a separate asset per
+  // color. The artwork is monochrome: it supplies shading only, so the hue
+  // always comes from the theme and any `color-theme` works.
   // Each square's overlay is rotated/mirrored by a deterministic per-square
-  // orientation so the tile doesn't look uniformly repeated.
+  // orientation so the artwork doesn't look uniformly repeated; marble also
+  // alternates between two variants for the same reason.
   // Normally set via `color-theme(.., pattern: ..)` rather than directly,
   // but it lives here as a plain board-style field so it flows through the
   // same three-layer merge as `light`/`dark`.
   pattern: none,          // none | "stripes" | "marble" | "wood"
+  // Whether a material `pattern` is also drawn on LIGHT squares. Default `true`
+  // (both square colors patterned, so a wood board reads as inlaid light and
+  // dark timber). Set `false` to pattern dark squares only -- which is what
+  // "wood" did before 1.0.0, so this is the opt-out for that older look.
+  // No effect on "stripes", which is dark-only by construction.
+  pattern-light: true,    // bool
   // Lightness nudges applied to the theme's resolved `light`/`dark` pair
   // (HSL lightness only; hue/saturation pass through unchanged), each a signed
   // ratio in [-100%, +100%] (silently clamped outside it). `auto` = no
@@ -533,10 +545,11 @@
 /// `set-board-defaults`, or inside a `board-theme`.
 ///
 /// - ..fields (arguments): `light` and/or `dark` colors; `pattern` (`none`;
-///   `"stripes"`, diagonal stripes on dark squares only; `"marble"`, a material
-///   overlay on both squares; or `"wood"`, a material overlay on dark squares only --
-///   the material overlays are composited over the theme colors, never
-///   replacing them); `brightness` and `contrast`
+///   `"stripes"`, diagonal stripes on dark squares only; or `"marble"` / `"wood"`,
+///   material overlays on both squares -- the material overlays are composited
+///   over the theme colors, never replacing them, and carry only light and
+///   shadow, so the hue always comes from the theme. Set `pattern-light: false`
+///   on the board to restrict a material to dark squares); `brightness` and `contrast`
 ///   (each `auto` or a signed ratio, e.g. `10%`/`-5%`, default `auto` = no
 ///   adjustment) nudge the resolved `light`/`dark` pair's HSL lightness --
 ///   `brightness` shifts both squares lighter/darker together, `contrast`
