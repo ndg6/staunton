@@ -16,7 +16,7 @@ Install the package, parse a PGN, and drop a captioned diagram of any position �
 the players, the year, and the move just played are filled in automatically:
 
 ```typ
-#import "@preview/staunton:0.3.0": parse-pgn, diagram-after, notation, standings-table
+#import "@preview/staunton:1.0.0": parse-pgn, diagram-after, notation, standings-table
 
 #let opera = parse-pgn(```
 [White "Morphy"] [Black "Allies"] [Date "1858"]
@@ -29,7 +29,7 @@ the players, the year, and the move just played are filled in automatically:
 #diagram-after(opera, "17w", check: true)
 ```
 
-![Morphy – Allies (1858): the final mate, the black king glowing, captioned "Position after 17. Rd8#"](https://raw.githubusercontent.com/ndg6/staunton/v0.3.0/docs/img/showcase-diagram.png)
+![Morphy – Allies (1858): the final mate, the black king glowing, captioned "Position after 17. Rd8#"](https://raw.githubusercontent.com/ndg6/staunton/v1.0.0/docs/img/showcase-diagram.png)
 
 ## Move notation
 
@@ -42,7 +42,7 @@ localized to the document language — output no board-only package produces:
 #notation(g, figurine: true, variations: true, nags: true)
 ```
 
-![Figurine Ruy Lopez notation with an inline variation and a “!?” annotation](https://raw.githubusercontent.com/ndg6/staunton/v0.3.0/docs/img/showcase-notation.png)
+![Figurine Ruy Lopez notation with an inline variation and a “!?” annotation](https://raw.githubusercontent.com/ndg6/staunton/v1.0.0/docs/img/showcase-notation.png)
 
 ## Tournament tables
 
@@ -62,7 +62,7 @@ with Buchholz / Sonneborn-Berger tie-breaks:
 #standings-table(games, caption: [Final standings])
 ```
 
-![A final-standings table: rank, player, played, +/=/−, points, Buchholz and Sonneborn-Berger tie-breaks](https://raw.githubusercontent.com/ndg6/staunton/v0.3.0/docs/img/showcase-table.png)
+![A final-standings table: rank, player, played, +/=/−, points, Buchholz and Sonneborn-Berger tie-breaks](https://raw.githubusercontent.com/ndg6/staunton/v1.0.0/docs/img/showcase-table.png)
 
 ## Annotated diagrams
 
@@ -75,7 +75,7 @@ and a `!` / `?` grade becomes a move-quality badge — composited onto the board
 #diagram-after(g, "2w", annotations: true, move-quality: true)
 ```
 
-![Board after 2.Nf3 with a green and a red arrow, a highlighted square, and a blue “!” badge](https://raw.githubusercontent.com/ndg6/staunton/v0.3.0/docs/img/showcase-annotations.png)
+![Board after 2.Nf3 with a green and a red arrow, a highlighted square, and a blue “!” badge](https://raw.githubusercontent.com/ndg6/staunton/v1.0.0/docs/img/showcase-annotations.png)
 
 ## Themed boards
 
@@ -92,7 +92,7 @@ everything from a flat two-color pairing to a full "look": square patterns
 )
 ```
 
-![A board with a marble-veined border band and marbled squares, the "coral" theme darkened and sharpened](https://raw.githubusercontent.com/ndg6/staunton/v0.3.0/docs/img/showcase-marble.png)
+![A board with a marble-veined border band and marbled squares, the "coral" theme darkened and sharpened](https://raw.githubusercontent.com/ndg6/staunton/v1.0.0/docs/img/showcase-marble.png)
 
 ## …and the basics
 
@@ -105,7 +105,7 @@ or a squares dict:
 #diagram("rnbqkbnr/pp1ppppp/8/2p5/4P3/5N2/PPPP1PPP/RNBQKB1R b KQkq - 1 2")
 ```
 
-![A chess diagram of the position after 1.e4 c5 2.Nf3, captioned "Black to move"](https://raw.githubusercontent.com/ndg6/staunton/v0.3.0/docs/img/quickstart-1.png)
+![A chess diagram of the position after 1.e4 c5 2.Nf3, captioned "Black to move"](https://raw.githubusercontent.com/ndg6/staunton/v1.0.0/docs/img/quickstart-1.png)
 
 ## Features
 
@@ -140,10 +140,10 @@ or a squares dict:
 
 - **User manual** — the complete reference (every function, option, and example),
   with each feature shown as the code you type beside the board it produces.
-  Download the compiled **[PDF](https://github.com/ndg6/staunton/releases/download/v0.3.0/manual.pdf)** (attached to each release), or build it yourself
-  from its Typst source, [`docs/manual.typ`](https://github.com/ndg6/staunton/blob/v0.3.0/docs/manual.typ). The manual is part
+  Download the compiled **[PDF](https://github.com/ndg6/staunton/releases/download/v1.0.0/manual.pdf)** (attached to each release), or build it yourself
+  from its Typst source, [`docs/manual.typ`](https://github.com/ndg6/staunton/blob/v1.0.0/docs/manual.typ). The manual is part
   of the repo only — it is not shipped in the package bundle.
-- **[Showcase](https://github.com/ndg6/staunton/blob/v0.3.0/docs/examples/showcase.typ)** — a runnable capability tour.
+- **[Showcase](https://github.com/ndg6/staunton/blob/v1.0.0/docs/examples/showcase.typ)** — a runnable capability tour.
 
 Compile the manual and the showcase locally with the package folder as root
 (the manual's own styling uses a 0.15 builtin, so *building* it needs Typst
@@ -181,7 +181,7 @@ and [LICENSE-PIECES](LICENSE-PIECES). The package manifest declares
 A `"unicode"` glyph fallback needs no SVGs. To use other art, pass `piece-set` a
 loader (`named-piece-set` / `svg-piece-set`, or `with-fallback` for mixed and
 fairy boards) — see the *Pieces and fonts* and *Non-standard pieces* sections of
-the [manual](https://github.com/ndg6/staunton/blob/v0.3.0/docs/manual.typ).
+the [manual](https://github.com/ndg6/staunton/blob/v1.0.0/docs/manual.typ).
 (Other popular lichess sets carry non-commercial licenses and are not bundled.)
 The manual and tests also embed **CC BY-SA 4.0** fairy demo art (under `docs/` and
 `tests/`), which is *not* part of the shipped package — see [LICENSE-PIECES](LICENSE-PIECES).

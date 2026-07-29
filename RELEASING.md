@@ -81,9 +81,16 @@ pushed.
     silently regressed it. Re-run the gate suite against the pinned 0.14.2
     binary (versioned binaries live under
     `C:\temp\sw_setup\sw_apps\productivity\publishing\typst\typst_0_14\typst_0_14_2\`;
-    prepend its directory to `PATH`, since `tests/run.sh` calls a bare `typst`):
-    `PATH="<dir>:$PATH" bash tests/run.sh --system-fonts`. Expect exactly
-    `171/175`, with the same four understood, non-behavioral gaps: the two
+    prepend its directory to `PATH`, since `tests/run.sh` calls a bare `typst`).
+    **The `PATH` entry must be POSIX-style** (`/c/temp/sw_setup/.../typst_0_14_2`),
+    not `C:/...` — Git Bash silently ignores a Windows-style `PATH` entry, so the
+    suite falls through to the 0.15 binary and reports a **false green**
+    (`176/176`). Always confirm the version actually used before trusting the run:
+    ```sh
+    DP=/c/temp/sw_setup/sw_apps/productivity/publishing/typst/typst_0_14/typst_0_14_2
+    PATH="$DP:$PATH" bash -c 'typst --version; bash tests/run.sh --system-fonts'
+    ```
+    Expect exactly `172/176`, with the same four understood, non-behavioral gaps: the two
     HTML-export tests (`boards_inline_svg`, `tables_native` — impossible without
     `html.frame`, 0.15+ only) and two expected-fail fixtures whose asserted
     *error wording* differs between compiler versions (`loader_outside_root`,
