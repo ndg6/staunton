@@ -58,9 +58,13 @@ display). Each lives under `docs/img/` with its Typst source beside it and the
 regen command in the source header:
 
 - `showcase-diagram.typ` / `showcase-notation.typ` / `showcase-table.typ` /
-  `showcase-annotations.typ` → the four showcase sections (a game diagram, move
-  notation, a standings table, an annotated diagram);
+  `showcase-annotations.typ` / `showcase-marble.typ` / `showcase-wood.typ` → the
+  six showcase sections (a game diagram, move notation, a standings table, an
+  annotated diagram, a marble board, an inlaid-wood board);
 - `quickstart-1.typ` → the "…and the basics" FEN diagram.
+
+Keep this list in sync when you add a showcase — it is the only inventory of
+which PNGs exist, and a missing entry means the image is never regenerated.
 
 If you change a showcase code block, regenerate the matching PNG (`typst compile
 --root . --format png --ppi 160 docs/img/<name>.typ docs/img/<name>.png`) and

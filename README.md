@@ -94,6 +94,22 @@ everything from a flat two-color pairing to a full "look": square patterns
 
 ![A board with a marble-veined border band and marbled squares, the "coral" theme darkened and sharpened](https://raw.githubusercontent.com/ndg6/staunton/v1.0.0/docs/img/showcase-marble.png)
 
+The same machinery in wood — the grain runs across **both** square colors, so the
+board reads as *inlaid* light and dark timber (set `pattern-light: false` for the
+dark-squares-only look). The textures are monochrome by design: they carry light
+and shadow only, so the hue always comes from your `color-theme`:
+
+```typ
+#board(
+  "r1bqk1nr/pppp1ppp/2n5/2b1p3/2B1P3/5N2/PPPP1PPP/RNBQK2R w KQkq - 4 4",
+  label-mode: "border",
+  border-theme: "wood",
+  color-theme: color-theme(base: "wikipedia", pattern: "wood"),
+)
+```
+
+![A board of inlaid light and dark timber with flowing grain on every square, framed by a matching wood band](https://raw.githubusercontent.com/ndg6/staunton/v1.0.0/docs/img/showcase-wood.png)
+
 ## …and the basics
 
 A **bare `board`** for an inline or decorative position; **`diagram`**
