@@ -5,7 +5,7 @@
 //  move" / "Black to move" (a bare FEN has no reliable move number); PGN
 //  (diagram-after) -> "Position after <last move>"; manual position/board dict ->
 //  no default.
-#import "/lib.typ": chess-diagram, diagram-after, position, starting-fen, parse-pgn
+#import "/lib.typ": diagram, diagram-after, position, starting-fen, parse-pgn
 
 #set page(width: 13cm, height: auto, margin: 1.2cm)
 #set text(font: "Libertinus Serif", size: 10pt)
@@ -13,19 +13,19 @@
 = Auto-caption situations
 
 == FEN source, no players → below caption only
-#chess-diagram(starting-fen, size: 3.2cm)
+#diagram(starting-fen, size: 3.2cm)
 
 == FEN source, both players + year → above line *and* below caption
-#chess-diagram(starting-fen, size: 3.2cm, white: [Carlsen], black: [Nepo], year: 2021)
+#diagram(starting-fen, size: 3.2cm, white: [Carlsen], black: [Nepo], year: 2021)
 
 == FEN source, both players, no year → above line without "(year)"
-#chess-diagram(starting-fen, size: 3.2cm, white: [Alice], black: [Bob])
+#diagram(starting-fen, size: 3.2cm, white: [Alice], black: [Bob])
 
 == FEN source, only one player known → no above line (needs both)
-#chess-diagram(starting-fen, size: 3.2cm, white: [Solo])
+#diagram(starting-fen, size: 3.2cm, white: [Solo])
 
 == Manual position dict → no above line, no default caption
-#chess-diagram(position((
+#diagram(position((
   e1: (kind: "king", color: "white"), e8: (kind: "king", color: "black"), d1: "Q",
 )), size: 3.2cm)
 

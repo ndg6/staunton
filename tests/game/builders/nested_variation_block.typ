@@ -6,7 +6,7 @@
 // indented one level per nesting depth. We assert the line texts (layout-agnostic)
 // AND the indent levels; the inline form and an independent legality check back it
 // up.
-#import "/lib.typ": parse-pgn, with-variation, notation, position-after, chess-moves
+#import "/lib.typ": parse-pgn, with-variation, notation, position-after, play
 
 #set page(width: auto, height: auto, margin: 1cm)
 #set text(font: "Libertinus Serif", size: 10pt)
@@ -66,8 +66,8 @@
 #let nested-loc = (line: ((at: "3w", into: 0), (at: "3b", into: 0)), at: "4w")
 #assert(
   position-after(gv2, nested-loc).squares
-    == chess-moves(none, "1. e4 e5 2. Nf3 Nc6 3. Bc4 Nf6 4. Ng5").squares,
-  message: "position-after into the nested variation == independent chess-moves",
+    == play(none, "1. e4 e5 2. Nf3 Nc6 3. Bc4 Nf6 4. Ng5").squares,
+  message: "position-after into the nested variation == independent play",
 )
 
 = Nested variation, block style

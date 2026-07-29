@@ -1,8 +1,7 @@
 // the position object shape after reshaping: it now carries
 // `variant`, `cols`, `rows`, and a `squares` dict (renamed from `board`). All
-// constructors (array, squares dict, FEN) yield the same shape; `chess-board`
-// is an alias for `board`.
-#import "/lib.typ": position, parse-fen, starting-fen, board, chess-board
+// constructors (array, squares dict, FEN) yield the same shape.
+#import "/lib.typ": position, parse-fen, starting-fen, board
 
 #set page(width: auto, height: auto, margin: 1cm)
 
@@ -31,7 +30,5 @@
 #assert(pf.squares.at("e1") == (kind: "king", color: "white"), message: "FEN -> squares")
 #assert(pf.variant == "standard" and pf.cols == 8 and pf.rows == 8, message: "FEN geometry")
 
-// `chess-board` is the standard-variant entry point (sugar over `board`); it
-// renders a standard position and rejects a non-standard one. (It is no longer
-// literally `== board`, which is the generic variant-agnostic primitive.)
-#chess-board(pa, size: 4cm, labels: false)
+// `board` renders the standard-variant position shape asserted above.
+#board(pa, size: 4cm, labels: false)

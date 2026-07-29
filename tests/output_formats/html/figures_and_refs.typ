@@ -3,6 +3,6 @@
 // HTML-HAS: <figure
 // HTML-HAS: <figcaption
 // HTML-HAS: href="#
-#import "/lib.typ": chess-diagram
-#chess-diagram("4k3/8/8/8/8/8/8/4K3", caption: [Kings only.], size: 3cm) <k>
+#import "/lib.typ": diagram
+#diagram("4k3/8/8/8/8/8/8/4K3", caption: [Kings only.], size: 3cm) <k>
 See @k for the position.

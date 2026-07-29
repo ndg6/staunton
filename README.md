@@ -16,7 +16,7 @@ Install the package, parse a PGN, and drop a captioned diagram of any position �
 the players, the year, and the move just played are filled in automatically:
 
 ```typ
-#import "@preview/staunton:0.3.0": parse-pgn, diagram-after, chess-notation, standings-table
+#import "@preview/staunton:0.3.0": parse-pgn, diagram-after, notation, standings-table
 
 #let opera = parse-pgn(```
 [White "Morphy"] [Black "Allies"] [Date "1858"]
@@ -39,7 +39,7 @@ localized to the document language — output no board-only package produces:
 ```typ
 #let g = parse-pgn("1. e4 e5 2. Nf3 Nc6 3. Bb5 a6 4. Ba4 Nf6 5. O-O Be7 (5... Nxe4!? 6. d4 b5) 6. Re1 b5 7. Bb3 d6 *").first()
 
-#chess-notation(g, figurine: true, variations: true, nags: true)
+#notation(g, figurine: true, variations: true, nags: true)
 ```
 
 ![Figurine Ruy Lopez notation with an inline variation and a “!?” annotation](https://raw.githubusercontent.com/ndg6/staunton/v0.3.0/docs/img/showcase-notation.png)
@@ -96,13 +96,13 @@ everything from a flat two-color pairing to a full "look": square patterns
 
 ## …and the basics
 
-A **bare `board`** for an inline or decorative position; a **`chess-diagram`**
+A **bare `board`** for an inline or decorative position; **`diagram`**
 whenever you want it captioned, counted, `@`-referenceable and listed by an
 outline. Sources are the same everywhere — a FEN string, a `position(..)` object,
 or a squares dict:
 
 ```typ
-#chess-diagram("rnbqkbnr/pp1ppppp/8/2p5/4P3/5N2/PPPP1PPP/RNBQKB1R b KQkq - 1 2")
+#diagram("rnbqkbnr/pp1ppppp/8/2p5/4P3/5N2/PPPP1PPP/RNBQKB1R b KQkq - 1 2")
 ```
 
 ![A chess diagram of the position after 1.e4 c5 2.Nf3, captioned "Black to move"](https://raw.githubusercontent.com/ndg6/staunton/v0.3.0/docs/img/quickstart-1.png)
@@ -158,11 +158,11 @@ typst compile --root . docs/examples/showcase.typ showcase.pdf
 
 | area | entry points |
 |---|---|
-| diagrams | `chess-diagram`, `diagram`, `board`, `chess-board`, `chess960-board`, `chess960-diagram` |
+| diagrams | `diagram`, `board` |
 | positions | `position`, `parse-fen`, `to-fen`, `starting-fen`, `chess960-start`, `chess960-start-fen` |
-| games (PGN) | `parse-pgn`, `movetext`, `mainline`, `diagram-after`, `position-after`, `chess-moves`, `game-start`, `game-variant` |
+| games (PGN) | `parse-pgn`, `movetext`, `mainline`, `diagram-after`, `position-after`, `play`, `game-start`, `game-variant` |
 | annotate / build | `with-nags`, `with-comments`, `with-variation` |
-| notation | `chess-notation`, `notation` |
+| notation | `notation` |
 | tables | `standings-table`, `crosstable-table`, `progress-table`, `games-by-event` (+ compute: `standings`, `crosstable`, `progress`) |
 | outlines | `chess-diagram-outline`, `chess-table-outline`, `chess-outlines` |
 | themes | `color-theme`, `board-theme` |

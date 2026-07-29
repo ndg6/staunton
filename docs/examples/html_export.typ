@@ -11,7 +11,7 @@
 #board("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR", size: 4cm)
 
 == 2. Chess diagram (figure + caption + ref)
-#chess-diagram(
+#diagram(
   "r1bqkbnr/pppp1ppp/2n5/4p3/4P3/5N2/PPPP1PPP/RNBQKB1R",
   caption: [The Ruy Lopez, three moves in.],
   size: 4cm,
@@ -21,7 +21,7 @@ See @ruy for the position.
 
 == 3. Notation
 #let game = parse-pgn("1. e4 e5 2. Nf3 Nc6 3. Bb5 a6 *").first()
-#chess-notation(game)
+#notation(game)
 
 == 4. Diagram at a locator
 #diagram-after(game, "3w", size: 4cm)

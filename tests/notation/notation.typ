@@ -1,8 +1,8 @@
-// chess-notation / notation: human-readable move notation from a
+// notation: human-readable move notation from a
 // game, a move-text string, or a SAN array. Figurines, language-aware piece
 // letters (auto follows #set text(lang:)), from/to ranges, and NAG
 // and comment rendering gated by the pgn-handling bucket.
-#import "/lib.typ": parse-pgn, notation, chess-notation, set-pgn-defaults
+#import "/lib.typ": parse-pgn, notation, set-pgn-defaults
 
 #set page(width: auto, height: auto, margin: 1cm)
 #set text(font: "Libertinus Serif", size: 10pt)

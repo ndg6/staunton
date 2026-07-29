@@ -6,8 +6,8 @@
 //
 // Compile with the package root:  typst compile --root . examples/showcase.typ
 #import "/lib.typ": (
-  parse-pgn, diagram-after, board, chess-diagram, chess-diagram-outline,
-  mainline, game-result, position-after, chess-moves, set-chess-defaults, starting-fen,
+  parse-pgn, diagram-after, board, diagram, chess-diagram-outline,
+  mainline, game-result, position-after, play, set-chess-defaults, starting-fen,
   color-theme, standings-table,
 )
 
@@ -103,13 +103,13 @@ The position right before the final blow, and the checkmate itself:
 
 = A "what-if" line that does not exist in any game
 
-`chess-moves` applies move text (or a SAN array) to a position (or FEN, or `none`
+`play` applies move text (or a SAN array) to a position (or FEN, or `none`
 for the start) and returns the resulting position, without mutating anything.
 
-#chess-diagram(
-  chess-moves(starting-fen, "1. e4 e5 2. Nf3 Nc6 3. Bc4 Bc5 4. b4"),
+#diagram(
+  play(starting-fen, "1. e4 e5 2. Nf3 Nc6 3. Bc4 Bc5 4. b4"),
   size: 5cm,
-  caption: [The Evans Gambit after 4.b4, built with `chess-moves`.],
+  caption: [The Evans Gambit after 4.b4, built with `play`.],
 )
 
 = Arrows, highlights and a grid

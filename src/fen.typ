@@ -202,7 +202,7 @@
 }
 
 /// The standard chess starting position, as a FEN string constant (handy as the
-/// `source` for `chess-moves`, `parse-fen`, `board`, …).
+/// `source` for `play`, `parse-fen`, `board`, …).
 #let starting-fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
 
 // FEN letter for a piece: kind letter, upper for white, lower for black.

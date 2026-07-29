@@ -4,7 +4,7 @@
 // castling is still available via the g1-rook, but because the h1-rook is now the
 // OUTERMOST rook on that side, X-FEN must name the castling rook by file -> "G".
 // Serialising the position must reproduce Scharnagl's published field "Gkq".
-#import "/lib.typ": parse-pgn, to-fen, position-after, game-variant, game-start, chess960-diagram
+#import "/lib.typ": parse-pgn, to-fen, position-after, game-variant, game-start, diagram
 
 #set page(width: auto, height: auto, margin: 1cm)
 #set text(font: "Libertinus Serif", size: 9pt)
@@ -48,6 +48,6 @@
 
 = Scharnagl Chess960 game — the "Gkq" X-FEN
 
-#chess960-diagram(position-after(g, "10b"), size: 4.5cm,
+#diagram(position-after(g, "10b"), size: 4.5cm,
   caption: [Before 11.O-O. White may castle king-side with the g1-rook; the outer
   h1-rook forces the X-FEN file letter, giving `Gkq`.])

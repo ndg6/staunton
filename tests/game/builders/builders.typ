@@ -2,7 +2,7 @@
 // anywhere in the tree (mainline or inside a nested variation), addressed by a
 // mainline locator ("3w") or a variation path dict. They return a NEW game
 // (stash-based), compose, and never mutate the source. Rendered via notation.
-#import "/lib.typ": parse-pgn, chess-notation, with-nags, with-comments
+#import "/lib.typ": parse-pgn, notation, with-nags, with-comments
 
 #set page(width: auto, height: auto, margin: 1cm)
 #set text(font: "Libertinus Serif", size: 10pt)
@@ -11,7 +11,7 @@
 #let bc4 = (line: ((at: "3w", into: 0),), at: "3w")   // Bc4, inside the variation
 #let bc5 = (line: ((at: "3w", into: 0),), at: "3b")   // Bc5, inside the variation
 // all switches explicit -> plain string (assertable)
-#let s(x) = chess-notation(x, variations: true, nags: true, comments: true, lang: "en", diagrams: false, bold-mainline: false, spaced: true)
+#let s(x) = notation(x, variations: true, nags: true, comments: true, lang: "en", diagrams: false, bold-mainline: false, spaced: true)
 
 #let base = "1. e4 e5 2. Nf3 Nc6 3. Bb5 (3. Bc4 Bc5) 3... a6"
 #assert(s(g) == base, message: "baseline (unbuilt) render")

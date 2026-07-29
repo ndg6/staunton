@@ -4,7 +4,7 @@
 // header WORDING is what to check here; the machine-checkable en/de strings live
 // in i18n.typ.
 #import "/lib.typ": (
-  set-lang, chess-diagram, diagram-after, standings-table,
+  set-lang, diagram, diagram-after, standings-table,
   starting-fen, parse-pgn,
 )
 
@@ -31,7 +31,7 @@
   set-lang(code)
   [== #label (`#code`)]
   grid(columns: (auto, auto), gutter: 1em,
-    chess-diagram(starting-fen, size: 3cm),
+    diagram(starting-fen, size: 3cm),
     diagram-after(game, "2w", size: 3cm),
   )
   standings-table(standings, caption: [Standings])

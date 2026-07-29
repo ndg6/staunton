@@ -3,13 +3,13 @@
 // may carry nested () variations, $n NAGs and {comments}; a plain SAN run is the
 // simple case. It composes with with-nags/with-comments, navigates like a parsed
 // game, and never mutates the source.
-#import "/lib.typ": parse-pgn, chess-notation, with-variation, with-nags, position-after, chess-moves
+#import "/lib.typ": parse-pgn, notation, with-variation, with-nags, position-after, play
 
 #set page(width: auto, height: auto, margin: 1cm)
 #set text(font: "Libertinus Serif", size: 10pt)
 
 #let g = parse-pgn("[White \"A\"][Black \"B\"] 1. e4 e5 2. Nf3 Nc6 3. Bb5 a6 *").first()
-#let s(x) = chess-notation(x, variations: true, nags: true, comments: true, lang: "en", diagrams: false, bold-mainline: false, spaced: true)
+#let s(x) = notation(x, variations: true, nags: true, comments: true, lang: "en", diagrams: false, bold-mainline: false, spaced: true)
 #let base = "1. e4 e5 2. Nf3 Nc6 3. Bb5 a6"
 
 // --- plain variation (SAN run) at a White move ------------------------------
@@ -44,7 +44,7 @@
 #let gv = with-variation(g, at: "3w", moves: "Bc4 Bc5")
 #assert(
   position-after(gv, (line: ((at: "3w", into: 0),), at: "3b")).squares
-    == chess-moves(none, "1. e4 e5 2. Nf3 Nc6 3. Bc4 Bc5").squares,
+    == play(none, "1. e4 e5 2. Nf3 Nc6 3. Bc4 Bc5").squares,
   message: "position-after navigates into the added variation",
 )
 

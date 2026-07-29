@@ -4,7 +4,7 @@
 // from diagrams. The per-call `supplement` override is checked here; the
 // language-aware default + settability live in tests/i18n/i18n.typ.
 #import "/lib.typ": (
-  parse-pgn, standings-table, crosstable-table, chess-diagram, starting-fen,
+  parse-pgn, standings-table, crosstable-table, diagram, starting-fen,
   chess-table-outline, chess-outlines,
 )
 
@@ -37,7 +37,7 @@ The references jump across pages: @st gives the standings (on its own page);
 
 #pagebreak()
 = A position
-#chess-diagram(starting-fen, size: 2.5cm, caption: [A position]) <pos>
+#diagram(starting-fen, size: 2.5cm, caption: [A position]) <pos>
 
 #context {
   // Separate counters: two chess-tables, one chess diagram.
