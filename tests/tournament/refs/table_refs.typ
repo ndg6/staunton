@@ -1,11 +1,11 @@
 // REFERENCING chess tables, plus the chess outlines. Tournament
 // tables are #figure(kind: "chess-table"), so they can be referenced (@label) and
-// listed by chess-table-outline / chess-outlines, with their OWN counter separate
+// listed by table-outline / outlines, with their OWN counter separate
 // from diagrams. The per-call `supplement` override is checked here; the
 // language-aware default + settability live in tests/i18n/i18n.typ.
 #import "/lib.typ": (
   parse-pgn, standings-table, crosstable-table, diagram, starting-fen,
-  chess-table-outline, chess-outlines,
+  table-outline, outlines,
 )
 
 // Fixed-height, numbered pages so the outline shows page numbers and the page
@@ -21,7 +21,7 @@
 ```)
 
 // --- page 1: both outlines + the references (forward jumps to later pages) ---
-#chess-outlines()
+#outlines()
 
 The references jump across pages: @st gives the standings (on its own page);
 @ct the cross-table; and the board is @pos.

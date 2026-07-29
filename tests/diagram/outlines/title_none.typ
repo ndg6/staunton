@@ -2,12 +2,12 @@
 // so a caller can render its own title (or none). Previously `_outline-title`
 // wrapped its result in an unconditional context and left an empty title heading
 // behind. Asserting test — no rendering to eyeball.
-#import "/lib.typ": chess-diagram-outline, chess-table-outline, diagram, starting-fen
+#import "/lib.typ": diagram-outline, table-outline, diagram, starting-fen
 
 #set page(width: 12cm, height: auto, margin: 1cm)
 
-#chess-diagram-outline(title: none)
-#chess-table-outline(title: none)
+#diagram-outline(title: none)
+#table-outline(title: none)
 #diagram(starting-fen, size: 2cm, caption: [Listed])
 
 #context {

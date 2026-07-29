@@ -35,4 +35,4 @@ See @ruy for the position.
 #standings-table(rr)
 
 == 6. Outlines
-#chess-diagram-outline()
+#diagram-outline()

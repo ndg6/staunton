@@ -6,7 +6,7 @@
 //
 // Compile with the package root:  typst compile --root . examples/showcase.typ
 #import "/lib.typ": (
-  parse-pgn, diagram-after, board, diagram, chess-diagram-outline,
+  parse-pgn, diagram-after, board, diagram, diagram-outline,
   mainline, game-result, position-after, play, set-chess-defaults, starting-fen,
   color-theme, standings-table,
 )
@@ -45,7 +45,7 @@
   str(movenum) + color
 }
 
-#chess-diagram-outline(title: [List of diagrams in this showcase])
+#diagram-outline(title: [List of diagrams in this showcase])
 
 = The synthetic games at a glance
 

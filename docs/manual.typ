@@ -14,7 +14,7 @@
 // show realistic unqualified calls; the front-matter figure lists below are the
 // one place the manual itself calls the API, so pull in just that function. The
 // dev build reads `/lib.typ`; a reader would `#import "@preview/staunton:..": *`.
-#import "/lib.typ": chess-diagram-outline, chess-table-outline
+#import "/lib.typ": diagram-outline, table-outline
 #import "@preview/tidy:0.4.1"
 
 // --- compact tidy style ------------------------------------------------------
@@ -271,11 +271,11 @@
 #v(0.4em)
 #align(center, text(size: 15pt, weight: "bold")[List of Diagrams])
 #v(0.6em)
-#chess-diagram-outline(title: none)
+#diagram-outline(title: none)
 #v(1.2em)
 #align(center, text(size: 15pt, weight: "bold")[List of Tables])
 #v(0.6em)
-#chess-table-outline(title: none)
+#table-outline(title: none)
 
 #pagebreak()
 
@@ -301,8 +301,8 @@ Staunton provides a full set of features, including:
   using flexible sizing, custom colors plus reusable color/board themes (brightness/contrast
   tweaks, theme derivation, and various patterns). Use the bundled SVG piece sets (or a
   Unicode fallback) or provide your own piece sets. Building on that foundation create diagrams with captions, figure counters, and referenceable labels.
-- *games from PGN* — let a sophisticated parser create #link(<games>)[game] structures (single or array)
-  from a PGN file and From you create positions using move "locators" (mainline and
+- *games from PGN* — let the PGN parser create #link(<games>)[game] structures (single or array)
+  from a PGN file, and from those create positions using move "locators" (mainline and
   variations). You can also play out moves from arbitrary start positions and export resulting
   positions as FEN strings.
 - *Chess960 / Fischer Random Chess* — with the same board, engine, PGN pipeline and notation
@@ -335,6 +335,14 @@ manual is in scope:
 
 ```typ
 #import "@preview/staunton:0.3.0": *
+```
+
+Should a short name like `board`, `diagram` or `notation` collide with something
+else in your document, import selectively and rename as you go — Typst's `as`
+does that, and the rest of this manual still applies under the new name:
+
+```typ
+#import "@preview/staunton:0.3.0": board as chessboard, diagram as chessdiagram
 ```
 
 *staunton* needs *Typst 0.14.2 or newer* — with one exception: HTML export
@@ -370,9 +378,9 @@ primary building block every diagram builds on. `source` is one of: a *FEN strin
 )
 ```)
 
-`board` is variant-agnostic: it draws standard chess by default, and also draws
-Chess960 and fairy positions (any `define-variant`-registered kinds) from the
-same call. Use `board` inline in text or inside your own layout; reach for a
+`board` is chess-variant-agnostic: it draws standard chess by default, and also
+draws Chess960 and fairy positions (any kind registered with `define-variant`,
+see @fairy-pieces) from the same call. Use `board` inline in text or inside your own layout; reach for a
 *diagram* (@diagrams) when you want a captioned, referenceable figure.
 
 The rest of this chapter covers the board's drawing options: labels, highlights,
@@ -404,21 +412,20 @@ over the band:
 - `"creme"` — a creme band with saddle-brown labels (a light, paper-like frame);
 - `"dark"` — a charcoal band with light-grey labels (suits dark backgrounds);
 - `"light"` — a light-grey band with charcoal labels, the mirror of `"dark"`;
-- `"wood"` — the same espresso-brown band and creme labels as `"brown"`, plus a
-  wood-grain texture overlay — the band counterpart of the `"wood"` square
-  `pattern` (@themes), for matching a wood-patterned board;
-- `"marble"` — a bottle-green band with creme labels and a marble-veining
-  texture overlay — the band counterpart of the `"marble"` square `pattern`
-  (@themes).
+- `"wood"` — a wood-grain band, the counterpart of the `"wood"` square `pattern`
+  (@themes), for framing a wood-patterned board;
+- `"marble"` — a marble-veined band, the counterpart of the `"marble"` square
+  `pattern` (@themes).
 
 `border-theme` is a normal board option: set it per call as above, or document-wide
 with `set-board-defaults(border-theme: ..)` / `set-chess-defaults` (see
 @document-style). It only takes effect with `label-mode: "border"`.
 
-The two material themes are the ones that repay a look — here is `"marble"`, whose
-veining is composited over the bottle-green band. A material band wants square
-colors that agree with it, so pair it with a matching `color-theme`; the
-green-on-green combination below uses `"emerald"`:
+The two material themes work differently from the five above. Rather than
+imposing a fixed color, they *derive* the band from the board's own colors — the
+dark square darkened, with the light square as the label — and composite the
+material texture over that. So a material band follows whatever `color-theme` is
+in play instead of fighting it, and needs no separate palette of its own:
 
 #example(```typ
 #board(
@@ -453,18 +460,33 @@ flat color:
   the flat `dark` fill (continuous lines, evenly spaced). Light squares are
   always flat `light`, regardless of `pattern` — stripes only ever apply to
   dark squares.
-- `"marble"` — a transparent marble-texture overlay is composited on top of
-  *both* squares' flat fills: a green-marble texture on dark squares, a
-  quieter light-stone texture on light squares.
-- `"wood"` — a transparent wood-grain overlay (linear, slightly bendy grain)
-  is composited on top of dark squares only; light squares stay flat, same
-  as `pattern: none`.
+- `"marble"` — a transparent marble-veining overlay is composited on top of
+  *both* squares' flat fills, lighter veins on the dark squares and darker ones
+  on the light.
+- `"wood"` — a transparent wood-grain overlay, likewise on *both* squares, so
+  the board reads as inlaid light and dark timber.
 
 Both material overlays are drawn *on top of* the theme's own `light`/`dark`
-colors and never change them — the overlay only adds texture, so the actual
-look still depends on the colors you pick via `color-theme`. Each square's
-overlay is also rotated/mirrored by a per-square orientation, so the
-texture doesn't read as one obviously repeating tile across the board.
+colors and never change them. The artwork carries only light and shadow — no
+color of its own — which is what lets the same overlay sit correctly on any
+palette: the hue always comes from your `color-theme`. Each square's overlay is
+rotated/mirrored by a per-square orientation (and marble alternates between two
+artworks), so the texture doesn't read as one obviously repeating tile.
+
+To pattern the dark squares only — which is what `"wood"` did before 1.0.0 —
+set `pattern-light: false`:
+
+#example(```typ
+#board(
+  "8/5k2/8/8/3Q4/8/4K3/8",
+  color-theme: color-theme(
+    light: rgb("#d9b98a"), dark: rgb("#6b4a2f"),
+    pattern: "wood",
+  ),
+  pattern-light: false,
+  size: 3.8cm,
+)
+```)
 
 An unknown `pattern` value raises a clear error.
 
@@ -757,7 +779,7 @@ without being told the geometry, and shrinks to fit if asked for more than fits.
 #example(```typ
 #board(
   "8/8/8/3k4/3K4/8/8/8",
-  size: 60%,   // of the available width
+  size: 60%, // of the available width
 )
 ```)
 
@@ -1013,7 +1035,7 @@ figure-level options. Extra named arguments are forwarded to `figure` (e.g.
 
 The distinction matters: a bare `board` is plain content — it has *no* caption,
 *no* figure counter, does *not* resolve `@`-references, and is *not* listed by
-`chess-diagram-outline`. Only a *diagram* is a figure. So draw a `board` for an
+`diagram-outline`. Only a *diagram* is a figure. So draw a `board` for an
 inline or decorative position, and a `diagram` whenever you want to caption
 it, cross-reference it (`@label`), or list it — see *Outlines and references*.
 
@@ -1180,9 +1202,9 @@ For chess publications, notational output of the move text is as important as sh
 board positions. This output has to be flexible and localisable. While you sometimes want to 
 show move text exactly as it was recorded in the PGN, you often want to amend and reformat the move text for your own purposes. The `notation(..)` function is the workhorse for this. It takes a game, a move-text string, or a SAN array and produces a formatted move text output. It can localise the piece letters and render figurine glyphs, and it can include or exclude move numbers, results, NAGs, comments, and embedded diagrams.
 
-`notation(..)` is *variant-agnostic*: it renders standard chess by default, and
-also handles Chess960 and fairy games (any `define-variant`-registered kinds) via
-the same call. This mirrors the package's other drawing and notation entry
+`notation(..)` is *chess-variant-agnostic*: it renders standard chess by default,
+and also handles Chess960 and fairy games (any kind registered with
+`define-variant`, see @fairy-pieces) via the same call. This mirrors the package's other drawing and notation entry
 points — `board`, `diagram`, `notation` — each a single name that covers
 standard chess, Chess960 and fairy positions alike, rather than a separate name
 per variant. `position` works the same way (the variant rides on its source or
@@ -1414,8 +1436,8 @@ per-move code at all:
 #notation(game)
 ```
 
-This is an *extreme* case (most publications want a curated subset, which is
-exactly why these switches default off), but it makes the point: staunton's job
+This is an *extreme* case — most publications want a curated subset, which is why
+the switches are opt-in (@pgn-handling) — but it makes the point: staunton's job
 is turning what is already *in* the PGN into typeset output, not making you
 re-describe it in Typst.
 
@@ -1683,9 +1705,9 @@ Diagrams and tables each carry a distinct figure `kind` (`"chess"` /
 (`@label` → "Diagram 3" / "Table 2"), and can be *listed separately*:
 
 ```typ
-#chess-diagram-outline()     // list of chess diagrams
-#chess-table-outline()       // list of tournament tables
-#chess-outlines()            // both, diagrams then tables
+#diagram-outline()     // list of chess diagrams
+#table-outline()       // list of tournament tables
+#outlines()            // both, diagrams then tables
 
 #diagram(starting-fen, caption: [Start]) <start>
 As shown in @start, ...
@@ -1886,6 +1908,7 @@ setters reject them), though their *styling* options can.
   [`file-side` / `rank-side`], [`bottom` / `right`], [which edge files / ranks sit on],
   [`file-label-corner` / `rank-label-corner`], [`left` / `right`], [on-square label corner],
   raw("border-theme"), raw("\"square\""), [`"border"` band theme: `"square"` / `"brown"` / `"creme"` / `"dark"` / `"light"` / `"wood"` / `"marble"`],
+  raw("pattern-light"), raw("true"), [also draw a material `pattern` on light squares; `false` = dark squares only],
   raw("border"), [`0.5pt + luma(40)`], [thin board outline (`none` to drop)],
   raw("grid"), raw("false"), [1pt grid lines between squares],
   raw("piece-set"), raw("\"cburnett\""), [SVG set name, or `"unicode"` for the glyph fallback],
@@ -1991,9 +2014,9 @@ source docstring: its signature, then every parameter with its type and default.
 
 == Outlines and References
 #show-fns((
-  ("/lib.typ", "chess-diagram-outline"),
-  ("/lib.typ", "chess-table-outline"),
-  ("/lib.typ", "chess-outlines"),
+  ("/lib.typ", "diagram-outline"),
+  ("/lib.typ", "table-outline"),
+  ("/lib.typ", "outlines"),
 ))
 
 == Themes

@@ -39,38 +39,31 @@ Then open the PDFs below and check the noted property. (The expected-*fail* test
       — the exact theme -> color wiring is now pinned by the asserting test
       `board/labeling/border_theme_colors.typ`, so this is just a legibility
       check, not a color-matching one.
-- [ ] `board/labeling/border_themes.pdf` — the new **wood** and **marble**
+- [ ] `board/labeling/border_themes.pdf` — the **wood** and **marble**
       border-theme bands specifically:
       - the wood grain / marble veining texture actually APPEARS in the band
         (not a flat color) — a silently missing overlay is the exact failure
         mode this repo has hit before (`_stripes-overlay`'s tiling seam bug);
       - the band reads as ONE continuous material all the way around, with
-        no repeating cell structure — the band is now drawn as a single
-        image spanning the whole band rect (not tiled per square, unlike the
-        square overlays below), which is the specific regression this fixes:
-        Frank had reported the earlier tiled band looked "segmented like it
-        was a stripe of squares" (the asset-path mapping itself is pinned by
-        the asserting test `board/labeling/border_theme_material.typ`, but
-        "does it actually look continuous" is a render-only check);
-      - the file/rank labels stay legible against both textured bands
-        (marble keeps `border-creme`, reused from "brown"/"wood").
-
-      _Settled 2026-07-25 — these were open design questions and Frank has
-      since signed off on the rendered result; they are listed here only so a
-      future change knows what was deliberate, not as pending decisions:_
-      - the band assets (`wood_band.svg` / `marble_band.svg`) carry 10x the
-        square assets' noise frequency. That is not arbitrary: one image now
-        spans the whole ~7.3cm band instead of one ~0.8cm square, and at the
-        square-scale frequency wood degenerated into large blobs and marble
-        into a near-flat wash. The resulting grain/veining scale at the
-        band's ~4.5mm width was reviewed and approved.
-      - `marble_band.svg`'s veining layer additionally has its alpha halved
-        (peak 0.20 instead of marble_dark.svg's 0.40). The near-white layer
-        was authored for dark SQUARES; at full strength across the whole band
-        it washed the `#2d4a3e` bottle-green backdrop out to a pale sage
-        grey, left the band lighter than the squares beside it, and cost the
-        creme labels contrast. At 0.20 the backdrop colour survives and the
-        labels read cleanly — confirmed on a rendered board.
+        no repeating cell structure — the band is drawn as a single image
+        spanning the whole band rect (not tiled per square, unlike the square
+        overlays below);
+      - the band **belongs to the board's palette**: since 1.0.0 both material
+        bands derive from the board's own colors (dark square darkened 32%,
+        light square as the label) instead of a fixed espresso/bottle-green.
+        So the band should read as a frame of the *same* material family as
+        the squares, not a differently-colored strip bolted on. Check it on
+        more than one `color-theme`;
+      - the file/rank labels stay legible against both textured bands.
+      - **wood specifically**: the grain follows the frame *around* the
+        perimeter (concentric), so all four sides look like milled moulding —
+        no side should show cross-cut end-grain. It should read as timber, not
+        as a machined "ripple" moulding; if the rings look too regular and
+        tight, the ring count is wrong.
+      - **marble specifically**: the veins *traverse* the ring at angles (slab
+        cut) rather than running around it. Veining that circles the frame
+        reads as a soft vignette/glow rather than stone — that construction was
+        tried and rejected.
 - [ ] `board/orientation/flip.pdf` — a1 in the correct corner both ways; labels
       flip with the board. Second section: the highlights (filled e4 / circle e5 /
       cross d5) stay on their named squares (mirrored screen position), and the
@@ -91,20 +84,32 @@ Then open the PDFs below and check the noted property. (The expected-*fail* test
       pattern -> fill mapping is pinned by the asserting test
       `board/style_options/color_theme_pattern.typ`; this is just the "does it
       actually look like diagonal stripes at real board size" check.)
-- [ ] `board/colors/pattern_marble_wood.pdf` (materials, prompt 40 §1 follow-up) —
-      for the **marble** board, BOTH squares show soft, fuzzy marble veining
-      (dark squares green with light veins, light squares a quiet cream stone
-      with faint grey veins), and the grain/veins vary per square rather than
-      reading as an obvious repeating tile. For the **wood** board, DARK
-      squares show linear, slightly-bendy vertical (upright) wood grain (with
-      both darker lines and lighter streaks), while the light (maple) squares
-      stay a flat fill. In both boards the texture should read as composited over
-      the theme's own colors (green/cream, walnut/maple) rather than
-      replacing them. (The pattern → overlay mapping itself — which SVG per
-      pattern/square-color, and the per-square rotation/mirror policy — is
-      pinned by the asserting test `board/style_options/color_theme_pattern.typ`;
-      this is just the "does it actually look like the intended material"
-      check.)
+- [ ] `board/colors/pattern_marble_wood.pdf` (materials; reworked for 1.0.0) —
+      three boards.
+      - **marble**: BOTH square colors show branching, multi-scale veining that
+        fades in and out along its length (dark squares green with light veins,
+        light squares quiet cream stone with faint grey veins). Veins must look
+        *irregular*: no rectangular lattice (that means the ramp angles went
+        orthogonal), no fine uniform speckle (that means the noise went
+        high-frequency), and no obviously repeating tile — two artworks
+        alternate per square precisely to break that.
+      - **wood**: BOTH square colors are grained, so the board should read as
+        *inlaid* timber — alternating dark and light wood — rather than texture
+        applied to half the squares. Grain runs vertically with a nested-arch
+        "cathedral" cluster; light squares carry the same grain more faintly.
+      - **third board, `pattern-light: false`**: the opt-out and the pre-1.0
+        look — dark squares grained, light squares flat. It should differ
+        visibly from the wood board above; if the two look the same, the gate
+        is not wired.
+      - In all three, the texture must read as composited *over* the theme's
+        own colors rather than replacing or tinting them. The overlays are
+        monochrome by design (they carry shading; the theme carries hue), so a
+        brown or grey cast creeping into a non-brown theme is a real defect.
+      (The pattern → asset mapping, the per-square rotation/mirror policy, and
+      the variant selection are pinned by the asserting tests
+      `board/style_options/color_theme_pattern.typ` and
+      `board/style_options/pattern_light_variant.typ`; this is just the "does it
+      actually look like the intended material" check.)
 - [ ] `board/colors/brightness_contrast.pdf` (prompt 38 §2/§12/§13) — versus the
       baseline board, `brightness: 30%` visibly lightens BOTH squares and
       `brightness: -30%` visibly darkens both; `contrast: 50%` visibly spreads

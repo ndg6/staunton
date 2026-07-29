@@ -360,7 +360,7 @@
 /// - match-points (dictionary): as for `standings`.
 /// - title (none, content): a title shown above the table.
 /// - caption (none, content): the figure caption (needed for the table to appear
-///   in `chess-table-outline`).
+///   in `table-outline`).
 /// - supplement (auto, content): the figure supplement; `auto` is language-aware.
 /// - lang (auto, str): language for defaults; `auto` follows the document.
 /// - ..table-args (arguments): forwarded to `#table`.

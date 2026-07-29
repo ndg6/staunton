@@ -3,13 +3,13 @@
 // reference is a hard error in Typst, so a clean compile already proves the
 // references work; the query asserts the diagram counter is independent (only
 // chess figures are counted here).
-#import "/lib.typ": diagram, chess-diagram-outline, starting-fen
+#import "/lib.typ": diagram, diagram-outline, starting-fen
 
 #set page(width: 14cm, height: auto, margin: 1.2cm)
 #set text(font: "Libertinus Serif", size: 10pt)
 #set heading(numbering: "1.")
 
-#chess-diagram-outline()
+#diagram-outline()
 
 = Positions
 #diagram(starting-fen, size: 2.5cm, caption: [The starting position]) <start>

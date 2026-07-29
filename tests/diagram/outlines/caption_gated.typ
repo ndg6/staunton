@@ -1,5 +1,5 @@
 // A caption-less diagram stays referenceable but UNLISTED: its `outlined`
-// flag (which drives chess-diagram-outline membership) must default to whether it
+// flag (which drives diagram-outline membership) must default to whether it
 // carries a caption, so bare positions don't leave blank rows in the outline. An
 // explicit `outlined:` still wins. Asserting test — no rendering to eyeball.
 #import "/lib.typ": diagram, starting-fen

@@ -3,11 +3,12 @@
 // labels; "brown" = espresso-brown band + creme-white labels; "creme" = creme
 // band + saddle-brown labels; "dark" = charcoal band + light-grey labels (a
 // neutral dark-mode look); "light" = light-grey band + charcoal labels (the
-// mirror of "dark"); "wood" = the same espresso-brown backdrop as "brown" but
-// with a wood-grain texture composited over the band; "marble" = a
-// bottle-green backdrop with a marble-veining texture, creme labels
-// (provisional -- see tests/VISUAL_CHECKS.md). Settable as a document default
-// and a per-call override.
+// mirror of "dark"). The two MATERIAL themes work differently from those five:
+// "wood" and "marble" DERIVE their band from the board's own colors -- the dark
+// square darkened 32%, with the light square as the label -- and composite a
+// material texture over that backdrop. So they follow `color-theme` instead of
+// imposing a fixed color, which is why neither has a border-* constant.
+// Settable as a document default and a per-call override.
 #import "/lib.typ": board, board-theme, default-board-style, set-board-defaults
 #import "/tests/board/_fixture.typ": test-fen
 
