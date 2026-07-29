@@ -419,7 +419,7 @@
   }
   // A caption-less diagram stays referenceable but unlisted: default `outlined`
   // to whether it carries a caption, so bare positions don't leave blank rows in
-  // a chess-diagram outline. An explicit `outlined:` in fig-args still wins.
+  // a diagram outline. An explicit `outlined:` in fig-args still wins.
   figure(body, kind: chess-kind, supplement: supp, caption: below, ..((outlined: below != none) + fig-args))
 }
 
