@@ -14,7 +14,7 @@
 // show realistic unqualified calls; the front-matter figure lists below are the
 // one place the manual itself calls the API, so pull in just that function. The
 // dev build reads `/lib.typ`; a reader would `#import "@preview/staunton:..": *`.
-#import "/lib.typ": chess-diagram-outline, chess-table-outline
+#import "/lib.typ": diagram-outline, table-outline
 #import "@preview/tidy:0.4.1"
 
 // --- compact tidy style ------------------------------------------------------
@@ -271,11 +271,11 @@
 #v(0.4em)
 #align(center, text(size: 15pt, weight: "bold")[List of Diagrams])
 #v(0.6em)
-#chess-diagram-outline(title: none)
+#diagram-outline(title: none)
 #v(1.2em)
 #align(center, text(size: 15pt, weight: "bold")[List of Tables])
 #v(0.6em)
-#chess-table-outline(title: none)
+#table-outline(title: none)
 
 #pagebreak()
 
@@ -301,8 +301,8 @@ Staunton provides a full set of features, including:
   using flexible sizing, custom colors plus reusable color/board themes (brightness/contrast
   tweaks, theme derivation, and various patterns). Use the bundled SVG piece sets (or a
   Unicode fallback) or provide your own piece sets. Building on that foundation create diagrams with captions, figure counters, and referenceable labels.
-- *games from PGN* — let a sophisticated parser create #link(<games>)[game] structures (single or array)
-  from a PGN file and From you create positions using move "locators" (mainline and
+- *games from PGN* — let the PGN parser create #link(<games>)[game] structures (single or array)
+  from a PGN file, and from those create positions using move "locators" (mainline and
   variations). You can also play out moves from arbitrary start positions and export resulting
   positions as FEN strings.
 - *Chess960 / Fischer Random Chess* — with the same board, engine, PGN pipeline and notation
@@ -335,6 +335,14 @@ manual is in scope:
 
 ```typ
 #import "@preview/staunton:0.3.0": *
+```
+
+Should a short name like `board`, `diagram` or `notation` collide with something
+else in your document, import selectively and rename as you go — Typst's `as`
+does that, and the rest of this manual still applies under the new name:
+
+```typ
+#import "@preview/staunton:0.3.0": board as chessboard, diagram as chessdiagram
 ```
 
 *staunton* needs *Typst 0.14.2 or newer* — with one exception: HTML export
@@ -370,9 +378,9 @@ primary building block every diagram builds on. `source` is one of: a *FEN strin
 )
 ```)
 
-`board` is variant-agnostic: it draws standard chess by default, and also draws
-Chess960 and fairy positions (any `define-variant`-registered kinds) from the
-same call. Use `board` inline in text or inside your own layout; reach for a
+`board` is chess-variant-agnostic: it draws standard chess by default, and also
+draws Chess960 and fairy positions (any kind registered with `define-variant`,
+see @fairy-pieces) from the same call. Use `board` inline in text or inside your own layout; reach for a
 *diagram* (@diagrams) when you want a captioned, referenceable figure.
 
 The rest of this chapter covers the board's drawing options: labels, highlights,
@@ -771,7 +779,7 @@ without being told the geometry, and shrinks to fit if asked for more than fits.
 #example(```typ
 #board(
   "8/8/8/3k4/3K4/8/8/8",
-  size: 60%,   // of the available width
+  size: 60%, // of the available width
 )
 ```)
 
@@ -1027,7 +1035,7 @@ figure-level options. Extra named arguments are forwarded to `figure` (e.g.
 
 The distinction matters: a bare `board` is plain content — it has *no* caption,
 *no* figure counter, does *not* resolve `@`-references, and is *not* listed by
-`chess-diagram-outline`. Only a *diagram* is a figure. So draw a `board` for an
+`diagram-outline`. Only a *diagram* is a figure. So draw a `board` for an
 inline or decorative position, and a `diagram` whenever you want to caption
 it, cross-reference it (`@label`), or list it — see *Outlines and references*.
 
@@ -1194,9 +1202,9 @@ For chess publications, notational output of the move text is as important as sh
 board positions. This output has to be flexible and localisable. While you sometimes want to 
 show move text exactly as it was recorded in the PGN, you often want to amend and reformat the move text for your own purposes. The `notation(..)` function is the workhorse for this. It takes a game, a move-text string, or a SAN array and produces a formatted move text output. It can localise the piece letters and render figurine glyphs, and it can include or exclude move numbers, results, NAGs, comments, and embedded diagrams.
 
-`notation(..)` is *variant-agnostic*: it renders standard chess by default, and
-also handles Chess960 and fairy games (any `define-variant`-registered kinds) via
-the same call. This mirrors the package's other drawing and notation entry
+`notation(..)` is *chess-variant-agnostic*: it renders standard chess by default,
+and also handles Chess960 and fairy games (any kind registered with
+`define-variant`, see @fairy-pieces) via the same call. This mirrors the package's other drawing and notation entry
 points — `board`, `diagram`, `notation` — each a single name that covers
 standard chess, Chess960 and fairy positions alike, rather than a separate name
 per variant. `position` works the same way (the variant rides on its source or
@@ -1428,8 +1436,8 @@ per-move code at all:
 #notation(game)
 ```
 
-This is an *extreme* case (most publications want a curated subset, which is
-exactly why these switches default off), but it makes the point: staunton's job
+This is an *extreme* case — most publications want a curated subset, which is why
+the switches are opt-in (@pgn-handling) — but it makes the point: staunton's job
 is turning what is already *in* the PGN into typeset output, not making you
 re-describe it in Typst.
 
@@ -1697,9 +1705,9 @@ Diagrams and tables each carry a distinct figure `kind` (`"chess"` /
 (`@label` → "Diagram 3" / "Table 2"), and can be *listed separately*:
 
 ```typ
-#chess-diagram-outline()     // list of chess diagrams
-#chess-table-outline()       // list of tournament tables
-#chess-outlines()            // both, diagrams then tables
+#diagram-outline()     // list of chess diagrams
+#table-outline()       // list of tournament tables
+#outlines()            // both, diagrams then tables
 
 #diagram(starting-fen, caption: [Start]) <start>
 As shown in @start, ...
@@ -2006,9 +2014,9 @@ source docstring: its signature, then every parameter with its type and default.
 
 == Outlines and References
 #show-fns((
-  ("/lib.typ", "chess-diagram-outline"),
-  ("/lib.typ", "chess-table-outline"),
-  ("/lib.typ", "chess-outlines"),
+  ("/lib.typ", "diagram-outline"),
+  ("/lib.typ", "table-outline"),
+  ("/lib.typ", "outlines"),
 ))
 
 == Themes

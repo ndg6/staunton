@@ -210,18 +210,18 @@
   info-bold: true,            // bold the auto game-info line
   info-gap: 0.6em,            // space between the game-info line and the board
   supplement: auto,           // figure supplement (auto -> localized "Diagram")
-  outline-title: auto,        // chess-diagram-outline title (auto -> "List of Diagrams")
+  outline-title: auto,        // diagram-outline title (auto -> "List of Diagrams")
 )
 
 // ---- table style ----------------------------------------------
 // The #figure wrapper around a tournament table (standings / cross-table /
 // progress). Tables are figures of `kind: "chess-table"` so they get their own
 // counter, can be referenced (@label -> "Table 3") and listed by
-// `chess-table-outline`. `supplement` / `outline-title` are language-aware
+// `table-outline`. `supplement` / `outline-title` are language-aware
 // (auto -> localized), with their own bucket so each defaults independently.
 #let default-table-style = (
   supplement: auto,           // figure supplement (auto -> localized "Table")
-  outline-title: auto,        // chess-table-outline title (auto -> "List of Tables")
+  outline-title: auto,        // table-outline title (auto -> "List of Tables")
   title-gap: 0.6em,           // gap between an above-table `title` and the table
   grid: "complete",           // rule preset: "complete" | "no-outer" | "header-rule"
   header-align: center,       // alignment of the header row

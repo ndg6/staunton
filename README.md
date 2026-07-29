@@ -164,7 +164,7 @@ typst compile --root . docs/examples/showcase.typ showcase.pdf
 | annotate / build | `with-nags`, `with-comments`, `with-variation` |
 | notation | `notation` |
 | tables | `standings-table`, `crosstable-table`, `progress-table`, `games-by-event` (+ compute: `standings`, `crosstable`, `progress`) |
-| outlines | `chess-diagram-outline`, `chess-table-outline`, `chess-outlines` |
+| outlines | `diagram-outline`, `table-outline`, `outlines` |
 | themes | `color-theme`, `board-theme` |
 | engine | `legal-moves`, `apply`, `in-check`, `move-to-san` |
 | defaults | `set-chess-defaults`, `set-board-defaults`, `set-diagram-defaults`, `set-table-defaults`, `set-pgn-defaults`, `set-lang`, `set-piece-set` |
@@ -241,9 +241,12 @@ play, Chess960, non-standard boards and limited fairy pieces. Other traditions
 - **Simpler API**: with one variant family to serve, the variant-named wrappers
   bought nothing, so `chess-board`, `chess960-board`, `chess-diagram`,
   `chess960-diagram` and `chess-notation` are **removed** — use the
-  variant-agnostic `board`, `diagram` and `notation`, which accept Chess960 and
-  fairy positions just as happily. `chess-moves` is renamed **`play`**.
-  Unchanged: `chess-diagram-outline`, `chess-table-outline`, `chess-outlines`,
+  chess-variant-agnostic `board`, `diagram` and `notation`, which accept Chess960
+  and fairy positions just as happily. `chess-moves` is renamed **`play`**. The
+  outline functions lose their prefix too: `chess-diagram-outline`,
+  `chess-table-outline` and `chess-outlines` become **`diagram-outline`**,
+  **`table-outline`** and **`outlines`**. If a short name collides with something
+  in your document, rename it on import (`board as chessboard`). Unchanged:
   `set-chess-defaults` (there the `chess-` prefix is a namespace, not a variant
   marker) and `game-variant`, now the way to tell a 960 game from a standard one.
 - **Reworked wood and marble**: both materials are redrawn from scratch. The old

@@ -3,7 +3,7 @@
 // HTML-HAS: doc-toc
 // HTML-HAS: List of Diagrams
 // HTML-HAS: href="#
-#import "/lib.typ": diagram, chess-diagram-outline
+#import "/lib.typ": diagram, diagram-outline
 #diagram("4k3/8/8/8/8/8/8/4K3", caption: [First.], size: 3cm)
 #diagram("8/8/8/8/8/8/8/4K1k1", caption: [Second.], size: 3cm)
-#chess-diagram-outline()
+#diagram-outline()

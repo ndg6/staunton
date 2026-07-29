@@ -1,13 +1,13 @@
 // Diagrams - the diagram outline. diagram emits figures with a
-// distinct kind ("chess"), so chess-diagram-outline lists ONLY those, separately
+// distinct kind ("chess"), so diagram-outline lists ONLY those, separately
 // from any other figures (here a non-chess figure is included to prove it is
 // skipped).
-#import "/lib.typ": diagram, chess-diagram-outline, starting-fen
+#import "/lib.typ": diagram, diagram-outline, starting-fen
 
 #set page(width: 13cm, height: auto, margin: 1.2cm)
 #set text(font: "Libertinus Serif", size: 10pt)
 
-#chess-diagram-outline()
+#diagram-outline()
 
 = Diagrams
 #diagram(starting-fen, size: 3cm, caption: [First diagram])

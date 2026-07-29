@@ -643,7 +643,7 @@
 ///   document.
 /// - ..args (arguments): forwarded to `outline` (e.g. `depth`, `indent`).
 /// -> content
-#let chess-diagram-outline(title: auto, lang: auto, ..args) = context {
+#let diagram-outline(title: auto, lang: auto, ..args) = context {
   let doc = (default-diagram-style + diagram-style-state.get()).outline-title
   outline(
     title: _outline-title(title, doc, lang, "diagram-outline-title"),
@@ -661,7 +661,7 @@
 ///   document.
 /// - ..args (arguments): forwarded to `outline`.
 /// -> content
-#let chess-table-outline(title: auto, lang: auto, ..args) = context {
+#let table-outline(title: auto, lang: auto, ..args) = context {
   let doc = (default-table-style + table-style-state.get()).outline-title
   outline(
     title: _outline-title(title, doc, lang, "table-outline-title"),
@@ -680,7 +680,7 @@
 ///   document.
 /// - ..args (arguments): forwarded to both `outline`s.
 /// -> content
-#let chess-outlines(diagram-title: auto, table-title: auto, lang: auto, ..args) = {
-  chess-diagram-outline(title: diagram-title, lang: lang, ..args)
-  chess-table-outline(title: table-title, lang: lang, ..args)
+#let outlines(diagram-title: auto, table-title: auto, lang: auto, ..args) = {
+  diagram-outline(title: diagram-title, lang: lang, ..args)
+  table-outline(title: table-title, lang: lang, ..args)
 }
