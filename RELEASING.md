@@ -73,6 +73,15 @@ flag a drift between the code shown and the image. The image URLs are pinned to
 the release tag (like the manual link), so they only resolve once `vX.Y.Z` is
 pushed.
 
+**Push the tag before (or together with) `main` whenever a commit ADDS a README
+image.** GitHub renders the README from the *branch*, but the image URLs resolve
+against the *tag* — so pushing `main` first publishes a README whose new image
+404s until the tag catches up. This bit 1.0.0: the wood showcase was added after
+`v1.0.0` was already cut, `main` went up first, and the front page carried a
+broken image until the tag was force-moved. Note that force-moving a published
+tag is only defensible while Universe has not seen that version; after the
+Universe PR, a README fix needs a new version, not a moved tag.
+
 ## Publishing to Universe (upload-gated — get explicit approval each time)
 
 1. Green suite: `bash tests/run.sh --system-fonts`. The `--system-fonts` flag is
