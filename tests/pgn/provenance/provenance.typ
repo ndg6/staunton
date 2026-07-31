@@ -10,7 +10,7 @@
 // captured values — so `_origin-of` / `_origin-in` / `_apply-origin` are the only
 // seams where this behaviour is machine-checkable. The visible result is eyeballed
 // via board/markings and notation/embed_diagrams (VISUAL_CHECKS).
-#import "/lib.typ": parse-pgn, parse-fen, with-nags, apply, legal-moves, _origin-in, _apply-origin
+#import "/lib.typ": parse-pgn, parse-fen, with-nags, apply, legal-moves, diagram, _origin-in, _apply-origin
 #import "/src/game.typ": position-after, _position-at, _origin-of
 
 #let g = parse-pgn(```
@@ -51,12 +51,29 @@
 #let p = position-after(g, "2w")
 #assert("_origin" not in apply(p, legal-moves(p).first()), message: "apply drops provenance")
 
+// Ply 0 addresses the position BEFORE any move — in range, but with no move
+// behind it. It must come back plain, not blow up in `move-node`.
+#assert("_origin" not in position-after(g, "0b"), message: "ply 0 has no move to remember")
+#assert.eq(position-after(g, "0b").turn, "w", message: "ply 0 is still the start position")
+
 // ---- _origin-in: forged/partial provenance degrades, never panics ----------
 #assert.eq(_origin-in("4k3/8/8/8/8/8/8/4K3 w - - 0 1"), none, message: "a string has none")
 #assert.eq(_origin-in((squares: (:), _origin: "nonsense")), none, message: "non-dict rejected")
 #assert.eq(_origin-in((squares: (:), _origin: (quality: (square: "e4", symbol: "!")))), none,
   message: "a partial origin must not badge")
 #assert(_origin-in(p) != none, message: "a real one is accepted")
+
+// The guard must cover every key a CONSUMER reads, not just the ones the merge
+// reads: `diagram` takes `tags` and the caption takes `locator`/`san`. A dict
+// that satisfies only the merge used to slip through and then die on a missing
+// key downstream — so drop one key at a time and require each to be rejected.
+#let full = _origin-of(g, "2w")
+#for k in full.keys() {
+  let partial = (:)
+  for (kk, vv) in full { if kk != k { partial.insert(kk, vv) } }
+  assert.eq(_origin-in((squares: (:), _origin: partial)), none,
+    message: "origin missing `" + k + "` must be rejected")
+}
 
 // ---- _apply-origin: the merge, which the rendered board cannot show --------
 #let caller = (arrows: (("a1", "a2", "G"),), highlight: (("h8", "Y"),))
@@ -91,3 +108,12 @@
 
 #set page(width: auto, height: auto, margin: 4mm)
 `position-after` provenance: derivation, gating and merge all pass.
+
+// End-to-end proof that a forged origin degrades instead of crashing. Asserting
+// on `_origin-in` alone is NOT enough: the keys `diagram` reads (`tags`, and
+// `locator`/`san` for the caption) are read OUTSIDE the merge, so a dict that
+// satisfied only the merge used to pass the guard and then die downstream on a
+// missing key. This must render a plain board — nothing here needs eyeballing.
+#let forged = parse-fen("4k3/8/8/8/8/8/8/4K3 w - - 0 1")
+#let forged = { let f = forged; f.insert("_origin", (arrows: (), highlights: (), quality: none)); f }
+#diagram(forged, size: 2cm)

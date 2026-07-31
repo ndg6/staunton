@@ -317,6 +317,14 @@
 // invite hand-built positions carrying a forged one, reopening exactly the
 // category error this closes.
 #let _origin-of(game, locator) = {
+  // Ply 0 is the position BEFORE any move — a legitimate thing to address, and
+  // the one in-range locator with no move behind it. There is nothing to derive,
+  // so it gets no provenance rather than a panic out of `move-node` (which would
+  // report the misleading "past the end of its line"). Genuinely out-of-range
+  // locators still error, and with the right message: `_position-at` runs first
+  // and asserts on them before we get here.
+  let at = if type(locator) == str { locator } else { locator.at("at") }
+  if _ply-of(at) == 0 { return none }
   let node = move-node(game, locator)
   let anno = interpret-comment(node.at("comment-after", default: none))
   (
@@ -345,7 +353,8 @@
   // Attached to the RETURNED COPY only. `_position-at`'s mainline fast path
   // indexes the memoised `_mainline-positions` array, which must stay pristine —
   // so provenance costs one dict build per CALL, not one per move in the game.
-  pos.insert("_origin", _origin-of(game, locator))
+  let origin = _origin-of(game, locator)
+  if origin != none { pos.insert("_origin", origin) }
   pos
 }
 

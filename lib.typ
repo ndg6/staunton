@@ -259,11 +259,18 @@
 // than panicking: this is an internal field, so the only way to see a broken one
 // is for someone to have built it by hand, and the right answer to that is "you
 // get no badge", not a crash.
+// Every key here is READ by some consumer: `_apply-origin` takes arrows /
+// highlights / quality, `diagram` takes tags, and `_pgn-caption` takes locator +
+// san. Validating a subset would let a partial dict past the gate only to die
+// later on a missing key — so the check must cover the whole contract, and any
+// new field added to `_origin-of` must be added here too.
+#let _origin-keys = ("arrows", "highlights", "locator", "quality", "san", "tags")
+
 #let _origin-in(source) = {
   if type(source) != dictionary { return none }
   let o = source.at("_origin", default: none)
   if type(o) != dictionary { return none }
-  if "arrows" not in o or "highlights" not in o or "quality" not in o { return none }
+  for k in _origin-keys { if k not in o { return none } }
   o
 }
 
