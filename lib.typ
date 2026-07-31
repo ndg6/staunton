@@ -539,6 +539,18 @@
   _assemble(drawn, white, black, year, game-info, below, diagram-ov, lang, fig-args)
 }
 
+// Pure sugar since prompt 49: the position itself now carries the move's
+// provenance, so `diagram` derives the caption, the roster line, the annotations
+// and the quality badge from `source` alone. Kept because it reads well and is
+// the documented shorthand — but it must stay a THIN pass-through, returning
+// `diagram`'s bare `#figure` so `#diagram-after(..) <lbl>` remains referenceable
+// (wrapping the return in `context`/`align` would attach the label to the
+// wrapper; tests/pgn/annotations guards this).
+//
+// NOTE: this comment sits ABOVE the `///` docstring on purpose. `tidy` binds a
+// docstring to the definition IMMEDIATELY below it, so a plain `//` note wedged
+// between the two detaches it — and the manual's `show-fns` then fails with
+// "`diagram-after` not found in /lib.typ", which is a confusing way to learn it.
 /// A chess diagram for the position at `locator` within a parsed game — the
 /// shorthand for `diagram(position-after(game, locator))`, which is exactly what
 /// it does. Players and year default to the game's roster tags (so the info line
@@ -563,13 +575,6 @@
 /// - lang (auto, str): language for the supplement; `auto` follows the document.
 /// - ..args (arguments): board *style* options and `#figure` arguments.
 /// -> content
-// Pure sugar since prompt 49: the position itself now carries the move's
-// provenance, so `diagram` derives the caption, the roster line, the annotations
-// and the quality badge from `source` alone. Kept because it reads well and is
-// the documented shorthand — but it must stay a THIN pass-through, returning
-// `diagram`'s bare `#figure` so `#diagram-after(..) <lbl>` remains referenceable
-// (wrapping the return in `context`/`align` would attach the label to the
-// wrapper; tests/pgn/annotations guards this).
 #let diagram-after(game, locator, white: auto, black: auto, year: auto, caption: auto, annotations: auto, flip: false, game-info: auto, lang: auto, ..args) = diagram(
   position-after(game, locator),
   white: white,
