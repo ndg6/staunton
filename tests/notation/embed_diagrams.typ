@@ -33,12 +33,16 @@
 #assert(type(notation(g, diagrams: true)) == content, message: "embedding yields content")
 
 // --- annotations on a marker-bearing move feed the spliced board ------------
-// One comment can carry BOTH a diagram marker AND %cal/%csl; `notation` runs a
-// single `interpret-comment` per move and (when `annotations` is on) hands the
-// extracted arrows/highlights to the spliced `diagram`. We assert the data
-// SOURCE here; the wiring + gating are shown by the annotated sheet below.
-// (Content equality can't see it: a `diagrams: true` result is a `context`
-// closure whose equality ignores the captured `annotations` value -- so
+// One comment can carry BOTH a diagram marker AND %cal/%csl. `notation` still
+// runs `interpret-comment` per move to spot the DIAGRAM MARKER, but since prompt
+// 49 it no longer extracts the arrows/highlights itself: the spliced board is an
+// ordinary `diagram` over a `position-after` position, which carries that move's
+// annotations (and its quality badge) in its own provenance. Deriving them here
+// as well would DOUBLE them -- the merge is asserted directly in
+// tests/pgn/provenance.
+// We assert the data SOURCE here; the wiring + gating are shown by the annotated
+// sheet below. (Content equality can't see it: a `diagrams: true` result is a
+// `context` closure whose equality ignores the captured `annotations` value -- so
 // annotations on/off compare EQUAL even though they render differently.)
 #let ga = parse-pgn(```
 [White "A"] [Black "B"]

@@ -1,7 +1,12 @@
 // EXPECT: move-quality badges are derived from a game move
 // Prompt 28: a move-quality badge is tied to a MOVE, so it may only come from a
-// game (via `diagram-after`). Setting `move-quality-mark` on a bare board — which
-// could otherwise badge an arbitrary or empty square — is a hard error.
+// game. Setting `move-quality-mark` on a bare board — which could otherwise badge
+// an arbitrary or empty square — is a hard error.
+//
+// Prompt 49 made this guard STRONGER rather than redundant. There is now a
+// legitimate way in (draw a `position-after` position and its provenance supplies
+// the mark), but the qualification is carried by the POSITION, not by which
+// function was called — so a caller-supplied mark on a bare board stays refused.
 #import "/lib.typ": board
 
 #board(

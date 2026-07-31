@@ -176,7 +176,8 @@ Then open the PDFs below and check the noted property. (The expected-*fail* test
       and the Unicode glyph fallback. Note the **highlight/arrow *styling*** sections:
       the fill/circle/cross colors and the teal arrow are set as *defaults*, while the
       `highlight:` / `arrows:` **list** is passed **per call** (it is per-call only).
-      The **move-quality** section uses `diagram-after` (not a bare board): with
+      The **move-quality** section uses `diagram-after` (i.e. a game-derived
+      position, not a bare board): with
       `move-quality: true` set as a default the badge is a red `??` disc on c6, then
       recolored fuchsia by `set-board-defaults(move-quality-colors: ..)`, then a `!`
       badge on f7 combined with the auto-located mate glow.
@@ -184,7 +185,12 @@ Then open the PDFs below and check the noted property. (The expected-*fail* test
 ## Diagrams, notation, tables
 
 - [ ] `notation/embed_diagrams.pdf` — boards are spliced at the markers; with
-      annotations on, each spliced board carries that move's arrows/highlights.
+      annotations on, each spliced board carries that move's arrows/highlights —
+      and **exactly once**: the green f1→c4 arrow and the red e5 highlight must
+      each appear a single time, not doubled. Spliced boards carry **no
+      "A – B" roster line** above them (`game-info: none`: the reader is already
+      inside this game's movetext). Since prompt 49 a spliced board also shows the
+      move's **quality badge** when it has one.
 - [ ] `notation/notation.pdf` — figurines, localized piece letters, NAG glyphs,
       and `from`/`to` slices read correctly.
 - [ ] `pgn/realworld/two_knights_variations.pdf` — inline variations numbered

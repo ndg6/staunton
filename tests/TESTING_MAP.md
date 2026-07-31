@@ -52,7 +52,11 @@ together are independent of A/D/E. Tournament (D) works off PGN tags/results onl
 
 1. **`tests/diagram` is NOT pure board rendering** — it uses `diagram-after`,
    which replays moves through `game`/`engine`/`san`/`pgn`. It belongs with C.
-   `tests/board` is the only pure-rendering area.
+   `tests/board` is *mostly* pure rendering — but since prompt 49 not entirely:
+   a position from `position-after` carries provenance (`_origin-of`, in
+   `game.typ`) that `board` reads to draw the move's annotations and quality
+   badge. So a `game.typ` change can move what a **board** renders, not just
+   what a diagram does.
 2. **`tests/output_formats` is cross-cutting integration** — HTML export exercises
    board + notation + tournament + figures at once. Run it for any render/
    notation/data change (`bash tests/run.sh tests/output_formats`), and always in
@@ -65,7 +69,7 @@ together are independent of A/D/E. Tournament (D) works off PGN tags/results onl
 | `board.typ` | `tests/board tests/output_formats` |
 | `style.typ` | `tests/board tests/tournament tests/notation tests/i18n tests/output_formats` |
 | `fen.typ` / `engine.typ` / `san.typ` | `tests/fen tests/position tests/pgn tests/notation tests/diagram` |
-| `pgn.typ` / `game.typ` | `tests/pgn tests/game tests/notation tests/tournament tests/diagram` |
+| `pgn.typ` / `game.typ` | `tests/pgn tests/game tests/notation tests/tournament tests/diagram tests/board` |
 | `notation.typ` / `annotations.typ` | `tests/notation tests/pgn tests/output_formats` |
 | `tournament.typ` | `tests/tournament tests/output_formats` |
 | `i18n.typ` | `tests/i18n tests/notation tests/diagram tests/output_formats` |
