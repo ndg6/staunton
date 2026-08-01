@@ -64,6 +64,20 @@ Then open the PDFs below and check the noted property. (The expected-*fail* test
         cut) rather than running around it. Veining that circles the frame
         reads as a soft vignette/glow rather than stone — that construction was
         tried and rejected.
+- [ ] `board/markings/move_quality_render.pdf` — the badge as drawn, four
+      sections. (1) **All six symbols** on `board`: `!` `!!` share one colour
+      (good), `?` `??` a second (bad), `!?` `?!` a third (interesting); every
+      disc sits on the SAME square (e4), top-right corner, on top of the piece.
+      (2) **`diagram` vs `board`** with `!!` — the two must look *identical*, not
+      merely similar; a difference means the figure path diverged again.
+      (3) **Switch off** — the same annotated move with no `move-quality`, which
+      must show NO badge (a badge here means the opt-in leaks).
+      (4) **Recoloured** — with `move-quality-colors` set document-wide the discs
+      must be purple / olive / teal, proving the category map is consulted rather
+      than hard-coded. The symbol → category pairing and the badge data are
+      asserted in `board/markings/move_quality.typ`; this is the colour and
+      placement check only.
+
 - [ ] `board/orientation/flip.pdf` — a1 in the correct corner both ways; labels
       flip with the board. Second section: the highlights (filled e4 / circle e5 /
       cross d5) stay on their named squares (mirrored screen position), and the
