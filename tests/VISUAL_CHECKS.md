@@ -72,11 +72,10 @@ Then open the PDFs below and check the noted property. (The expected-*fail* test
       merely similar; a difference means the figure path diverged again.
       (3) **Switch off** — the same annotated move with no `move-quality`, which
       must show NO badge (a badge here means the opt-in leaks).
-      (4) **Recoloured** — with `move-quality-colors` set document-wide the discs
-      must be purple / olive / teal, proving the category map is consulted rather
-      than hard-coded. The symbol → category pairing and the badge data are
-      asserted in `board/markings/move_quality.typ`; this is the colour and
-      placement check only.
+      Recolouring is NOT checked here — markings.typ already covers it. The
+      symbol → category pairing and the badge data are asserted in
+      `board/markings/move_quality.typ`; this is the colour and placement check
+      only.
 
 - [ ] `board/orientation/flip.pdf` — a1 in the correct corner both ways; labels
       flip with the board. Second section: the highlights (filled e4 / circle e5 /

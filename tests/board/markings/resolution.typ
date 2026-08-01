@@ -4,12 +4,11 @@
 //   * checked-king-square: the side-to-move king when (and only when) in check.
 //   * move-destination: where the addressed move landed (captures, castling,
 //     promotion, mainline + variations).
-//   * move-quality-mark: the badge data, sourced identically from a literal
-//     SAN suffix, a PGN NAG, or a programmatic with-nags.
+// (move-quality-mark has its own sheet: move_quality.typ.)
 #import "/src/engine.typ": checked-king-square
-#import "/src/game.typ": move-destination, move-quality-mark
+#import "/src/game.typ": move-destination
 #import "/src/fen.typ": parse-fen
-#import "/lib.typ": parse-pgn, with-nags
+#import "/lib.typ": parse-pgn
 
 #set page(width: auto, height: auto, margin: 1cm)
 #set text(font: "Libertinus Serif", size: 10pt)
@@ -44,23 +43,11 @@
 #let gv = parse-pgn("[W \"a\"][B \"b\"] 1. e4 e5 (1... c5 2. Nf3) 2. Nf3 *").first()
 #assert.eq(move-destination(gv, (line: ((at: "1b", into: 0),), at: "2w")), "f3")
 
-// ---- move-quality-mark: three input forms, one result ---------------------
-// (a) literal "!"/"?" suffix in the SAN text (Nf6??)
-#assert.eq(move-quality-mark(g, "3b"), (square: "f6", symbol: "??"))
-// (b) PGN NAG in the movetext ($2 = "?") attached to 1. e4
-#let gn = parse-pgn("[W \"a\"][B \"b\"] 1. e4 $2 e5 2. Nf3 *").first()
-#assert.eq(move-quality-mark(gn, "1w"), (square: "e4", symbol: "?"))
-// (c) programmatic, via with-nags ($5 = "!?")
-#let g2 = with-nags(g, ("2w": "!?"))
-#assert.eq(move-quality-mark(g2, "2w"), (square: "h5", symbol: "!?"))
-
-// no quality mark -> none; a non-quality NAG ($14 = "⩲") is ignored, not shown
-#assert.eq(move-quality-mark(g, "2w"), none)
-#let ge = parse-pgn("[W \"a\"][B \"b\"] 1. e4 $14 e5 *").first()
-#assert.eq(move-quality-mark(ge, "1w"), none)
-// first quality NAG wins when several are present ($3 = "!!" before $1 = "!")
-#let gm = parse-pgn("[W \"a\"][B \"b\"] 1. e4 $3 $1 e5 *").first()
-#assert.eq(move-quality-mark(gm, "1w").symbol, "!!")
+// ---- move-quality-mark ----------------------------------------------------
+// Deliberately NOT here: the badge-derivation matrix (six symbols x three input
+// forms, NAG-vs-literal precedence, the ignored non-quality NAGs) lives in
+// move_quality.typ, which owns that subject end to end. This sheet keeps the two
+// markings helpers that have no other home.
 
 // ---- _resolve-square-dim: proportional marker dimensions (0.2.2, topic 3) ---
 // auto -> the default ratio * square; an explicit ratio -> that fraction of the

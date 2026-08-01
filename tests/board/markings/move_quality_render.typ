@@ -3,9 +3,8 @@
 // rendered board, so they are eyeballed here (see VISUAL_CHECKS).
 //
 // Covers, in order: all six symbols and their three colour categories; the same
-// badge through `board` and through `diagram`; the `move-quality` switch off;
-// and a recoloured category map.
-#import "/lib.typ": parse-pgn, with-nags, board, diagram, position-after, set-board-defaults
+// badge through `board` and through `diagram`; and the `move-quality` switch off.
+#import "/lib.typ": parse-pgn, with-nags, board, diagram, position-after
 
 #set page(width: 17cm, height: auto, margin: 1cm)
 #set text(font: "Libertinus Serif", size: 9pt)
@@ -44,15 +43,6 @@ badge at all.
 
 #board(at-e4("??"), size: 3cm)
 
-= Recoloured categories
-
-`move-quality-colors` set document-wide — the `!!` disc must follow the new
-"good" colour, proving the map is consulted rather than hard-coded.
-
-#set-board-defaults(move-quality: true, move-quality-colors: (good: purple, bad: olive, interesting: teal))
-
-#grid(columns: 3, gutter: 8pt,
-  board(at-e4("!!"), size: 2.6cm),
-  board(at-e4("??"), size: 2.6cm),
-  board(at-e4("?!"), size: 2.6cm),
-)
+// (Recolouring via `move-quality-colors` is already eyeballed in markings.typ's
+// move-quality section — not repeated here. Every render-only sheet costs human
+// attention, so a second recolour would be a real cost for no new information.)

@@ -32,12 +32,12 @@
 #assert.eq(o.keys().sorted(), ("arrows", "highlights", "locator", "quality", "san", "tags"))
 #assert(not repr(o).contains("movetext"), message: "provenance must not carry the game")
 
-// ---- quality: same three input forms as move-quality-mark ------------------
-#assert.eq(o.quality, (square: "f3", symbol: "!"))          // literal SAN suffix
-#assert.eq(_origin-of(g, "3w").quality, (square: "b5", symbol: "??"))
-#assert.eq(_origin-of(g, "1w").quality, none)               // unremarkable move
-// set programmatically rather than written in the PGN
-#assert.eq(_origin-of(with-nags(g, ("1w": "!!")), "1w").quality, (square: "e4", symbol: "!!"))
+// ---- quality rides in the payload -----------------------------------------
+// One case each way is enough HERE: this sheet is about the payload's shape and
+// routing, not about badge derivation. The full matrix (six symbols, three input
+// forms, NAG-vs-literal precedence) belongs to board/markings/move_quality.typ.
+#assert.eq(o.quality, (square: "f3", symbol: "!"))          // populated
+#assert.eq(_origin-of(g, "1w").quality, none)               // absent when unmarked
 
 // ---- who carries provenance, and who must not ------------------------------
 #assert("_origin" in position-after(g, "2w"), message: "position-after attaches it")

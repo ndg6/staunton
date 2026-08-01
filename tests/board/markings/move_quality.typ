@@ -11,7 +11,7 @@
 // move_quality_render.typ + VISUAL_CHECKS for that half.
 #import "/lib.typ": (
   parse-pgn, with-nags, board, diagram, position-after,
-  default-board-style, board-non-default-keys, board-style-keys,
+  board-non-default-keys, board-style-keys,
   _origin-in, _apply-origin,
 )
 #import "/src/game.typ": move-quality-mark, _origin-of
@@ -61,6 +61,18 @@
 #let agree = parse-pgn(head + "1. e4! $1 e5 *").first()
 #assert.eq(move-quality-mark(agree, "1w").symbol, "!")
 
+// Several quality NAGs on one move: the FIRST wins ($3 = "!!" before $1 = "!").
+#let gm = parse-pgn(head + "1. e4 $3 $1 e5 *").first()
+#assert.eq(move-quality-mark(gm, "1w").symbol, "!!")
+
+// Absence, and the near-miss: a move with no annotation at all, and one carrying
+// a NON-quality NAG ($14 = "⩲", a position evaluation). Neither is a badge —
+// evaluating a position is not grading the move that reached it.
+#assert.eq(move-quality-mark(parse-pgn(head + "1. e4 e5 *").first(), "1w"), none)
+#let ge = parse-pgn(head + "1. e4 $14 e5 *").first()
+#assert.eq(move-quality-mark(ge, "1w"), none,
+  message: "a non-quality NAG must not produce a badge")
+
 // ---------------------------------------------------------------------------
 // 3. Symbol -> colour category. Three categories, six symbols, and the pairing
 //    is what makes "!!" and "!" share a colour.
@@ -71,11 +83,8 @@
 #assert.eq(_mq-category("??"), "bad")
 #assert.eq(_mq-category("!?"), "interesting")
 #assert.eq(_mq-category("?!"), "interesting")
-// every category named above is a real key of the default colour map
-#for sym in SYMBOLS {
-  assert(_mq-category(sym) in default-board-style.move-quality-colors,
-    message: "category for " + sym + " must exist in move-quality-colors")
-}
+// (That these three categories are real keys of `move-quality-colors`, and that
+// the switch defaults to false, is options.typ's business — not repeated here.)
 
 // ---------------------------------------------------------------------------
 // 4. Both drawing entry points get the badge, by the same route.
@@ -106,7 +115,6 @@
 //    key). The mark is position-specific and rejected as a document default —
 //    that guard has its own expected-fail sheets.
 // ---------------------------------------------------------------------------
-#assert.eq(default-board-style.move-quality, false, message: "badges are opt-in")
 #assert(board-style-keys.contains("move-quality"), message: "the switch is a board-style key")
 #assert(not board-non-default-keys.contains("move-quality"),
   message: "the switch IS settable document-wide")
