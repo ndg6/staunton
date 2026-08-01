@@ -73,7 +73,7 @@ Then open the PDFs below and check the noted property. (The expected-*fail* test
 - [ ] `board/size/sizes.pdf` — cells stay square at every size; nothing clipped.
 - [ ] `board/grid/grid.pdf` — 1pt grid lines sit between squares at every size.
 - [ ] `board/colors/colors.pdf` — light/dark themes render as intended.
-- [ ] `board/colors/pattern_stripes.pdf` (prompt 38 §3a, renamed prompt 40 §1) —
+- [ ] `board/colors/pattern_stripes.pdf` (square pattern: stripes) —
       dark squares show visible thin BLACK diagonal stripes (fine,
       closely-spaced, ~4pt spacing / stroke 0.5pt) over the theme's own dark
       background color; light squares stay a flat fill (no stripes). The
@@ -110,7 +110,7 @@ Then open the PDFs below and check the noted property. (The expected-*fail* test
       `board/style_options/color_theme_pattern.typ` and
       `board/style_options/pattern_light_variant.typ`; this is just the "does it
       actually look like the intended material" check.)
-- [ ] `board/colors/brightness_contrast.pdf` (prompt 38 §2/§12/§13) — versus the
+- [ ] `board/colors/brightness_contrast.pdf` (color-theme brightness/contrast) — versus the
       baseline board, `brightness: 30%` visibly lightens BOTH squares and
       `brightness: -30%` visibly darkens both; `contrast: 50%` visibly spreads
       the gap between the light and dark squares wider. The last board
@@ -148,7 +148,7 @@ Then open the PDFs below and check the noted property. (The expected-*fail* test
       the empty f5. (Self-asserts the 4 pieces render; the eyeball is that each
       highlight lands on the right square and layers correctly with custom pieces.)
 - [ ] `board/geometry/nonstandard_boards.pdf` — non-8×8 geometry looks sane.
-- [ ] `board/markings/markings.pdf` (prompt 27/28) —
+- [ ] `board/markings/markings.pdf` (check glow + move-quality badges) —
       *In-check glow*: a **Lichess-style** red radial that fills most of the square
       — solid near the centre and reaching the **edge midpoints**, with only the four
       **corners** left showing the bare square color — sits **under** the king on
@@ -205,7 +205,7 @@ Then open the PDFs below and check the noted property. (The expected-*fail* test
 - [ ] `tournament/standings.pdf`, `crosstable_progress.pdf`,
       `realworld_standings.pdf`, `refs/table_refs.pdf` — columns aligned, headers
       and running totals correct, tie-breaks plausible.
-- [ ] `tournament/styling.pdf` (prompt 42, table styling) — the new
+- [ ] `tournament/styling.pdf` (table styling) — the new
       `*-table` styling options. Section 1 (default): complete grid with a
       visibly **thicker outer border** than the inner rules; header **bold +
       centered**; name column **left**; rank-1 (A)'s name + points **bold**.
@@ -249,19 +249,22 @@ Then open the PDFs below and check the noted property. (The expected-*fail* test
 These are not under `tests/out/`; build them separately.
 
 - [ ] `docs/manual.pdf` — every framed example's board matches its code (rebuild:
-      `typst compile --root . docs/manual.typ docs/manual.pdf`).
-- [ ] `docs/manual.pdf` — specific examples revised for the 0.1.0 findings pass:
+      `bash scripts/build-manual.sh`).
+- [ ] `docs/manual.pdf` — examples worth a closer look:
       - *The Board → Flip*: two boards side by side, both with `"border"` labels and
         the `"brown"` theme (dark-brown band, creme labels). Left is normal
         orientation, right is `flip: true`; confirm `a1` moves from lower-left to
         upper-right so the coordinate flip is obvious.
-      - *The Board → Labels*: the five `border-theme` looks read as described —
-        `"square"` blends with the board, `"brown"` is espresso-brown + creme
-        (now visibly lighter than the old darker brown), `"creme"` is creme +
-        saddle-brown (a different brown from `"brown"`, not its mirror), `"dark"`
-        is charcoal + light-grey, `"light"` is light-grey + charcoal (the mirror
-        of `"dark"`) (only the `"brown"` one is rendered inline; the prose
-        describes the others).
+      - *The Board → Labels*: the seven `border-theme` looks read as described —
+        `"square"` blends with the board, `"brown"` is espresso-brown + creme,
+        `"creme"` is creme + saddle-brown (a different brown from `"brown"`, not
+        its mirror), `"dark"` is charcoal + light-grey, `"light"` is light-grey +
+        charcoal (the mirror of `"dark"`), and `"wood"` / `"marble"` are the
+        material bands that derive from the board's own colors. Two boards are
+        rendered inline — a `"brown"` one and a `"marble"` one on the
+        `"emerald"` color-theme; the prose describes the rest. (The material
+        bands' texture and palette-following get their own detailed check
+        above, under `board/labeling/border_themes.pdf`.)
       - *The Board → Piece Sets and Fonts → Using your own downloaded piece set*:
         the new subsection reads cleanly — the `piece-loader` code block is not
         clipped or overflowing, and the lichess link renders.
@@ -320,6 +323,11 @@ These are not under `tests/out/`; build them separately.
       bold chapter-TOC styling.
 - [ ] showcase — `typst compile --root . docs/examples/showcase.typ showcase.pdf`,
       then skim it.
+- [ ] README images — `docs/img/*.typ` are in no compile gate, and the README
+      embeds the committed **PNG** beside each one. If a showcase code block
+      changed, regenerate the PNG (command in each source's header) and check the
+      README renders it — otherwise the front page keeps the old picture.
+      See RELEASING.md step 3.
 - [ ] HTML export — `typst compile --root . --features html --format html
       docs/examples/html_export.typ html_export.html`, then open it in a browser:
       the boards/diagrams render (as inline SVG), the standings table and the

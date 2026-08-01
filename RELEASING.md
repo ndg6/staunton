@@ -69,7 +69,10 @@ which PNGs exist, and a missing entry means the image is never regenerated.
 If you change a showcase code block, regenerate the matching PNG (`typst compile
 --root . --format png --ppi 160 docs/img/<name>.typ docs/img/<name>.png`) and
 commit it. These sheets are **not** part of `tests/run.sh`, so nothing else will
-flag a drift between the code shown and the image. The image URLs are pinned to
+flag a drift between the code shown and the image. Worth doing here as a cheap
+guard, since these sources are otherwise ungated: `for f in docs/img/*.typ; do
+typst compile --root . "$f" /dev/null || echo "BROKEN $f"; done` — a public-API
+rename can leave one uncompilable and it ships unnoticed. The image URLs are pinned to
 the release tag (like the manual link), so they only resolve once `vX.Y.Z` is
 pushed.
 
@@ -110,6 +113,11 @@ Universe PR, a README fix needs a new version, not a moved tag.
     `bad_by`). Any *other* delta (a different count, a different failing test) is
     a release blocker — it means something in `src/` now depends on a 0.15+
     feature without being guarded, and the compiler floor claim is false.
+1b. **Drift lint (optional but cheap).** `bash scripts/lint-docs.sh` (~5s) — catches
+    what compiling cannot: dangling test references in `tests/*.md`, renamed-away
+    API names in `README.md`'s code fences (README is in no compile gate and is the
+    Universe front page), and unreachable `src/` symbols. Deliberately not part of
+    `tests/run.sh`; a release is the natural time to run it.
 2. Commit the version bump and land it on GitHub.
 3. Publish the GitHub Release, attaching the compiled manual as an asset (the PDF
    is a build artifact, gitignored — it is *not* committed). The README download
