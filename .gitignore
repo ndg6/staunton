@@ -26,9 +26,11 @@ src/assets/piece_sets/california/
 src/assets/piece_sets/maestro/
 src/assets/piece_sets/staunty/
 
-# Private (local-only): prompts + LLM design discussions, and the agent guide.
+# Private (local-only): prompts + LLM design discussions, and the agent guide
+# (CLAUDE.md plus GOTCHAS.md, the triggered-gotcha overflow it points at).
 prompts/
 CLAUDE.md
+GOTCHAS.md
 
 # Per-developer local helpers (machine-specific / convenience, not shipped).
 scripts/install-local.sh

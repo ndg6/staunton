@@ -47,6 +47,7 @@ docs
 scripts
 prompts
 CLAUDE.md
+GOTCHAS.md
 RELEASING.md
 .github
 .gitignore

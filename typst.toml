@@ -11,8 +11,9 @@ categories = ["visualization"]
 compiler = "0.14.2"
 
 # Files kept in the repo but NOT shipped in the published bundle. (`prompts`,
-# `CLAUDE.md`, and the non-shipped piece sets are also gitignored, so they are
-# absent from a clean checkout; they are listed here too as belt-and-suspenders.)
+# `CLAUDE.md`, `GOTCHAS.md` and the non-shipped piece sets are also gitignored, so
+# they are absent from a clean checkout; they are listed here too as
+# belt-and-suspenders -- one layer failing must not be enough to leak.)
 exclude = [
   "tests",
   "bench",
@@ -20,6 +21,7 @@ exclude = [
   "scripts",
   "prompts",
   "CLAUDE.md",
+  "GOTCHAS.md",
   "RELEASING.md",
   ".github",
   "src/assets/piece_sets/_incomplete",
