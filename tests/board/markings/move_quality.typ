@@ -10,7 +10,7 @@
 // in which colour) cannot be queried out of a rendered board — see
 // move_quality_render.typ + VISUAL_CHECKS for that half.
 #import "/lib.typ": (
-  parse-pgn, with-nags, board, diagram, position-after,
+  parse-pgn, with-nags, board, diagram, position-after, chess-kind,
   board-non-default-keys, board-style-keys,
   _origin-in, _apply-origin,
 )
@@ -101,9 +101,18 @@
 #assert.eq(_apply-origin((:), _origin-of(g, "2w"), false).at("move-quality-mark"),
   (square: "f3", symbol: "!!"), message: "the badge reaches the renderer's override dict")
 
-// Neither call errors on a provenanced position (the drawing itself is visual).
-#let _b = board(pos, move-quality: true, size: 2cm)
-#let _d = diagram(pos, move-quality: true, size: 2cm)
+// Both entry points accept a provenanced position. The badge DRAWING is visual,
+// but the structural difference between them is not: `diagram` must wrap its
+// board in a locatable chess figure and `board` must not. Asserting it here is
+// what stops move_quality_render.typ's side-by-side section from silently
+// comparing `board` with `board` -- which is how that section was first written,
+// with `caption: none, game-info: none` hiding every visible sign of the figure.
+// Exactly one chess figure below proves both halves at once: if `board` also
+// wrapped, this would be 2; if `diagram` stopped wrapping, 0.
+#board(pos, move-quality: true, size: 2cm)
+#diagram(pos, move-quality: true, size: 2cm)
+#context assert.eq(query(figure.where(kind: chess-kind)).len(), 1,
+  message: "diagram must wrap in a chess figure and board must not")
 
 // A position with NO history carries nothing, so neither entry point can badge it.
 #import "/src/fen.typ": parse-fen

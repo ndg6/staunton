@@ -68,8 +68,13 @@ Then open the PDFs below and check the noted property. (The expected-*fail* test
       sections. (1) **All six symbols** on `board`: `!` `!!` share one colour
       (good), `?` `??` a second (bad), `!?` `?!` a third (interesting); every
       disc sits on the SAME square (e4), top-right corner, on top of the piece.
-      (2) **`diagram` vs `board`** with `!!` — the two must look *identical*, not
-      merely similar; a difference means the figure path diverged again.
+      (2) **`diagram` vs `board`** with `!!` — the *board area* must be identical
+      (same disc, square, colour), while the right-hand side must be visibly a
+      **figure**: roster line above, numbered caption below. If both columns look
+      like bare boards, the section is comparing `board` with `board` and proves
+      nothing — which is how it was first written. (That the figure really is
+      produced is now also asserted in `move_quality.typ`, so this is a
+      look-the-same check, not a did-it-wrap check.)
       (3) **Switch off** — the same annotated move with no `move-quality`, which
       must show NO badge (a badge here means the opt-in leaks).
       Recolouring is NOT checked here — markings.typ already covers it. The

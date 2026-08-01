@@ -28,12 +28,26 @@ all on *e4*.
 
 = The same badge through `diagram`
 
-`diagram` adds only the figure wrapper — the badge must be identical to the
-`board` above it, not merely similar.
+Same position, both entry points. The *board area* must be identical — same `!!`
+disc, same square, same colour. Everything around it is what `diagram` adds and
+`board` does not: the roster line above, and a numbered, captioned figure below.
 
-#grid(columns: 2, gutter: 10pt,
-  board(at-e4("!!"), move-quality: true, size: 3cm),
-  diagram(at-e4("!!"), move-quality: true, size: 3cm, caption: none, game-info: none),
+The right-hand side must be visibly a *figure*. If it is not — if both columns
+look like bare boards — then this section is comparing `board` with `board` and
+proves nothing, which is exactly how it was first written (`caption: none,
+game-info: none` suppressed every visible sign of the diagram path).
+
+#grid(columns: 2, gutter: 14pt, align: top + center,
+  [
+    `board(..)` — no wrapper
+    #v(4pt)
+    #board(at-e4("!!"), move-quality: true, size: 3cm)
+  ],
+  [
+    `diagram(..)` — roster line + caption
+    #v(4pt)
+    #diagram(at-e4("!!"), move-quality: true, size: 3cm)
+  ],
 )
 
 = The switch, off
