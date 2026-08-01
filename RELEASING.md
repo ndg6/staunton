@@ -106,13 +106,20 @@ Universe PR, a README fix needs a new version, not a moved tag.
     DP=/c/temp/sw_setup/sw_apps/productivity/publishing/typst/typst_0_14/typst_0_14_2
     PATH="$DP:$PATH" bash -c 'typst --version; bash tests/run.sh --system-fonts'
     ```
-    Expect exactly `172/176`, with the same four understood, non-behavioral gaps: the two
-    HTML-export tests (`boards_inline_svg`, `tables_native` — impossible without
+    Compare the failing sheet **names**, not a pass total — the suite grows, so a
+    hard-coded total silently becomes a phantom blocker (this line read "expect
+    exactly `172/176`" until 2026-08-01, and was already about to be wrong at
+    177). Expect exactly these four understood, non-behavioral gaps and nothing
+    else: the two HTML-export tests (`boards_inline_svg` — HTML missing
+    `<image`; `tables_native` — HTML missing `</table>`; both impossible without
     `html.frame`, 0.15+ only) and two expected-fail fixtures whose asserted
-    *error wording* differs between compiler versions (`loader_outside_root`,
-    `bad_by`). Any *other* delta (a different count, a different failing test) is
-    a release blocker — it means something in `src/` now depends on a 0.15+
-    feature without being guarded, and the compiler floor claim is false.
+    *error wording* differs between compiler versions (`loader_outside_root` —
+    lacked "would escape the project root"; `bad_by` — lacked `must be "player"
+    or "team"`). All four *compile* fine under 0.14.2 and fail on an assertion,
+    so a bare `typst compile` will not reproduce them. A fifth failure, or any of
+    these four passing, is a release blocker — it means something in `src/` now
+    depends on a 0.15+ feature without being guarded, and the compiler floor
+    claim is false.
 1b. **Drift lint (optional but cheap).** `bash scripts/lint-docs.sh` (~5s) — catches
     what compiling cannot: dangling test references in `tests/*.md`, renamed-away
     API names in `README.md`'s code fences (README is in no compile gate and is the

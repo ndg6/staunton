@@ -111,9 +111,24 @@ luma rgb cmyk oklab oklch color gradient tiling stroke calc str int float bool
 array dict dictionary type repr panic assert eval read csv json yaml toml xml
 datetime duration symbol if else for while return break continue none auto
 true false"
+# Fence tracking must toggle ONLY on a real delimiter: a line that is nothing but
+# ``` plus an optional language tag. A bare /^```/ also fires on CONTENT, because
+# staunton's own README embeds Typst raw blocks inside its Typst samples, and one
+# of them closes with  ```).first()  -- a line that starts with backticks but is
+# code, not a fence. That flipped the in/out parity for the whole rest of the
+# file, so real code went unscanned (a planted `#chess-diagram` on the README's
+# headline example passed clean) while prose was scanned as code.
+#
+# Found by the machinery audit, 2026-08-01. To re-verify this check after any
+# change to it, plant the regression again and watch it fire:
+#   sed -i '0,/^#diagram-after(opera/s//#chess-diagram(opera/' README.md
+#   bash scripts/lint-docs.sh          # must report  UNKNOWN: #chess-diagram
+#   git checkout -- README.md
+# A check that cannot fail is indistinguishable from one that passes -- and this
+# one silently could not, for its entire life before that audit.
 check_readme() {
   [ -e README.md ] || return 0
-  awk '/^```/{f=!f; next} f' README.md \
+  awk '/^```[A-Za-z0-9_-]*[[:space:]]*$/{f=!f; next} f' README.md \
     | grep -oE '#[a-z][a-z0-9-]*' \
     | awk -v builtins="$TYPST_BUILTINS" -v libids="$(sed 's|//.*||' lib.typ | grep -oE '[A-Za-z_][A-Za-z0-9_-]*' | sort -u | tr '\n' ' ')" '
       BEGIN {

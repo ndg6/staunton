@@ -40,6 +40,15 @@ git archive --format=tar HEAD | tar -x -C "$DEST"
 
 # --- drop everything the published bundle must not contain -----------------
 # (the `exclude` globs from typst.toml, plus repo-only dotfiles)
+#
+# This list is intentionally LONGER than typst.toml's `exclude`, and the two are
+# not meant to match. The manifest is a public declaration, so it lists only
+# tracked paths -- naming an untracked file there implies a protection the entry
+# does not provide, since `git archive` cannot include it anyway. This list is
+# the operative step that actually builds the bundle, so it also names the
+# local-only files (prompts, CLAUDE.md, GOTCHAS.md): an `rm -rf` on a path that
+# is not there costs nothing, and it is what would still strip them if one were
+# ever committed by accident. Do not "reconcile" the two lists.
 EXCLUDE="
 tests
 bench
@@ -47,6 +56,7 @@ docs
 scripts
 prompts
 CLAUDE.md
+GOTCHAS.md
 RELEASING.md
 .github
 .gitignore
