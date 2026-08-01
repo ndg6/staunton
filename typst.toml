@@ -13,9 +13,9 @@ compiler = "0.14.2"
 # Files kept in the repo but NOT shipped in the published bundle.
 #
 # Only TRACKED paths belong here. `scripts/build-bundle.sh` builds from
-# `git archive HEAD`, so anything untracked (prompts/, CLAUDE.md, GOTCHAS.md,
-# the non-shipped piece sets) cannot reach the bundle by construction -- listing
-# it would be noise that implies a protection the entry is not providing.
+# `git archive HEAD`, so anything untracked cannot reach the bundle by
+# construction -- listing it would be noise that implies a protection the
+# entry is not providing.
 exclude = [
   "tests",
   "bench",
