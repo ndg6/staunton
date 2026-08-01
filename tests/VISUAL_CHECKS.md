@@ -167,14 +167,18 @@ Then open the PDFs below and check the noted property. (The expected-*fail* test
       highlight lands on the right square and layers correctly with custom pieces.)
 - [ ] `board/geometry/nonstandard_boards.pdf` — non-8×8 geometry looks sane.
 - [ ] `board/markings/markings.pdf` (check glow + move-quality badges) —
-      *In-check glow*: a **Lichess-style** red radial that fills most of the square
-      — solid near the centre and reaching the **edge midpoints**, with only the four
-      **corners** left showing the bare square color — sits **under** the king on
-      the checked square, which stays crisp **on top** (the glow must NOT vanish
-      under the piece). Present on both the Black-in-check and White-in-check boards; the
-      "default" board (no `check:`) shows **no** glow; the custom-color board glows
-      blue. The reference-play board (`3. Qh5#`) glows the Black king. The glow stays
-      roughly circular and does not bleed into neighbouring squares.
+      *In-check glow*: a **Lichess-style** red radial soft glow, strongest at the
+      centre and fading continuously outward, still fading as it crosses the
+      **edge midpoints** and reaching zero just **before the corners** (so the
+      corners stay bare, but there is no hard-edged "fills most of the square"
+      look) — sits **under** the king on the checked square, which stays crisp
+      **on top** (the glow must NOT vanish under the piece). Present on both the
+      Black-in-check and White-in-check boards; the "default" board (no `check:`)
+      shows **no** glow; the custom-color board glows blue. The reference-play
+      board (`3. Qh5#`) glows the Black king. The glow stays roughly circular and
+      does not bleed into neighbouring squares. (The gradient's stop structure is
+      asserted in `board/markings/check_gradient.typ`; this is purely the visual
+      shape/color check.)
       *Move-quality badge* (all now sourced from a game): the six glyphs read as
       discs on each move's destination square, at the **upper-right**, pulled toward
       the piece's square — good `!`/`!!` blue, bad `?`/`??` red, interesting `!?`/`?!`

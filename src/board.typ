@@ -368,20 +368,42 @@
   }
 }
 
-// In-check glow: a square-filling radial gradient, drawn UNDER the
-// piece so the king reads crisp on top and the glow radiates from beneath it —
-// the Lichess look. The gradient's default 50% radius is the circle inscribed in
-// the square (touching the four EDGE MIDPOINTS); the four corners fall outside it
-// and so keep the underlying square color. We hold the glow FULLY OPAQUE almost
-// to that edge, fading out only in the last sliver, so the color reaches the edge
-// midpoints and only the corners stay bare. The transparent stop reuses `color`'s
-// RGB at 0% alpha so the fade is hueless.
+// In-check glow: the gradient itself, as a PURE function of the glow color so the
+// suite can assert its stops — a rendered board is not queryable (CLAUDE.md §6).
+//
+// This reproduces Lichess's check highlight, whose CSS is
+//   radial-gradient(ellipse at center, rgba(255,0,0,1) 0%, rgba(231,0,0,1) 25%,
+//                   rgba(169,0,0,0) 89%, rgba(158,0,0,0) 100%)
+// Two things make that port faithful (both measured, prompt 50):
+//   * CSS's default extent is FARTHEST-CORNER, which in Typst's terms is
+//     radius sqrt(2)/2 = 70.71% — not the default 50% (the inscribed circle).
+//     So the glow is still fading as it crosses the edge midpoints and only
+//     reaches zero just short of the corners, which keeps the corners bare.
+//   * Lichess's stops DARKEN as they fade (255 -> 231 -> 169 -> 158). Those are
+//     scalings of ~0.91/0.66/0.62, i.e. `darken(9%/34%/38%)` — verified to land
+//     on 232/168/158, within 1/255 of the originals. Deriving them from `color`
+//     rather than hard-coding the reds is what keeps `check-color` meaningful:
+//     a blue check-color yields the same profile in blue.
+// The transparent stops keep `color`'s (darkened) RGB at 0% alpha so the fade
+// stays hueless. Typst requires the last stop at exactly 100%, so the fourth
+// stop is mandatory, not decorative.
+#let _check-gradient(color) = {
+  let clear-of(c) = { let k = rgb(c).components(); rgb(k.at(0), k.at(1), k.at(2), 0%) }
+  gradient.radial(
+    (color, 0%),
+    (color.darken(9%), 25%),
+    (clear-of(color.darken(34%)), 89%),
+    (clear-of(color.darken(38%)), 100%),
+    radius: 70.71%,
+  )
+}
+
+// Drawn UNDER the piece so the king reads crisp on top and the glow radiates
+// from beneath it.
 #let _draw-check(dx, dy, sq, color) = {
-  let c = rgb(color).components()
-  let clear = rgb(c.at(0), c.at(1), c.at(2), 0%)
   place(dx: dx, dy: dy, rect(
     width: sq, height: sq, stroke: none,
-    fill: gradient.radial((color, 0%), (color, 78%), (clear, 100%)),
+    fill: _check-gradient(color),
   ))
 }
 

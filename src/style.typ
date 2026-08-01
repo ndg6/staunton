@@ -166,7 +166,12 @@
   // by `board()` from the side-to-move's king for ANALYZABLE variants (standard
   // chess) and user-overridable; it stays `none` for fairy/bare positions.
   check: false,               // show the in-check glow
-  check-color: red,           // glow inner color (fades to its own transparent)
+  // The WHOLE gradient derives from this one color -- its mid stop is a darkened
+  // shade of it and the fade keeps its hue (see `_check-gradient` in board.typ),
+  // so a custom check-color yields the same profile in that color. Pure #ff0000,
+  // not Typst's named `red` (#ff4136, a coral): the profile is Lichess's and the
+  // hue is half of why it reads as Lichess.
+  check-color: rgb(255, 0, 0),
   check-square: none,         // square name to glow, or none (auto-filled)
   // Move-quality indicator. A small badge on the destination square
   // of the last move, colored by the move's assessment. `move-quality` gates it;
