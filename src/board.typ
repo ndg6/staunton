@@ -611,8 +611,10 @@
           place(rect(width: bw, height: bh, fill: none, stroke: st.border))
         }
         // move-quality badge: topmost, on the destination square's
-        // screen top-right corner. `move-quality-mark` is derived and injected by
-        // `diagram-after` only (badges are tied to a move; never a bare position).
+        // screen top-right corner. `move-quality-mark` is never passed in by a
+        // caller: it is derived from the drawn position's own game provenance
+        // (prompt 49), so `board` and `diagram` reach it alike. A position with
+        // no move behind it carries none and cannot be badged.
         if st.move-quality and st.move-quality-mark != none {
           let mq = st.move-quality-mark
           let p = parse-square(mq.square, cols: cols, rows: rows)

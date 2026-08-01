@@ -278,6 +278,12 @@
 /// not mutated). Handles captures, en passant, castling (rook too), promotion,
 /// castling-rights and en-passant-target updates, and the move clocks.
 ///
+/// This is the primitive behind #link(<games>)[`play`], and takes a concrete
+/// *move dict* rather than notation. Reach for `play` unless you already hold
+/// one — it parses SAN and applies a whole run of moves, which is what a
+/// document usually wants; `apply` is for when the move came from
+/// `legal-moves` and turning it back into text would be a pointless round trip.
+///
 /// - position (dictionary): the position to move from.
 /// - move (dictionary): a concrete move dict (e.g. from `san-to-move` or
 ///   `legal-moves`).

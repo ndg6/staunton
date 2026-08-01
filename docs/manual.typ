@@ -712,7 +712,7 @@ lines between the squares.
 )
 ```, stacked: true)
 
-== Move Markings
+== Move Markings<move-markings>
 
 Two optional markings annotate the *move* rather than arbitrary squares. Both are
 *off by default* and their colors are settable per call or via
@@ -729,10 +729,12 @@ destination square, carrying its assessment: `!` / `!!` (good, blue), `?` / `??`
 piece and spills slightly into the neighbours; recolor the categories with
 `move-quality-colors`.
 
-A badge is tied to a *move*, so it is only available when you draw *from a game*:
-`diagram-after` derives it from the addressed move itself and places it on that
-move's destination. (A bare `board` has no move, so it cannot carry
-a badge — setting `move-quality-mark` there is an error.) The assessment is read
+A badge is tied to a *move*, so it is only available when you draw a position
+that came *from a game* — one from `position-after`, which
+#link(<position-provenance>)[remembers its move] (`diagram-after` being the
+shorthand for exactly that). The badge lands on the move's destination square.
+A FEN or a hand-built position has no move, so it cannot carry a badge, and
+setting `move-quality-mark` yourself is an error. The assessment is read
 identically whether written as a literal `?!` suffix, a PGN NAG, or set with
 `with-nags`. Here the mate `4.Qxf7#` glows on the Black king and, tagged `!`
 programmatically, wears a good-move badge on `f7`:
@@ -1125,6 +1127,36 @@ for a position. So a tournament file read only for results and never tokenises m
 #diagram-after(game, "3w", size: 4cm)
 ```)
 
+=== A position remembers its move<position-provenance>
+
+`position-after(game, loc)` hands you the position at a locator — and that
+position *remembers the move it came from*. Drawing it with the ordinary
+`board` or `diagram` therefore reproduces everything that move knows:
+
+- the players and year, from the game's roster, as the info line;
+- the caption "Position after 24. Nf3";
+- the move's `%cal` / `%csl` #link(<pgn-annotations>)[drawing annotations]
+  (when the `annotations` switch is on);
+- its #link(<move-markings>)[move-quality badge].
+
+So `diagram-after(game, loc, ..)` is exactly the shorthand for
+`diagram(position-after(game, loc), ..)`, and there is deliberately *no*
+`board-after`: you simply write `board(position-after(game, loc))` and get the
+bare board, annotations and badge included.
+
+#example(```typ
+// identical output, two spellings
+#diagram-after(game, "3w", size: 3.4cm)
+#diagram(position-after(game, "3w"), size: 3.4cm)
+```)
+
+A position that has *no* such history — one from `parse-fen`, from a hand-built
+squares dict, or one you advanced yourself with the #link(<engine>)[engine]'s
+`apply` — is drawn plain. This is what keeps a move-quality badge honest: the badge is tied to a move, so it
+appears only on a position that demonstrably came from one, and `board` refuses
+a `move-quality-mark` you pass yourself (it could otherwise badge an empty
+square).
+
 == Locators
 
 A *locator* addresses one position in a game. The simple form is a string —
@@ -1363,7 +1395,7 @@ locator. Standard 8×8 positions round-trip exactly:
 For Chess960 positions `to-fen` emits *X-FEN* — a rook-file castling letter when
 `KQkq` would be ambiguous — and it writes en-passant targets strictly; see @chess960.
 
-== Drawing Annotations in PGNs
+== Drawing Annotations in PGNs<pgn-annotations>
 
 PGN comments can carry drawing annotations — `[%cal …]` for arrows, `[%csl …]`
 for highlights. Processing is *off by default*; opt in per call with
@@ -1460,7 +1492,7 @@ lossless; these only decide what is *processed*, and (except `bold-mainline`)
   align: (left, left),
   stroke: 0.5pt + rgb("#d9d9d2"),
   table.header([*key*], [*effect*]),
-  raw("annotations"), [`%cal`/`%csl` → arrows/highlights on `diagram-after`],
+  raw("annotations"), [`%cal`/`%csl` → arrows/highlights on any game-derived position],
   raw("nags"), [render NAGs (`Nf3!`, `d4⩲`) in `notation`],
   raw("comments"), [include comment prose in `notation`],
   raw("diagrams"), [embed a board in `notation` after each move marked for one],
@@ -1924,7 +1956,7 @@ setters reject them), though their *styling* options can.
   raw("check"), raw("false"), [in-check glow on the checked king (auto-located for standard positions)],
   [`check-color` / `check-square`], [red / `none`], [glow color; square to glow (`none` → auto-located)],
   raw("move-quality"), raw("false"), [move-quality badge on the last move's destination],
-  raw("move-quality-mark"), raw("none"), [`(square:, symbol:)`, symbol one of `! ? !! ?? !? ?!` — derived and set by `diagram-after` only; not a document default nor settable on a bare board _(per call only)_],
+  raw("move-quality-mark"), raw("none"), [`(square:, symbol:)`, symbol one of `! ? !! ?? !? ?!` — derived from the drawn position's own game history, never passed in; not a document default nor settable on a bare board],
   raw("move-quality-colors"), [blue / red / green], [`good` / `bad` / `interesting` badge backgrounds],
   raw("annotation-colors"), [G/R/Y/B/O map], [PGN `%cal`/`%csl` color-letter → color],
   raw("label-color"), raw("luma(90)"), [`"outside"`-mode strip label color],
@@ -2066,7 +2098,7 @@ you can lay it out yourself.
   ("/src/tournament.typ", "progress"),
 ))
 
-== Engine
+== Engine<engine>
 Generate and apply moves, or test for check — for puzzles, analysis, or
 conditional rendering. `move-to-san` names a move dict as canonical SAN (see
 #link(<naming-moves-san>)[Naming Moves as SAN]).

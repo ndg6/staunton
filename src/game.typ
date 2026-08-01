@@ -22,7 +22,7 @@
 #import "pgn.typ": movetext, _movetext-tree
 #import "chess960.typ": chess960-start-fen
 #import "coords.typ": square-name
-#import "annotations.typ": nag-symbol
+#import "annotations.typ": nag-symbol, interpret-comment
 
 // "30w" -> 59 ; "30b" -> 60
 #let _ply-of(loc) = {
@@ -119,13 +119,12 @@
   out
 }
 
-/// The position at a locator — handles the mainline and (nested) variations.
-///
-/// - game (dictionary): a parsed game (from `parse-pgn`).
-/// - locator (str, dictionary): a mainline `"30w"` / `"30b"`, or a variation path
-///   dict `(line: (..hops..), at: "<move>")`.
-/// -> dictionary
-#let position-after(game, locator) = {
+// The bare position at a locator — handles the mainline and (nested) variations.
+// This is the position WITHOUT provenance; the public `position-after` (defined
+// below, once the derivations it needs are in scope) is this plus `_origin`.
+// Callers that only want the squares — `to-fen`, and any internal replay — should
+// use this and skip building provenance they would immediately discard.
+#let _position-at(game, locator) = {
   let loc = if type(locator) == str { (line: (), at: locator) } else { locator }
 
   // Fast path: a pure mainline locator just indexes into the (memoised) mainline
@@ -292,6 +291,71 @@
   }
   if symbol == none { return none }
   (square: move-destination(game, locator), symbol: symbol)
+}
+
+// ---------------------------------------------------------------------------
+// Position provenance (prompt 49)
+//
+// A position returned by `position-after` remembers the move it came from. That
+// is what lets `board`/`diagram` draw the move's `%cal`/`%csl` annotations and
+// its move-quality badge WITHOUT being handed the game — and, more importantly,
+// what makes "this position really came from a game move" a checkable property
+// of the VALUE rather than of which function the caller happened to use. A badge
+// on a hand-built position stays impossible, because a hand-built position has
+// no `_origin`.
+//
+// The payload is deliberately FLAT and SMALL — derived data, never the game
+// itself. Embedding the game would make `repr(pos)` explode into the whole
+// movetext tree, which would wreck assert messages, panics and the line-based
+// `// EXPECT:` fixtures in tests/run.sh.
+//
+// `tags` rides along RAW rather than pre-interpreted into white/black/year: which
+// tags feed the info line, and how a Date becomes a year, are presentation
+// decisions that belong to lib.typ, not here.
+//
+// Underscore-prefixed because it is NOT public API: a documented `origin` would
+// invite hand-built positions carrying a forged one, reopening exactly the
+// category error this closes.
+#let _origin-of(game, locator) = {
+  // Ply 0 is the position BEFORE any move — a legitimate thing to address, and
+  // the one in-range locator with no move behind it. There is nothing to derive,
+  // so it gets no provenance rather than a panic out of `move-node` (which would
+  // report the misleading "past the end of its line"). Genuinely out-of-range
+  // locators still error, and with the right message: `_position-at` runs first
+  // and asserts on them before we get here.
+  let at = if type(locator) == str { locator } else { locator.at("at") }
+  if _ply-of(at) == 0 { return none }
+  let node = move-node(game, locator)
+  let anno = interpret-comment(node.at("comment-after", default: none))
+  (
+    locator: locator,
+    san: node.san,
+    quality: move-quality-mark(game, locator),
+    arrows: anno.arrows,
+    highlights: anno.highlights,
+    tags: game.at("tags", default: (:)),
+  )
+}
+
+/// The position at a locator — handles the mainline and (nested) variations.
+///
+/// The returned position also remembers the move it came from, so drawing it
+/// with `board` / `diagram` reproduces that move's `%cal` / `%csl` annotations
+/// and its move-quality badge. A position from `parse-fen`, `apply` or a
+/// hand-built dict carries no such history and is drawn plain.
+///
+/// - game (dictionary): a parsed game (from `parse-pgn`).
+/// - locator (str, dictionary): a mainline `"30w"` / `"30b"`, or a variation path
+///   dict `(line: (..hops..), at: "<move>")`.
+/// -> dictionary
+#let position-after(game, locator) = {
+  let pos = _position-at(game, locator)
+  // Attached to the RETURNED COPY only. `_position-at`'s mainline fast path
+  // indexes the memoised `_mainline-positions` array, which must stay pristine —
+  // so provenance costs one dict build per CALL, not one per move in the game.
+  let origin = _origin-of(game, locator)
+  if origin != none { pos.insert("_origin", origin) }
+  pos
 }
 
 // ===========================================================================

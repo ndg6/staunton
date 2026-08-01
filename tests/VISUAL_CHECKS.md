@@ -64,6 +64,24 @@ Then open the PDFs below and check the noted property. (The expected-*fail* test
         cut) rather than running around it. Veining that circles the frame
         reads as a soft vignette/glow rather than stone — that construction was
         tried and rejected.
+- [ ] `board/markings/move_quality_render.pdf` — the badge as drawn, four
+      sections. (1) **All six symbols** on `board`: `!` `!!` share one colour
+      (good), `?` `??` a second (bad), `!?` `?!` a third (interesting); every
+      disc sits on the SAME square (e4), top-right corner, on top of the piece.
+      (2) **`diagram` vs `board`** with `!!` — the *board area* must be identical
+      (same disc, square, colour), while the right-hand side must be visibly a
+      **figure**: roster line above, numbered caption below. If both columns look
+      like bare boards, the section is comparing `board` with `board` and proves
+      nothing — which is how it was first written. (That the figure really is
+      produced is now also asserted in `move_quality.typ`, so this is a
+      look-the-same check, not a did-it-wrap check.)
+      (3) **Switch off** — the same annotated move with no `move-quality`, which
+      must show NO badge (a badge here means the opt-in leaks).
+      Recolouring is NOT checked here — markings.typ already covers it. The
+      symbol → category pairing and the badge data are asserted in
+      `board/markings/move_quality.typ`; this is the colour and placement check
+      only.
+
 - [ ] `board/orientation/flip.pdf` — a1 in the correct corner both ways; labels
       flip with the board. Second section: the highlights (filled e4 / circle e5 /
       cross d5) stay on their named squares (mirrored screen position), and the
@@ -176,7 +194,8 @@ Then open the PDFs below and check the noted property. (The expected-*fail* test
       and the Unicode glyph fallback. Note the **highlight/arrow *styling*** sections:
       the fill/circle/cross colors and the teal arrow are set as *defaults*, while the
       `highlight:` / `arrows:` **list** is passed **per call** (it is per-call only).
-      The **move-quality** section uses `diagram-after` (not a bare board): with
+      The **move-quality** section uses `diagram-after` (i.e. a game-derived
+      position, not a bare board): with
       `move-quality: true` set as a default the badge is a red `??` disc on c6, then
       recolored fuchsia by `set-board-defaults(move-quality-colors: ..)`, then a `!`
       badge on f7 combined with the auto-located mate glow.
@@ -184,7 +203,18 @@ Then open the PDFs below and check the noted property. (The expected-*fail* test
 ## Diagrams, notation, tables
 
 - [ ] `notation/embed_diagrams.pdf` — boards are spliced at the markers; with
-      annotations on, each spliced board carries that move's arrows/highlights.
+      annotations on, each spliced board carries that move's arrows/highlights —
+      and **exactly once**: the green f1→c4 arrow and the red e5 highlight must
+      each appear a single time, not doubled. Spliced boards carry **no
+      "A – B" roster line** above them (`game-info: none`: the reader is already
+      inside this game's movetext).
+      The **last section only** (`move-quality` on) shows the prompt-49 badge: a
+      blue `!` disc on **f3**, from the literal `!` on `2. Nf3!`. It must be
+      absent from every earlier section — `move-quality` defaults OFF and
+      `notation` does not turn it on, so an embedded diagram is badge-free unless
+      the document asks for badges. (Both halves matter: a badge in the earlier
+      sections means the gate leaks; no badge in the last one means provenance is
+      not reaching the spliced board.)
 - [ ] `notation/notation.pdf` — figurines, localized piece letters, NAG glyphs,
       and `from`/`to` slices read correctly.
 - [ ] `pgn/realworld/two_knights_variations.pdf` — inline variations numbered
