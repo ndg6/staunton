@@ -191,6 +191,19 @@ export STAUNTON_IGNORE_FONTS=${STAUNTON_IGNORE_FONTS:-1}
 FOCUSED=0
 [ ${#FILTERS[@]} -gt 0 ] && FOCUSED=1
 
+# Record the effective font mode in the OUTPUT, not just in the shell that ran
+# it. The release preflight requires the gate to have used --system-fonts (the
+# default --ignore-system-fonts renders visual sheets with fallback fonts), and
+# release-auditor is handed only the captured log -- so without this line that
+# requirement is unverifiable from the evidence, and the auditor can do nothing
+# but take the orchestrator's word for it. (Found by the machinery audit,
+# 2026-08-01: the auditor correctly reported it could not confirm the flag.)
+if [ "$STAUNTON_IGNORE_FONTS" = "1" ]; then
+  printf 'fonts: --ignore-system-fonts (fast; NOT valid for the release gate)\n'
+else
+  printf 'fonts: --system-fonts (real fonts; release-gate mode)\n'
+fi
+
 pass=0
 fail=0
 compile_ms=0                 # summed compile time across all tests
