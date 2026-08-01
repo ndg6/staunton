@@ -189,8 +189,14 @@ Then open the PDFs below and check the noted property. (The expected-*fail* test
       and **exactly once**: the green f1→c4 arrow and the red e5 highlight must
       each appear a single time, not doubled. Spliced boards carry **no
       "A – B" roster line** above them (`game-info: none`: the reader is already
-      inside this game's movetext). Since prompt 49 a spliced board also shows the
-      move's **quality badge** when it has one.
+      inside this game's movetext).
+      The **last section only** (`move-quality` on) shows the prompt-49 badge: a
+      blue `!` disc on **f3**, from the literal `!` on `2. Nf3!`. It must be
+      absent from every earlier section — `move-quality` defaults OFF and
+      `notation` does not turn it on, so an embedded diagram is badge-free unless
+      the document asks for badges. (Both halves matter: a badge in the earlier
+      sections means the gate leaks; no badge in the last one means provenance is
+      not reaching the spliced board.)
 - [ ] `notation/notation.pdf` — figurines, localized piece letters, NAG glyphs,
       and `from`/`to` slices read correctly.
 - [ ] `pgn/realworld/two_knights_variations.pdf` — inline variations numbered
