@@ -718,10 +718,11 @@ Two optional markings annotate the *move* rather than arbitrary squares. Both ar
 *off by default* and their colors are settable per call or via
 `set-board-defaults`.
 
-`check: true` draws a radial glow (`check-color`, default red, fading to
-transparent) *under* the king that is in check. On a standard position the checked
-king is located automatically — you only flip the switch (see the combined example
-below).
+`check: true` draws a radial glow (`check-color`, default pure red, fading to
+transparent) *under* the king that is in check; the whole glow, including its
+darkening, derives from `check-color`, so setting it to another color reproduces
+the same glow in that color. On a standard position the checked king is located
+automatically — you only flip the switch (see the combined example below).
 
 `move-quality: true` draws a small disc near the *upper-right* of the last move's
 destination square, carrying its assessment: `!` / `!!` (good, blue), `?` / `??`
@@ -1954,7 +1955,7 @@ setters reject them), though their *styling* options can.
   [`arrow-color` / `arrow-transparency`], [green, `35%`], [default arrow color and its transparency],
   raw("arrow-width"), raw("auto"), [arrow shaft width; `auto` → 15% of the square (ratio / length accepted)],
   raw("check"), raw("false"), [in-check glow on the checked king (auto-located for standard positions)],
-  [`check-color` / `check-square`], [red / `none`], [glow color; square to glow (`none` → auto-located)],
+  [`check-color` / `check-square`], [pure red / `none`], [glow color; square to glow (`none` → auto-located)],
   raw("move-quality"), raw("false"), [move-quality badge on the last move's destination],
   raw("move-quality-mark"), raw("none"), [`(square:, symbol:)`, symbol one of `! ? !! ?? !? ?!` — derived from the drawn position's own game history, never passed in; not a document default nor settable on a bare board],
   raw("move-quality-colors"), [blue / red / green], [`good` / `bad` / `interesting` badge backgrounds],

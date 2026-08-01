@@ -10,7 +10,7 @@
 // defaults: both indicators OFF by default (prompt 27 requirement)
 #assert.eq(default-board-style.check, false)
 #assert.eq(default-board-style.move-quality, false)
-#assert.eq(default-board-style.check-color, red)
+#assert.eq(default-board-style.check-color, rgb(255, 0, 0))
 #assert.eq(default-board-style.check-square, none)
 #assert.eq(default-board-style.move-quality-mark, none)
 // per-category backgrounds present and settable
