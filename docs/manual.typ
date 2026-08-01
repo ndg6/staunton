@@ -1151,8 +1151,8 @@ bare board, annotations and badge included.
 ```)
 
 A position that has *no* such history — one from `parse-fen`, from a hand-built
-squares dict, or one you advanced yourself with `apply` — is drawn plain. This
-is what keeps a move-quality badge honest: the badge is tied to a move, so it
+squares dict, or one you advanced yourself with the #link(<engine>)[engine]'s
+`apply` — is drawn plain. This is what keeps a move-quality badge honest: the badge is tied to a move, so it
 appears only on a position that demonstrably came from one, and `board` refuses
 a `move-quality-mark` you pass yourself (it could otherwise badge an empty
 square).
@@ -2098,7 +2098,7 @@ you can lay it out yourself.
   ("/src/tournament.typ", "progress"),
 ))
 
-== Engine
+== Engine<engine>
 Generate and apply moves, or test for check — for puzzles, analysis, or
 conditional rendering. `move-to-san` names a move dict as canonical SAN (see
 #link(<naming-moves-san>)[Naming Moves as SAN]).
