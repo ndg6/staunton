@@ -44,7 +44,7 @@
 ```)
 
 // Everything exported from the package PLUS the demo bindings, as an eval scope.
-// Examples can therefore call `chess-diagram`, `board`, `parse-pgn`, ... and use
+// Examples can therefore call `diagram`, `board`, `parse-pgn`, ... and use
 // `game` / `games`, unqualified — just as a reader would.
 #let manual-scope = dictionary(staunton) + (game: demo-game, games: demo-games, frc: demo-frc)
 

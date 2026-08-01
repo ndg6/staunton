@@ -93,7 +93,7 @@
   // resolved style dict when no theme was ever set; harmless, since nothing
   // reads them.
   // `color-theme`: a built-in name (see `builtin-color-themes`) or a dict from
-  // `color-theme(..)` (light/dark only, for now).
+  // `color-theme(..)` (see `color-theme-keys` for the accepted fields).
   color-theme: none,
   // Square-fill pattern. `none` = flat fill (default, unchanged); "stripes" =
   // thin black diagonal stripes drawn as an overlay on DARK squares only (light
