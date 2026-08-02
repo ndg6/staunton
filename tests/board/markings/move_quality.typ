@@ -10,7 +10,7 @@
 // in which colour) cannot be queried out of a rendered board — see
 // move_quality_render.typ + VISUAL_CHECKS for that half.
 #import "/lib.typ": (
-  parse-pgn, with-nags, board, diagram, position-after, chess-kind,
+  game, position, with-nags, board, diagram, position-after, chess-kind,
   board-non-default-keys, board-style-keys,
   _origin-in, _apply-origin,
 )
@@ -30,23 +30,23 @@
 
 #for sym in SYMBOLS {
   // (a) a literal suffix glyph typed in the PGN text: "1. e4!!". Since the
-  // D2 fix, `parse-pgn` converts this to the equivalent quality NAG AT PARSE
+  // D2 fix, `game`/`games` convert this to the equivalent quality NAG AT PARSE
   // TIME (src/pgn.typ's `_split-quality-suffix`/`_finalize-quality-nag`), so
   // by the time `move-quality-mark` runs there is no SAN suffix left to see --
   // it reads the NAG, exactly like case (b) below. This case exists to prove
   // that the end-to-end result (source text -> badge symbol) is unaffected by
   // where the conversion happens, not to exercise a separate SAN-suffix path.
-  let lit = parse-pgn(head + "1. e4" + sym + " e5 *").first()
+  let lit = game(head + "1. e4" + sym + " e5 *")
   assert.eq(move-quality-mark(lit, "1w"), (square: "e4", symbol: sym),
     message: "literal suffix " + sym + " must yield that symbol on e4")
 
   // (b) PGN NAG in the movetext: "1. e4 $3"
-  let nag = parse-pgn(head + "1. e4 " + NAG-OF.at(sym) + " e5 *").first()
+  let nag = game(head + "1. e4 " + NAG-OF.at(sym) + " e5 *")
   assert.eq(move-quality-mark(nag, "1w"), (square: "e4", symbol: sym),
     message: NAG-OF.at(sym) + " must yield " + sym)
 
   // (c) programmatic, via with-nags
-  let prog = with-nags(parse-pgn(head + "1. e4 e5 *").first(), ("1w": sym))
+  let prog = with-nags(game(head + "1. e4 e5 *"), ("1w": sym))
   assert.eq(move-quality-mark(prog, "1w"), (square: "e4", symbol: sym),
     message: "with-nags " + sym + " must yield that symbol")
 }
@@ -63,23 +63,23 @@
 //    "!"), and silently picking the other one would relabel a blunder as
 //    brilliant.
 // ---------------------------------------------------------------------------
-#let both = parse-pgn(head + "1. e4! $2 e5 *").first()
+#let both = game(head + "1. e4! $2 e5 *")
 #assert.eq(move-quality-mark(both, "1w"), (square: "e4", symbol: "?"),
   message: "NAG must win over a literal suffix when a move carries both")
 
 // Agreeing sources are simply consistent.
-#let agree = parse-pgn(head + "1. e4! $1 e5 *").first()
+#let agree = game(head + "1. e4! $1 e5 *")
 #assert.eq(move-quality-mark(agree, "1w").symbol, "!")
 
 // Several quality NAGs on one move: the FIRST wins ($3 = "!!" before $1 = "!").
-#let gm = parse-pgn(head + "1. e4 $3 $1 e5 *").first()
+#let gm = game(head + "1. e4 $3 $1 e5 *")
 #assert.eq(move-quality-mark(gm, "1w").symbol, "!!")
 
 // Absence, and the near-miss: a move with no annotation at all, and one carrying
 // a NON-quality NAG ($14 = "⩲", a position evaluation). Neither is a badge —
 // evaluating a position is not grading the move that reached it.
-#assert.eq(move-quality-mark(parse-pgn(head + "1. e4 e5 *").first(), "1w"), none)
-#let ge = parse-pgn(head + "1. e4 $14 e5 *").first()
+#assert.eq(move-quality-mark(game(head + "1. e4 e5 *"), "1w"), none)
+#let ge = game(head + "1. e4 $14 e5 *")
 #assert.eq(move-quality-mark(ge, "1w"), none,
   message: "a non-quality NAG must not produce a badge")
 
@@ -102,7 +102,7 @@
 //    `diagram` are fed identically — `diagram` adds only the figure wrapper. This
 //    is the assertion that would fail if the badge ever became figure-only again.
 // ---------------------------------------------------------------------------
-#let g = parse-pgn(head + "1. e4 e5 2. Nf3!! Nc6 *").first()
+#let g = game(head + "1. e4 e5 2. Nf3!! Nc6 *")
 #let pos = position-after(g, "2w")
 #assert.eq(_origin-in(pos).quality, (square: "f3", symbol: "!!"),
   message: "a game-derived position carries the badge data")
@@ -125,8 +125,7 @@
   message: "diagram must wrap in a chess figure and board must not")
 
 // A position with NO history carries nothing, so neither entry point can badge it.
-#import "/src/fen.typ": parse-fen
-#assert.eq(_origin-in(parse-fen("4k3/8/8/8/8/8/8/4K3 w - - 0 1")), none)
+#assert.eq(_origin-in(position("4k3/8/8/8/8/8/8/4K3 w - - 0 1")), none)
 
 // ---------------------------------------------------------------------------
 // 5. The `move-quality` switch is an ordinary style option; the MARK is not.

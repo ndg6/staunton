@@ -2,17 +2,17 @@
 // [FEN <X-FEN start>] is recognised as chess960, starts from the FEN tag, and
 // replays through the shared engine (incl. Chess960 castling). The parsed-game
 // replay must agree with play applied to the same start + SAN list.
-#import "/lib.typ": parse-pgn, game-variant, game-start, position-after, to-fen, play, board, diagram
+#import "/lib.typ": game, game-variant, game-start, position-after, to-fen, play, board, diagram
 
 #set page(width: auto, height: auto, margin: 1cm)
 #set text(font: "Libertinus Serif", size: 9pt)
 
 // Chess960 start: king on f, rooks on b/h (knights on a/g, bishops on c/d).
 #let start960 = "nrbbqknr/pppppppp/8/8/8/8/PPPPPPPP/NRBBQKNR w KQkq - 0 1"
-#let g = parse-pgn(
+#let g = game(
   "[Variant \"Fischerrandom\"][SetUp \"1\"][FEN \"" + start960 + "\"]\n" +
   "1. Nf3 Nf6 2. O-O O-O *"
-).first()
+)
 
 // --- recognition + start position ---
 #assert(game-variant(g) == "chess960", message: "variant: " + game-variant(g))

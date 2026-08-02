@@ -4,7 +4,7 @@
 //
 // Covers, in order: all six symbols and their three colour categories; the same
 // badge through `board` and through `diagram`; and the `move-quality` switch off.
-#import "/lib.typ": parse-pgn, with-nags, board, diagram, position-after
+#import "/lib.typ": game, with-nags, board, diagram, position-after
 
 #set page(width: 17cm, height: auto, margin: 1cm)
 #set text(font: "Libertinus Serif", size: 9pt)
@@ -12,7 +12,7 @@
 #let head = "[White \"a\"][Black \"b\"] "
 // One move, annotated six ways. e4 is the destination in every case, so the badge
 // must land on the SAME square each time and only the glyph/colour changes.
-#let at-e4(sym) = position-after(with-nags(parse-pgn(head + "1. e4 e5 *").first(), ("1w": sym)), "1w")
+#let at-e4(sym) = position-after(with-nags(game(head + "1. e4 e5 *"), ("1w": sym)), "1w")
 
 = All six symbols (`board`, `move-quality: true`)
 

@@ -18,22 +18,22 @@
 // Claude owns the asserts (the settable / rejected key contract + the derived
 // mark); the user eyeballs the rendered options — see tests/VISUAL_CHECKS.md.
 #import "/lib.typ": (
-  board, diagram-after, parse-pgn, to-fen, with-nags,
+  board, diagram-after, game, to-fen, with-nags,
   set-board-defaults, default-board-style, board-style-keys, board-non-default-keys,
 )
 #import "/src/game.typ": move-quality-mark
 
 // --- the NAG-annotated game (literal quality suffixes) ---------------------
 // 1.e4! e5? 2.Nf3!! Nc6?? ...  — a badge sits on each graded move's destination.
-#let game = parse-pgn("1. e4! e5? 2. Nf3!! Nc6?? 3. Bb5!? a6?!").first()
+#let g = game("1. e4! e5? 2. Nf3!! Nc6?? 3. Bb5!? a6?!")
 // A separate line whose mate leaves the Black king in check (for `check:`), with a
 // programmatic `!` on the mating move so it also carries a good-move badge.
 #let mate = with-nags(
-  parse-pgn("1. e4 e5 2. Qh5 Nc6 3. Bc4 Nf6?? 4. Qxf7# 1-0").first(),
+  game("1. e4 e5 2. Qh5 Nc6 3. Bc4 Nf6?? 4. Qxf7# 1-0"),
   ("4w": "!"),
 )
 
-#let main-fen  = to-fen(game, locator: "2b")   // open position after 2...Nc6??
+#let main-fen  = to-fen(g, locator: "2b")   // open position after 2...Nc6??
 #let mate-fen  = to-fen(mate, locator: "4w")    // 4.Qxf7#  — Black king in check
 
 // --- machine-checkable contract --------------------------------------------
@@ -63,7 +63,7 @@
   assert(not board-non-default-keys.contains(k), message: "should be per-call: " + k)
 }
 // The badge marks are derived from the game, not hand-fed.
-#assert.eq(move-quality-mark(game, "2b"), (square: "c6", symbol: "??"))
+#assert.eq(move-quality-mark(g, "2b"), (square: "c6", symbol: "??"))
 #assert.eq(move-quality-mark(mate, "4w"), (square: "f7", symbol: "!"))
 
 #set page(width: 15cm, height: auto, margin: 1.2cm)
@@ -211,11 +211,11 @@ the badge's *mark* is move-specific, so `move-quality-mark` is *not* a default �
 #set-board-defaults(..base)
 #set-board-defaults(move-quality: true)
 Default badge colors, from the game — red `??` on c6 (`2...Nc6??`):
-#diagram-after(game, "2b", caption: none, game-info: none, size: 3cm)
+#diagram-after(g, "2b", caption: none, game-info: none, size: 3cm)
 
 #set-board-defaults(move-quality-colors: (good: navy, bad: fuchsia, interesting: olive))
 After `set-board-defaults(move-quality-colors: (bad: fuchsia, ..))` — same board, fuchsia disc:
-#diagram-after(game, "2b", caption: none, game-info: none, size: 3cm)
+#diagram-after(g, "2b", caption: none, game-info: none, size: 3cm)
 
 Combined with the glow, on the mate — a `!` badge on f7 and the auto-located king glow:
 #set-board-defaults(..base)

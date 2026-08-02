@@ -6,7 +6,7 @@
 //
 // Compile with the package root:  typst compile --root . examples/showcase.typ
 #import "/lib.typ": (
-  parse-pgn, diagram-after, board, diagram, diagram-outline,
+  game, games, diagram-after, board, diagram, diagram-outline,
   mainline, game-result, position-after, play, set-chess-defaults, starting-fen,
   color-theme, standings-table,
 )
@@ -24,18 +24,18 @@
 // --- synthetic games (inline; legal textbook lines, fictional players) ---
 
 // A complete Giuoco Piano (~29 plies), used for most of the position diagrams.
-#let g-main = parse-pgn(```
+#let g-main = game(```
 [White "Alice"] [Black "Bob"] [Event "Synthetic Open"] [Result "1/2-1/2"]
 1. e4 e5 2. Nf3 Nc6 3. Bc4 Bc5 4. c3 Nf6 5. d4 exd4 6. cxd4 Bb4+
 7. Bd2 Bxd2+ 8. Nbxd2 d5 9. exd5 Nxd5 10. Qb3 Nce7 11. O-O O-O
 12. Rfe1 c6 13. a4 Qb6 14. Qxb6 Nxb6 15. Bb3 1/2-1/2
-```).first()
+```)
 
 // A 7-ply miniature ("Scholar's mate") - short, decisive, ends in checkmate.
-#let g-mate = parse-pgn(```
+#let g-mate = game(```
 [White "Carol"] [Black "Dan"] [Event "Synthetic Blitz"] [Result "1-0"]
 1. e4 e5 2. Bc4 Bc5 3. Qh5 Nf6 4. Qxf7# 1-0
-```).first()
+```)
 
 // Locator for the final mainline position of a game (move number + side).
 #let final-locator(game) = {
@@ -126,10 +126,10 @@ Explicit arrows (tuple / dict forms), square highlights, and the optional grid:
 
 PGN `{[%cal …]}` / `{[%csl …]}` annotations are picked up automatically:
 
-#let annotated = parse-pgn(```
+#let annotated = game(```
 [White "Demo"] [Black "Annotations"]
 1. e4 e5 2. Nf3 {[%cal Gf3e5,Bf1c4] [%csl Re5]} Nc6 *
-```).first()
+```)
 #diagram-after(annotated, "2w", size: 6cm)
 
 = Document-wide styling
@@ -161,7 +161,7 @@ here, but equally valid as document-wide defaults through `set-board-defaults`.
 
 = Tournament-table styling  (zebra rows, winner highlighting, and more)
 
-#let mini = parse-pgn(```
+#let mini = games(```
 [White "Alice"][Black "Bob"][Result "1-0"][Round "1"]
 1. e4 e5 2. Nf3 Nc6 3. Bb5 1-0
 [White "Carol"][Black "Dan"][Result "0-1"][Round "1"]

@@ -10,13 +10,13 @@
 // captured values — so `_origin-of` / `_origin-in` / `_apply-origin` are the only
 // seams where this behaviour is machine-checkable. The visible result is eyeballed
 // via board/markings and notation/embed_diagrams (VISUAL_CHECKS).
-#import "/lib.typ": parse-pgn, parse-fen, with-nags, apply, legal-moves, diagram, _origin-in, _apply-origin
+#import "/lib.typ": game, position, with-nags, apply, legal-moves, diagram, _origin-in, _apply-origin
 #import "/src/game.typ": position-after, _position-at, _origin-of
 
-#let g = parse-pgn(```
+#let g = game(```
 [White "Morphy"] [Black "Allies"] [Date "1858.11.02"]
 1. e4 e5 2. Nf3! {[%cal Gf3e5,Bf1c4] [%csl Re5]} Nc6 3. Bb5?? a6 *
-```).first()
+```)
 
 // ---- _origin-of: the derived payload ---------------------------------------
 #let o = _origin-of(g, "2w")
@@ -45,7 +45,7 @@
 // ---- who carries provenance, and who must not ------------------------------
 #assert("_origin" in position-after(g, "2w"), message: "position-after attaches it")
 #assert("_origin" not in _position-at(g, "2w"), message: "the internal lookup stays plain")
-#assert("_origin" not in parse-fen("4k3/8/8/8/8/8/8/4K3 w - - 0 1"), message: "a FEN has no history")
+#assert("_origin" not in position("4k3/8/8/8/8/8/8/4K3 w - - 0 1"), message: "a FEN has no history")
 
 // `apply` rebuilds the position dict from a literal, so provenance does not ride
 // along — a position the user advanced themselves has no move to badge. This is
@@ -117,6 +117,6 @@
 // `locator`/`san` for the caption) are read OUTSIDE the merge, so a dict that
 // satisfied only the merge used to pass the guard and then die downstream on a
 // missing key. This must render a plain board — nothing here needs eyeballing.
-#let forged = parse-fen("4k3/8/8/8/8/8/8/4K3 w - - 0 1")
+#let forged = position("4k3/8/8/8/8/8/8/4K3 w - - 0 1")
 #let forged = { let f = forged; f.insert("_origin", (arrows: (), highlights: (), quality: none)); f }
 #diagram(forged, size: 2cm)

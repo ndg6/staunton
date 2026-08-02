@@ -16,14 +16,14 @@ Install the package, parse a PGN, and drop a captioned diagram of any position �
 the players, the year, and the move just played are filled in automatically:
 
 ```typ
-#import "@preview/staunton:1.1.0": parse-pgn, diagram-after, notation, standings-table
+#import "@preview/staunton:1.1.0": game, diagram-after, notation, standings-table
 
-#let opera = parse-pgn(```
+#let opera = game(```
 [White "Morphy"] [Black "Allies"] [Date "1858"]
 1. e4 e5 2. Nf3 d6 3. d4 Bg4 4. dxe5 Bxf3 5. Qxf3 dxe5 6. Bc4 Nf6 7. Qb3 Qe7
 8. Nc3 c6 9. Bg5 b5 10. Nxb5 cxb5 11. Bxb5+ Nbd7 12. O-O-O Rd8 13. Rxd7 Rxd7
 14. Rd1 Qe6 15. Bxd7+ Nxd7 16. Qb8+ Nxb8 17. Rd8# 1-0
-```).first()
+```)
 
 // The final position: roster → info line, last move → caption, check → king glow.
 #diagram-after(opera, "17w", check: true)
@@ -37,7 +37,7 @@ Numbered movetext with figurine glyphs, inline **variations**, NAGs and comments
 localized to the document language — output no board-only package produces:
 
 ```typ
-#let g = parse-pgn("1. e4 e5 2. Nf3 Nc6 3. Bb5 a6 4. Ba4 Nf6 5. O-O Be7 (5... Nxe4!? 6. d4 b5) 6. Re1 b5 7. Bb3 d6 *").first()
+#let g = game("1. e4 e5 2. Nf3 Nc6 3. Bb5 a6 4. Ba4 Nf6 5. O-O Be7 (5... Nxe4!? 6. d4 b5) 6. Re1 b5 7. Bb3 d6 *")
 
 #notation(g, figurine: true, variations: true, nags: true)
 ```
@@ -50,7 +50,7 @@ Standings, cross-tables and progress tables straight from the games' result tags
 with Buchholz / Sonneborn-Berger tie-breaks:
 
 ```typ
-#let games = parse-pgn(```
+#let gs = games(```
 [White "Carlsen"][Black "Nakamura"][Result "1-0"][Round "1"] 1-0
 [White "Caruana"][Black "Nepomniachtchi"][Result "1/2-1/2"][Round "1"] 1/2-1/2
 [White "Carlsen"][Black "Caruana"][Result "1/2-1/2"][Round "2"] 1/2-1/2
@@ -59,7 +59,7 @@ with Buchholz / Sonneborn-Berger tie-breaks:
 [White "Nakamura"][Black "Caruana"][Result "0-1"][Round "3"] 0-1
 ```)
 
-#standings-table(games, caption: [Final standings])
+#standings-table(gs, caption: [Final standings])
 ```
 
 ![A final-standings table: rank, player, played, +/=/−, points, Buchholz and Sonneborn-Berger tie-breaks](https://raw.githubusercontent.com/ndg6/staunton/v1.1.0/docs/img/showcase-table.png)
@@ -70,7 +70,7 @@ with Buchholz / Sonneborn-Berger tie-breaks:
 and a `!` / `?` grade becomes a move-quality badge — composited onto the board:
 
 ```typ
-#let g = parse-pgn("1. e4 e5 2. Nf3! {[%cal Gf3e5,Rf1c4][%csl Ge5]} Nc6 *").first()
+#let g = game("1. e4 e5 2. Nf3! {[%cal Gf3e5,Rf1c4][%csl Ge5]} Nc6 *")
 
 #diagram-after(g, "2w", annotations: true, move-quality: true)
 ```
@@ -175,8 +175,8 @@ typst compile --root . docs/examples/showcase.typ showcase.pdf
 | area | entry points |
 |---|---|
 | diagrams | `diagram`, `board` |
-| positions | `position`, `parse-fen`, `to-fen`, `starting-fen`, `chess960-start`, `chess960-start-fen` |
-| games (PGN) | `parse-pgn`, `movetext`, `mainline`, `diagram-after`, `position-after`, `play`, `game-start`, `game-variant` |
+| positions | `position`, `to-fen`, `starting-fen`, `chess960-start-fen` |
+| games (PGN) | `game`, `games`, `movetext`, `mainline`, `diagram-after`, `position-after`, `play`, `game-start`, `game-variant` |
 | annotate / build | `with-nags`, `with-comments`, `with-variation` |
 | notation | `notation` |
 | tables | `standings-table`, `crosstable-table`, `progress-table`, `games-by-event` (+ compute: `standings`, `crosstable`, `progress`) |

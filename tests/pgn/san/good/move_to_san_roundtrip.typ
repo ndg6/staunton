@@ -8,7 +8,7 @@
 // (captures, a king-side castle) and the Chess960 Scharnagl game (castling with
 // a non-h1 rook, the Chess960-safe path). Not every realworld/*.pgn fixture is
 // replayed -- these two already exercise captures, castling and both variants.
-#import "/lib.typ": parse-pgn, mainline, game-start, apply, move-to-san
+#import "/lib.typ": game, mainline, game-start, apply, move-to-san
 #import "/src/san.typ": san-to-move
 
 #set page(width: auto, height: auto, margin: 1cm)
@@ -31,7 +31,7 @@
 
 // -- standard game: Italian / Two Knights (32 plies, mainline only; captures,
 // a king-side castle) --
-#let g = parse-pgn(read("/tests/pgn/realworld/italian_two_knights.pgn")).first()
+#let g = game(read("/tests/pgn/realworld/italian_two_knights.pgn"))
 #assert(mainline(g).len() == 32, message: "mainline: 16 full moves (32 plies)")
 #check-roundtrip(g, "italian_two_knights")
 
@@ -45,7 +45,7 @@
 1. h4 g6 2. g3 Bf6 3. a4 Qh6 4. Ra3 Bxh4 5. gxh4 Qxh4 6. Qh3 Qxh3 7. Rxh3 Ne6
 8. Bf3 d6 9. Nbc3 Ng5 10. Rhh1 Bf5 11. O-O *
 ```
-#let g960 = parse-pgn(pgn960).first()
+#let g960 = game(pgn960)
 #assert(mainline(g960).len() == 21, message: "chess960 mainline plies")
 #check-roundtrip(g960, "scharnagl_chess960")
 

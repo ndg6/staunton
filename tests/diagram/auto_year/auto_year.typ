@@ -10,9 +10,9 @@
 //
 // Prompt 49: `_year-of` takes the raw TAGS dict, not a game — the year is derived
 // from provenance now, and provenance carries tags rather than the game.
-#import "/lib.typ": parse-pgn, _year-of
+#import "/lib.typ": game, _year-of
 
-#let mk(tags) = parse-pgn(tags + "\n1. e4 *").first().tags
+#let mk(tags) = game(tags + "\n1. e4 *").tags
 
 // known from roster -> the year
 #assert.eq(_year-of(mk("[White \"Morphy\"][Black \"Allies\"][Date \"1858.11.02\"]")), "1858", message: "full Date -> year")

@@ -20,14 +20,14 @@
 See @ruy for the position.
 
 == 3. Notation
-#let game = parse-pgn("1. e4 e5 2. Nf3 Nc6 3. Bb5 a6 *").first()
-#notation(game)
+#let g = game("1. e4 e5 2. Nf3 Nc6 3. Bb5 a6 *")
+#notation(g)
 
 == 4. Diagram at a locator
-#diagram-after(game, "3w", size: 4cm)
+#diagram-after(g, "3w", size: 4cm)
 
 == 5. Standings table
-#let rr = parse-pgn(```
+#let rr = games(```
 [White "A"][Black "B"][Result "1-0"] 1-0
 [White "A"][Black "C"][Result "1-0"] 1-0
 [White "B"][Black "C"][Result "1-0"] 1-0

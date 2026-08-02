@@ -2,13 +2,13 @@
 // game, a move-text string, or a SAN array. Figurines, language-aware piece
 // letters (auto follows #set text(lang:)), from/to ranges, and NAG
 // and comment rendering gated by the pgn-handling bucket.
-#import "/lib.typ": parse-pgn, notation, set-pgn-defaults
+#import "/lib.typ": game, notation, set-pgn-defaults
 
 #set page(width: auto, height: auto, margin: 1cm)
 #set text(font: "Libertinus Serif", size: 10pt)
 
-#let g = parse-pgn("[White \"A\"][Black \"B\"][Result \"1-0\"]
-1. e4 e5 2. Nf3 Nc6 3. Bb5 a6 4. Ba4 Nf6 5. O-O 1-0").first()
+#let g = game("[White \"A\"][Black \"B\"][Result \"1-0\"]
+1. e4 e5 2. Nf3 Nc6 3. Bb5 a6 4. Ba4 Nf6 5. O-O 1-0")
 
 // String-returning fast path: lang AND nags/comments/diagrams must be explicit
 // (their `auto`/auto-value defaults consult the document buckets -> content).
@@ -63,7 +63,7 @@
 #assert(s("d8=Q", lang: "de") == "1. d8=D", message: "promotion localized")
 
 // --- NAGs and comments (opt-in) ---
-#let gn = parse-pgn("[White \"A\"][Black \"B\"] 1. e4 $1 e5 $6 2. Nf3 {develops the knight} Nc6 *").first()
+#let gn = game("[White \"A\"][Black \"B\"] 1. e4 $1 e5 $6 2. Nf3 {develops the knight} Nc6 *")
 // default off: plain movetext, no NAG glyphs, no prose
 #assert(s(gn) == "1. e4 e5 2. Nf3 Nc6", message: "nags/comments off")
 // nags on: $1 -> "!", $6 -> "?!"

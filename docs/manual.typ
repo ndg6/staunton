@@ -368,7 +368,7 @@ still the tournament standard.
 
 `board(source, ..)` draws *just the board* — no caption, no figure — and is the
 primary building block every diagram builds on. `source` is one of: a *FEN string*; a
-*position* (from `position(..)` or `parse-fen(..)`); or a bare *squares* dict
+*position* (from `position(..)`); or a bare *squares* dict
 (square name → `(kind, color)`).
 
 #example(```typ
@@ -779,9 +779,9 @@ identically whether written as a literal `?!` suffix, a PGN NAG, or set with
 programmatically, wears a good-move badge on `f7`:
 
 #example(```typ
-#let g = parse-pgn(
+#let g = game(
   "1. e4 e5 2. Qh5 Nc6 3. Bc4 Nf6?? 4. Qxf7# 1-0",
-).first()
+)
 #diagram-after(
   with-nags(g, ("4w": "!")), "4w",
   check: true, move-quality: true, size: 4cm,
@@ -1122,7 +1122,7 @@ that aren't a valid piece abbreviation or `.`:
 )
 ````)
 
-`position` and `parse-fen` both return a dict of the same shape:
+`position` returns a dict of the same shape:
 
 ```
 (variant, cols, rows, squares, turn, castling, en-passant, halfmove, fullmove)
@@ -1146,29 +1146,29 @@ them unchanged.
 The `parse-pgn` function returns an *array of games*; `.first()` takes the first one. Read an external file with `read` in your own file, or pass an inline raw block. The examples below assume an already parsed game is in scope:
 
 ```typ
-#let game = parse-pgn(read("game.pgn")).first()
+#let g = game(read("game.pgn"))
 ```
 
 Parsing is *lazy*: the roster (`tags`), the `result`, and the verbatim
 `movetext-raw` are extracted cheaply; the move tree is built on demand by
-`movetext(game)`; the move parser / generator engine runs only when you ask
+`movetext(g)`; the move parser / generator engine runs only when you ask
 for a position. So a tournament file read only for results and never tokenises movetext.
 
-`notation(game)` renders the moves (as text) the game already holds, and
-`diagram-after(game, loc)` renders a *diagram* (a referenceable `#figure`, like
+`notation(g)` renders the moves (as text) the game already holds, and
+`diagram-after(g, loc)` renders a *diagram* (a referenceable `#figure`, like
 `diagram`) of the position at a locator:
 
 #example(```typ
-#notation(game)
+#notation(g)
 ```, stacked: true)
 
 #example(```typ
-#diagram-after(game, "3w", size: 4cm)
+#diagram-after(g, "3w", size: 4cm)
 ```)
 
 === A position remembers its move<position-provenance>
 
-`position-after(game, loc)` hands you the position at a locator — and that
+`position-after(g, loc)` hands you the position at a locator — and that
 position *remembers the move it came from*. Drawing it with the ordinary
 `board` or `diagram` therefore reproduces everything that move knows:
 
@@ -1178,18 +1178,18 @@ position *remembers the move it came from*. Drawing it with the ordinary
   (when the `annotations` switch is on);
 - its #link(<move-markings>)[move-quality badge].
 
-So `diagram-after(game, loc, ..)` is exactly the shorthand for
-`diagram(position-after(game, loc), ..)`, and there is deliberately *no*
-`board-after`: you simply write `board(position-after(game, loc))` and get the
+So `diagram-after(g, loc, ..)` is exactly the shorthand for
+`diagram(position-after(g, loc), ..)`, and there is deliberately *no*
+`board-after`: you simply write `board(position-after(g, loc))` and get the
 bare board, annotations and badge included.
 
 #example(```typ
 // identical output, two spellings
-#diagram-after(game, "3w", size: 3.4cm)
-#diagram(position-after(game, "3w"), size: 3.4cm)
+#diagram-after(g, "3w", size: 3.4cm)
+#diagram(position-after(g, "3w"), size: 3.4cm)
 ```)
 
-A position that has *no* such history — one from `parse-fen`, from a hand-built
+A position that has *no* such history — one from `position`, from a hand-built
 squares dict, or one you advanced yourself with the #link(<engine>)[engine]'s
 `apply` — is drawn plain. This is what keeps a move-quality badge honest: the badge is tied to a move, so it
 appears only on a position that demonstrably came from one, and `board` refuses
@@ -1200,8 +1200,8 @@ square).
 
 A *locator* addresses one position in a game. The simple form is a string —
 `"30w"` / `"30b"`, the position after White's / Black's 30th *mainline* move.
-`position-after(game, loc)`, `diagram-after(game, loc, ..)`, and
-`to-fen(game, locator: ..)` all take this simple string form.
+`position-after(g, loc)`, `diagram-after(g, loc, ..)`, and
+`to-fen(g, locator: ..)` all take this simple string form.
 
 To address a move *inside a variation* (a PGN 'Recursive Annotation Variantion' or RAV), pass a *path* dict instead:
 `(line: (..hops..), at: "<final move>")`. Each hop is `(at: "<move>", into: <n>)`
@@ -1210,9 +1210,9 @@ number `n` (*0-based*: `0` is the first variation recorded at that move, `1` the
 second, …). The top-level `at` is where you stop within the line you reached:
 
 #example(```typ
-#let g = parse-pgn(
+#let g = game(
   "[White \"V\"][Black \"T\"] 1. e4 (1. d4 d5 2. c4) e5 *",
-).first()
+)
 // into variation 0 at White's move 1 (the
 // 1.d4 line), position after 2.c4:
 #diagram-after(
@@ -1287,11 +1287,11 @@ game, a move-text string, or a SAN array; it localises the piece letters and
 renders figurine glyphs:
 
 #example(```typ
-#notation(game, lang: "de")
+#notation(g, lang: "de")
 ```, stacked: true)
 
 #example(```typ
-#notation(game, figurine: true)
+#notation(g, figurine: true)
 ```, stacked: true)
 
 `from` / `to` restrict output to an *inclusive* slice of moves. Both are the
@@ -1299,7 +1299,7 @@ simple `"8b"` / `"12w"` locators; `from` defaults to the first move, `to` to the
 last:
 
 #example(```typ
-#notation(game, from: "2w", to: "3b")
+#notation(g, from: "2w", to: "3b")
 ```, stacked: true)
 
 `from` / `to` bound a slice of the *mainline*: they are the simple `"8b"` /
@@ -1323,9 +1323,9 @@ mainline move re-shows its number:
 
 #example(```typ
 #notation(
-  parse-pgn(
+  game(
     "1. e4 e5 2. Nf3 Nc6 3. Bb5 (3. Bc4 Bc5) a6 *",
-  ).first(),
+  ),
   variations: true,
 )
 ```, stacked: true)
@@ -1338,9 +1338,9 @@ layout:
 
 #example(```typ
 #notation(
-  parse-pgn(
+  game(
     "1. e4 (1. d4 d5 (1... Nf6 2. c4)) e5 *",
-  ).first(),
+  ),
   variations: true,
   variation-style: "block",
 )
@@ -1352,9 +1352,9 @@ variation. It is numbered from its real branch ply, so it reads exactly as you'd
 write it in analysis:
 
 #example(```typ
-#let g = parse-pgn(
+#let g = game(
   "1. e4 e5 2. Nf3 Nc6 (2... d6 3. d4) 3. Bb5 *",
-).first()
+)
 // the 2...d6 side line, on its own:
 #notation(g, line: ((at: "2b", into: 0),))
 ```, stacked: true)
@@ -1367,14 +1367,14 @@ stay mainline-only and don't combine with `line`.)
 
 Beyond `nags: true` (which renders the `$n` NAGs a game *already* carries), you can
 attach NAGs and comments *programmatically* — without editing the PGN — and then
-render them like any parsed game. `with-nags(game, ..)` and
-`with-comments(game, ..)` each return a *new* game (the source is never mutated),
+render them like any parsed game. `with-nags(g, ..)` and
+`with-comments(g, ..)` each return a *new* game (the source is never mutated),
 so they compose:
 
 #example(````typ
-#let g = parse-pgn(
+#let g = game(
   "1. e4 e5 2. Nf3 Nc6 3. Bb5 (3. Bc4 Bc5) a6 *",
-).first()
+)
 #notation(
   with-comments(
     with-nags(g, ("3w": "!")),
@@ -1399,14 +1399,14 @@ true`, NAGs only with `nags: true`.
 
 === Adding Variations
 
-`with-variation(game, at:, moves:)` grows the tree: it adds a variation as an
+`with-variation(g, at:, moves:)` grows the tree: it adds a variation as an
 *alternative* to the move at `at` (a mainline locator or a path dict). `moves` is
-a PGN movetext fragment — the same syntax `parse-pgn` reads — so one call can carry
+a PGN movetext fragment — the same syntax `game` reads — so one call can carry
 move numbers (recomputed), nested `()` variations, `$n` NAGs, and `{comments}`; a
 plain SAN run like `"Bc4 Bc5"` is the simplest case:
 
 #example(```typ
-#let g = parse-pgn("1. e4 e5 2. Nf3 Nc6 3. Bb5 a6 *").first()
+#let g = game("1. e4 e5 2. Nf3 Nc6 3. Bb5 a6 *")
 #notation(
   with-variation(g, at: "3w",
     moves: "3. Bc4 Bc5! (3... Nf6 4. d4) {a sharp alternative}"),
@@ -1424,7 +1424,7 @@ of the lazy model.
 
 == Exporting FEN
 
-`to-fen` is the inverse of `parse-fen`. It serialises a position, or a game at a
+`to-fen` is the inverse of `position`. It serialises a position, or a game at a
 locator. Standard 8×8 positions round-trip exactly:
 
 #example(```typ
@@ -1451,7 +1451,7 @@ demo game annotates its 2nd move:
 
 #example(```typ
 // move 2: {[%cal Gf3e5] [%csl Re5]}
-#diagram-after(game, "2w", annotations: true, size: 4cm)
+#diagram-after(g, "2w", annotations: true, size: 4cm)
 ```)
 
 The color letters (`G R Y B O`) resolve through the `annotation-colors` board
@@ -1465,7 +1465,7 @@ game and layer your own emphasis on top without editing the PGN. Here the green
 and the circle on `d4` are added programmatically:
 
 #example(```typ
-#diagram-after(game, "2w",
+#diagram-after(g, "2w",
   annotations: true,                              // Gf3e5 + Re5, from the PGN
   arrows: (("b1", "c3"),),                        // added here
   highlight: ((square: "d4", shape: "circle"),),  // added here
@@ -1485,7 +1485,7 @@ spliced board shows those arrows/highlights too — the two switches compose:
 ```typ
 // 2. Nf3 {[%cal Gf1c4] [%csl Re5] #[After 2.Nf3]} Nc6 ...
 #set-pgn-defaults(diagrams: true, annotations: true)
-#notation(game)   // ...text, then a board after 2.Nf3 with the arrow + highlight
+#notation(g)   // ...text, then a board after 2.Nf3 with the arrow + highlight
 ```
 
 `diagrams` decides *whether* a board appears; `annotations` decides whether it
@@ -1493,7 +1493,7 @@ carries the marks. The marker and the `%cal`/`%csl` must be in the *same* move's
 comment. (Only mainline moves are addressed — `notation` renders the mainline.)
 
 *The convenience payoff.* Push every switch at once, and a single
-`#notation(game)` on a *fully annotated* PGN (one already carrying diagram
+`#notation(g)` on a *fully annotated* PGN (one already carrying diagram
 markers, `%cal`/`%csl`, NAGs, comments and variations — say, exported from
 lichess, ChessBase or Scid) reproduces the whole illustrated, annotated game:
 boards spliced in at the marked moves, arrows and highlights drawn, `!`/`?`
@@ -1504,7 +1504,7 @@ per-move code at all:
 #set-pgn-defaults(
   diagrams: true, annotations: true, nags: true, comments: true, variations: true,
 )
-#notation(game)
+#notation(g)
 ```
 
 This is an *extreme* case — most publications want a curated subset, which is why
@@ -1580,12 +1580,12 @@ the 960 back-rank arrangements @scharnagl, running `0`–`959` (`518` is standar
 chess) — with `chess960-start` (a Chess960 position number) or `chess960-start-fen` (its FEN):
 
 #example(```typ
-#diagram(chess960-start(356), size: 4cm)
+#diagram(position(chess960-start-fen(356)), size: 4cm)
 ```)
 
 == X-FEN castling
 
-`parse-fen` and `to-fen` speak *X-FEN*, the Chess960-compatible extension of FEN.
+`position` and `to-fen` speak *X-FEN*, the Chess960-compatible extension of FEN.
 On input a castling right may be written as the rook's *file letter* (`A`–`H` /
 `a`–`h`) instead of `K`/`Q`; on output `to-fen` still writes plain `KQkq` whenever
 it is unambiguous, and switches to the file letter only when it is not — for
@@ -1626,30 +1626,30 @@ generalised 960 castling (the h1-rook stays put):
 Tournament tables are built from a parsed PGN's roster + results (no engine). The
 `*-table` renderers produce a captioned, referenceable `#figure` (kind
 `"chess-table"`). Each works on a list of games, with `by: "player"` or
-`by: "team"`. The examples use a parsed 4-player round-robin in `games`:
+`by: "team"`. The examples use a parsed 4-player round-robin in `gs`:
 
 ```typ
-#let games = parse-pgn(read("event.pgn"))
+#let gs = games(read("event.pgn"))
 ```
 
 `standings-table` sorts best-first (score, then tie-breaks, then first
 appearance):
 
 #example(```typ
-#standings-table(games, by: "player", caption: [Final standings.])
+#standings-table(gs, by: "player", caption: [Final standings.])
 ```, stacked: true)
 
 `crosstable-table` renders the round-robin grid (it *requires* a complete
 round-robin and errors otherwise — use standings + progress for Swiss/league):
 
 #example(```typ
-#crosstable-table(games, by: "player", caption: [Round-robin cross-table.])
+#crosstable-table(gs, by: "player", caption: [Round-robin cross-table.])
 ```, stacked: true)
 
 `progress-table` shows the round-by-round running score (needs the `Round` tag):
 
 #example(```typ
-#progress-table(games, by: "player", caption: [Round-by-round progress.])
+#progress-table(gs, by: "player", caption: [Round-by-round progress.])
 ```, stacked: true)
 
 Each renderer takes `caption` (used by refs and the outline), `title` (a heading
@@ -1698,14 +1698,14 @@ The defaults below reproduce the classic look shown earlier in this chapter.
 The default standings table again, for comparison:
 
 #example(```typ
-#standings-table(games, by: "player", caption: [Default styling.])
+#standings-table(gs, by: "player", caption: [Default styling.])
 ```, stacked: true)
 
 A single header rule instead of a full grid, with a shaded header row:
 
 #example(```typ
 #standings-table(
-  games, by: "player",
+  gs, by: "player",
   grid: "header-rule", header-fill: "gray",
   caption: [Header rule + shaded header.],
 )
@@ -1715,7 +1715,7 @@ Zebra body rows on a crosstable (note the self/self diagonal keeps its own
 light-blue tint so it stays legible):
 
 #example(```typ
-#crosstable-table(games, by: "player", body-fill: "zebra", caption: [Zebra body rows.])
+#crosstable-table(gs, by: "player", body-fill: "zebra", caption: [Zebra body rows.])
 ```, stacked: true)
 
 A left-aligned table (the caption stays centered) with a bold caption, and
@@ -1724,7 +1724,7 @@ bolded:
 
 #example(```typ
 #standings-table(
-  games, by: "player",
+  gs, by: "player",
   table-align: left, caption-bold: true, highlight-winners: false,
   caption: [Left-aligned, bold caption, no winner highlight.],
 )
@@ -1764,7 +1764,7 @@ these fields don't cover, pass raw `#table` arguments straight through — they
 override any preset:
 
 ```typ
-#standings-table(games, by: "player", stroke: 2pt + red, caption: [..])
+#standings-table(gs, by: "player", stroke: 2pt + red, caption: [..])
 ```
 
 // === Outlines and references =================================================
@@ -1928,7 +1928,7 @@ A few arguments accept more than one shape and recur across functions, so they a
 described once here.
 
 / `source`: for `board`, `diagram`, `position` —
-  a *FEN string* `"rnbqkbnr/…"`; a *position* dict (from `position` / `parse-fen`);
+  a *FEN string* `"rnbqkbnr/…"`; a *position* dict (from `position`);
   a *squares* dict `(e1: "K", d8: (kind: "q", color: "black"), e4: "P")` (piece as a
   long name, kind abbreviation, or bare letter — UPPER white, lower black); or the
   *string form* (rank-per-line rows, `.` = empty; one raw block or several row

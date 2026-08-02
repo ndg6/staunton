@@ -1,13 +1,13 @@
 // Real-world variation notation: an Italian / Two Knights analysis with two
 // variations at one move (7. O-O), a deep NESTED line (12. O-O-O ... move 18), and
-// a black-first variation (16... Rab8). Regression that parse-pgn + notation
+// a black-first variation (16... Rab8). Regression that `game` + notation
 // (variations: true) render real RAVs with correct offset numbering.
-#import "/lib.typ": parse-pgn, notation, mainline
+#import "/lib.typ": game, notation, mainline
 
 #set page(width: auto, height: auto, margin: 1cm)
 #set text(font: "Libertinus Serif", size: 9pt)
 
-#let g = parse-pgn(read("/tests/pgn/realworld/italian_two_knights.pgn")).first()
+#let g = game(read("/tests/pgn/realworld/italian_two_knights.pgn"))
 #assert(mainline(g).len() == 32, message: "mainline: 16 full moves (32 plies)")
 
 // all switches explicit -> a plain string; check the structurally tricky spots.

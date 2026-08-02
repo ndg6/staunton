@@ -6,9 +6,9 @@
 // `_stash` helper so its edit sticks without re-parsing the raw text). All
 // three builders (`with-nags`, `with-comments`, `with-variation`) route
 // through `_stash`, so all three are checked here rather than just one.
-#import "/lib.typ": parse-pgn, with-nags, with-comments, with-variation
+#import "/lib.typ": game, with-nags, with-comments, with-variation
 
-#let g = parse-pgn("[White \"A\"][Black \"B\"] 1. e4 e5 2. Nf3 Nc6 *").first()
+#let g = game("[White \"A\"][Black \"B\"] 1. e4 e5 2. Nf3 Nc6 *")
 #assert.eq(g.keys().sorted(), ("movetext-raw", "result", "tags"), message: "a parsed game must have exactly these keys")
 
 #let expected-builder-keys = ("movetext-nodes", "movetext-raw", "result", "tags")

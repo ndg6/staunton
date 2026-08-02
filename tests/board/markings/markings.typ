@@ -5,7 +5,7 @@
 // the king (king crisp on top, glow radiates from beneath); (2) badges are tied to
 // a MOVE and therefore come ONLY from a game (`diagram-after`) — never from a bare
 // position or an empty square.
-#import "/lib.typ": board, diagram-after, parse-pgn, with-nags
+#import "/lib.typ": board, diagram-after, game, with-nags
 
 #set page(width: 16cm, height: auto, margin: 1cm)
 #set text(font: "Libertinus Serif", size: 10pt)
@@ -34,7 +34,7 @@ stays crisp *on top*; the red glow radiates from underneath.
 Reference play `1. b3 g5 2. e3 f6 3. Qh5#` (the fool's-mate shape) — the mated
 Black king glows, piece unaffected on top:
 
-#let mate = parse-pgn("1. b3 g5 2. e3 f6 3. Qh5#").first()
+#let mate = game("1. b3 g5 2. e3 f6 3. Qh5#")
 #diagram-after(mate, "3w", check: true, caption: none, game-info: none, size: 5cm)
 
 = Move-quality badge
@@ -44,7 +44,7 @@ quality suffix; `diagram-after` derives the badge and places it on the move's
 destination square — always an occupied square. Good `!`/`!!` blue, bad `?`/`??`
 red, interesting `!?`/`?!` green.
 
-#let q = parse-pgn("1. e4! e5? 2. Nf3!! Nc6?? 3. Bb5!? a6?!").first()
+#let q = game("1. e4! e5? 2. Nf3!! Nc6?? 3. Bb5!? a6?!")
 
 #grid(columns: 3, gutter: 0.6cm,
   diagram-after(q, "1w", move-quality: true, caption: none, game-info: none, size: 4.6cm),
@@ -58,9 +58,9 @@ red, interesting `!?`/`?!` green.
 Corner square (a8) — a FEN-seeded game whose first move is `Nxa8!!`. The badge
 should spill above/right of the board, and stay screen-upper-right under a flip:
 
-#let corner = parse-pgn(
+#let corner = game(
   "[SetUp \"1\"][FEN \"r3k3/8/1N6/8/8/8/8/4K3 w - - 0 1\"] 1. Nxa8!! 1-0",
-).first()
+)
 
 #grid(columns: 2, gutter: 1cm,
   diagram-after(corner, "1w", move-quality: true, caption: none, game-info: none, size: 5cm),
@@ -74,10 +74,10 @@ the glow (check delivered by the move). Left: the mate `4.Qxf7#`, badge from a
 programmatic `!` on that move. Right: `3...Nf6??`, badge on f6 from the literal
 suffix (the badge always sits on the addressed move's destination).
 
-#let g = parse-pgn(
+#let g = game(
   "[White \"Player A\"][Black \"Player B\"][Date \"2026.01.01\"] " +
   "1. e4 e5 2. Qh5 Nc6 3. Bc4 Nf6?? 4. Qxf7# 1-0",
-).first()
+)
 
 #grid(columns: 2, gutter: 1cm,
   diagram-after(with-nags(g, ("4w": "!")), "4w",

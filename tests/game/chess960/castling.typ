@@ -2,7 +2,7 @@
 // destination files — king -> g / rook -> f for O-O, king -> c / rook -> d for
 // O-O-O — from ARBITRARY starting files. Standard castling is the special case.
 // These positions use non-standard king/rook files to exercise the general path.
-#import "/lib.typ": play, parse-fen, to-fen, legal-moves
+#import "/lib.typ": play, position, to-fen, legal-moves
 
 #set page(width: auto, height: auto, margin: 1cm)
 
@@ -20,7 +20,7 @@
 #assert(to-fen(c) == "4k3/8/8/8/8/8/8/5RK1 b - - 1 1", message: "O-O king stationary: " + to-fen(c))
 
 // legal-moves offers exactly one castling move here, and it is a king-side castle.
-#let castles = legal-moves(parse-fen("4k3/8/8/8/8/8/8/5KR1 w K - 0 1")).filter(m => m.kind == "castle-k" or m.kind == "castle-q")
+#let castles = legal-moves(position("4k3/8/8/8/8/8/8/5KR1 w K - 0 1")).filter(m => m.kind == "castle-k" or m.kind == "castle-q")
 #assert(castles.len() == 1 and castles.first().kind == "castle-k", message: "one king-side castle: " + repr(castles))
 
 = Chess960 castling from non-standard king/rook files

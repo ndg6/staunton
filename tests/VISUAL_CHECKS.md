@@ -313,8 +313,9 @@ These are not under `tests/out/`; build them separately.
         PGN's green `f3→e5` arrow and red `e5` highlight **together with** a
         programmatic `b1→c3` arrow and a circle on `d4` on one board.
 - [ ] `docs/manual.pdf` — the new *Chess960 / Fischer Random* chapter (after *Games*):
-      - *Boards and start positions*: `diagram(chess960-start(356))` draws a
-        valid non-standard back rank (bishops on opposite colors, king between the rooks).
+      - *Boards and start positions*: `diagram(position(chess960-start-fen(356)))`
+        draws a valid non-standard back rank (bishops on opposite colors, king
+        between the rooks).
       - *X-FEN castling*: the `to-fen(frc, "10b")` output line reads
         `…/2BNK1RR w Gkq - 4 11` (the `Gkq`, not `KQkq`).
       - *Games*: `game-variant(frc)` prints `chess960`; the `diagram-after(frc, "11w")`

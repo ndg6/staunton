@@ -2,7 +2,7 @@
 // the mainline in parentheses, correctly numbered and side-aware -- a white-first
 // variation is "N. ...", a black-first one "N... ...", and the resumed mainline
 // move re-shows its number (a Black move as "N..."). Nesting recurses.
-#import "/lib.typ": parse-pgn, notation, set-pgn-defaults, default-pgn-style, pgn-style-state
+#import "/lib.typ": game, notation, set-pgn-defaults, default-pgn-style, pgn-style-state
 
 #set page(width: auto, height: auto, margin: 1cm)
 #set text(font: "Libertinus Serif", size: 10pt)
@@ -11,7 +11,7 @@
 #let s(src, ..a) = notation(src, ..((diagrams: false, bold-mainline: false, spaced: true, nags: false, comments: false, lang: "en", variations: true) + a.named()))
 
 // --- default OFF is byte-identical to the mainline (regression) -------------
-#let g1 = parse-pgn("[White \"A\"][Black \"B\"] 1. e4 e5 2. Nf3 Nc6 3. Bb5 (3. Bc4 Bc5) a6 *").first()
+#let g1 = game("[White \"A\"][Black \"B\"] 1. e4 e5 2. Nf3 Nc6 3. Bb5 (3. Bc4 Bc5) a6 *")
 #assert(
   notation(g1, diagrams: false, bold-mainline: false, spaced: true, nags: false, comments: false, variations: false, lang: "en")
     == "1. e4 e5 2. Nf3 Nc6 3. Bb5 a6",
@@ -25,21 +25,21 @@
 )
 
 // --- black-first variation: "2... d6 3. d4 ..." -----------------------------
-#let g2 = parse-pgn("[White \"A\"][Black \"B\"] 1. e4 e5 2. Nf3 Nc6 (2... d6 3. d4 exd4) 3. Bb5 *").first()
+#let g2 = game("[White \"A\"][Black \"B\"] 1. e4 e5 2. Nf3 Nc6 (2... d6 3. d4 exd4) 3. Bb5 *")
 #assert(
   s(g2) == "1. e4 e5 2. Nf3 Nc6 (2... d6 3. d4 exd4) 3. Bb5",
   message: "black-first variation numbered 2... / 3.",
 )
 
 // --- nested variation (a RAV inside a RAV) ----------------------------------
-#let g3 = parse-pgn("[White \"A\"][Black \"B\"] 1. e4 (1. d4 d5 (1... Nf6 2. c4)) e5 *").first()
+#let g3 = game("[White \"A\"][Black \"B\"] 1. e4 (1. d4 d5 (1... Nf6 2. c4)) e5 *")
 #assert(
   s(g3) == "1. e4 (1. d4 d5 (1... Nf6 2. c4)) 1... e5",
   message: "nested variation + resumed 1... e5",
 )
 
 // --- two variations at the same move ----------------------------------------
-#let g4 = parse-pgn("[White \"A\"][Black \"B\"] 1. e4 (1. d4) (1. c4) e5 *").first()
+#let g4 = game("[White \"A\"][Black \"B\"] 1. e4 (1. d4) (1. c4) e5 *")
 #assert(s(g4) == "1. e4 (1. d4) (1. c4) 1... e5", message: "two RAVs at one move")
 
 // --- variations honour figurine + lang inside the parens --------------------
@@ -49,7 +49,7 @@
 )
 
 // --- NAGs / comments render inside variations when on ------------------------
-#let g5 = parse-pgn("[White \"A\"][Black \"B\"] 1. e4 (1. d4 $1 {solid} d5) e5 *").first()
+#let g5 = game("[White \"A\"][Black \"B\"] 1. e4 (1. d4 $1 {solid} d5) e5 *")
 #assert(
   notation(g5, diagrams: false, bold-mainline: false, spaced: true, nags: true, comments: true, variations: true, lang: "en")
     == "1. e4 (1. d4! solid d5) 1... e5",
@@ -57,10 +57,10 @@
 )
 
 // --- line: address one specific variation, correctly offset-numbered --------
-#let gw = parse-pgn("[White \"A\"][Black \"B\"] 1. e4 e5 2. Nf3 Nc6 3. Bb5 (3. Bc4 Bc5 4. c3) a6 *").first()
+#let gw = game("[White \"A\"][Black \"B\"] 1. e4 e5 2. Nf3 Nc6 3. Bb5 (3. Bc4 Bc5 4. c3) a6 *")
 #assert(s(gw, line: ((at: "3w", into: 0),)) == "3. Bc4 Bc5 4. c3", message: "line: white-first variation (hops)")
 #assert(s(gw, line: (line: ((at: "3w", into: 0),), at: "3w")) == "3. Bc4 Bc5 4. c3", message: "line: dict form (at ignored)")
-#let gbk = parse-pgn("[White \"A\"][Black \"B\"] 1. e4 e5 2. Nf3 Nc6 (2... d6 3. d4 exd4) 3. Bb5 *").first()
+#let gbk = game("[White \"A\"][Black \"B\"] 1. e4 e5 2. Nf3 Nc6 (2... d6 3. d4 exd4) 3. Bb5 *")
 #assert(s(gbk, line: ((at: "2b", into: 0),)) == "2... d6 3. d4 exd4", message: "line: black-first variation")
 #assert(s(g3, line: ((at: "1w", into: 0), (at: "1b", into: 0))) == "1... Nf6 2. c4", message: "line: nested variation")
 // the addressed sub-line's OWN nested variations follow the `variations` flag:

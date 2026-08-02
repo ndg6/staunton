@@ -3,12 +3,12 @@
 // the canonical "$n" form or one of the six suffix glyphs (sugar for $1..$6),
 // or an array of them; the mapping REPLACES any NAGs already on the move and the
 // source game is never mutated.
-#import "/lib.typ": parse-pgn, with-nags, notation, movetext
+#import "/lib.typ": game, with-nags, notation, movetext
 
 #set page(width: auto, height: auto, margin: 1cm)
 #set text(font: "Libertinus Serif", size: 10pt)
 
-#let g = parse-pgn("[White \"A\"][Black \"B\"] 1. e4 e5 2. Nf3 Nc6 *").first()
+#let g = game("[White \"A\"][Black \"B\"] 1. e4 e5 2. Nf3 Nc6 *")
 // string fast path: every option explicit (incl. diagrams) -> a plain string
 #let s(src, ..a) = notation(src, ..((diagrams: false, bold-mainline: false, spaced: true, nags: true, comments: false, variations: false, lang: "en") + a.named()))
 
@@ -25,7 +25,7 @@
 #assert(s(g4) == "1. e4!\u{2A72} e5 2. Nf3 Nc6", message: "array of NAGs on one move")
 
 // REPLACE semantics: a NAG parsed from the PGN is overwritten by the mapping
-#let gp = parse-pgn("[White \"A\"][Black \"B\"] 1. e4 $2 e5 *").first()
+#let gp = game("[White \"A\"][Black \"B\"] 1. e4 $2 e5 *")
 #assert(s(gp) == "1. e4? e5", message: "parsed $2 renders as ?")
 #assert(s(with-nags(gp, ("1w": "!"))) == "1. e4! e5", message: "mapping replaces the parsed NAG")
 
@@ -43,26 +43,26 @@
 // suffix is converted to a NAG at parse time, so `nags: false` suppresses it
 // exactly like the "$n" spelling above.
 #let common = (diagrams: false, bold-mainline: false, spaced: true, comments: false, variations: false, lang: "en")
-#let gs = parse-pgn("1. e4! e5 *").first()
+#let gs = game("1. e4! e5 *")
 #assert.eq(notation(gs, nags: true, ..common), "1. e4! e5", message: "suffix glyph renders when nags: true")
 #assert.eq(notation(gs, nags: false, ..common), "1. e4 e5", message: "suffix glyph suppressed when nags: false (was leaking)")
 
 // an explicit $n NAG alongside the suffix glyph must not double the mark either
 // way (`nags: true` shows exactly one glyph, `nags: false` shows none)
-#let gs2 = parse-pgn("1. e4! $1 e5 *").first()
+#let gs2 = game("1. e4! $1 e5 *")
 #assert.eq(notation(gs2, nags: true, ..common), "1. e4! e5", message: "suffix + explicit $1 must not double (was '1. e4!! e5')")
 #assert.eq(notation(gs2, nags: false, ..common), "1. e4 e5", message: "suffix + explicit $1 both suppressed by nags: false")
 
 // --- SOURCE PARITY: a bare SAN string and the equivalent parsed game must ---
 // render IDENTICALLY. src/notation.typ's `_bare-node` normalises a string/array
-// SAN source through the same `_split-quality-suffix` helper `parse-pgn` uses,
+// SAN source through the same `_split-quality-suffix` helper `game`/`games` use,
 // specifically so "1. e4! e5" typed straight into `notation()` behaves like the
 // same text run through a game. Assert the parity directly (string == game
 // result), not two separate literals, so a future divergence between the two
 // paths fails THIS assertion instead of silently passing two now-different
 // "expected" strings.
 #let san-str = "1. e4! e5"
-#let san-game = parse-pgn(san-str + " *").first()
+#let san-game = game(san-str + " *")
 #assert.eq(notation(san-str, nags: true, ..common), notation(san-game, nags: true, ..common),
   message: "string source and game source must render identically with nags: true")
 #assert.eq(notation(san-str, nags: false, ..common), notation(san-game, nags: false, ..common),

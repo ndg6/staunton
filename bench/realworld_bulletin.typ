@@ -6,17 +6,17 @@
 // ~70 distinct diagrams — the "real document with many diagrams" workload the
 // drawing optimisations (prompt 37) target. Every diagram is a distinct real
 // position, so this measures true per-diagram drawing cost (no memoisation
-// short-cut), the same way bench/spassky_fischer.typ does for the 9-game set.
+// short-cut), the same way bench/spassky_fischer.typ does for the 9-g set.
 //
 // NOT an asserting test; a benchmark input compiled by bench/run-bench.sh.
-#import "/lib.typ": parse-pgn, mainline, notation, diagram-after
+#import "/lib.typ": game, mainline, notation, diagram-after
 #set page(paper: "a4", margin: 2cm)
 #set text(size: 10pt)
 
 // The three new long games (tests/pgn/realworld/). Read from the repo root so
 // this compiles with `--root .` like the rest of the harness.
-#let game-ids = (1012928, 1125843, 1281900)
-#let game-file(id) = "/tests/pgn/realworld/game_" + str(id) + ".pgn"
+#let g-ids = (1012928, 1125843, 1281900)
+#let g-file(id) = "/tests/pgn/realworld/game_" + str(id) + ".pgn"
 
 #let ply-locator(p) = str(calc.quo(p + 1, 2)) + (if calc.odd(p) { "w" } else { "b" })
 
@@ -26,23 +26,23 @@
   #text(size: 12pt)[Three long games, a diagram every 8 plies]
 ]
 
-#for id in game-ids {
-  let game = parse-pgn(read(game-file(id))).first()
-  let tags = game.tags
-  let plies = mainline(game).len()
+#for id in g-ids {
+  let g = game(read(g-file(id)))
+  let tags = g.tags
+  let plies = mainline(g).len()
 
   pagebreak(weak: true)
-  heading(level: 2)[#tags.at("White", default: "?") – #tags.at("Black", default: "?") · #game.result]
+  heading(level: 2)[#tags.at("White", default: "?") – #tags.at("Black", default: "?") · #g.result]
   [*Event:* #tags.at("Event", default: "?") · #tags.at("Opening", default: tags.at("ECO", default: "?")) · #plies plies]
 
   // Full move notation.
-  block(notation(game))
+  block(notation(g))
 
   // Board diagrams every 8 plies plus the final position.
   let marks = range(8, plies, step: 8) + (plies,)
   grid(
     columns: 3,
     gutter: 8pt,
-    ..marks.map(p => diagram-after(game, ply-locator(p), caption: "after ply " + str(p), size: 4cm)),
+    ..marks.map(p => diagram-after(g, ply-locator(p), caption: "after ply " + str(p), size: 4cm)),
   )
 }

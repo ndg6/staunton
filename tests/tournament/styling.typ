@@ -1,14 +1,14 @@
 // Render-only (no asserts): tournament-table styling options (prompt 42).
 // The machine-checkable pure mapping is pinned in tournament/table_style_args.typ;
 // this sheet is for the human eyeball pass — see tests/VISUAL_CHECKS.md.
-#import "/lib.typ": parse-pgn, standings-table, crosstable-table, set-table-defaults
+#import "/lib.typ": games, standings-table, crosstable-table, set-table-defaults
 
 #set page(width: auto, height: auto, margin: 1cm)
 #set text(font: "Libertinus Serif", size: 10pt)
 
 // Small round-robin, same shape as tests/tournament/standings.typ: A>all,
 // B>{C,D}, C>D -- gives a clear rank-1 winner (A) to check winner-bold.
-#let rr = parse-pgn(```
+#let rr = games(```
 [White "A"][Black "B"][Result "1-0"] 1-0
 [White "A"][Black "C"][Result "1-0"] 1-0
 [White "A"][Black "D"][Result "1-0"] 1-0

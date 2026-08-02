@@ -6,11 +6,11 @@
 // returned position. Two positions denoting the same chess position then
 // compared unequal (the leaky one carried extra keys the clean one didn't).
 //
-// This is asserted through the round trip `play` -> `to-fen` -> `parse-fen`:
+// This is asserted through the round trip `play` -> `to-fen` -> `position`:
 // if `play`'s result carried stray keys, it would still equal itself trivially,
 // so the real check is that it equals the INDEPENDENTLY-REBUILT position that
-// `parse-fen(to-fen(..))` produces — a dict with only the canonical keys.
-#import "/lib.typ": play, to-fen, parse-fen
+// `position(to-fen(..))` produces — a dict with only the canonical keys.
+#import "/lib.typ": play, to-fen, position
 
 #let expected-keys = (
   "variant", "cols", "rows", "squares", "turn", "castling", "en-passant", "halfmove", "fullmove",
@@ -30,7 +30,7 @@
 
 #for (label, line) in cases {
   let played = play(none, line)
-  let rebuilt = parse-fen(to-fen(played))
+  let rebuilt = position(to-fen(played))
 
   assert.eq(played, rebuilt, message: "round trip mismatch for " + label)
   assert.eq(played.keys().sorted(), expected-keys, message: "key set wrong for " + label)

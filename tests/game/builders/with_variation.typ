@@ -1,14 +1,14 @@
 // Phase 2: with-variation(game, at:, moves:) adds a RAV as an alternative to the
-// move at `at`. `moves` is a PGN movetext fragment (parsed like parse-pgn), so it
+// move at `at`. `moves` is a PGN movetext fragment (parsed like `game(..)`), so it
 // may carry nested () variations, $n NAGs and {comments}; a plain SAN run is the
 // simple case. It composes with with-nags/with-comments, navigates like a parsed
 // game, and never mutates the source.
-#import "/lib.typ": parse-pgn, notation, with-variation, with-nags, position-after, play
+#import "/lib.typ": game, notation, with-variation, with-nags, position-after, play
 
 #set page(width: auto, height: auto, margin: 1cm)
 #set text(font: "Libertinus Serif", size: 10pt)
 
-#let g = parse-pgn("[White \"A\"][Black \"B\"] 1. e4 e5 2. Nf3 Nc6 3. Bb5 a6 *").first()
+#let g = game("[White \"A\"][Black \"B\"] 1. e4 e5 2. Nf3 Nc6 3. Bb5 a6 *")
 #let s(x) = notation(x, variations: true, nags: true, comments: true, lang: "en", diagrams: false, bold-mainline: false, spaced: true)
 #let base = "1. e4 e5 2. Nf3 Nc6 3. Bb5 a6"
 

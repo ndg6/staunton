@@ -4,7 +4,7 @@
 // castling is still available via the g1-rook, but because the h1-rook is now the
 // OUTERMOST rook on that side, X-FEN must name the castling rook by file -> "G".
 // Serialising the position must reproduce Scharnagl's published field "Gkq".
-#import "/lib.typ": parse-pgn, to-fen, position-after, game-variant, game-start, diagram
+#import "/lib.typ": game, to-fen, position-after, game-variant, game-start, diagram
 
 #set page(width: auto, height: auto, margin: 1cm)
 #set text(font: "Libertinus Serif", size: 9pt)
@@ -24,7 +24,7 @@
 1. h4 g6 2. g3 Bf6 3. a4 Qh6 4. Ra3 Bxh4 5. gxh4 Qxh4 6. Qh3 Qxh3 7. Rxh3 Ne6
 8. Bf3 d6 9. Nbc3 Ng5 10. Rhh1 Bf5 11. O-O *
 ```
-#let g = parse-pgn(pgn).first()
+#let g = game(pgn)
 
 #assert(game-variant(g) == "chess960", message: "variant: " + game-variant(g))
 #assert(
