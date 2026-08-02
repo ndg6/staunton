@@ -104,8 +104,9 @@
 
 // All mainline positions: (start, after ply 1, after ply 2, ...). Each SAN is
 // resolved once, so the move generator runs N times TOTAL here. Typst memoises a
-// pure call by its arguments, so repeated `position-after` / `diagram-after` on the
-// SAME game reuse this list instead of re-walking from the start every time --
+// pure call by its arguments, so repeated `position-after` (or `board`/`diagram`
+// drawn with `at:`) calls on the SAME game reuse this list instead of
+// re-walking from the start every time --
 // the "fast-track": O(N) once, then O(1) per mainline locator, rather than
 // O(N*K) generator runs for K diagrams. (Legality is still proven the first time
 // the list is built; PGN parsing itself never runs the engine.)
@@ -120,10 +121,12 @@
 }
 
 // The bare position at a locator — handles the mainline and (nested) variations.
-// This is the position WITHOUT provenance; the public `position-after` (defined
-// below, once the derivations it needs are in scope) is this plus `_origin`.
-// Callers that only want the squares — `to-fen`, and any internal replay — should
-// use this and skip building provenance they would immediately discard.
+// The public `position-after` (defined below) is a thin wrapper around this;
+// they are identical. Kept as a separate internal name because callers that
+// only want the squares — `to-fen`, and any internal replay — reach for this
+// one directly, and because `lib.typ`'s `at:` resolution needs the position and
+// the move context (`_move-context`) as two separate values, not a wrapper that
+// bundles them.
 #let _position-at(game, locator) = {
   let loc = if type(locator) == str { (line: (), at: locator) } else { locator }
 
@@ -273,18 +276,19 @@
 }
 
 // ---------------------------------------------------------------------------
-// Position provenance (prompt 49)
+// Move context (2.0.0 Phase D)
 //
-// A position returned by `position-after` remembers the move it came from. That
-// is what lets `board`/`diagram` draw the move's `%cal`/`%csl` annotations and
-// its move-quality badge WITHOUT being handed the game — and, more importantly,
-// what makes "this position really came from a game move" a checkable property
-// of the VALUE rather than of which function the caller happened to use. A badge
-// on a hand-built position stays impossible, because a hand-built position has
-// no `_origin`.
+// This is the DERIVATION a game move contributes to a drawing — its `%cal`/
+// `%csl` annotations, its move-quality badge, its locator/SAN, and the game's
+// roster tags — used when `board`/`diagram` are handed a game directly via
+// `at:` (see `_resolve-at-source` in lib.typ). It travels as its OWN value
+// from there to the drawing seam; it is never attached to a position (earlier
+// designs stashed it on the position as `_origin`, which meant a position
+// could carry a badge with no game in the caller's hand at all — a category
+// error this closes: a badge is now reachable only by handing over the game).
 //
 // The payload is deliberately FLAT and SMALL — derived data, never the game
-// itself. Embedding the game would make `repr(pos)` explode into the whole
+// itself. Embedding the game would make `repr(..)` explode into the whole
 // movetext tree, which would wreck assert messages, panics and the line-based
 // `// EXPECT:` fixtures in tests/run.sh.
 //
@@ -292,13 +296,12 @@
 // tags feed the info line, and how a Date becomes a year, are presentation
 // decisions that belong to lib.typ, not here.
 //
-// Underscore-prefixed because it is NOT public API: a documented `origin` would
-// invite hand-built positions carrying a forged one, reopening exactly the
-// category error this closes.
-#let _origin-of(game, locator) = {
+// Underscore-prefixed because it is NOT public API: it is only ever produced
+// and consumed inside lib.typ's `at:` resolution.
+#let _move-context(game, locator) = {
   // Ply 0 is the position BEFORE any move — a legitimate thing to address, and
   // the one in-range locator with no move behind it. There is nothing to derive,
-  // so it gets no provenance rather than a panic out of `move-node` (which would
+  // so it gets no context rather than a panic out of `move-node` (which would
   // report the misleading "past the end of its line"). Genuinely out-of-range
   // locators still error, and with the right message: `_position-at` runs first
   // and asserts on them before we get here.
@@ -318,24 +321,17 @@
 
 /// The position at a locator — handles the mainline and (nested) variations.
 ///
-/// The returned position also remembers the move it came from, so drawing it
-/// with `board` / `diagram` reproduces that move's `%cal` / `%csl` annotations
-/// and its move-quality badge. A position from `position`, `apply` or a
-/// hand-built dict carries no such history and is drawn plain.
+/// The returned position is a plain position, identical to drawing it directly:
+/// it carries no memory of the move it came from. To have `board`/`diagram`
+/// draw that move's `%cal` / `%csl` annotations and its move-quality badge, hand
+/// them the *game* itself together with `at:` (e.g. `diagram(game, at: locator)`)
+/// rather than pre-resolving the position here.
 ///
 /// - game (dictionary): a parsed game (from `game`).
 /// - locator (str, dictionary): a mainline `"30w"` / `"30b"`, or a variation path
 ///   dict `(line: (..hops..), at: "<move>")`.
 /// -> dictionary
-#let position-after(game, locator) = {
-  let pos = _position-at(game, locator)
-  // Attached to the RETURNED COPY only. `_position-at`'s mainline fast path
-  // indexes the memoised `_mainline-positions` array, which must stay pristine —
-  // so provenance costs one dict build per CALL, not one per move in the game.
-  let origin = _origin-of(game, locator)
-  if origin != none { pos.insert("_origin", origin) }
-  pos
-}
+#let position-after(game, locator) = _position-at(game, locator)
 
 // ===========================================================================
 // Programmatic game building (Phase 1: annotate existing moves).
@@ -443,7 +439,7 @@
 /// *new* game (the source is never mutated). The variation is appended to that
 /// move's variations (its `into` index is the previous count) and numbered from
 /// the move's ply at render time. Legality is checked only if you later navigate
-/// into the line (e.g. via `diagram-after`).
+/// into the line (e.g. by drawing `board(game, at: ..)` on that variation).
 ///
 /// - game (dictionary): a parsed game (from `game`).
 /// - at (str, dictionary): the move to branch at — a *mainline* locator

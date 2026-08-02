@@ -12,9 +12,9 @@
 #import "/lib.typ": (
   game, position, with-nags, board, diagram, position-after, chess-kind,
   board-non-default-keys, board-style-keys,
-  _origin-in, _apply-origin,
+  _apply-origin, _resolve-draw,
 )
-#import "/src/game.typ": move-quality-mark, _origin-of
+#import "/src/game.typ": move-quality-mark, _move-context
 #import "/src/board.typ": _mq-category
 
 #let SYMBOLS = ("!", "?", "!!", "??", "!?", "?!")
@@ -98,20 +98,28 @@
 
 // ---------------------------------------------------------------------------
 // 4. Both drawing entry points get the badge, by the same route.
-//    Since prompt 49 the mark rides on the POSITION's provenance, so `board` and
-//    `diagram` are fed identically — `diagram` adds only the figure wrapper. This
-//    is the assertion that would fail if the badge ever became figure-only again.
+//    Since Phase D the mark is reachable only via a game handed to `board`/
+//    `diagram` with `at:` — a plain position (even from `position-after`) has
+//    no history to badge. `board` and `diagram` are fed identically -- `diagram`
+//    adds only the figure wrapper. This is the assertion that would fail if the
+//    badge ever became figure-only again.
 // ---------------------------------------------------------------------------
 #let g = game(head + "1. e4 e5 2. Nf3!! Nc6 *")
-#let pos = position-after(g, "2w")
-#assert.eq(_origin-in(pos).quality, (square: "f3", symbol: "!!"),
-  message: "a game-derived position carries the badge data")
+#assert.eq(_move-context(g, "2w").quality, (square: "f3", symbol: "!!"),
+  message: "the move carries the badge data")
 
 // The fold that both entry points share inserts the style key the renderer reads.
-#assert.eq(_apply-origin((:), _origin-of(g, "2w"), false).at("move-quality-mark"),
+#assert.eq(_apply-origin((:), _move-context(g, "2w"), false).at("move-quality-mark"),
   (square: "f3", symbol: "!!"), message: "the badge reaches the renderer's override dict")
 
-// Both entry points accept a provenanced position. The badge DRAWING is visual,
+// A plain position (from `position-after`) has no history to badge: fed
+// through the same seam, it carries no `move-quality-mark`.
+#assert(
+  "move-quality-mark" not in _resolve-draw(position-after(g, "2w"), none, (:), true).ov,
+  message: "a plain position must not carry a badge",
+)
+
+// Both entry points accept a game + `at:`. The badge DRAWING is visual,
 // but the structural difference between them is not: `diagram` must wrap its
 // board in a locatable chess figure and `board` must not. Asserting it here is
 // what stops move_quality_render.typ's side-by-side section from silently
@@ -119,13 +127,15 @@
 // with `caption: none, game-info: none` hiding every visible sign of the figure.
 // Exactly one chess figure below proves both halves at once: if `board` also
 // wrapped, this would be 2; if `diagram` stopped wrapping, 0.
-#board(pos, move-quality: true, size: 2cm)
-#diagram(pos, move-quality: true, size: 2cm)
+#board(g, at: "2w", move-quality: true, size: 2cm)
+#diagram(g, at: "2w", move-quality: true, size: 2cm)
 #context assert.eq(query(figure.where(kind: chess-kind)).len(), 1,
   message: "diagram must wrap in a chess figure and board must not")
 
 // A position with NO history carries nothing, so neither entry point can badge it.
-#assert.eq(_origin-in(position("4k3/8/8/8/8/8/8/4K3 w - - 0 1")), none)
+#assert(
+  "move-quality-mark" not in _resolve-draw(position("4k3/8/8/8/8/8/8/4K3 w - - 0 1"), none, (:), true).ov,
+)
 
 // ---------------------------------------------------------------------------
 // 5. The `move-quality` switch is an ordinary style option; the MARK is not.

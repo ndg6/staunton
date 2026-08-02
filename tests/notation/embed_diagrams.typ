@@ -5,7 +5,7 @@
 // (when annotations on) its %cal/%csl. Default off -> plain text, unchanged.
 #import "/lib.typ": game, notation, set-pgn-defaults, set-board-defaults, movetext
 #import "/src/annotations.typ": interpret-comment  // internal helper, tested directly
-#import "/src/game.typ": _origin-of                 // provenance builder, tested directly
+#import "/src/game.typ": _move-context               // move-context builder, tested directly
 
 #set page(width: 14cm, height: auto, margin: 1cm)
 #set text(font: "Libertinus Serif", size: 10pt)
@@ -35,12 +35,12 @@
 
 // --- annotations on a marker-bearing move feed the spliced board ------------
 // One comment can carry BOTH a diagram marker AND %cal/%csl. `notation` still
-// runs `interpret-comment` per move to spot the DIAGRAM MARKER, but since prompt
-// 49 it no longer extracts the arrows/highlights itself: the spliced board is an
-// ordinary `diagram` over a `position-after` position, which carries that move's
-// annotations (and its quality badge) in its own provenance. Deriving them here
-// as well would DOUBLE them -- the merge is asserted directly in
-// tests/pgn/provenance.
+// runs `interpret-comment` per move to spot the DIAGRAM MARKER, but it does not
+// extract the arrows/highlights itself: the spliced board is an ordinary
+// `diagram(game, at: locator)` call, which derives that move's annotations (and
+// its quality badge) from the game itself via `_move-context`. Deriving them
+// here as well would DOUBLE them -- the merge is asserted directly in
+// tests/pgn/move_context.
 // We assert the data SOURCE here; the wiring + gating are shown by the annotated
 // sheet below. (Content equality can't see it: a `diagrams: true` result is a
 // `context` closure whose equality ignores the captured `annotations` value -- so
@@ -56,11 +56,12 @@
 #assert(info.highlights == (("e5", "R"),), message: "%csl extracted for the spliced board")
 
 // The badge reaches a spliced board the same way the annotations do: through the
-// position's provenance, not through anything `notation` derives. Assert the DATA
-// here -- whether the disc is actually drawn is a visual check, and is gated by
+// move context `diagram(game, at:)` derives itself, not through anything
+// `notation` derives. Assert the DATA here -- whether the disc is actually drawn
+// is a visual check, and is gated by
 // the `move-quality` style switch (default OFF), which is why the sheet below has
 // to turn it on before a badge can appear at all.
-#assert.eq(_origin-of(ga, "2w").quality, (square: "f3", symbol: "!"),
+#assert.eq(_move-context(ga, "2w").quality, (square: "f3", symbol: "!"),
   message: "the marker-bearing move carries a quality mark for the spliced board")
 
 = Diagrams off (plain text)

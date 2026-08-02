@@ -4,8 +4,7 @@
 // stay in `san` (they are check/mate markers, not quality assessments). If an
 // EXPLICIT quality NAG ($1..$6) is already present on the move, it wins and the
 // glyph is discarded rather than doubled.
-#import "/lib.typ": game, movetext, with-nags, position-after, notation
-#import "/src/game.typ": _origin-of
+#import "/lib.typ": game, movetext, with-nags, notation, _move-context
 
 // --- plain suffix glyph is stripped, converted to the matching NAG ----------
 #let g1 = game("1. e4! e5 *")
@@ -88,7 +87,7 @@
 
 // --- the move-quality badge still derives from the converted NAG -----------
 #assert.eq(
-  position-after(game("1. e4 e5 2. Nf3! *"), "2w").at("_origin").quality,
+  _move-context(game("1. e4 e5 2. Nf3! *"), "2w").quality,
   (square: "f3", symbol: "!"),
   message: "badge must still derive after suffix->NAG conversion",
 )

@@ -768,11 +768,11 @@ destination square, carrying its assessment: `!` / `!!` (good, blue), `?` / `??`
 piece and spills slightly into the neighbours; recolor the categories with
 `move-quality-colors`.
 
-A badge is tied to a *move*, so it is only available when you draw a position
-that came *from a game* — one from `position-after`, which
-#link(<position-provenance>)[remembers its move] (`diagram-after` being the
-shorthand for exactly that). The badge lands on the move's destination square.
-A FEN or a hand-built position has no move, so it cannot carry a badge, and
+A badge is tied to a *move*, so it appears only when you
+#link(<position-provenance>)[draw a game with `at:`] — `board(g, at: "24w")` or
+`diagram(g, at: "24w")`. The badge lands on the move's destination square.
+A FEN, a hand-built position, or a bare `position-after` result has no move
+attached, so it cannot carry a badge, and
 setting `move-quality-mark` yourself is an error. The assessment is read
 identically whether written as a literal `?!` suffix, a PGN NAG, or set with
 `with-nags`. Here the mate `4.Qxf7#` glows on the Black king and, tagged `!`
@@ -1171,11 +1171,12 @@ for a position. So a tournament file read only for results and never tokenises m
 #diagram(g, at: "3w", size: 4cm)
 ```)
 
-=== A position remembers its move<position-provenance>
+=== Drawing a move, not just a position<position-provenance>
 
-`position-after(g, loc)` hands you the position at a locator — and that
-position *remembers the move it came from*. Drawing it with the ordinary
-`board` or `diagram` therefore reproduces everything that move knows:
+A *position* is only ever pieces on squares. It does not know which move
+produced it — and in staunton 2.0.0 it deliberately never carries that
+knowledge around. So when you want the move itself to show, hand `board` or
+`diagram` the *game*, and say which move with `at:`:
 
 - the players and year, from the game's roster, as the info line;
 - the caption "Position after 24. Nf3";
@@ -1183,21 +1184,26 @@ position *remembers the move it came from*. Drawing it with the ordinary
   (when the `annotations` switch is on);
 - its #link(<move-markings>)[move-quality badge].
 
-So `diagram-after(g, loc, ..)` is exactly the shorthand for
-`diagram(position-after(g, loc), ..)`, and there is deliberately *no*
-`board-after`: you simply write `board(position-after(g, loc))` and get the
-bare board, annotations and badge included.
+`at:` takes the same locators as everything else — a mainline `"24w"` /
+`"24b"`, or a variation path dict — and works on `board` as well as `diagram`,
+so there is no separate `*-after` function for either.
 
 #example(```typ
-// identical output, two spellings
-#diagram-after(g, "3w", size: 3.4cm)
+#diagram(g, at: "3w", size: 3.4cm)
+```)
+
+`position-after(g, loc)` still hands you the position at a locator, and it is
+an *ordinary* position — identical to one built by `position` or advanced with
+the #link(<engine>)[engine]'s `apply`. Drawing it gives you the board and
+nothing else: no caption, no roster line, no annotations, no badge.
+
+#example(```typ
+// the same squares, drawn WITHOUT the move: no badge, no annotations
 #diagram(position-after(g, "3w"), size: 3.4cm)
 ```)
 
-A position that has *no* such history — one from `position`, from a hand-built
-squares dict, or one you advanced yourself with the #link(<engine>)[engine]'s
-`apply` — is drawn plain. This is what keeps a move-quality badge honest: the badge is tied to a move, so it
-appears only on a position that demonstrably came from one, and `board` refuses
+That is what keeps a move-quality badge honest: the badge is tied to a move, so it
+appears only when you actually supplied one, and `board` refuses
 a `move-quality-mark` you pass yourself (it could otherwise badge an empty
 square).
 

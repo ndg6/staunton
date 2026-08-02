@@ -52,11 +52,12 @@ together are independent of A/D/E. Tournament (D) works off PGN tags/results onl
 
 1. **`tests/diagram` is NOT pure board rendering** — it uses `diagram(.., at: ..)`,
    which replays moves through `game`/`engine`/`san`/`pgn`. It belongs with C.
-   `tests/board` is *mostly* pure rendering — but since prompt 49 not entirely:
-   a position from `position-after` carries provenance (`_origin-of`, in
-   `game.typ`) that `board` reads to draw the move's annotations and quality
-   badge. So a `game.typ` change can move what a **board** renders, not just
-   what a diagram does.
+   `tests/board` is mostly pure rendering, but not entirely: `board`/`diagram`
+   handed a *game* with `at:` derive that move's annotations and quality badge
+   via `_move-context` (in `game.typ`) — a bare position (even one from
+   `position-after`) has no such history. So a `game.typ` change can move what a
+   **board** renders (when called with a game + `at:`), not just what a diagram
+   does.
 2. **`tests/output_formats` is cross-cutting integration** — HTML export exercises
    board + notation + tournament + figures at once. Run it for any render/
    notation/data change (`bash tests/run.sh tests/output_formats`), and always in

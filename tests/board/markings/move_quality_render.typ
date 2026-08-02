@@ -4,15 +4,17 @@
 //
 // Covers, in order: all six symbols and their three colour categories; the same
 // badge through `board` and through `diagram`; and the `move-quality` switch off.
-#import "/lib.typ": game, with-nags, board, diagram, position-after
+#import "/lib.typ": game, with-nags, board, diagram
 
 #set page(width: 17cm, height: auto, margin: 1cm)
 #set text(font: "Libertinus Serif", size: 9pt)
 
 #let head = "[White \"a\"][Black \"b\"] "
 // One move, annotated six ways. e4 is the destination in every case, so the badge
-// must land on the SAME square each time and only the glyph/colour changes.
-#let at-e4(sym) = position-after(with-nags(game(head + "1. e4 e5 *"), ("1w": sym)), "1w")
+// must land on the SAME square each time and only the glyph/colour changes. The
+// badge is now reachable ONLY by handing the game itself, plus `at:`, to `board`/
+// `diagram` — a plain `position-after` position has no move to badge.
+#let game-e4(sym) = with-nags(game(head + "1. e4 e5 *"), ("1w": sym))
 
 = All six symbols (`board`, `move-quality: true`)
 
@@ -22,13 +24,13 @@ all on *e4*.
 #grid(columns: 6, gutter: 6pt,
   ..("!", "!!", "?", "??", "!?", "?!").map(s => [
     #align(center)[#raw(s)]
-    #board(at-e4(s), move-quality: true, size: 2.4cm)
+    #board(game-e4(s), at: "1w", move-quality: true, size: 2.4cm)
   ])
 )
 
 = The same badge through `diagram`
 
-Same position, both entry points. The *board area* must be identical — same `!!`
+Same game move, both entry points. The *board area* must be identical — same `!!`
 disc, same square, same colour. Everything around it is what `diagram` adds and
 `board` does not: the roster line above, and a numbered, captioned figure below.
 
@@ -41,12 +43,12 @@ game-info: none` suppressed every visible sign of the diagram path).
   [
     `board(..)` — no wrapper
     #v(4pt)
-    #board(at-e4("!!"), move-quality: true, size: 3cm)
+    #board(game-e4("!!"), at: "1w", move-quality: true, size: 3cm)
   ],
   [
     `diagram(..)` — roster line + caption
     #v(4pt)
-    #diagram(at-e4("!!"), move-quality: true, size: 3cm)
+    #diagram(game-e4("!!"), at: "1w", move-quality: true, size: 3cm)
   ],
 )
 
@@ -55,7 +57,7 @@ game-info: none` suppressed every visible sign of the diagram path).
 Default is off: this board carries the same annotated move and must show *no*
 badge at all.
 
-#board(at-e4("??"), size: 3cm)
+#board(game-e4("??"), at: "1w", size: 3cm)
 
 // (Recolouring via `move-quality-colors` is already eyeballed in markings.typ's
 // move-quality section — not repeated here. Every render-only sheet costs human

@@ -1,15 +1,16 @@
 // Asserting test: automatic year from the PGN roster (the `Date` tag). A diagram
 // prints " (<YEAR>)" after the players ONLY when the year is known from the
 // roster; otherwise the info line is just the player names. `diagram` resolves
-// the year with `year: auto` -> `_year-of(tags)`, reading the tags a game-derived
-// position carries in its provenance, and a caller's explicit `year:` still
+// the year with `year: auto` -> `_year-of(tags)`, reading the tags out of the
+// move context a game + `at:` derives, and a caller's explicit `year:` still
 // overrides. Here we lock down the roster-extraction core (`_year-of`): a full or
 // partial `Date` yields the four-digit year, while an unknown ("????") year or a
 // missing `Date` tag yields `none` (-> names only). The display/override wiring is
 // eyeballed in diagram/auto_captions (VISUAL_CHECKS).
 //
-// Prompt 49: `_year-of` takes the raw TAGS dict, not a game — the year is derived
-// from provenance now, and provenance carries tags rather than the game.
+// `_year-of` takes the raw TAGS dict, not a game — the year is derived from the
+// move context now (`_move-context`, see src/game.typ), which carries tags rather
+// than the game itself.
 #import "/lib.typ": game, _year-of
 
 #let mk(tags) = game(tags + "\n1. e4 *").tags

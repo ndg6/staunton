@@ -181,11 +181,12 @@
   // Move-quality indicator. A small badge on the destination square
   // of the last move, colored by the move's assessment. `move-quality` gates it;
   // `move-quality-mark` is the data `(square: "e5", symbol: "!!")`. Because a badge
-  // is tied to a MOVE, it is derived and injected ONLY by `diagram-after` (from the
-  // move's quality NAG / literal suffix) -- never settable on a bare position, and
-  // never on an empty square. Per-category backgrounds are settable; text is white.
+  // is tied to a MOVE, it is derived and injected ONLY by `board`/`diagram` when
+  // handed a game via `at:` (from the move's quality NAG / literal suffix) --
+  // never settable on a bare position, and never on an empty square. Per-category
+  // backgrounds are settable; text is white.
   move-quality: false,        // show the move-quality badge
-  move-quality-mark: none,    // (square: <name>, symbol: <! ? !! ?? !? ?!>) — internal, set by diagram-after only
+  move-quality-mark: none,    // (square: <name>, symbol: <! ? !! ?? !? ?!>) — internal, set by `board`/`diagram`'s `at:` resolution only
   move-quality-colors: (
     good: rgb("#4b8fd1"),        // ! !!   (light blue)
     bad: rgb("#c0392b"),         // ? ??   (red)
@@ -274,7 +275,8 @@
 // Board options that are inherently *position-specific* and therefore make no
 // sense as document-wide defaults (a single default would stamp the SAME squares
 // on every later board). `highlight` / `arrows` are per-CALL board arguments;
-// `move-quality-mark` is derived from a game move by `diagram-after`. All three
+// `move-quality-mark` is derived from a game move by `board`/`diagram`'s `at:`
+// resolution. All three
 // stay valid where they belong (see `board` / `diagram`); the defaults setters
 // reject them.
 #let board-non-default-keys = ("highlight", "arrows", "move-quality-mark")
@@ -290,7 +292,7 @@
 #let _reject-non-default-board(f) = {
   for k in f.keys() {
     assert(not board-non-default-keys.contains(k),
-      message: "`" + k + "` is position-specific and cannot be a document default; pass `highlight` / `arrows` per call, and let `diagram-after` supply the move-quality badge")
+      message: "`" + k + "` is position-specific and cannot be a document default; pass `highlight` / `arrows` per call, and let `board`/`diagram`'s `at:` supply the move-quality badge")
   }
 }
 
@@ -640,7 +642,7 @@
 /// Set default *board* style fields for all subsequent boards and diagrams
 /// (document-order state, like a Typst `#set`). `flip` is rejected (per-diagram
 /// only), as are the position-specific `highlight` / `arrows` (per-call only) and
-/// `move-quality-mark` (supplied by `diagram-after`).
+/// `move-quality-mark` (supplied by `board`/`diagram`'s `at:` resolution).
 ///
 /// - ..fields (arguments): named board style options (`size`, `light`, `dark`,
 ///   `labels`, `label-mode`, `piece-set`, …), plus `color-theme` / `board-theme`;
