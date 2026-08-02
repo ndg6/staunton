@@ -702,6 +702,36 @@ look.]
 )
 ```)
 
+Each shape's *color* and *geometry* are settable, and there are three places to
+set them. A `color:` on the entry itself wins, and applies to that square only.
+Otherwise the shape's own default applies: `cross-color`, `circle-color` or
+`frame-color` — set per call, or document-wide via `set-board-defaults`, or
+inside a reusable `board-theme`. The stroke weight and inset follow the same
+pattern (`cross-width` / `circle-width` / `frame-width`, `cross-margin` /
+`circle-margin` / `frame-margin`, and `frame-radius` for the frame's corner),
+each taking `auto`, a ratio of the square, or an absolute length. See @board-options
+for the full list and defaults.
+
+#example(```typ
+#board(
+  "8/8/8/4p3/4P3/8/8/8",
+  highlight: (
+    (square: "e4", shape: "frame", color: blue),  // this square only
+    (square: "e5", shape: "frame"),               // uses frame-color
+    (square: "d5", shape: "cross"),               // uses cross-color
+  ),
+  frame-color: purple,   // per call; set-board-defaults takes it too
+  frame-width: 14%,      // ratio of the square (auto = 10%)
+  size: 4cm,
+)
+```)
+
+A `(square, color)` pair is the short form when every mark is the same shape: it
+sets the color and leaves the shape to `highlight-shape`, so
+`highlight: (("e4", orange),)` with `highlight-shape: "frame"` gives an orange
+frame. That is also the form PGN `%csl` produces — which means
+`highlight-shape` decides how imported square annotations are drawn.
+
 == Arrows and the Grid
 
 As the name suggests `arrows` draws arrows on the board; each entry is a `(from, to)` or `(from, to, color)` tuple, or a dict `(from: .., to: .., color: ..)`. A missing color uses `arrow-color`.
