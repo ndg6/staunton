@@ -24,7 +24,7 @@
 #import "src/chess960.typ": chess960-start-fen
 #import "src/engine.typ": legal-moves, apply, in-check, checked-king-square as _checked-king-square
 #import "src/san.typ": play, move-to-san
-#import "src/pgn.typ": parse-pgn, movetext
+#import "src/pgn.typ": parse-pgn, games, game, movetext
 // `_position-at` is game.typ's provenance-free position lookup: `to-fen` only
 // wants the squares, so it must not pay for provenance it discards. It keeps its
 // underscore, which is also lib's marker for "not public API".

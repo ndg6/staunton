@@ -217,15 +217,17 @@
   else { panic("parse-pgn: expected a string or a raw block (`#raw(..)` or ```...```), got " + repr(type(input))) }
 }
 
-/// Parse PGN text into an array of games. The roster (tags), result, and the
-/// verbatim movetext substring are extracted eagerly; the move tree is parsed
-/// lazily on first use via `movetext(game)`, so a document that shows only a few
-/// positions never parses the rest.
+/// Parse PGN text into an array of games. The roster (tags) is optional — bare
+/// movetext like `1. e4 e5 *` parses fine and yields `tags: (:)`. The roster,
+/// result, and the verbatim movetext substring are extracted eagerly; the move
+/// tree is parsed lazily on first use via `movetext(game)`, so a document that
+/// shows only a few positions never parses the rest. Always returns an array,
+/// even for a single game — use `game(input)` when you know there is exactly one.
 ///
 /// - input (str, content): the PGN source — a string, or a raw block
 ///   (```` ```…``` ````) / `#raw(..)`.
 /// -> array
-#let parse-pgn(input) = {
+#let games(input) = {
   let s = _normalise(_as-text(input))
 
   // Unterminated tag / comment: an opener with no closer before end-of-input.
@@ -288,3 +290,28 @@
   assert(games.len() > 0, message: "no games found in PGN input")
   games
 }
+
+/// Parse PGN text that holds exactly one game, and return that game's dictionary
+/// directly (not wrapped in an array). The roster (tags) is optional, same as
+/// `games(input)`. Errors if the input holds more than one game — use
+/// `games(input)` to get all of them in that case.
+///
+/// - input (str, content): the PGN source — a string, or a raw block
+///   (```` ```…``` ````) / `#raw(..)`.
+/// -> dictionary
+#let game(input) = {
+  let gs = games(input)
+  assert(
+    gs.len() == 1,
+    message: "game(): input contains " + str(gs.len()) + " games; use games() to get all of them, or pass a single game",
+  )
+  gs.first()
+}
+
+/// Legacy alias for `games(input)`. Kept for backward compatibility; new code
+/// should prefer `games(input)` (or `game(input)` for a single game).
+///
+/// - input (str, content): the PGN source — a string, or a raw block
+///   (```` ```…``` ````) / `#raw(..)`.
+/// -> array
+#let parse-pgn(input) = games(input)
