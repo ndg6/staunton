@@ -29,7 +29,9 @@ Then open the PDFs below and check the noted property. (The expected-*fail* test
       (~3% margin, matching the circle); the frame shape row and the mixed-entries
       board both put a frame on an OCCUPIED square (unlike the cross convention)
       and the piece stays fully legible through the frame's open centre. Strokes
-      are ~15% of the square. The **Proportional strokes** section shows a
+      are ~10% of the square (thinned from 15% in 1.1.0; the arrow shaft stays
+      at 15%, so arrows should read as noticeably heavier than the marks).
+      The **Proportional strokes** section shows a
       circle+cross+arrow at 2/4/6 cm squares — the marks should read the **same
       weight** at every size (not heavy when small / thin when large); the
       overrides row shows a fat `20%` cross and a fixed `1pt` circle.

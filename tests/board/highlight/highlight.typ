@@ -33,7 +33,7 @@ over a piece (unlike a cross, which would be obscured by/obscure the piece).
 // square (both diagonals overlap on d4/f4/e3), the round-cap tips ~10% from the
 // corners (a short "×", not a full-diagonal line); each
 // circle sits just inside its square border (a small ~3% margin — it no longer
-// touches the border) without spilling over. Strokes are ~15% of the square.
+// touches the border) without spilling over. Mark strokes are ~10% of the square.
 // Each frame is a ROUNDED rectangle (visibly rounded corners, not sharp, not a
 // full stadium/circle) that sits just inside the square border (~3% margin) and
 // stays legible over the occupied squares (piece visible through the open
@@ -89,7 +89,8 @@ opaque fill); a per-call override still wins on the right:
 
 = Proportional strokes (0.2.2)
 
-Same cross + circle + arrow at three square sizes. Strokes (~15%) and margins
+Same cross + circle + arrow at three square sizes. Mark strokes (~10%), the
+arrow shaft (~15%), and margins
 (cross tip ~10%, circle ~3%) scale with the square, so the marks read the same at every
 size — small boards no longer look heavy, large boards no longer look thin.
 

@@ -299,8 +299,8 @@
 // Geometry for the "frame" highlight: a stroked rounded rect hugging the
 // square border. Takes RAW style values (`auto`, a ratio, or a length) for
 // stroke width `w`, inset margin `m`, and desired outer corner radius `r`,
-// and resolves each internally via `_resolve-square-dim` (auto -> 15% / 3% /
-// 22% of `sq` respectively) before doing the arithmetic. The 15%/3%/22%
+// and resolves each internally via `_resolve-square-dim` (auto -> 10% / 3% /
+// 22% of `sq` respectively) before doing the arithmetic. The 10%/3%/22%
 // defaults live HERE, not inline in the caller, so they sit under the same
 // assert the rest of this function's geometry does -- an inline resolve at
 // the call site would be wiring the suite can't see (prompt 51 follow-up).
@@ -321,7 +321,7 @@
 // Invariant: the outer stroke edge sits `m` inside the square border on all
 // four sides.
 #let _frame-geom(sq, w, m, r) = {
-  let w = _resolve-square-dim(w, sq, 15%)
+  let w = _resolve-square-dim(w, sq, 10%)
   let m = _resolve-square-dim(m, sq, 3%)
   let r = _resolve-square-dim(r, sq, 22%)
   let side = sq - 2 * m - w
@@ -344,6 +344,9 @@
   let uy = dy / len
   let head-len = sq * 0.36
   let head-hw = sq * 0.20
+  // Arrows keep the older, heavier 15%: the highlight MARKS were thinned to 10%
+  // (1.1.0) but an arrow shaft spans several squares, so at 10% it reads as a
+  // hairline rather than a pointer. Deliberately NOT kept in step with them.
   let sw = _resolve-square-dim(shaft-w, sq, 15%)
   let bx = tx - ux * head-len   // base of the head (shaft stops here)
   let by = ty - uy * head-len
@@ -375,7 +378,7 @@
   if shape == "filled" {
     place(dx: dx, dy: dy, rect(width: sq, height: sq, fill: fill, stroke: none))
   } else if shape == "circle" {
-    let w = _resolve-square-dim(opts.circle.width, sq, 15%)
+    let w = _resolve-square-dim(opts.circle.width, sq, 10%)
     let m = _resolve-square-dim(opts.circle.margin, sq, 3%)
     // Outer stroke edge sits `m` inside the border; the stroke straddles the
     // radius, so shrink the radius by `m + w/2` and re-centre by the same.
@@ -387,7 +390,7 @@
       circle(radius: radius, fill: none, stroke: w + opts.circle.color),
     )
   } else if shape == "cross" {
-    let w = _resolve-square-dim(opts.cross.width, sq, 15%)
+    let w = _resolve-square-dim(opts.cross.width, sq, 10%)
     let m = _resolve-square-dim(opts.cross.margin, sq, 10%)
     // `cross-margin` is the distance from each corner to the cross TIP (like
     // board-n-pieces). Round caps extend w/2 along the diagonal, i.e. w/√8 per
@@ -407,7 +410,7 @@
     // shape -- the outer corner radius (~22% of the square) was MEASURED from
     // its reference screenshots, prompt 51. ChessBase's stroke is a fixed 5px
     // screen constant; that was deliberately NOT copied -- staunton keeps its
-    // marker strokes proportional (15% of the square, matching cross/circle)
+    // marker strokes proportional (10% of the square, matching cross/circle)
     // so the frame scales with the board like everything else.
     let geom = _frame-geom(sq, opts.frame.width, opts.frame.margin, opts.frame.radius)
     place(

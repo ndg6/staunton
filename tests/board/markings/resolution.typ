@@ -53,7 +53,8 @@
 // auto -> the default ratio * square; an explicit ratio -> that fraction of the
 // square; an absolute length -> passed through unchanged.
 #import "/src/board.typ": _resolve-square-dim
-#assert.eq(_resolve-square-dim(auto, 4cm, 15%), 0.6cm)    // stroke default (15%)
+#assert.eq(_resolve-square-dim(auto, 4cm, 10%), 0.4cm)    // mark stroke default (10%): cross/circle/frame
+#assert.eq(_resolve-square-dim(auto, 4cm, 15%), 0.6cm)    // ARROW stroke default (15%) -- arrows stay heavier
 #assert.eq(_resolve-square-dim(auto, 4cm, 3%), 0.12cm)    // circle-margin default
 #assert.eq(_resolve-square-dim(auto, 2cm, 10%), 0.2cm)    // cross-margin default (corner-to-tip)
 #assert.eq(_resolve-square-dim(10%, 4cm, 15%), 0.4cm)     // explicit ratio wins
@@ -88,7 +89,7 @@
 #assert.eq(clamped.radius, (4cm - 2 * 0.12cm) / 2)
 #assert.ne(clamped.radius, 10cm)
 
-// (d) `auto` defaults resolve to the documented ratios (15% width, 3% margin,
+// (d) `auto` defaults resolve to the documented ratios (10% width, 3% margin,
 // 22% radius) -- `_frame-geom` now resolves raw style values internally. The
 // expected numbers below are LITERAL lengths, computed by hand, NOT by calling
 // `_resolve-square-dim(auto, sq, ratio)` here: that would just mirror the
@@ -97,15 +98,15 @@
 // exactly the bug this assert exists to catch. Do not "simplify" this back to
 // a call through `_resolve-square-dim`.
 #let g4 = _frame-geom(4cm, auto, auto, auto)
-#assert.eq(g4.width, 0.6cm)    // 15% of 4cm
-#assert.eq(g4.offset, 0.42cm)  // 3% margin (0.12cm) + half the 0.6cm stroke
-#assert.eq(g4.side, 3.16cm)    // 4cm - 2*0.12cm - 0.6cm
+#assert.eq(g4.width, 0.4cm)    // 10% of 4cm
+#assert.eq(g4.offset, 0.32cm)  // 3% margin (0.12cm) + half the 0.4cm stroke
+#assert.eq(g4.side, 3.36cm)    // 4cm - 2*0.12cm - 0.4cm
 #assert.eq(g4.radius, 0.88cm)  // 22% of 4cm
 
 #let g2 = _frame-geom(2cm, auto, auto, auto)
-#assert.eq(g2.width, 0.3cm)    // 15% of 2cm
-#assert.eq(g2.offset, 0.21cm)  // 3% margin (0.06cm) + half the 0.3cm stroke
-#assert.eq(g2.side, 1.58cm)    // 2cm - 2*0.06cm - 0.3cm
+#assert.eq(g2.width, 0.2cm)    // 10% of 2cm
+#assert.eq(g2.offset, 0.16cm)  // 3% margin (0.06cm) + half the 0.2cm stroke
+#assert.eq(g2.side, 1.68cm)    // 2cm - 2*0.06cm - 0.2cm
 #assert.eq(g2.radius, 0.44cm)  // 22% of 2cm
 
 = move-markings resolution

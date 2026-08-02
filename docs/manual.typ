@@ -1959,7 +1959,7 @@ setters reject them), though their *styling* options can.
   raw("highlight-shape"), raw("\"filled\""), [default shape for plain-string highlight entries],
   [`highlight-fill` / `highlight-transparency`], [green, `75%`], [filled-highlight color and its transparency],
   [`cross-color` / `circle-color` / `frame-color`], [red / green / green], [cross / circle / frame stroke colors],
-  [`cross-width` / `circle-width` / `frame-width`], raw("auto"), [cross / circle / frame stroke widths; `auto` → 15% of the square (a `ratio` or absolute length also work)],
+  [`cross-width` / `circle-width` / `frame-width`], raw("auto"), [cross / circle / frame stroke widths; `auto` → 10% of the square (a `ratio` or absolute length also work)],
   [`cross-margin` / `circle-margin` / `frame-margin`], raw("auto"), [cross corner-to-tip distance / circle inset / frame inset; `auto` → 10% / 3% / 3% of the square (ratio / length accepted)],
   raw("frame-radius"), raw("auto"), [frame outer corner radius; `auto` → 22% of the square (ratio / length accepted)],
   [`arrow-color` / `arrow-transparency`], [green, `35%`], [default arrow color and its transparency],
