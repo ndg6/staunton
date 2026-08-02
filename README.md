@@ -250,6 +250,15 @@ header must error with that message, any other must compile. Files/dirs prefixed
 
 ### 1.1.0
 
+- **Positions remember the move they came from.** `position-after` (and
+  anything built on it) now folds a small provenance payload — locator, SAN,
+  move quality, `%cal`/`%csl` annotations, raw tags, but never the game itself
+  — into the position it returns. `board`/`diagram` read that payload at one
+  shared seam, so the move-quality badge and imported annotations render
+  correctly regardless of which function produced the position: badge
+  legitimacy is a property of the *value* ("this came from a real move"), not
+  of which function was called. No new public API — `diagram-after` is a
+  one-line alias for `diagram(position-after(g, l))`.
 - **New highlight shape `"frame"`** — a stroked rounded rectangle hugging the
   square border, reproducing the square highlight used by ChessBase. Unlike
   `"cross"` it carries no empty-square convention: it leaves the centre clear,
