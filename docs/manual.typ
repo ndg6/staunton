@@ -209,7 +209,7 @@
     #v(8pt)
     #link("https://github.com/ndg6/staunton")[#text(size: 11pt, fill: rgb("#555"), font: "DejaVu Sans Mono")[https://github.com/ndg6/staunton]]
     #v(8pt)
-    #text(size: 10pt, fill: rgb("#666"))[User manual · package version 1.0.0]
+    #text(size: 10pt, fill: rgb("#666"))[User manual · package version 1.1.0]
   ]
 ]
 
@@ -334,7 +334,7 @@ references*, and the *document-wide defaults*.
 manual is in scope:
 
 ```typ
-#import "@preview/staunton:1.0.0": *
+#import "@preview/staunton:1.1.0": *
 ```
 
 Should a short name like `board`, `diagram` or `notation` collide with something
@@ -342,7 +342,7 @@ else in your document, import selectively and rename as you go — Typst's `as`
 does that, and the rest of this manual still applies under the new name:
 
 ```typ
-#import "@preview/staunton:1.0.0": board as chessboard, diagram as chessdiagram
+#import "@preview/staunton:1.1.0": board as chessboard, diagram as chessdiagram
 ```
 
 *staunton* needs *Typst 0.14.2 or newer* — with one exception: HTML export
@@ -1744,7 +1744,7 @@ to your own document. Yours is the one place it can live: a rule inside the
 package would have to wrap the figure, and that breaks the cross-references.
 
 ```typ
-#import "@preview/staunton:1.0.0": chess-table-kind
+#import "@preview/staunton:1.1.0": chess-table-kind
 
 #show figure.caption: it => {
   if it.kind == chess-table-kind {
@@ -2126,7 +2126,7 @@ Everything else in `src/` (the position parser's internals, the SAN encoder, the
 renderer, the comment interpreter, the localization tables, …) is deliberately
 *not* re-exported from the package: those names are implementation details that
 may change between releases. If you truly need one, import it directly from its
-module — e.g. `#import "@preview/staunton:1.0.0/src/coords.typ": square-name` —
+module — e.g. `#import "@preview/staunton:1.1.0/src/coords.typ": square-name` —
 with the understanding that it carries no stability promise.
 
 == Tournament data
