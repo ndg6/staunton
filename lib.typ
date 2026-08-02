@@ -32,7 +32,7 @@
 // `_position-at` is game.typ's provenance-free position lookup: `to-fen` only
 // wants the squares, so it must not pay for provenance it discards. It keeps its
 // underscore, which is also lib's marker for "not public API".
-#import "src/game.typ": mainline, position-after, _position-at, game-result, move-san, move-node, with-nags, with-comments, with-variation, game-start, game-variant
+#import "src/game.typ": mainline, position-after, _position-at, _origin-of, game-result, move-san, move-node, with-nags, with-comments, with-variation, game-start, game-variant
 // The text core lives in src/notation.typ; lib defines `notation` on top so
 // it can also embed diagrams (which needs the lib-level `diagram`).
 #import "src/notation.typ": notation as _notation-text
@@ -297,6 +297,32 @@
   ov
 }
 
+// D1 checkpoint: let `board`/`diagram` take a game directly via `at:`, instead of
+// requiring the caller to pre-resolve `position-after(game, at)`. This is a THIN
+// front door: it derives an ordinary position (`_position-at`) and, when there is
+// one, that move's provenance (`_origin-of`), then attaches the provenance the
+// exact same way `position-after` already does (`_origin` field) — so every
+// downstream consumer (`_to-board`, `_analyzable-position`, `_board-internal`,
+// `diagram`'s own `_origin-in` read) sees a plain position and needs no game
+// awareness at all. `source` unchanged (not a game, or a game with no `at:`)
+// passes straight through, so the existing `_origin`-on-the-position path and
+// `diagram-after` are untouched.
+#let _resolve-at-source(source, at) = {
+  let is-game = type(source) == dictionary and "movetext-raw" in source
+  if at != none {
+    assert(is-game,
+      message: "`at:` requires a game — a position already identifies its own move; pass the game (not the position) together with `at:` to select a move within it")
+    let pos = _position-at(source, at)
+    let origin = _origin-of(source, at)
+    if origin != none { pos.insert("_origin", origin) }
+    pos
+  } else {
+    assert(not is-game,
+      message: "a game needs `at:` naming which move to draw (e.g. `at: \"12w\"`) — or use `position-after(game, at)` / `diagram-after(game, at)`")
+    source
+  }
+}
+
 // Shared board renderer: the actual draw, with the in-check auto-fill and the
 // provenance fold. `ov` is the resolved override dict. Both `board` and (through
 // it) `diagram` funnel here, which is why provenance is consumed at this one
@@ -351,11 +377,12 @@
 /// rules engine.
 ///
 /// - source (str, dictionary): the position to draw — a *FEN string*, a
-///   *position* dict (from `position`), or a bare *squares* dict
-///   (`(e1: "K", …)`).
-/// When `source` came from `position-after`, it remembers its move: the move's
-/// `%cal` / `%csl` annotations and its move-quality badge are drawn automatically.
-/// A FEN string or a hand-built position has no such history and is drawn plain.
+///   *position* dict (from `position`), a bare *squares* dict
+///   (`(e1: "K", …)`), or a *game* (from `game` / `games`), paired with `at:`.
+/// When `source` came from `position-after`, or is a game drawn via `at:`, it
+/// remembers its move: the move's `%cal` / `%csl` annotations and its
+/// move-quality badge are drawn automatically. A FEN string or a hand-built
+/// position has no such history and is drawn plain.
 ///
 /// - flip (bool): show the board from Black's side. Per-call only — never a
 ///   document default.
@@ -363,11 +390,16 @@
 ///   comment annotations into arrows / highlights; `auto` consults
 ///   `set-pgn-defaults` (off by default). No effect on a position without a game
 ///   history.
+/// - at (str, dictionary, none): when `source` is a *game*, which move to draw
+///   — a mainline `"12w"` / `"12b"` or a variation path dict, exactly like
+///   `position-after`'s `locator`. Required with a game; an error otherwise (a
+///   position already identifies its own move).
 /// - ..overrides (arguments): any board *style* option (`size`, `light`, `dark`,
 ///   `labels`, `label-mode`, `file-side`, `rank-side`, `piece-set`, `highlight`,
 ///   `arrows`, `grid`, …) — see #link(<board-options>)[Board style options].
 /// -> content
-#let board(source, flip: false, annotations: auto, ..overrides) = {
+#let board(source, flip: false, annotations: auto, at: none, ..overrides) = {
+  let source = _resolve-at-source(source, at)
   let ov = overrides.named()
   // Move-quality badges are tied to a MOVE. The legitimate way in is a position
   // that PROVES it came from one (`position-after` provenance, folded in by
@@ -496,8 +528,8 @@
 /// quality badge are drawn — all of which `diagram-after` is now just a shorthand
 /// for.
 ///
-/// - source (str, dictionary): a FEN string, a position dict, or a bare board
-///   dict.
+/// - source (str, dictionary): a FEN string, a position dict, a bare board
+///   dict, or a *game* (from `game` / `games`), paired with `at:`.
 /// - white (auto, str, none): white player's name, for the automatic info line;
 ///   `auto` uses the source's game tags when it has any.
 /// - black (auto, str, none): black player's name.
@@ -511,6 +543,8 @@
 /// - flip (bool): show the board from Black's side (per-diagram only).
 /// - annotations (auto, bool): process the source position's `%cal` / `%csl`
 ///   annotations into arrows / highlights; `auto` consults `set-pgn-defaults`.
+/// - at (str, dictionary, none): when `source` is a *game*, which move to draw
+///   — see `board`'s `at:`. Required with a game; an error otherwise.
 /// - lang (auto, str): language for the supplement; `auto` follows the document.
 /// - ..args (arguments): board *style* options go to the renderer; anything else
 ///   is forwarded to `#figure` (e.g. `placement: top`).
@@ -525,9 +559,11 @@
   game-info: auto,
   flip: false,
   annotations: auto,
+  at: none,
   lang: auto,
   ..args,
 ) = {
+  let source = _resolve-at-source(source, at)
   let (board-ov, diagram-ov, fig-args) = _split-args(args.named())
   let origin = _origin-in(source)
   let tags = if origin != none { origin.tags } else { (:) }
