@@ -24,9 +24,16 @@ Then open the PDFs below and check the noted property. (The expected-*fail* test
       corners (a short "×", not a full-diagonal line); each
       **circle** sits just inside its square border (small ~3% margin — it no
       longer touches the border) without spilling; filled squares sit under the
-      pieces. Strokes are ~15% of the square. The **Proportional strokes** section
-      shows a circle+cross+arrow at 2/4/6 cm squares — the marks should read the
-      **same weight** at every size (not heavy when small / thin when large); the
+      pieces. Each **frame** is a visibly ROUNDED rectangle (rounded corners, not
+      sharp, not a stadium/circle) whose stroke sits just inside the square border
+      (~3% margin, matching the circle); the frame shape row and the mixed-entries
+      board both put a frame on an OCCUPIED square (unlike the cross convention)
+      and the piece stays fully legible through the frame's open centre. Strokes
+      are ~10% of the square (thinned from 15% in 1.1.0; the arrow shaft stays
+      at 15%, so arrows should read as noticeably heavier than the marks).
+      The **Proportional strokes** section shows a
+      circle+cross+arrow at 2/4/6 cm squares — the marks should read the **same
+      weight** at every size (not heavy when small / thin when large); the
       overrides row shows a fat `20%` cross and a fixed `1pt` circle.
       *(This sheet hid a cross-on-the-wrong-square bug that compiled green.)*
 - [ ] `board/arrows/arrows.pdf` — arrows run centre-to-centre, scale with the
@@ -196,7 +203,7 @@ Then open the PDFs below and check the noted property. (The expected-*fail* test
       theme, the label modes/sides/corners, the border themes/outline, the grid, the
       merida set and 0.7 piece-scale, the check glow (blue, and the forced-`e1` one),
       and the Unicode glyph fallback. Note the **highlight/arrow *styling*** sections:
-      the fill/circle/cross colors and the teal arrow are set as *defaults*, while the
+      the fill/circle/cross/frame colors and the teal arrow are set as *defaults*, while the
       `highlight:` / `arrows:` **list** is passed **per call** (it is per-call only).
       The **move-quality** section uses `diagram-after` (i.e. a game-derived
       position, not a bare board): with

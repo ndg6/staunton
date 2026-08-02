@@ -141,8 +141,8 @@ or a squares dict:
   derivable from one another), brightness / contrast adjustment, square patterns
   (stripes, marble, wood), seven `"border"`-mode band looks including wood and
   marble material frames, six label placements, flip, piece sets, grid;
-  proportional highlights (filled / cross / circle) and arrows; size-adaptive
-  layout.
+  proportional highlights (filled / cross / circle / frame) and arrows;
+  size-adaptive layout.
 - **Bring-your-own & fairy pieces** — any downloaded set via a `piece-set` loader
   (`named-piece-set` / `svg-piece-set`), plus non-standard kinds and whole variants
   (`define-variant`, `with-fallback`).
@@ -419,7 +419,7 @@ Initial release.
 
 - The [boards-n-pieces](https://typst.app/universe/package/boards-n-pieces) Typst
   package was an inspiration for some features.
-- Developed with assistance from Claude (Opus 4.8) by Anthropic.
+- Developed with assistance from Claude models by Anthropic.
 
 ## License
 

@@ -1,9 +1,11 @@
-// highlights. Three shapes: "filled" (default), "cross",
-// "circle". Entry forms: a square name (uses highlight-shape + highlight-fill);
-// a (square, color) pair (filled, explicit color, e.g. PGN %csl); a dict
-// (square:, shape:, color:) for full control. Settable options: highlight-fill +
-// highlight-transparency (filled), cross-color / circle-color, cross-width /
-// circle-width.
+// highlights. Four shapes: "filled" (default), "cross",
+// "circle", "frame". Entry forms: a square name (uses highlight-shape +
+// highlight-fill); a (square, color) pair (filled, explicit color, e.g. PGN
+// %csl); a dict (square:, shape:, color:) for full control. Settable options:
+// highlight-fill + highlight-transparency (filled), cross-color / circle-color /
+// frame-color, cross-width / circle-width / frame-width. Unlike "cross" (which by
+// convention marks an EMPTY square), "frame" hugs the square's border and leaves
+// the centre clear, so it works fine on an OCCUPIED square too.
 #import "/lib.typ": board, default-board-style, set-board-defaults
 #import "/tests/board/_fixture.typ": test-fen
 
@@ -11,36 +13,46 @@
 #assert(default-board-style.highlight-shape == "filled", message: "filled is the default shape")
 #assert(default-board-style.highlight-transparency == 75%, message: "default transparency 75%")
 // 0.2.2: strokes + margins default to `auto` (proportional to the square).
-#assert(default-board-style.cross-width == auto and default-board-style.circle-width == auto, message: "default stroke is auto (proportional)")
-#assert(default-board-style.cross-margin == auto and default-board-style.circle-margin == auto, message: "default margins are auto (proportional)")
+#assert(default-board-style.cross-width == auto and default-board-style.circle-width == auto and default-board-style.frame-width == auto, message: "default stroke is auto (proportional)")
+#assert(default-board-style.cross-margin == auto and default-board-style.circle-margin == auto and default-board-style.frame-margin == auto, message: "default margins are auto (proportional)")
+#assert(default-board-style.frame-radius == auto, message: "default frame-radius is auto (proportional)")
+#assert(default-board-style.frame-color == green, message: "default frame-color is green")
 
 #set page(width: auto, height: auto, margin: 1cm)
 #set text(font: "Libertinus Serif", size: 9pt)
 
 = Highlight shapes
 
-Filled (default, green @ 75% transparency), cross (red), circle (green). By
-convention a cross marks an EMPTY square, so the cross row uses empty squares
-(d4, f4, e3) while filled/circle sit on occupied ones (e4, e5, c4).
+Filled (default, green @ 75% transparency), cross (red), circle (green), frame
+(green). By convention a cross marks an EMPTY square, so the cross row uses
+empty squares (d4, f4, e3) while filled/circle/frame sit on occupied ones (e4,
+e5, c4) — frame hugs the border and leaves the centre clear, so it works fine
+over a piece (unlike a cross, which would be obscured by/obscure the piece).
 
 // VISUAL REGRESSION CHECK: each cross must be a complete X CONFINED to its own
 // square (both diagonals overlap on d4/f4/e3), the round-cap tips ~10% from the
 // corners (a short "×", not a full-diagonal line); each
 // circle sits just inside its square border (a small ~3% margin — it no longer
-// touches the border) without spilling over. Strokes are ~15% of the square.
+// touches the border) without spilling over. Mark strokes are ~10% of the square.
+// Each frame is a ROUNDED rectangle (visibly rounded corners, not sharp, not a
+// full stadium/circle) that sits just inside the square border (~3% margin) and
+// stays legible over the occupied squares (piece visible through the open
+// centre).
 
-#grid(columns: 3, column-gutter: 12pt,
+#grid(columns: 4, column-gutter: 12pt,
   stack(dir: ttb, spacing: 4pt, align(center, emph("filled")),
     board(test-fen, size: 4cm, labels: false, highlight: ("e4", "e5", "c4"))),
   stack(dir: ttb, spacing: 4pt, align(center, emph("cross (empty squares)")),
     board(test-fen, size: 4cm, labels: false, highlight: ("d4", "f4", "e3"), highlight-shape: "cross")),
   stack(dir: ttb, spacing: 4pt, align(center, emph("circle")),
     board(test-fen, size: 4cm, labels: false, highlight: ("e4", "e5", "c4"), highlight-shape: "circle")),
+  stack(dir: ttb, spacing: 4pt, align(center, emph("frame (occupied squares)")),
+    board(test-fen, size: 4cm, labels: false, highlight: ("e4", "e5", "c4"), highlight-shape: "frame")),
 )
 
 = Per-entry shapes and colors (dict form)
 
-A single board mixing all three shapes (crosses on empty squares), with per-entry
+A single board mixing all four shapes (crosses on empty squares), with per-entry
 color overrides:
 
 #board(test-fen, size: 5cm, labels: false, highlight: (
@@ -49,6 +61,7 @@ color overrides:
   (square: "f4", shape: "cross"),                           // empty square
   (square: "c5", shape: "circle", color: rgb(0, 70, 160)),  // blue circle
   (square: "d4", shape: "cross",  color: rgb(120, 0, 140)), // purple cross, empty
+  (square: "c4", shape: "frame",  color: rgb(200, 140, 0)), // amber frame, occupied
 ))
 
 = Settable widths, colors, and transparency
@@ -76,7 +89,8 @@ opaque fill); a per-call override still wins on the right:
 
 = Proportional strokes (0.2.2)
 
-Same cross + circle + arrow at three square sizes. Strokes (~15%) and margins
+Same cross + circle + arrow at three square sizes. Mark strokes (~10%), the
+arrow shaft (~15%), and margins
 (cross tip ~10%, circle ~3%) scale with the square, so the marks read the same at every
 size — small boards no longer look heavy, large boards no longer look thin.
 

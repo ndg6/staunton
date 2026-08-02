@@ -296,6 +296,40 @@
   else { panic("marker dimension must be `auto`, a ratio (e.g. 10%), or a length; got " + repr(value)) }
 }
 
+// Geometry for the "frame" highlight: a stroked rounded rect hugging the
+// square border. Takes RAW style values (`auto`, a ratio, or a length) for
+// stroke width `w`, inset margin `m`, and desired outer corner radius `r`,
+// and resolves each internally via `_resolve-square-dim` (auto -> 10% / 3% /
+// 22% of `sq` respectively) before doing the arithmetic. The 10%/3%/22%
+// defaults live HERE, not inline in the caller, so they sit under the same
+// assert the rest of this function's geometry does -- an inline resolve at
+// the call site would be wiring the suite can't see (prompt 51 follow-up).
+// A `length` passes through `_resolve-square-dim` unchanged, so existing
+// callers that hand in already-resolved lengths keep working identically.
+// Still importable and directly assertable from a test with no board
+// involved -- no rendering, no style-dict lookups.
+//
+// Typst's `rect(width:, height:, radius:, stroke:)` straddles the STRAIGHT
+// edges with the stroke (outer box = side + w), but does NOT straddle the
+// CORNER: the outer corner radius equals `radius:` exactly as passed
+// (measured, prompt 51 -- do not subtract w/2 here). So:
+//   side   = sq - 2*m - w   -- the rect Typst is asked to draw
+//   offset = m + w/2        -- dx/dy, relative to the square origin
+//   radius = r, clamped to at most half of (sq - 2*m) -- an over-large
+//            radius doesn't error, Typst silently degrades to a stadium,
+//            so the clamp has to be ours.
+// Invariant: the outer stroke edge sits `m` inside the square border on all
+// four sides.
+#let _frame-geom(sq, w, m, r) = {
+  let w = _resolve-square-dim(w, sq, 10%)
+  let m = _resolve-square-dim(m, sq, 3%)
+  let r = _resolve-square-dim(r, sq, 22%)
+  let side = sq - 2 * m - w
+  assert(side > 0pt, message: "frame highlight: frame-width + frame-margin exceed the square; reduce one of them")
+  let radius = calc.min(r, (sq - 2 * m) / 2)
+  (offset: m + w / 2, side: side, radius: radius, width: w)
+}
+
 // A straight arrow: a shaft plus a filled triangular head, from
 // (fx,fy) to (tx,ty) in board-canvas coordinates. Drawn by `place`ing at the
 // origin and giving absolute vertex coordinates, so it composes with the rest of
@@ -310,6 +344,9 @@
   let uy = dy / len
   let head-len = sq * 0.36
   let head-hw = sq * 0.20
+  // Arrows keep the older, heavier 15%: the highlight MARKS were thinned to 10%
+  // (1.1.0) but an arrow shaft spans several squares, so at 10% it reads as a
+  // hairline rather than a pointer. Deliberately NOT kept in step with them.
   let sw = _resolve-square-dim(shaft-w, sq, 15%)
   let bx = tx - ux * head-len   // base of the head (shaft stops here)
   let by = ty - uy * head-len
@@ -334,12 +371,15 @@
 //                 stroked with round caps. The two diagonals are placed
 //                 INDEPENDENTLY: a single `place` holding both lines would stack
 //                 them in normal flow, dropping the second diagonal a square down.
-#let _draw-highlight(shape, dx, dy, sq, fill, cross-col, circle-col, cross-w, circle-w, cross-margin, circle-margin) = {
+//   * "frame"  -> a stroked rounded rect whose OUTER stroke edge sits
+//                 `frame-margin` inside the square border, corner radius
+//                 `frame-radius`; geometry via `_frame-geom`.
+#let _draw-highlight(shape, dx, dy, sq, fill, opts) = {
   if shape == "filled" {
     place(dx: dx, dy: dy, rect(width: sq, height: sq, fill: fill, stroke: none))
   } else if shape == "circle" {
-    let w = _resolve-square-dim(circle-w, sq, 15%)
-    let m = _resolve-square-dim(circle-margin, sq, 3%)
+    let w = _resolve-square-dim(opts.circle.width, sq, 10%)
+    let m = _resolve-square-dim(opts.circle.margin, sq, 3%)
     // Outer stroke edge sits `m` inside the border; the stroke straddles the
     // radius, so shrink the radius by `m + w/2` and re-centre by the same.
     let radius = sq / 2 - m - w / 2
@@ -347,11 +387,11 @@
     place(
       dx: dx + m + w / 2,
       dy: dy + m + w / 2,
-      circle(radius: radius, fill: none, stroke: w + circle-col),
+      circle(radius: radius, fill: none, stroke: w + opts.circle.color),
     )
   } else if shape == "cross" {
-    let w = _resolve-square-dim(cross-w, sq, 15%)
-    let m = _resolve-square-dim(cross-margin, sq, 10%)
+    let w = _resolve-square-dim(opts.cross.width, sq, 10%)
+    let m = _resolve-square-dim(opts.cross.margin, sq, 10%)
     // `cross-margin` is the distance from each corner to the cross TIP (like
     // board-n-pieces). Round caps extend w/2 along the diagonal, i.e. w/√8 per
     // axis, so pull the geometric endpoints in by that offset to land the tip at
@@ -360,11 +400,26 @@
     let lo = m + off
     let hi = sq - m - off
     assert(lo < hi, message: "cross highlight: cross-margin (plus stroke) too large for the square")
-    let str = stroke(paint: cross-col, thickness: w, cap: "round")
+    let str = stroke(paint: opts.cross.color, thickness: w, cap: "round")
     place(dx: dx, dy: dy, line(start: (lo, hi), end: (hi, lo), stroke: str))      // LL -> UR
     place(dx: dx, dy: dy, line(start: (lo, lo), end: (hi, hi), stroke: str))      // UL -> LR
+  } else if shape == "frame" {
+    // Reproduces ChessBase's square highlight; see
+    // https://en.chessbase.com/post/annotating-in-chessbase-arrows-and-highlighted-squares
+    // (Albert Silver, 26 Oct 2021). The article shows but never describes the
+    // shape -- the outer corner radius (~22% of the square) was MEASURED from
+    // its reference screenshots, prompt 51. ChessBase's stroke is a fixed 5px
+    // screen constant; that was deliberately NOT copied -- staunton keeps its
+    // marker strokes proportional (10% of the square, matching cross/circle)
+    // so the frame scales with the board like everything else.
+    let geom = _frame-geom(sq, opts.frame.width, opts.frame.margin, opts.frame.radius)
+    place(
+      dx: dx + geom.offset,
+      dy: dy + geom.offset,
+      rect(width: geom.side, height: geom.side, radius: geom.radius, fill: none, stroke: geom.width + opts.frame.color),
+    )
   } else {
-    panic("highlight shape must be \"filled\", \"cross\", or \"circle\"; got " + repr(shape))
+    panic("highlight shape must be \"filled\", \"cross\", \"circle\", or \"frame\"; got " + repr(shape))
   }
 }
 
@@ -559,7 +614,13 @@
           let fill = if ecol == auto { hl-default-fill } else { _resolve-anno-color(ecol, st.annotation-colors, hl-default-fill) }
           let cross-c = if ecol == auto { st.cross-color } else { _resolve-anno-color(ecol, st.annotation-colors, st.cross-color) }
           let circle-c = if ecol == auto { st.circle-color } else { _resolve-anno-color(ecol, st.annotation-colors, st.circle-color) }
-          _draw-highlight(shape, o.dx, o.dy, sq, fill, cross-c, circle-c, st.cross-width, st.circle-width, st.cross-margin, st.circle-margin)
+          let frame-c = if ecol == auto { st.frame-color } else { _resolve-anno-color(ecol, st.annotation-colors, st.frame-color) }
+          let opts = (
+            cross: (color: cross-c, width: st.cross-width, margin: st.cross-margin),
+            circle: (color: circle-c, width: st.circle-width, margin: st.circle-margin),
+            frame: (color: frame-c, width: st.frame-width, margin: st.frame-margin, radius: st.frame-radius),
+          )
+          _draw-highlight(shape, o.dx, o.dy, sq, fill, opts)
         }
         // in-check glow: under the pieces, over the checker/highlights.
         // `check-square` is auto-filled by `board()` for analyzable positions.
