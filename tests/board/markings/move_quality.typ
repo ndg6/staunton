@@ -29,7 +29,13 @@
 #let head = "[White \"a\"][Black \"b\"] "
 
 #for sym in SYMBOLS {
-  // (a) literal suffix on the SAN: "1. e4!!"
+  // (a) a literal suffix glyph typed in the PGN text: "1. e4!!". Since the
+  // D2 fix, `parse-pgn` converts this to the equivalent quality NAG AT PARSE
+  // TIME (src/pgn.typ's `_split-quality-suffix`/`_finalize-quality-nag`), so
+  // by the time `move-quality-mark` runs there is no SAN suffix left to see --
+  // it reads the NAG, exactly like case (b) below. This case exists to prove
+  // that the end-to-end result (source text -> badge symbol) is unaffected by
+  // where the conversion happens, not to exercise a separate SAN-suffix path.
   let lit = parse-pgn(head + "1. e4" + sym + " e5 *").first()
   assert.eq(move-quality-mark(lit, "1w"), (square: "e4", symbol: sym),
     message: "literal suffix " + sym + " must yield that symbol on e4")
@@ -46,12 +52,16 @@
 }
 
 // ---------------------------------------------------------------------------
-// 2. Both at once: a move carrying a literal suffix AND a NAG.
-//    The NAG wins — `move-quality-mark` scans NAGs first and only falls back to
-//    the SAN suffix when none is a quality NAG. Pinned here because the two can
-//    legitimately disagree in real PGN files (a tool adds $2 to a move an author
-//    already wrote as "!"), and silently picking the other one would relabel a
-//    blunder as brilliant.
+// 2. Both at once: a move carrying a literal suffix AND an explicit NAG.
+//    The explicit NAG wins and the suffix glyph is discarded (never doubled) --
+//    this is now decided at PARSE time, by `_finalize-quality-nag` in
+//    src/pgn.typ (the suffix-derived code is inserted only if no explicit
+//    quality NAG is already present). `move-quality-mark` itself no longer has
+//    a SAN-suffix fallback to choose between -- it just reads whichever NAG
+//    survived parsing. Pinned here because the two can legitimately disagree
+//    in real PGN files (a tool adds $2 to a move an author already wrote as
+//    "!"), and silently picking the other one would relabel a blunder as
+//    brilliant.
 // ---------------------------------------------------------------------------
 #let both = parse-pgn(head + "1. e4! $2 e5 *").first()
 #assert.eq(move-quality-mark(both, "1w"), (square: "e4", symbol: "?"),

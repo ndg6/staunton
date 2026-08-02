@@ -30,10 +30,47 @@
 #assert(s(with-nags(gp, ("1w": "!"))) == "1. e4! e5", message: "mapping replaces the parsed NAG")
 
 // still gated by `nags:` -- with-nags only sets data, rendering decides
+// (this case covers the "$n" spelling, attached via with-nags -- $2 on 1w)
 #assert(
   notation(g2, diagrams: false, bold-mainline: false, spaced: true, nags: false, comments: false, variations: false, lang: "en") == "1. e4 e5 2. Nf3 Nc6",
   message: "nags: false still suppresses",
 )
+
+// `nags:` must gate BOTH spellings (regression guard for the D2 fix): a move-
+// quality suffix glyph parsed straight from PGN text ("!" on 1.e4, no with-nags
+// involved) used to leak past `nags: false` because the old code kept the "!"
+// glued onto `san` instead of routing it through the NAG machinery. Now the
+// suffix is converted to a NAG at parse time, so `nags: false` suppresses it
+// exactly like the "$n" spelling above.
+#let common = (diagrams: false, bold-mainline: false, spaced: true, comments: false, variations: false, lang: "en")
+#let gs = parse-pgn("1. e4! e5 *").first()
+#assert.eq(notation(gs, nags: true, ..common), "1. e4! e5", message: "suffix glyph renders when nags: true")
+#assert.eq(notation(gs, nags: false, ..common), "1. e4 e5", message: "suffix glyph suppressed when nags: false (was leaking)")
+
+// an explicit $n NAG alongside the suffix glyph must not double the mark either
+// way (`nags: true` shows exactly one glyph, `nags: false` shows none)
+#let gs2 = parse-pgn("1. e4! $1 e5 *").first()
+#assert.eq(notation(gs2, nags: true, ..common), "1. e4! e5", message: "suffix + explicit $1 must not double (was '1. e4!! e5')")
+#assert.eq(notation(gs2, nags: false, ..common), "1. e4 e5", message: "suffix + explicit $1 both suppressed by nags: false")
+
+// --- SOURCE PARITY: a bare SAN string and the equivalent parsed game must ---
+// render IDENTICALLY. src/notation.typ's `_bare-node` normalises a string/array
+// SAN source through the same `_split-quality-suffix` helper `parse-pgn` uses,
+// specifically so "1. e4! e5" typed straight into `notation()` behaves like the
+// same text run through a game. Assert the parity directly (string == game
+// result), not two separate literals, so a future divergence between the two
+// paths fails THIS assertion instead of silently passing two now-different
+// "expected" strings.
+#let san-str = "1. e4! e5"
+#let san-game = parse-pgn(san-str + " *").first()
+#assert.eq(notation(san-str, nags: true, ..common), notation(san-game, nags: true, ..common),
+  message: "string source and game source must render identically with nags: true")
+#assert.eq(notation(san-str, nags: false, ..common), notation(san-game, nags: false, ..common),
+  message: "string source and game source must render identically with nags: false")
+// pin the actual values too, so a bug that changes BOTH sides identically (and
+// would otherwise still satisfy the parity check above) is still caught
+#assert.eq(notation(san-str, nags: true, ..common), "1. e4! e5")
+#assert.eq(notation(san-str, nags: false, ..common), "1. e4 e5")
 
 // the source game is untouched (no mutation)
 #assert(s(g) == "1. e4 e5 2. Nf3 Nc6", message: "original game not mutated")

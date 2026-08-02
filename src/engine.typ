@@ -296,10 +296,14 @@
   let from-name = square-name(fc, fr)
   let to-name = square-name(tc, tr)
 
-  board.remove(from-name)
+  // NOTE: `dict.remove(k)` RETURNS the removed value, and a bare statement's
+  // value is joined into the enclosing block's result -- which silently merged
+  // the removed piece's `(kind, color)` into the position this function returns.
+  // Bind the results so nothing joins.
+  let _ = board.remove(from-name)
   if move.kind == "en-passant" {
     // captured pawn sits beside the destination, on the mover's origin rank
-    board.remove(square-name(tc, fr))
+    let _ = board.remove(square-name(tc, fr))
   }
 
   let cr = position.castling
@@ -310,7 +314,7 @@
     let side = if move.kind == "castle-k" { "king" } else { "queen" }
     let rf = cr.at(color + "-" + side, default: none)
     if rf == none or rf == true or rf == false { rf = if side == "king" { 7 } else { 0 } }
-    board.remove(square-name(rf, fr))
+    let _ = board.remove(square-name(rf, fr))
     board.insert(square-name(_KING-DEST.at(move.kind), fr), (kind: "king", color: color))
     board.insert(square-name(_ROOK-DEST.at(move.kind), fr), (kind: "rook", color: color))
   } else {

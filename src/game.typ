@@ -22,7 +22,7 @@
 #import "pgn.typ": movetext, _movetext-tree
 #import "chess960.typ": chess960-start-fen
 #import "coords.typ": square-name
-#import "annotations.typ": nag-symbol, interpret-comment
+#import "annotations.typ": nag-symbol, interpret-comment, glyph-to-nag, quality-nag-codes
 
 // "30w" -> 59 ; "30b" -> 60
 #let _ply-of(loc) = {
@@ -251,29 +251,12 @@
   square-name(mv.to.at(0), mv.to.at(1))
 }
 
-// Move-quality glyphs: the six the badge recognises, and the NAG codes
-// ($1..$6) that map to them.
-#let _quality-nag-codes = ("1", "2", "3", "4", "5", "6")
-#let _quality-symbols = ("!", "?", "!!", "??", "!?", "?!")
-
-// Trailing run of `!`/`?` on a SAN string (e.g. "Nf6??" -> "??", "Nf3" -> "").
-#let _quality-suffix(san) = {
-  let s = san
-  let suf = ""
-  while s.len() > 0 and ("!", "?").contains(s.slice(s.len() - 1)) {
-    suf = s.slice(s.len() - 1) + suf
-    s = s.slice(0, s.len() - 1)
-  }
-  suf
-}
-
 /// The move-quality badge data for the move at `locator`: a dict
 /// `(square: <dest>, symbol: <! ? !! ?? !? ?!>)`, or `none` when the move carries
-/// no quality mark. The symbol is sourced (in order) from the move's first quality
-/// NAG (`$1`..`$6`, whether parsed from the PGN or set with `with-nags`) or a
-/// literal `!`/`?` suffix on the SAN — so a mark written as text, as a PGN NAG, or
-/// set programmatically all resolve identically. Other NAGs (position evals like
-/// `$14`) are ignored. Used to place the badge; standard-chess only.
+/// no quality mark. The symbol is sourced from the move's first quality NAG
+/// (`$1`..`$6`, whether parsed from the PGN's SAN suffix, an explicit `$n`, or
+/// set with `with-nags`). Other NAGs (position evals like `$14`) are ignored.
+/// Used to place the badge; standard-chess only.
 ///
 /// - game (dictionary): a parsed game (from `parse-pgn`).
 /// - locator (str, dictionary): a mainline `"30w"` / `"30b"`, or a variation path
@@ -283,11 +266,7 @@
   let node = move-node(game, locator)
   let symbol = none
   for ng in node.at("nags", default: ()) {
-    if _quality-nag-codes.contains(ng) { symbol = nag-symbol(ng); break }
-  }
-  if symbol == none {
-    let suf = _quality-suffix(node.san)
-    if _quality-symbols.contains(suf) { symbol = suf }
+    if quality-nag-codes.contains(ng) { symbol = nag-symbol(ng); break }
   }
   if symbol == none { return none }
   (square: move-destination(game, locator), symbol: symbol)
@@ -415,10 +394,9 @@
 #let _stash(game, nodes) = { let g = game; g.insert("movetext-nodes", nodes); g }
 
 // NAG value -> stored code ("1".."n"). Accepts "$n" or a suffix glyph.
-#let _glyph-to-code = ("!": "1", "?": "2", "!!": "3", "??": "4", "!?": "5", "?!": "6")
 #let _norm-nag(v) = {
   if type(v) == str and v.starts-with("$") and v.len() > 1 { v.slice(1) }
-  else if type(v) == str and v in _glyph-to-code { _glyph-to-code.at(v) }
+  else if type(v) == str and v in glyph-to-nag { glyph-to-nag.at(v) }
   else { panic("with-nags: a NAG must be \"$n\" or one of ! ? !! ?? !? ?!; got " + repr(v)) }
 }
 

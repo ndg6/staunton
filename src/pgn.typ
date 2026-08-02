@@ -26,6 +26,48 @@
 
 #let _results = ("1-0", "0-1", "1/2-1/2", "*")
 
+#import "annotations.typ": glyph-to-nag, quality-nag-codes
+
+// Split a trailing run of `!`/`?` off a SAN token, but ONLY when the ENTIRE
+// run is exactly one of the six recognised glyphs (! ? !! ?? !? ?!) AND
+// something remains in front of it -- e.g. "Nf6??" -> ("Nf6", "??"),
+// "Qh7#!!" -> ("Qh7#", "!!"), "Nf3" -> ("Nf3", ""). Anything else (a longer
+// or unrecognised run like "!!!" or "?!?", or a standalone glyph token with
+// nothing in front) is left COMPLETELY untouched -- parsing stays lossless
+// per docs/manual.typ rather than guessing at a partial strip that would
+// produce a nonsense SAN. A trailing `+`/`#` is part of SAN proper and is
+// never touched (the run only ever consumes `!`/`?`).
+#let _split-quality-suffix(san) = {
+  let s = san
+  let suf = ""
+  while s.len() > 0 and ("!", "?").contains(s.slice(s.len() - 1)) {
+    suf = s.slice(s.len() - 1) + suf
+    s = s.slice(0, s.len() - 1)
+  }
+  if s.len() > 0 and suf in glyph-to-nag { (san: s, suffix: suf) }
+  else { (san: san, suffix: "") }
+}
+
+// Finalize a move node once it's fully assembled (no more NAGs will be added):
+// resolve the pending suffix-derived quality NAG against any EXPLICIT quality
+// NAG ($1..$6) already collected. An explicit NAG wins and the suffix glyph is
+// discarded (never doubled); otherwise the suffix's code is inserted at the
+// front of `nags`, so it renders before positional-assessment NAGs.
+#let _finalize-quality-nag(node) = {
+  let suf-code = node.at("_suffix-nag", default: none)
+  let nags = node.nags
+  if suf-code != none and not nags.any(c => quality-nag-codes.contains(c)) {
+    nags = (suf-code,) + nags
+  }
+  (
+    san: node.san,
+    nags: nags,
+    comment-before: node.comment-before,
+    comment-after: node.comment-after,
+    variations: node.variations,
+  )
+}
+
 // ---- token regexes (compiled ONCE, module level) --------------------------
 // Master pattern alternatives (leftmost match wins, so a comment swallows any
 // brackets it contains):
@@ -122,13 +164,15 @@
       i += 1
       break
     } else if t.type == "san" {
-      if cur != none { nodes.push(cur) }
+      if cur != none { nodes.push(_finalize-quality-nag(cur)) }
+      let split = _split-quality-suffix(t.value)
       cur = (
-        san: t.value,
+        san: split.san,
         nags: (),
         comment-before: pending-comment,
         comment-after: none,
         variations: (),
+        _suffix-nag: glyph-to-nag.at(split.suffix, default: none),
       )
       pending-comment = none
       i += 1
@@ -137,7 +181,7 @@
     }
   }
   // Flush the last move being assembled (covers every exit: result, close, EOF).
-  if cur != none { nodes.push(cur) }
+  if cur != none { nodes.push(_finalize-quality-nag(cur)) }
   (nodes: nodes, next: i, result: result)
 }
 

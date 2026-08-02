@@ -19,10 +19,10 @@
 // ===========================================================================
 
 #import "san.typ": _split-movetext
-#import "pgn.typ": movetext
+#import "pgn.typ": movetext, _split-quality-suffix
 #import "i18n.typ": notation-langs, lang-piece-chars
 #import "game.typ": mainline, game-result
-#import "annotations.typ": interpret-comment, nag-symbol
+#import "annotations.typ": interpret-comment, nag-symbol, glyph-to-nag
 #import "style.typ": default-pgn-style, pgn-style-state
 
 // The only uppercase letters that denote a piece in SAN -> kind. Files (a-h),
@@ -78,8 +78,16 @@
   out
 }
 
-// Wrap a SAN string into a minimal move node (no nags/comments).
-#let _bare-node(san) = (san: san, nags: (), comment-after: none)
+// Wrap a SAN string into a minimal move node (no comments). Normalises a
+// trailing move-quality glyph exactly like the `parse-pgn` path (pgn.typ's
+// `_split-quality-suffix`), so a string/array SAN source and a parsed game
+// produce the same clean `san` + `nags` for visually identical input -- the
+// `nags:` gate on `notation()` then applies uniformly regardless of source.
+#let _bare-node(san) = {
+  let split = _split-quality-suffix(san)
+  let code = glyph-to-nag.at(split.suffix, default: none)
+  (san: split.san, nags: if code != none { (code,) } else { () }, comment-after: none)
+}
 
 // Resolve a source + from/to into (nodes, lo, hi) inclusive node indices. A game
 // yields its real move nodes (carrying nags/comments); a SAN string/array yields

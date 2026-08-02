@@ -21,7 +21,10 @@
 // ---- _origin-of: the derived payload ---------------------------------------
 #let o = _origin-of(g, "2w")
 #assert.eq(o.locator, "2w")
-#assert.eq(o.san, "Nf3!")
+// D2 (2.0.0 Phase A): the quality suffix glyph is now stripped from `san` at
+// parse time and converted to a NAG, so `san` is the plain move and the grade
+// is reachable via `quality` below (and `nags`, movetext(g).at(4).nags).
+#assert.eq(o.san, "Nf3")
 #assert.eq(o.arrows, (("f3", "e5", "G"), ("f1", "c4", "B")))
 #assert.eq(o.highlights, (("e5", "R"),))
 #assert.eq(o.tags.at("White"), "Morphy")
