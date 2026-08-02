@@ -782,8 +782,8 @@ programmatically, wears a good-move badge on `f7`:
 #let g = game(
   "1. e4 e5 2. Qh5 Nc6 3. Bc4 Nf6?? 4. Qxf7# 1-0",
 )
-#diagram-after(
-  with-nags(g, ("4w": "!")), "4w",
+#diagram(
+  with-nags(g, ("4w": "!")), at: "4w",
   check: true, move-quality: true, size: 4cm,
 )
 ```)
@@ -1063,7 +1063,7 @@ the figure *caption* below it.
 ```)
 
 *Automatic captions.* Omit `caption:` and staunton supplies a source-appropriate
-default. A *game* (`diagram-after`) knows the move just played, so its caption
+default. A *game* (`diagram(g, at: ..)`) knows the move just played, so its caption
 names it — `Position after 23... Nf6`. A bare *FEN* or *position* is only a
 snapshot, with no move history, so it can state only whose turn it is —
 `White to move` / `Black to move`. A manual squares dict has neither and gets no
@@ -1160,7 +1160,7 @@ Parsing is *lazy*: the roster (`tags`), the `result`, and the verbatim
 for a position. So a tournament file read only for results and never tokenises movetext.
 
 `notation(g)` renders the moves (as text) the game already holds, and
-`diagram-after(g, loc)` renders a *diagram* (a referenceable `#figure`, like
+`diagram(g, at: loc)` renders a *diagram* (a referenceable `#figure`, like
 `diagram`) of the position at a locator:
 
 #example(```typ
@@ -1168,7 +1168,7 @@ for a position. So a tournament file read only for results and never tokenises m
 ```, stacked: true)
 
 #example(```typ
-#diagram-after(g, "3w", size: 4cm)
+#diagram(g, at: "3w", size: 4cm)
 ```)
 
 === A position remembers its move<position-provenance>
@@ -1205,7 +1205,7 @@ square).
 
 A *locator* addresses one position in a game. The simple form is a string —
 `"30w"` / `"30b"`, the position after White's / Black's 30th *mainline* move.
-`position-after(g, loc)`, `diagram-after(g, loc, ..)`, and
+`position-after(g, loc)`, `diagram(g, at: loc, ..)`, and
 `to-fen(g, locator: ..)` all take this simple string form.
 
 To address a move *inside a variation* (a PGN 'Recursive Annotation Variantion' or RAV), pass a *path* dict instead:
@@ -1220,9 +1220,9 @@ second, …). The top-level `at` is where you stop within the line you reached:
 )
 // into variation 0 at White's move 1 (the
 // 1.d4 line), position after 2.c4:
-#diagram-after(
+#diagram(
   g,
-  (line: ((at: "1w", into: 0),), at: "2w"),
+  at: (line: ((at: "1w", into: 0),), at: "2w"),
   size: 3.4cm,
 )
 ```)
@@ -1308,7 +1308,7 @@ last:
 ```, stacked: true)
 
 `from` / `to` bound a slice of the *mainline*: they are the simple `"8b"` /
-`"12w"` locators, not the variation *path* form that `diagram-after` takes
+`"12w"` locators, not the variation *path* form that `diagram(g, at: ..)` takes
 (rendering variations is a separate control — see @variations). A `from` past
 the end or a `to` before `from` is a hard error.
 
@@ -1352,7 +1352,7 @@ layout:
 ```, stacked: true, left-align: true)
 
 To render *one specific* variation on its own, pass `line:` — a path locator
-(the same `diagram-after` shape, or just its hops array) that descends into the
+(the same `diagram(g, at: ..)` shape, or just its hops array) that descends into the
 variation. It is numbered from its real branch ply, so it reads exactly as you'd
 write it in analysis:
 
@@ -1424,7 +1424,7 @@ previous count — `0` for a move with none yet), so you can address into it
 afterwards and it composes with `with-nags`/`with-comments`. Together these let you
 build a whole annotated tree from a bare game, then render or navigate it exactly
 like a parsed PGN. Moves are *not* checked for legality when added — an illegal
-move surfaces only if you navigate into the line (`diagram-after`), matching the rest
+move surfaces only if you navigate into the line (`diagram(g, at: ..)`), matching the rest
 of the lazy model.
 
 == Exporting FEN
@@ -1456,7 +1456,7 @@ demo game annotates its 2nd move:
 
 #example(```typ
 // move 2: {[%cal Gf3e5] [%csl Re5]}
-#diagram-after(g, "2w", annotations: true, size: 4cm)
+#diagram(g, at: "2w", annotations: true, size: 4cm)
 ```)
 
 The color letters (`G R Y B O`) resolve through the `annotation-colors` board
@@ -1470,7 +1470,7 @@ game and layer your own emphasis on top without editing the PGN. Here the green
 and the circle on `d4` are added programmatically:
 
 #example(```typ
-#diagram-after(g, "2w",
+#diagram(g, at: "2w",
   annotations: true,                              // Gf3e5 + Re5, from the PGN
   arrows: (("b1", "c3"),),                        // added here
   highlight: ((square: "d4", shape: "circle"),),  // added here
@@ -1524,7 +1524,7 @@ The switches above — `annotations`, `nags`, `comments`, `diagrams`, `variation
 game's embedded extras get interpreted at render time. Parsing itself stays
 lossless; these only decide what is *processed*, and (except `bold-mainline`)
 *all default off*. Each is a per-call argument (`auto` → the document default) on
-`notation` / `diagram-after`, or a document-wide default via `set-pgn-defaults`:
+`notation` / `diagram(g, at: ..)`, or a document-wide default via `set-pgn-defaults`:
 
 ```typ
 #set-pgn-defaults(annotations: true, nags: true, comments: true)
@@ -1615,13 +1615,13 @@ tag, or a position number in an `[FRCPosition N]` / `[Chess960Position N]` tag
 #game-variant(frc)
 ```, stacked: true)
 
-Everything else is unchanged — locators, `notation`, `diagram-after`, move
+Everything else is unchanged — locators, `notation`, `diagram(g, at: ..)`, move
 play-out and FEN export all behave as in @games. Here is the position right after
 White castles king-side: the king lands on g1 and the g1-rook on f1, the
 generalised 960 castling (the h1-rook stays put):
 
 #example(```typ
-#diagram-after(frc, "11w", size: 4cm)
+#diagram(frc, at: "11w", size: 4cm)
 ```)
 
 // === Tournament tables =======================================================
@@ -1845,7 +1845,7 @@ per-board choice, so `set-chess-defaults(flip: ..)` is an error. The
 *position-specific* board options are likewise rejected: `highlight` and `arrows`
 are per-call arguments (a document-wide default would stamp the same squares on
 every diagram), and `move-quality-mark` is derived from a game move by
-`diagram-after` — their *styling* (`highlight-fill`, `cross-color`, `arrow-color`,
+`diagram(g, at: ..)` — their *styling* (`highlight-fill`, `cross-color`, `arrow-color`,
 `move-quality-colors`, …) is settable document-wide, but the squares/arrows/mark
 themselves are not. Finally, `supplement` / `outline-title` live in *both* the
 diagram and table buckets; the umbrella routes them to *diagram*, so use
@@ -1939,7 +1939,7 @@ described once here.
   *string form* (rank-per-line rows, `.` = empty; one raw block or several row
   strings).
 
-/ `locator`: for `position-after`, `diagram-after`, `to-fen`, `move-san`,
+/ `locator`: for `position-after`, `diagram(g, at: ..)`, `to-fen`, `move-san`,
   `move-node`, and builder addresses — a *mainline* string `"12w"` / `"12b"`, or a
   *path* dict `(line: (..hops..), at: "<move>")`, each hop `(at: "<move>", into:
   <n>)` (descend into variation `n` at that move), to reach a move inside a (possibly nested)
@@ -2063,7 +2063,6 @@ source docstring: its signature, then every parameter with its type and default.
   ("/src/game.typ", "game-start"),
   ("/src/game.typ", "game-variant"),
   ("/src/game.typ", "position-after"),
-  ("/lib.typ", "diagram-after"),
   ("/src/game.typ", "move-san"),
   ("/src/game.typ", "move-node"),
   ("/src/san.typ", "play"),

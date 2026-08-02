@@ -5,7 +5,7 @@
 // a trace small enough to load in https://ui.perfetto.dev while still showing
 // the eval-vs-layout / func-call breakdown. Game 13 is the longest decisive
 // game, so it is a good single-game stand-in.
-#import "/lib.typ": game, mainline, notation, diagram-after
+#import "/lib.typ": game, mainline, notation, diagram
 #set page(paper: "a4", margin: 2cm)
 
 #let g = game(read("/bench/spassky_fischer_1972/game_13.pgn"))
@@ -15,5 +15,5 @@
 #notation(g)
 #grid(
   columns: 3, gutter: 8pt,
-  ..range(10, plies, step: 10).map(p => diagram-after(g, loc(p), caption: "ply " + str(p), size: 4cm)),
+  ..range(10, plies, step: 10).map(p => diagram(g, at: loc(p), caption: "ply " + str(p), size: 4cm)),
 )

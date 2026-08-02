@@ -3,9 +3,9 @@
 //
 // Prompt 28 changes: (1) the glow is a Lichess-style centre-hot radial drawn UNDER
 // the king (king crisp on top, glow radiates from beneath); (2) badges are tied to
-// a MOVE and therefore come ONLY from a game (`diagram-after`) — never from a bare
-// position or an empty square.
-#import "/lib.typ": board, diagram-after, game, with-nags
+// a MOVE and therefore come ONLY from a game (`diagram(.., at: ..)`) — never from a
+// bare position or an empty square.
+#import "/lib.typ": board, diagram, game, with-nags
 
 #set page(width: 16cm, height: auto, margin: 1cm)
 #set text(font: "Libertinus Serif", size: 10pt)
@@ -35,24 +35,24 @@ Reference play `1. b3 g5 2. e3 f6 3. Qh5#` (the fool's-mate shape) — the mated
 Black king glows, piece unaffected on top:
 
 #let mate = game("1. b3 g5 2. e3 f6 3. Qh5#")
-#diagram-after(mate, "3w", check: true, caption: none, game-info: none, size: 5cm)
+#diagram(mate, at: "3w", check: true, caption: none, game-info: none, size: 5cm)
 
 = Move-quality badge
 
 Badges come from a game only. This game tags each of six plies with a literal
-quality suffix; `diagram-after` derives the badge and places it on the move's
+quality suffix; `diagram(.., at: ..)` derives the badge and places it on the move's
 destination square — always an occupied square. Good `!`/`!!` blue, bad `?`/`??`
 red, interesting `!?`/`?!` green.
 
 #let q = game("1. e4! e5? 2. Nf3!! Nc6?? 3. Bb5!? a6?!")
 
 #grid(columns: 3, gutter: 0.6cm,
-  diagram-after(q, "1w", move-quality: true, caption: none, game-info: none, size: 4.6cm),
-  diagram-after(q, "2w", move-quality: true, caption: none, game-info: none, size: 4.6cm),
-  diagram-after(q, "1b", move-quality: true, caption: none, game-info: none, size: 4.6cm),
-  diagram-after(q, "2b", move-quality: true, caption: none, game-info: none, size: 4.6cm),
-  diagram-after(q, "3w", move-quality: true, caption: none, game-info: none, size: 4.6cm),
-  diagram-after(q, "3b", move-quality: true, caption: none, game-info: none, size: 4.6cm),
+  diagram(q, at: "1w", move-quality: true, caption: none, game-info: none, size: 4.6cm),
+  diagram(q, at: "2w", move-quality: true, caption: none, game-info: none, size: 4.6cm),
+  diagram(q, at: "1b", move-quality: true, caption: none, game-info: none, size: 4.6cm),
+  diagram(q, at: "2b", move-quality: true, caption: none, game-info: none, size: 4.6cm),
+  diagram(q, at: "3w", move-quality: true, caption: none, game-info: none, size: 4.6cm),
+  diagram(q, at: "3b", move-quality: true, caption: none, game-info: none, size: 4.6cm),
 )
 
 Corner square (a8) — a FEN-seeded game whose first move is `Nxa8!!`. The badge
@@ -63,13 +63,13 @@ should spill above/right of the board, and stay screen-upper-right under a flip:
 )
 
 #grid(columns: 2, gutter: 1cm,
-  diagram-after(corner, "1w", move-quality: true, caption: none, game-info: none, size: 5cm),
-  diagram-after(corner, "1w", flip: true, move-quality: true, caption: none, game-info: none, size: 5cm),
+  diagram(corner, at: "1w", move-quality: true, caption: none, game-info: none, size: 5cm),
+  diagram(corner, at: "1w", flip: true, move-quality: true, caption: none, game-info: none, size: 5cm),
 )
 
 = Both, wired through a game
 
-`diagram-after` auto-places the badge (from the move's NAG / literal suffix) and
+`diagram(.., at: ..)` auto-places the badge (from the move's NAG / literal suffix) and
 the glow (check delivered by the move). Left: the mate `4.Qxf7#`, badge from a
 programmatic `!` on that move. Right: `3...Nf6??`, badge on f6 from the literal
 suffix (the badge always sits on the addressed move's destination).
@@ -80,8 +80,8 @@ suffix (the badge always sits on the addressed move's destination).
 )
 
 #grid(columns: 2, gutter: 1cm,
-  diagram-after(with-nags(g, ("4w": "!")), "4w",
+  diagram(with-nags(g, ("4w": "!")), at: "4w",
     check: true, move-quality: true, size: 5cm),
-  diagram-after(g, "3b",
+  diagram(g, at: "3b",
     check: true, move-quality: true, size: 5cm),   // Nf6?? badge on f6
 )

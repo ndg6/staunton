@@ -9,7 +9,7 @@
 //
 // This is NOT an asserting test; it is a benchmark input. It lives under bench/
 // and is compiled by bench/run-bench.sh, not by tests/run.sh.
-#import "/lib.typ": game, mainline, notation, diagram-after
+#import "/lib.typ": game, mainline, notation, diagram
 #set page(paper: "a4", margin: 2cm)
 #set text(size: 10pt)
 
@@ -42,6 +42,6 @@
   grid(
     columns: 3,
     gutter: 8pt,
-    ..marks.map(p => diagram-after(g, ply-locator(p), caption: "after ply " + str(p), size: 4cm)),
+    ..marks.map(p => diagram(g, at: ply-locator(p), caption: "after ply " + str(p), size: 4cm)),
   )
 }

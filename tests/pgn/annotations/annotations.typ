@@ -3,7 +3,7 @@
 // letters (G/R/Y/B/O) resolve through the board's stylable `annotation-colors`.
 // Processing is OFF by default: opt in with `annotations: true` per
 // call or `set-pgn-defaults(annotations: true)` document-wide.
-#import "/lib.typ": game, diagram-after, move-node, set-board-defaults, set-pgn-defaults
+#import "/lib.typ": game, diagram, move-node, set-board-defaults, set-pgn-defaults
 
 #set page(width: 13cm, height: auto, margin: 1.2cm)
 #set text(font: "Libertinus Serif", size: 10pt)
@@ -21,17 +21,17 @@
 = PGN annotations
 
 Default (annotations OFF): no arrows/highlights even though the comment has them:
-#diagram-after(g, "2w", size: 6cm) <plain>
+#diagram(g, at: "2w", size: 6cm) <plain>
 
 Opt in per call with `annotations: true` — green f3→e5, blue f1→c4; red e5,
 yellow c6:
-#diagram-after(g, "2w", size: 6cm, annotations: true)
+#diagram(g, at: "2w", size: 6cm, annotations: true)
 
 Document-wide via `set-pgn-defaults(annotations: true)`; re-themed via
 `set-board-defaults(annotation-colors: ...)` so "G" renders purple:
 #set-pgn-defaults(annotations: true)
 #set-board-defaults(annotation-colors: (G: purple, R: red, Y: olive, B: blue, O: orange))
-#diagram-after(g, "2w", size: 6cm)
+#diagram(g, at: "2w", size: 6cm)
 
-// diagram-after figures stay referenceable (the pgn gate lives in the figure body):
+// diagram(.., at: ..) figures stay referenceable (the pgn gate lives in the figure body):
 See @plain.

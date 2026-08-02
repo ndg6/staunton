@@ -9,7 +9,7 @@
 // short-cut), the same way bench/spassky_fischer.typ does for the 9-game set.
 //
 // NOT an asserting test; a benchmark input compiled by bench/run-bench.sh.
-#import "/lib.typ": game, mainline, notation, diagram-after
+#import "/lib.typ": game, mainline, notation, diagram
 #set page(paper: "a4", margin: 2cm)
 #set text(size: 10pt)
 
@@ -43,6 +43,6 @@
   grid(
     columns: 3,
     gutter: 8pt,
-    ..marks.map(p => diagram-after(g, ply-locator(p), caption: "after ply " + str(p), size: 4cm)),
+    ..marks.map(p => diagram(g, at: ply-locator(p), caption: "after ply " + str(p), size: 4cm)),
   )
 }

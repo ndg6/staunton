@@ -205,7 +205,7 @@ Then open the PDFs below and check the noted property. (The expected-*fail* test
       and the Unicode glyph fallback. Note the **highlight/arrow *styling*** sections:
       the fill/circle/cross/frame colors and the teal arrow are set as *defaults*, while the
       `highlight:` / `arrows:` **list** is passed **per call** (it is per-call only).
-      The **move-quality** section uses `diagram-after` (i.e. a game-derived
+      The **move-quality** section uses `diagram(.., at: ..)` (i.e. a game-derived
       position, not a bare board): with
       `move-quality: true` set as a default the badge is a red `??` disc on c6, then
       recolored fuchsia by `set-board-defaults(move-quality-colors: ..)`, then a `!`
@@ -238,7 +238,7 @@ Then open the PDFs below and check the noted property. (The expected-*fail* test
       `outlines/outline.pdf`, `refs/diagram_refs.pdf` — game-info line, captions,
       outline entries, and cross-references resolve. Caption wording (0.2.2): a FEN
       diagram reads "White to move" / "Black to move" (no move number); a
-      `diagram-after` reads "Position after 24. Nf3" / "Position after 24... Nf6".
+      `diagram(.., at: ..)` reads "Position after 24. Nf3" / "Position after 24... Nf6".
       In particular for the
       automatic year: the dated PGN diagram shows "Morphy – Allies (1858)"; the
       no-Date PGN diagram shows "Morphy – Allies" with *no* "(year)"; and the
@@ -318,7 +318,7 @@ These are not under `tests/out/`; build them separately.
         between the rooks).
       - *X-FEN castling*: the `to-fen(frc, "10b")` output line reads
         `…/2BNK1RR w Gkq - 4 11` (the `Gkq`, not `KQkq`).
-      - *Games*: `game-variant(frc)` prints `chess960`; the `diagram-after(frc, "11w")`
+      - *Games*: `game-variant(frc)` prints `chess960`; the `diagram(frc, at: "11w")`
         board shows the white king on g1 and a rook on f1 (with the other rook still on h1).
 - [ ] `docs/manual.pdf` structure & cross-refs — the *Document-Wide Defaults* chapter
       (formerly "Document-Wide Style") covers the five default buckets; the canonical

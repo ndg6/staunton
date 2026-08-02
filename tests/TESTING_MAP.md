@@ -50,7 +50,7 @@ together are independent of A/D/E. Tournament (D) works off PGN tags/results onl
 
 ## Two traps (do not treat as pure "rendering")
 
-1. **`tests/diagram` is NOT pure board rendering** — it uses `diagram-after`,
+1. **`tests/diagram` is NOT pure board rendering** — it uses `diagram(.., at: ..)`,
    which replays moves through `game`/`engine`/`san`/`pgn`. It belongs with C.
    `tests/board` is *mostly* pure rendering — but since prompt 49 not entirely:
    a position from `position-after` carries provenance (`_origin-of`, in

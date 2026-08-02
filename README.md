@@ -16,7 +16,7 @@ Install the package, parse a PGN, and drop a captioned diagram of any position �
 the players, the year, and the move just played are filled in automatically:
 
 ```typ
-#import "@preview/staunton:1.1.0": game, diagram-after, notation, standings-table
+#import "@preview/staunton:1.1.0": game, diagram, notation, standings-table
 
 #let opera = game(```
 [White "Morphy"] [Black "Allies"] [Date "1858"]
@@ -26,7 +26,7 @@ the players, the year, and the move just played are filled in automatically:
 ```)
 
 // The final position: roster → info line, last move → caption, check → king glow.
-#diagram-after(opera, "17w", check: true)
+#diagram(opera, at: "17w", check: true)
 ```
 
 ![Morphy – Allies (1858): the final mate, the black king glowing, captioned "Position after 17. Rd8#"](https://raw.githubusercontent.com/ndg6/staunton/v1.1.0/docs/img/showcase-diagram.png)
@@ -72,7 +72,7 @@ and a `!` / `?` grade becomes a move-quality badge — composited onto the board
 ```typ
 #let g = game("1. e4 e5 2. Nf3! {[%cal Gf3e5,Rf1c4][%csl Ge5]} Nc6 *")
 
-#diagram-after(g, "2w", annotations: true, move-quality: true)
+#diagram(g, at: "2w", annotations: true, move-quality: true)
 ```
 
 ![Board after 2.Nf3 with a green and a red arrow, a highlighted square, and a blue “!” badge](https://raw.githubusercontent.com/ndg6/staunton/v1.1.0/docs/img/showcase-annotations.png)
@@ -176,7 +176,7 @@ typst compile --root . docs/examples/showcase.typ showcase.pdf
 |---|---|
 | diagrams | `diagram`, `board` |
 | positions | `position`, `to-fen`, `starting-fen`, `chess960-start-fen` |
-| games (PGN) | `game`, `games`, `movetext`, `mainline`, `diagram-after`, `position-after`, `play`, `game-start`, `game-variant` |
+| games (PGN) | `game`, `games`, `movetext`, `mainline`, `position-after`, `play`, `game-start`, `game-variant` |
 | annotate / build | `with-nags`, `with-comments`, `with-variation` |
 | notation | `notation` |
 | tables | `standings-table`, `crosstable-table`, `progress-table`, `games-by-event` (+ compute: `standings`, `crosstable`, `progress`) |

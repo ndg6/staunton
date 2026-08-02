@@ -121,9 +121,13 @@ true false"
 #
 # Found by the machinery audit, 2026-08-01. To re-verify this check after any
 # change to it, plant the regression again and watch it fire:
-#   sed -i '0,/^#diagram-after(opera/s//#chess-diagram(opera/' README.md
+#   sed -i '0,/^#diagram(opera/s//#chess-diagram(opera/' README.md
 #   bash scripts/lint-docs.sh          # must report  UNKNOWN: #chess-diagram
 #   git checkout -- README.md
+# WARNING: that last line reverts the WHOLE file, not just the planted line. If
+# README.md has uncommitted edits, `git stash push README.md` first and pop it
+# after -- otherwise the recipe silently destroys your work. (It did exactly
+# that during the 2.0.0 Phase D migration.)
 # A check that cannot fail is indistinguishable from one that passes -- and this
 # one silently could not, for its entire life before that audit.
 check_readme() {

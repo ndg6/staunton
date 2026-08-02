@@ -2,7 +2,7 @@
 // a one-step variation (RAV) and a two-step NESTED variation. Locator correctness
 // is asserted in variation_locators.typ (cross-checked against play); this
 // sheet is the visual confirmation that the drawn board matches.
-#import "/lib.typ": game, diagram-after
+#import "/lib.typ": game, diagram
 
 #set page(width: 13cm, height: auto, margin: 1.2cm)
 #set text(font: "Libertinus Serif", size: 10pt)
@@ -26,6 +26,6 @@ after 1...d5. *Right* — into that same line, then its nested variation 0 at
 Black's move 1 (1...Nf6), position after 2.c4.
 
 #grid(columns: 2, column-gutter: 1cm, align: top,
-  diagram-after(vgame, (line: ((at: "1w", into: 0),), at: "1b"), size: 5cm),
-  diagram-after(ngame, (line: ((at: "1w", into: 0), (at: "1b", into: 0)), at: "2w"), size: 5cm),
+  diagram(vgame, at: (line: ((at: "1w", into: 0),), at: "1b"), size: 5cm),
+  diagram(ngame, at: (line: ((at: "1w", into: 0), (at: "1b", into: 0)), at: "2w"), size: 5cm),
 )

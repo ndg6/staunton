@@ -6,7 +6,7 @@
 //
 // Compile with the package root:  typst compile --root . examples/showcase.typ
 #import "/lib.typ": (
-  game, games, diagram-after, board, diagram, diagram-outline,
+  game, games, board, diagram, diagram-outline,
   mainline, game-result, position-after, play, set-chess-defaults, starting-fen,
   color-theme, standings-table,
 )
@@ -65,14 +65,14 @@
 
 = Diagrams from a game (auto captions, different piece sets)
 
-`diagram-after` pulls the roster and the last move into the labels automatically.
+`diagram(g, at: ..)` pulls the roster and the last move into the labels automatically.
 Each diagram below uses a different bundled piece set.
 
 #grid(
   columns: 2,
   gutter: 14pt,
-  diagram-after(g-main, "8w", size: 5cm, piece-set: "merida"),
-  diagram-after(g-main, final-locator(g-main), size: 5cm, piece-set: "cburnett"),
+  diagram(g-main, at: "8w", size: 5cm, piece-set: "merida"),
+  diagram(g-main, at: final-locator(g-main), size: 5cm, piece-set: "cburnett"),
 )
 
 = Label modes and orientation
@@ -97,8 +97,8 @@ The position right before the final blow, and the checkmate itself:
 #grid(
   columns: 2,
   gutter: 14pt,
-  diagram-after(g-mate, "3b", size: 5cm),
-  diagram-after(g-mate, final-locator(g-mate), size: 5cm, piece-set: "merida"),
+  diagram(g-mate, at: "3b", size: 5cm),
+  diagram(g-mate, at: final-locator(g-mate), size: 5cm, piece-set: "merida"),
 )
 
 = A "what-if" line that does not exist in any game
@@ -130,7 +130,7 @@ PGN `{[%cal …]}` / `{[%csl …]}` annotations are picked up automatically:
 [White "Demo"] [Black "Annotations"]
 1. e4 e5 2. Nf3 {[%cal Gf3e5,Bf1c4] [%csl Re5]} Nc6 *
 ```)
-#diagram-after(annotated, "2w", size: 6cm)
+#diagram(annotated, at: "2w", size: 6cm)
 
 = Document-wide styling
 
@@ -138,8 +138,8 @@ PGN `{[%cal …]}` / `{[%csl …]}` annotations are picked up automatically:
 After `set-chess-defaults`, subsequent diagrams inherit the green theme:
 
 #grid(columns: 2, gutter: 14pt,
-  diagram-after(g-main, "10w", size: 4.5cm),
-  diagram-after(g-main, "14w", size: 4.5cm),
+  diagram(g-main, at: "10w", size: 4.5cm),
+  diagram(g-main, at: "14w", size: 4.5cm),
 )
 
 = Themed boards  (reusable `color-theme` / `board-theme`, patterns, material borders)

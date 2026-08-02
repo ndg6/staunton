@@ -1,7 +1,7 @@
 // Source for the README showcase #1 (a position from a real game). Keep in sync
 // with its README code block. Regenerate with:
 //   typst compile --root . --format png --ppi 160 docs/img/showcase-diagram.typ docs/img/showcase-diagram.png
-#import "/lib.typ": game, diagram-after
+#import "/lib.typ": game, diagram
 
 #set page(width: auto, height: auto, margin: 12pt, fill: white)
 #set text(font: "Libertinus Serif", size: 10pt)
@@ -15,4 +15,4 @@
 ```)
 
 // The final position: roster -> info line, last move -> caption, check -> glow.
-#diagram-after(g, "17w", check: true, size: 4.6cm)
+#diagram(g, at: "17w", check: true, size: 4.6cm)

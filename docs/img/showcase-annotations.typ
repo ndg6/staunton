@@ -1,7 +1,7 @@
 // Source for the README showcase #4 (annotated diagram). Keep in sync with its
 // README code block. Regenerate with:
 //   typst compile --root . --format png --ppi 160 docs/img/showcase-annotations.typ docs/img/showcase-annotations.png
-#import "/lib.typ": game, diagram-after
+#import "/lib.typ": game, diagram
 
 #set page(width: auto, height: auto, margin: 12pt, fill: white)
 #set text(font: "Libertinus Serif", size: 10pt)
@@ -13,4 +13,4 @@
 1. e4 e5 2. Nf3! {[%cal Gf3e5,Rf1c4][%csl Ge5]} Nc6 *
 ```)
 
-#diagram-after(g, "2w", annotations: true, move-quality: true, size: 4.8cm)
+#diagram(g, at: "2w", annotations: true, move-quality: true, size: 4.8cm)

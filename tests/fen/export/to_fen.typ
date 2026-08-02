@@ -36,7 +36,7 @@
   message: "play -> fen",
 )
 
-// from a game + locator (diagram-after locator syntax); "2w" = AFTER White's 2nd
+// from a game + locator (diagram(.., at: ..) locator syntax); "2w" = AFTER White's 2nd
 #let g = game("[White \"A\"][Black \"B\"] 1. e4 e5 2. Nf3 Nc6 *")
 #assert(to-fen(g, locator: "2w") == "rnbqkbnr/pppp1ppp/8/4p3/4P3/5N2/PPPP1PPP/RNBQKB1R b KQkq - 1 2", message: "game@2w -> fen")
 #assert(to-fen(g, locator: "2b") == "r1bqkbnr/pppp1ppp/2n5/4p3/4P3/5N2/PPPP1PPP/RNBQKB1R w KQkq - 2 3", message: "game@2b -> fen")

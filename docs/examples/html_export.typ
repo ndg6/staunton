@@ -24,7 +24,7 @@ See @ruy for the position.
 #notation(g)
 
 == 4. Diagram at a locator
-#diagram-after(g, "3w", size: 4cm)
+#diagram(g, at: "3w", size: 4cm)
 
 == 5. Standings table
 #let rr = games(```

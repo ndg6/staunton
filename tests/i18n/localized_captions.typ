@@ -4,7 +4,7 @@
 // header WORDING is what to check here; the machine-checkable en/de strings live
 // in i18n.typ.
 #import "/lib.typ": (
-  set-lang, diagram, diagram-after, standings-table,
+  set-lang, diagram, standings-table,
   starting-fen, game, games,
 )
 
@@ -25,14 +25,14 @@
 
 = Localized captions & table headers
 
-// Each language block: a FEN diagram (fen-caption), a diagram-after
+// Each language block: a FEN diagram (fen-caption), a diagram(.., at: ..)
 // (pgn-caption), and a standings table (localized column headers).
 #let showcase(code, label) = {
   set-lang(code)
   [== #label (`#code`)]
   grid(columns: (auto, auto), gutter: 1em,
     diagram(starting-fen, size: 3cm),
-    diagram-after(g, "2w", size: 3cm),
+    diagram(g, at: "2w", size: 3cm),
   )
   standings-table(standings, caption: [Standings])
 }
