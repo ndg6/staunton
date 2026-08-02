@@ -334,12 +334,12 @@
 //                 stroked with round caps. The two diagonals are placed
 //                 INDEPENDENTLY: a single `place` holding both lines would stack
 //                 them in normal flow, dropping the second diagonal a square down.
-#let _draw-highlight(shape, dx, dy, sq, fill, cross-col, circle-col, cross-w, circle-w, cross-margin, circle-margin) = {
+#let _draw-highlight(shape, dx, dy, sq, fill, opts) = {
   if shape == "filled" {
     place(dx: dx, dy: dy, rect(width: sq, height: sq, fill: fill, stroke: none))
   } else if shape == "circle" {
-    let w = _resolve-square-dim(circle-w, sq, 15%)
-    let m = _resolve-square-dim(circle-margin, sq, 3%)
+    let w = _resolve-square-dim(opts.circle.width, sq, 15%)
+    let m = _resolve-square-dim(opts.circle.margin, sq, 3%)
     // Outer stroke edge sits `m` inside the border; the stroke straddles the
     // radius, so shrink the radius by `m + w/2` and re-centre by the same.
     let radius = sq / 2 - m - w / 2
@@ -347,11 +347,11 @@
     place(
       dx: dx + m + w / 2,
       dy: dy + m + w / 2,
-      circle(radius: radius, fill: none, stroke: w + circle-col),
+      circle(radius: radius, fill: none, stroke: w + opts.circle.color),
     )
   } else if shape == "cross" {
-    let w = _resolve-square-dim(cross-w, sq, 15%)
-    let m = _resolve-square-dim(cross-margin, sq, 10%)
+    let w = _resolve-square-dim(opts.cross.width, sq, 15%)
+    let m = _resolve-square-dim(opts.cross.margin, sq, 10%)
     // `cross-margin` is the distance from each corner to the cross TIP (like
     // board-n-pieces). Round caps extend w/2 along the diagonal, i.e. w/√8 per
     // axis, so pull the geometric endpoints in by that offset to land the tip at
@@ -360,7 +360,7 @@
     let lo = m + off
     let hi = sq - m - off
     assert(lo < hi, message: "cross highlight: cross-margin (plus stroke) too large for the square")
-    let str = stroke(paint: cross-col, thickness: w, cap: "round")
+    let str = stroke(paint: opts.cross.color, thickness: w, cap: "round")
     place(dx: dx, dy: dy, line(start: (lo, hi), end: (hi, lo), stroke: str))      // LL -> UR
     place(dx: dx, dy: dy, line(start: (lo, lo), end: (hi, hi), stroke: str))      // UL -> LR
   } else {
@@ -559,7 +559,11 @@
           let fill = if ecol == auto { hl-default-fill } else { _resolve-anno-color(ecol, st.annotation-colors, hl-default-fill) }
           let cross-c = if ecol == auto { st.cross-color } else { _resolve-anno-color(ecol, st.annotation-colors, st.cross-color) }
           let circle-c = if ecol == auto { st.circle-color } else { _resolve-anno-color(ecol, st.annotation-colors, st.circle-color) }
-          _draw-highlight(shape, o.dx, o.dy, sq, fill, cross-c, circle-c, st.cross-width, st.circle-width, st.cross-margin, st.circle-margin)
+          let opts = (
+            cross: (color: cross-c, width: st.cross-width, margin: st.cross-margin),
+            circle: (color: circle-c, width: st.circle-width, margin: st.circle-margin),
+          )
+          _draw-highlight(shape, o.dx, o.dy, sq, fill, opts)
         }
         // in-check glow: under the pieces, over the checker/highlights.
         // `check-square` is auto-filled by `board()` for analyzable positions.
