@@ -27,6 +27,7 @@
 #let _results = ("1-0", "0-1", "1/2-1/2", "*")
 
 #import "annotations.typ": glyph-to-nag, quality-nag-codes
+#import "i18n.typ": notation-langs, normalize-san
 
 // Split a trailing run of `!`/`?` off a SAN token, but ONLY when the ENTIRE
 // run is exactly one of the six recognised glyphs (! ? !! ?? !? ?!) AND
@@ -194,20 +195,37 @@
   _parse-movetext(toks, 0, toks.len(), true).nodes
 }
 
+// Recursively convert every node's `san` (mainline and nested variations) from
+// `lang` to canonical English SAN, so nothing downstream of `movetext(..)` ever
+// sees a language. Pure (memoisable): a fresh dict per node/variation, keyed off
+// the same inputs each call.
+#let _normalize-nodes(nodes, lang) = {
+  nodes.map(node => (
+    san: normalize-san(node.san, lang),
+    nags: node.nags,
+    comment-before: node.comment-before,
+    comment-after: node.comment-after,
+    variations: node.variations.map(v => _normalize-nodes(v, lang)),
+  ))
+}
+
 /// The parsed movetext tree (an array of move nodes) of a game — the mainline
 /// spine with recursive `variations`. Built on demand from the game's raw
 /// movetext and memoised, so deeper structure errors (e.g. a `(` without a
-/// preceding move) surface here.
+/// preceding move) surface here. Every node's `san` is normalized from
+/// `game.lang` to canonical English SAN, so downstream code (engine, to-fen,
+/// notation, export) never sees a language.
 ///
 /// - game (dictionary): a parsed game (from `game`).
 /// -> array
 #let movetext(game) = {
   // A game patched by the builders (`with-nags` / `with-comments` /
-  // `with-variation`, game.typ) carries a precomputed node tree; honour it so the
-  // change flows through every consumer (notation, position-after, ...). Unpatched
-  // games build (and memoise) from the raw text.
+  // `with-variation`, game.typ) carries a precomputed node tree (already in
+  // canonical English SAN); honour it so the change flows through every consumer
+  // (notation, position-after, ...). Unpatched games build (and memoise) from the
+  // raw text, then normalize.
   let pre = game.at("movetext-nodes", default: none)
-  if pre != none { pre } else { _movetext-tree(game.movetext-raw) }
+  if pre != none { pre } else { _normalize-nodes(_movetext-tree(game.movetext-raw), game.lang) }
 }
 
 // ---- normalise input (string or raw block) -------------------------------
@@ -226,8 +244,16 @@
 ///
 /// - input (str, content): the PGN source — a string, or a raw block
 ///   (```` ```…``` ````) / `#raw(..)`.
+/// - lang (str): the language of the movetext's piece letters (e.g. `"de"` for
+///   German `S` = knight). Never auto-detected -- see the manual. `movetext(game)`
+///   converts to canonical English SAN using this code; the language is never
+///   read again downstream.
 /// -> array
-#let games(input) = {
+#let games(input, lang: "en") = {
+  assert(
+    notation-langs.keys().contains(lang),
+    message: "games: unknown language code \"" + lang + "\"; supported: " + notation-langs.keys().join(", "),
+  )
   let s = _normalise(_as-text(input))
 
   // Unterminated tag / comment: an opener with no closer before end-of-input.
@@ -284,6 +310,7 @@
       tags: tags,
       movetext-raw: raw,
       result: if result != none { result } else { tags.at("Result", default: "*") },
+      lang: lang,
     ))
   }
 
@@ -298,9 +325,10 @@
 ///
 /// - input (str, content): the PGN source — a string, or a raw block
 ///   (```` ```…``` ````) / `#raw(..)`.
+/// - lang (str): the language of the movetext's piece letters; see `games`.
 /// -> dictionary
-#let game(input) = {
-  let gs = games(input)
+#let game(input, lang: "en") = {
+  let gs = games(input, lang: lang)
   assert(
     gs.len() == 1,
     message: "game(): input contains " + str(gs.len()) + " games; use games() to get all of them, or pass a single game",

@@ -71,3 +71,58 @@
 #let lang-piece-chars(call-lang) = {
   notation-langs.at(resolve-lang(call-lang), default: notation-langs.en)
 }
+
+// Reverse of `notation-langs.at(lang)`: SAN letter -> piece kind, sorted longest
+// letter first so a multi-cluster letter (Russian king "Кр") is tried before a
+// shorter one it starts with (knight "К") -- derived, never a second hand-written
+// table. `lang` must already be a known code (see `normalize-san`).
+#let _lang-letter-kinds(lang) = {
+  let chars = notation-langs.at(lang)
+  let pairs = chars.pairs().map(p => (p.at(1), p.at(0)))
+  pairs.sorted(key: p => -p.at(0).clusters().len())
+}
+
+/// Convert one SAN token written in `lang` into canonical English SAN: the
+/// leading piece letter and any promotion letter (after `=`) are translated via
+/// `notation-langs`; everything else (files, ranks, `x`, `O-O`/`O-O-O`, check/mate,
+/// glyph suffixes) is language-independent and passes through untouched. For
+/// `lang: "en"` this is the identity (byte-for-byte).
+///
+/// - san (str): a SAN token in the given language, e.g. `"Sf3"` (German).
+/// - lang (str): the source language code (must be a key of `notation-langs`).
+/// -> str
+#let normalize-san(san, lang) = {
+  assert(
+    notation-langs.keys().contains(lang),
+    message: "unknown language code \"" + lang + "\"; supported: " + notation-langs.keys().join(", "),
+  )
+  if lang == "en" { return san }
+  let kinds = _lang-letter-kinds(lang)
+
+  // leading piece letter
+  let cs = san.clusters()
+  let s = san
+  for (letter, kind) in kinds {
+    let lc = letter.clusters()
+    if cs.len() >= lc.len() and cs.slice(0, lc.len()) == lc {
+      s = notation-langs.en.at(kind) + cs.slice(lc.len()).join("")
+      break
+    }
+  }
+
+  // promotion letter after "="
+  if s.contains("=") {
+    let parts = s.split("=")
+    if parts.len() == 2 and parts.at(1).len() > 0 {
+      let pc = parts.at(1).clusters()
+      let letter = pc.at(0)
+      for (l, kind) in kinds {
+        if kind != "king" and l == letter {
+          s = parts.at(0) + "=" + notation-langs.en.at(kind) + pc.slice(1).join("")
+          break
+        }
+      }
+    }
+  }
+  s
+}
