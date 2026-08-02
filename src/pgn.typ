@@ -1,8 +1,8 @@
 // ===========================================================================
 // PGN parsing (Phase A: cheap, eager, no engine).
 //
-// `parse-pgn(input)` -> array of `game` dicts. One PGN string may contain many
-// games. Parsing is LAZY in the movetext: `parse-pgn` eagerly extracts the
+// `games(input)` -> array of `game` dicts. One PGN string may contain many
+// games. Parsing is LAZY in the movetext: `games` eagerly extracts the
 // roster (tags) and the verbatim movetext SUBSTRING per game, but does NOT build
 // the move TREE. The tree (mainline spine plus recursive `variations`) is parsed
 // on demand by `movetext(game)` -- memoised -- so:
@@ -85,7 +85,7 @@
 
 // ---- movetext tokeniser (per game, used lazily) ---------------------------
 // Turns a movetext SUBSTRING into the token stream the tree parser consumes.
-// (Tags never appear here -- they are split off eagerly in parse-pgn.)
+// (Tags never appear here -- they are split off eagerly in games().)
 #let _tokenize(s) = {
   let toks = ()
   for m in s.matches(_token-re) {
@@ -199,7 +199,7 @@
 /// movetext and memoised, so deeper structure errors (e.g. a `(` without a
 /// preceding move) surface here.
 ///
-/// - game (dictionary): a parsed game (from `parse-pgn`).
+/// - game (dictionary): a parsed game (from `game`).
 /// -> array
 #let movetext(game) = {
   // A game patched by the builders (`with-nags` / `with-comments` /
@@ -214,7 +214,7 @@
 #let _as-text(input) = {
   if type(input) == str { input }
   else if type(input) == content and input.func() == raw { input.text }
-  else { panic("parse-pgn: expected a string or a raw block (`#raw(..)` or ```...```), got " + repr(type(input))) }
+  else { panic("games: expected a string or a raw block (`#raw(..)` or ```...```), got " + repr(type(input))) }
 }
 
 /// Parse PGN text into an array of games. The roster (tags) is optional — bare
@@ -241,7 +241,7 @@
   // token, so it can never be mistaken for a roster tag.
   let ms = s.matches(_token-re)
   let n = ms.len()
-  let games = ()
+  let out = ()
   let i = 0
 
   while i < n {
@@ -280,15 +280,15 @@
 
     let raw = if last-end == none { "" } else { s.slice(mv-start, mv-end).trim() }
 
-    games.push((
+    out.push((
       tags: tags,
       movetext-raw: raw,
       result: if result != none { result } else { tags.at("Result", default: "*") },
     ))
   }
 
-  assert(games.len() > 0, message: "no games found in PGN input")
-  games
+  assert(out.len() > 0, message: "no games found in PGN input")
+  out
 }
 
 /// Parse PGN text that holds exactly one game, and return that game's dictionary
@@ -308,10 +308,3 @@
   gs.first()
 }
 
-/// Legacy alias for `games(input)`. Kept for backward compatibility; new code
-/// should prefer `games(input)` (or `game(input)` for a single game).
-///
-/// - input (str, content): the PGN source — a string, or a raw block
-///   (```` ```…``` ````) / `#raw(..)`.
-/// -> array
-#let parse-pgn(input) = games(input)

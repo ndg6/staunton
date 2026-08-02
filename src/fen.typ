@@ -202,7 +202,7 @@
 }
 
 /// The standard chess starting position, as a FEN string constant (handy as the
-/// `source` for `play`, `parse-fen`, `board`, …).
+/// `source` for `play`, `position`, `board`, …).
 #let starting-fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
 
 // FEN letter for a piece: kind letter, upper for white, lower for black.
@@ -211,13 +211,13 @@
   if piece.color == "white" { upper(l) } else { lower(l) }
 }
 
-/// Encode a `position` dict back into a FEN string (the inverse of `parse-fen`).
+/// Encode a `position` dict back into a FEN string (the inverse of `position(fen)`).
 /// Geometry-aware — it uses the position's `cols` / `rows`, so it also serialises
 /// larger-than-8×8 boards — and tolerant of positions built by `position()`
 /// (empty `castling`, `en-passant` `none`). Standard 8×8 positions round-trip
-/// exactly with `parse-fen`.
+/// exactly with `position(fen)`.
 ///
-/// - position (dictionary): a position dict (from `position` / `parse-fen`).
+/// - position (dictionary): a position dict (from `position`).
 /// -> str
 #let position-fen(position) = {
   assert(type(position) == dictionary and "squares" in position,

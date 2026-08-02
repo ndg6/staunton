@@ -44,7 +44,7 @@
 /// games, whose start rides on the `FEN` tag (with X-FEN castling) or a position
 /// number; see `game-variant`.
 ///
-/// - game (dictionary): a parsed game (from `parse-pgn`).
+/// - game (dictionary): a parsed game (from `game`).
 /// -> dictionary
 #let game-start(game) = {
   let has-fen = "FEN" in game.tags
@@ -72,7 +72,7 @@
 /// game from a standard one (e.g. to caption or label it accordingly), not an
 /// engine switch.
 ///
-/// - game (dictionary): a parsed game (from `parse-pgn`).
+/// - game (dictionary): a parsed game (from `game`).
 /// -> str
 #let game-variant(game) = {
   let v = game.tags.at("Variant", default: none)
@@ -83,13 +83,13 @@
 
 /// The mainline of a game as an array of SAN strings (the game as played).
 ///
-/// - game (dictionary): a parsed game (from `parse-pgn`).
+/// - game (dictionary): a parsed game (from `game`).
 /// -> array
 #let mainline(game) = movetext(game).map(n => n.san)
 
 /// The game result token: `"1-0"`, `"0-1"`, `"1/2-1/2"`, or `"*"`.
 ///
-/// - game (dictionary): a parsed game (from `parse-pgn`).
+/// - game (dictionary): a parsed game (from `game`).
 /// -> str
 #let game-result(game) = game.result
 
@@ -164,7 +164,7 @@
 /// The SAN of the move addressed by `locator` (e.g. `"O-O-O"`). Used to build
 /// PGN-diagram captions.
 ///
-/// - game (dictionary): a parsed game (from `parse-pgn`).
+/// - game (dictionary): a parsed game (from `game`).
 /// - locator (str, dictionary): a mainline `"30w"` / `"30b"`, or a variation path
 ///   dict.
 /// -> str
@@ -188,7 +188,7 @@
 /// (`comment-before` / `comment-after`) and `variations`. Used e.g. to recover
 /// PGN `%cal` / `%csl` annotations for a diagram.
 ///
-/// - game (dictionary): a parsed game (from `parse-pgn`).
+/// - game (dictionary): a parsed game (from `game`).
 /// - locator (str, dictionary): a mainline `"30w"` / `"30b"`, or a variation path
 ///   dict.
 /// -> dictionary
@@ -213,7 +213,7 @@
 /// *before* it, so it works for captures, castling and promotions. Standard-chess
 /// only (uses the rules engine). Used to place the move-quality badge.
 ///
-/// - game (dictionary): a parsed game (from `parse-pgn`).
+/// - game (dictionary): a parsed game (from `game`).
 /// - locator (str, dictionary): a mainline `"30w"` / `"30b"`, or a variation path
 ///   dict.
 /// -> str
@@ -258,7 +258,7 @@
 /// set with `with-nags`). Other NAGs (position evals like `$14`) are ignored.
 /// Used to place the badge; standard-chess only.
 ///
-/// - game (dictionary): a parsed game (from `parse-pgn`).
+/// - game (dictionary): a parsed game (from `game`).
 /// - locator (str, dictionary): a mainline `"30w"` / `"30b"`, or a variation path
 ///   dict.
 /// -> dictionary | none
@@ -320,10 +320,10 @@
 ///
 /// The returned position also remembers the move it came from, so drawing it
 /// with `board` / `diagram` reproduces that move's `%cal` / `%csl` annotations
-/// and its move-quality badge. A position from `parse-fen`, `apply` or a
+/// and its move-quality badge. A position from `position`, `apply` or a
 /// hand-built dict carries no such history and is drawn plain.
 ///
-/// - game (dictionary): a parsed game (from `parse-pgn`).
+/// - game (dictionary): a parsed game (from `game`).
 /// - locator (str, dictionary): a mainline `"30w"` / `"30b"`, or a variation path
 ///   dict `(line: (..hops..), at: "<move>")`.
 /// -> dictionary
@@ -403,14 +403,14 @@
 /// Attach NAGs to addressed moves (mainline or inside variations), returning a
 /// *new* game (the source is not mutated). Each value *replaces* that move's NAGs.
 ///
-/// - game (dictionary): a parsed game (from `parse-pgn`).
+/// - game (dictionary): a parsed game (from `game`).
 /// - overrides (dictionary, array): a dict of mainline locators (`("12w": "!")`)
 ///   or an array of `(locator, value)` pairs (a locator may be a variation path
 ///   dict). A value is `"$n"`, a suffix glyph (`! ? !! ?? !? ?!`), or an array of
 ///   those.
 /// -> dictionary
 #let with-nags(game, overrides) = {
-  assert(type(game) == dictionary and "movetext-raw" in game, message: "with-nags: first argument must be a parsed game (from parse-pgn)")
+  assert(type(game) == dictionary and "movetext-raw" in game, message: "with-nags: first argument must be a parsed game (from game())")
   let nodes = movetext(game)
   for (loc, val) in _overrides-pairs(overrides) {
     let codes = if type(val) == array { val.map(_norm-nag) } else { (_norm-nag(val),) }
@@ -424,13 +424,13 @@
 /// existing one and is set as the move's `comment-after` (what notation's
 /// `comments` switch renders).
 ///
-/// - game (dictionary): a parsed game (from `parse-pgn`).
+/// - game (dictionary): a parsed game (from `game`).
 /// - overrides (dictionary, array): a dict of mainline locators or an array of
 ///   `(locator, text)` pairs (a locator may be a variation path dict); each
 ///   `text` is a plain string.
 /// -> dictionary
 #let with-comments(game, overrides) = {
-  assert(type(game) == dictionary and "movetext-raw" in game, message: "with-comments: first argument must be a parsed game (from parse-pgn)")
+  assert(type(game) == dictionary and "movetext-raw" in game, message: "with-comments: first argument must be a parsed game (from game())")
   let nodes = movetext(game)
   for (loc, val) in _overrides-pairs(overrides) {
     assert(type(val) == str, message: "with-comments: a comment must be a string; got " + repr(type(val)))
@@ -445,7 +445,7 @@
 /// the move's ply at render time. Legality is checked only if you later navigate
 /// into the line (e.g. via `diagram-after`).
 ///
-/// - game (dictionary): a parsed game (from `parse-pgn`).
+/// - game (dictionary): a parsed game (from `game`).
 /// - at (str, dictionary): the move to branch at — a *mainline* locator
 ///   (`"3w"` / `"3b"`), or a *path* dict `(line: (..hops..), at: "<move>")` to
 ///   reach a move inside a (possibly nested) variation.
@@ -453,7 +453,7 @@
 ///   `"Bc4 Bc5"`, or richer text with nested `()`, `$n` NAGs and `{comments}`.
 /// -> dictionary
 #let with-variation(game, at: none, moves: none) = {
-  assert(type(game) == dictionary and "movetext-raw" in game, message: "with-variation: first argument must be a parsed game (from parse-pgn)")
+  assert(type(game) == dictionary and "movetext-raw" in game, message: "with-variation: first argument must be a parsed game (from game())")
   assert(at != none, message: "with-variation: `at` (a move locator) is required")
   assert(moves != none, message: "with-variation: `moves` (a movetext fragment) is required")
   let text = if type(moves) == str { moves }

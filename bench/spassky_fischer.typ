@@ -1,7 +1,7 @@
 // End-to-end realistic workload for the Phase 0 performance baseline.
 //
 // The 9 decisive-by-play games of the Spassky-Fischer 1972 World Championship
-// match (draws and the g-2 forfeit excluded). For each g we typeset a
+// match (draws and the game-2 forfeit excluded). For each game we typeset a
 // bulletin-style entry: a header from the PGN tags, the full move notation, and
 // a board diagram at several plies. This is the "not an engine, just typeset
 // it" workload from the prompt: it drives parse + replay + notation + drawing
@@ -15,7 +15,7 @@
 
 #let rounds = (1, 3, 5, 6, 8, 10, 11, 13, 21)
 
-#let g-file(r) = "/bench/spassky_fischer_1972/game_" + (if r < 10 { "0" } else { "" }) + str(r) + ".pgn"
+#let game-file(r) = "/bench/spassky_fischer_1972/game_" + (if r < 10 { "0" } else { "" }) + str(r) + ".pgn"
 
 #let ply-locator(p) = str(calc.quo(p + 1, 2)) + (if calc.odd(p) { "w" } else { "b" })
 
@@ -26,7 +26,7 @@
 ]
 
 #for r in rounds {
-  let g = game(read(g-file(r)))
+  let g = game(read(game-file(r)))
   let tags = g.tags
   let plies = mainline(g).len()
 

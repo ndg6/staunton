@@ -6,7 +6,7 @@
 // ~70 distinct diagrams — the "real document with many diagrams" workload the
 // drawing optimisations (prompt 37) target. Every diagram is a distinct real
 // position, so this measures true per-diagram drawing cost (no memoisation
-// short-cut), the same way bench/spassky_fischer.typ does for the 9-g set.
+// short-cut), the same way bench/spassky_fischer.typ does for the 9-game set.
 //
 // NOT an asserting test; a benchmark input compiled by bench/run-bench.sh.
 #import "/lib.typ": game, mainline, notation, diagram-after
@@ -15,8 +15,8 @@
 
 // The three new long games (tests/pgn/realworld/). Read from the repo root so
 // this compiles with `--root .` like the rest of the harness.
-#let g-ids = (1012928, 1125843, 1281900)
-#let g-file(id) = "/tests/pgn/realworld/game_" + str(id) + ".pgn"
+#let game-ids = (1012928, 1125843, 1281900)
+#let game-file(id) = "/tests/pgn/realworld/game_" + str(id) + ".pgn"
 
 #let ply-locator(p) = str(calc.quo(p + 1, 2)) + (if calc.odd(p) { "w" } else { "b" })
 
@@ -26,8 +26,8 @@
   #text(size: 12pt)[Three long games, a diagram every 8 plies]
 ]
 
-#for id in g-ids {
-  let g = game(read(g-file(id)))
+#for id in game-ids {
+  let g = game(read(game-file(id)))
   let tags = g.tags
   let plies = mainline(g).len()
 

@@ -1143,7 +1143,12 @@ Package *staunton* also reads *Chess960 / Fischer Random* games — the variant 
 start-by-number are covered in @chess960; everything in this chapter applies to
 them unchanged.
 
-The `parse-pgn` function returns an *array of games*; `.first()` takes the first one. Read an external file with `read` in your own file, or pass an inline raw block. The examples below assume an already parsed game is in scope:
+There are two readers, differing only in how many games they return.
+`game(..)` returns *one* game and errors if the input holds more than one;
+`games(..)` always returns an *array*, however many it finds. Both accept the
+same input: PGN text whose tag roster is optional, so bare movetext works too.
+Read an external file with `read` in your own file, or pass an inline raw
+block. The examples below assume a single parsed game is in scope:
 
 ```typ
 #let g = game(read("game.pgn"))
@@ -1577,7 +1582,7 @@ Draw a Chess960 board or diagram with the same `board` / `diagram` entry points
 used throughout this manual — pass a Chess960 position or FEN and it renders like
 any other. Get a start position by its Scharnagl *number* — the standard indexing of
 the 960 back-rank arrangements @scharnagl, running `0`–`959` (`518` is standard
-chess) — with `chess960-start` (a Chess960 position number) or `chess960-start-fen` (its FEN):
+chess) — with `chess960-start-fen`, then hand the FEN to `position`:
 
 #example(```typ
 #diagram(position(chess960-start-fen(356)), size: 4cm)
@@ -2042,17 +2047,16 @@ source docstring: its signature, then every parameter with its type and default.
 (see #link(<fairy-pieces>)[Non-standard pieces]).
 #show-fns((
   ("/lib.typ", "position"),
-  ("/src/fen.typ", "parse-fen"),
   ("/lib.typ", "to-fen"),
   ("/src/fen.typ", "starting-fen"),
-  ("/lib.typ", "chess960-start"),
   ("/src/chess960.typ", "chess960-start-fen"),
   ("/src/variants.typ", "define-variant"),
 ))
 
 == Games (PGN)
 #show-fns((
-  ("/src/pgn.typ", "parse-pgn"),
+  ("/src/pgn.typ", "game"),
+  ("/src/pgn.typ", "games"),
   ("/src/pgn.typ", "movetext"),
   ("/src/game.typ", "mainline"),
   ("/src/game.typ", "game-result"),

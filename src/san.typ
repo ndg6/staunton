@@ -177,7 +177,7 @@
 // Tokenize free move text into a flat SAN list. Drops move numbers ("3." /
 // "3..." and glued "3.e4" / "3...Nf6") and result tokens ("1-0", "*", ...).
 // Comments {..}, NAGs ($n) and variations (..) are NOT supported here -- they
-// raise an error (use `parse-pgn` for full PGN movetext).
+// raise an error (use `game` for full PGN movetext).
 #let _results = ("1-0", "0-1", "1/2-1/2", "*")
 #let _split-movetext(text) = {
   let out = ()
@@ -186,7 +186,7 @@
     if t == "" { continue }
     assert(
       not (t.contains("{") or t.contains("}") or t.contains("(") or t.contains(")") or t.starts-with(";") or t.starts-with("$")),
-      message: "play: comments, NAGs and variations are not supported in move text (use parse-pgn); got " + repr(t),
+      message: "play: comments, NAGs and variations are not supported in move text (use game()); got " + repr(t),
     )
     if _results.contains(t) { continue }
     if t.match(regex("^[0-9]+\.+$")) != none { continue }   // bare move number

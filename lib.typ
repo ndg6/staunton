@@ -20,11 +20,15 @@
 #import "src/coords.typ": parse-square, is-dark-square, square-name as _square-name
 #import "src/pieces.typ": piece-content, svg-piece-set, named-piece-set, with-fallback
 #import "src/variants.typ": variant-spec as _variant-spec, char-to-piece as _char-to-piece, define-variant
-#import "src/fen.typ": parse-fen, starting-fen, position-fen as _position-fen
+// `parse-fen` is NOT public API in 2.0.0 -- `position(fen)` is the one spelling
+// (it auto-detects a FEN by the "/" and delegates here). It keeps an underscore
+// alias because lib and src both still need it internally: src/ cannot call
+// `position`, which lives here, without a circular import.
+#import "src/fen.typ": parse-fen as _parse-fen, starting-fen, position-fen as _position-fen
 #import "src/chess960.typ": chess960-start-fen
 #import "src/engine.typ": legal-moves, apply, in-check, checked-king-square as _checked-king-square
 #import "src/san.typ": play, move-to-san
-#import "src/pgn.typ": parse-pgn, games, game, movetext
+#import "src/pgn.typ": games, game, movetext
 // `_position-at` is game.typ's provenance-free position lookup: `to-fen` only
 // wants the squares, so it must not pay for provenance it discards. It keeps its
 // underscore, which is also lib's marker for "not public API".
@@ -36,7 +40,7 @@
 // NOTE on reading external files: there is intentionally no `read-pgn(path)`
 // wrapper. Typst's `read` resolves paths relative to the file the call appears
 // in, so a wrapper here would resolve relative to this library, not your
-// document. Read in your own file instead:  parse-pgn(read("game.pgn")).
+// document. Read in your own file instead:  game(read("game.pgn")).
 #import "src/style.typ": (
   default-style, style-state, style-keys, set-chess-defaults, set-piece-set, chess-style,
   default-board-style, default-diagram-style, board-style-keys, diagram-style-keys,
@@ -121,7 +125,7 @@
 }
 
 /// Build a `position` — the data a board draws — from manual placement. (A single
-/// string containing `/` is treated as a FEN and delegated to `parse-fen`.)
+/// string containing `/` is treated as a FEN and delegated to the internal FEN parser.)
 /// Positional arguments place the pieces; named arguments set the metadata.
 ///
 /// Pieces are given as a *squares dict* — `(e1: "K", d8: (kind: "q", color:
@@ -142,14 +146,14 @@
   assert(pos.len() >= 1, message: "position(): expected at least one positional argument")
 
   // FEN auto-detect: a single string/raw positional that contains "/" is a FEN
-  // (rank separators), so delegate to parse-fen. This keeps position(fen),
+  // (rank separators), so delegate to the FEN parser. This keeps position(fen),
   // board(fen) and play(fen, ..) consistent. The string ROW form never
-  // uses "/", so there is no clash. (parse-fen sets turn/castling/etc itself.)
+  // uses "/", so there is no clash. (it sets turn/castling/etc itself.)
   if pos.len() == 1 {
     let p0 = pos.first()
     let fen-text = if type(p0) == str { p0 }
       else if type(p0) == content and p0.func() == raw { p0.text } else { none }
-    if fen-text != none and fen-text.contains("/") { return parse-fen(fen-text) }
+    if fen-text != none and fen-text.contains("/") { return _parse-fen(fen-text) }
   }
 
   let squares = (:)
@@ -198,14 +202,10 @@
   )
 }
 
-/// The Chess960 / Fischer Random starting *position* for a position number
-/// (0–959), via Scharnagl's numbering scheme — a ready-to-draw position (feed it
-/// to `board` / `diagram`, or `to-fen` it). `518` is the
-/// standard start. The companion `chess960-start-fen` returns the FEN string.
-///
-/// - n (int): the position number, 0–959.
-/// -> dictionary
-#let chess960-start(n) = parse-fen(chess960-start-fen(n))
+// `chess960-start(n)` was removed in 2.0.0: it was exactly
+// `position(chess960-start-fen(n))`, and two spellings for one outcome is the
+// redundancy this release exists to remove. `chess960-start-fen` stays -- it is
+// the one that carries Scharnagl's numbering.
 
 // Normalise the many accepted `source` forms into (squares, cols, rows) for
 // rendering. The geometry comes from the position model: a FEN
@@ -213,7 +213,7 @@
 // a bare squares dict defaults to standard 8x8.
 #let _to-board(source) = {
   if type(source) == str {
-    let p = parse-fen(source)
+    let p = _parse-fen(source)
     (squares: p.squares, cols: p.cols, rows: p.rows)
   } else if type(source) == dictionary and "squares" in source {
     (squares: source.squares, cols: source.at("cols", default: 8), rows: source.at("rows", default: 8))
@@ -239,7 +239,7 @@
 // non-standard variant deliberately return `none`, so the in-check glow never
 // fires on fairy/variant boards.
 #let _analyzable-position(source) = {
-  let pos = if type(source) == str { parse-fen(source) }
+  let pos = if type(source) == str { _parse-fen(source) }
     else if type(source) == dictionary and "squares" in source and "turn" in source { source }
     else { none }
   if pos == none { return none }
@@ -351,7 +351,7 @@
 /// rules engine.
 ///
 /// - source (str, dictionary): the position to draw — a *FEN string*, a
-///   *position* dict (from `position` / `parse-fen`), or a bare *squares* dict
+///   *position* dict (from `position`), or a bare *squares* dict
 ///   (`(e1: "K", …)`).
 /// When `source` came from `position-after`, it remembers its move: the move's
 /// `%cal` / `%csl` annotations and its move-quality badge are drawn automatically.
@@ -380,11 +380,11 @@
   _board-internal(source, flip, ov, annotations: annotations)
 }
 
-/// Export a position as a FEN string — the inverse of `parse-fen`. Serialises
+/// Export a position as a FEN string — the inverse of `position(fen)`. Serialises
 /// either a *position* dict directly, or a *game* at a locator. Standard 8×8
 /// positions round-trip exactly.
 ///
-/// - source (dictionary): a *position* dict, or a *game* (from `parse-pgn`).
+/// - source (dictionary): a *position* dict, or a *game* (from `game` / `games`).
 /// - locator (str, dictionary): required when `source` is a game — which move's
 ///   position to serialise (a mainline `"12w"` or a path dict). Ignored for a
 ///   position.
@@ -534,7 +534,7 @@
   let below = if caption != auto { caption }
     else if origin != none { context _pgn-caption(origin.locator, origin.san, lang) }
     else if type(source) == str {
-      let pos = parse-fen(source)
+      let pos = _parse-fen(source)
       context _fen-caption(pos, lang)
     } else { none }
   // `auto` means "take it from the source's game history if it has one";
@@ -568,7 +568,7 @@
 /// drawing annotations in the move's comment become arrows / highlights, merged
 /// with any passed explicitly.
 ///
-/// - game (dictionary): a parsed game (from `parse-pgn`).
+/// - game (dictionary): a parsed game (from `game` / `games`).
 /// - locator (str, dictionary): which position — a mainline `"30w"` / `"30b"` or
 ///   a variation path dict.
 /// - white (auto, str, none): white player; `auto` uses the game's `White` tag.

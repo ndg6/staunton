@@ -199,7 +199,7 @@
 /// Split a games array into a dict keyed by the `Event` tag, preserving insertion
 /// order within each event. Games without an `Event` tag group under `""`.
 ///
-/// - games (array): parsed games (from `parse-pgn`).
+/// - games (array): parsed games (from `games`).
 /// -> dictionary
 #let games-by-event(games) = {
   let out = (:)
@@ -293,7 +293,7 @@
 /// score, played, wins, draws, losses, buchholz, sonneborn-berger, [board-points
 /// for teams])`.
 ///
-/// - games (array): parsed games (from `parse-pgn`).
+/// - games (array): parsed games (from `games`).
 /// - by (str): `"player"` or `"team"`.
 /// - tiebreaks (auto, array): ordered tiebreak keys, or `auto` for the mode
 ///   default.
@@ -354,7 +354,7 @@
 /// Render a standings table as a Typst `#table` figure (kind `"chess-table"`).
 /// The data options are exactly as for `standings`.
 ///
-/// - games (array): parsed games (from `parse-pgn`).
+/// - games (array): parsed games (from `games`).
 /// - by (str): `"player"` or `"team"`.
 /// - tiebreaks (auto, array): as for `standings`.
 /// - match-points (dictionary): as for `standings`.
@@ -411,7 +411,7 @@
 /// not form a round-robin (some pair never met) — use `standings` + `progress` for
 /// Swiss / league events.
 ///
-/// - games (array): parsed games (from `parse-pgn`).
+/// - games (array): parsed games (from `games`).
 /// - by (str): `"player"` or `"team"`.
 /// - match-points (dictionary): team match-point values.
 /// -> dictionary
@@ -446,7 +446,7 @@
 /// Render a round-robin cross-table as a Typst `#table` figure. Columns are
 /// numbered to match the row order; the diagonal is shaded.
 ///
-/// - games (array): parsed games (from `parse-pgn`).
+/// - games (array): parsed games (from `games`).
 /// - by (str): `"player"` or `"team"`.
 /// - match-points (dictionary): team match-point values.
 /// - title (none, content): a title shown above the table.
@@ -506,7 +506,7 @@
 /// (player: game points that round; team: match points). Needs the `Round` tag;
 /// works for open / Swiss events too.
 ///
-/// - games (array): parsed games (from `parse-pgn`).
+/// - games (array): parsed games (from `games`).
 /// - by (str): `"player"` or `"team"`.
 /// - match-points (dictionary): team match-point values.
 /// -> dictionary
@@ -564,7 +564,7 @@
 /// Render a progress table as a Typst `#table` figure: a column per round showing
 /// that round's result and the running total, plus a final total.
 ///
-/// - games (array): parsed games (from `parse-pgn`).
+/// - games (array): parsed games (from `games`).
 /// - by (str): `"player"` or `"team"`.
 /// - match-points (dictionary): team match-point values.
 /// - title (none, content): a title shown above the table.

@@ -79,7 +79,7 @@
 }
 
 // Wrap a SAN string into a minimal move node (no comments). Normalises a
-// trailing move-quality glyph exactly like the `parse-pgn` path (pgn.typ's
+// trailing move-quality glyph exactly like the parsed-game path (pgn.typ's
 // `_split-quality-suffix`), so a string/array SAN source and a parsed game
 // produce the same clean `san` + `nags` for visually identical input -- the
 // `nags:` gate on `notation()` then applies uniformly regardless of source.
@@ -101,11 +101,11 @@
   let nodes = if type(source) == str { _split-movetext(source).map(_bare-node) }
     else if type(source) == array {
       // A SAN array must hold move strings. The classic slip is passing
-      // `parse-pgn(..)` (an ARRAY of games) instead of one game -- catch it with a
-      // clear message pointing at `.first()`, rather than crashing deep inside.
+      // `games(..)` (an ARRAY of games) instead of one game -- catch it with a
+      // clear message pointing at `game(..)`, rather than crashing deep inside.
       if source.any(e => type(e) != str) {
         let looks-like-games = source.any(e => type(e) == dictionary and "movetext-raw" in e)
-        panic("notation: a SAN array must contain move strings, but got a non-string element" + if looks-like-games { " -- this looks like the array of games from `parse-pgn`; did you forget `.first()`?" } else { "" })
+        panic("notation: a SAN array must contain move strings, but got a non-string element" + if looks-like-games { " -- this looks like the array from `games(..)`; did you mean `game(..)` for a single game?" } else { "" })
       }
       source.map(_bare-node)
     }

@@ -11,7 +11,7 @@
 // the per-call figure came out ~10x too low. We instead draw a DISTINCT real
 // position each iteration (the position after ply i+1), exactly as a real
 // document does — so the full square/piece construction runs every time. N must
-// stay <= the g's ply count so no position repeats (see run-bench.sh).
+// stay <= the game's ply count so no position repeats (see run-bench.sh).
 #import "/lib.typ": game, mainline, position-after, board
 #set page(width: auto, height: auto)
 

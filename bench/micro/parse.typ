@@ -1,4 +1,4 @@
-// Microbench: games (PGN tokenize + parse).
+// Microbench: game (PGN tokenize + parse).
 //
 // Parameterised by  --input n=<count>.  The loop body is the ONLY thing that
 // scales with n; everything above it (import, read) is FIXED cost that is
@@ -9,7 +9,7 @@
 // parsing the SAME string n times would parse once and hit the cache n-1 times.
 // We prepend a distinct tag line per iteration to force a genuine parse each
 // time. (The extra tag is a few bytes; its cost is counted into the per-call
-// figure but is negligible next to parsing a full g.)
+// figure but is negligible next to parsing a full game.)
 #import "/lib.typ": game
 #set page(width: auto, height: auto)
 
