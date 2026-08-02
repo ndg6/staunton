@@ -71,8 +71,14 @@ If you change a showcase code block, regenerate the matching PNG (`typst compile
 commit it. These sheets are **not** part of `tests/run.sh`, so nothing else will
 flag a drift between the code shown and the image. Worth doing here as a cheap
 guard, since these sources are otherwise ungated: `for f in docs/img/*.typ; do
-typst compile --root . "$f" /dev/null || echo "BROKEN $f"; done` — a public-API
-rename can leave one uncompilable and it ships unnoticed. The image URLs are pinned to
+typst compile --root . "$f" /dev/null --format pdf || echo "BROKEN $f"; done` — a
+public-API rename can leave one uncompilable and it ships unnoticed.
+**`--format pdf` is required here, not optional:** Git Bash rewrites `/dev/null`
+to `nul`, and without an explicit format typst fails with "could not infer output
+format for path nul" *before compiling anything* — so every file reports BROKEN
+and the check silently becomes worthless. Verified 2026-08-02 (1.1.0): the bare
+form flagged all 7 sources as broken while all 7 compiled fine; with `--format
+pdf` they pass, and a planted bad import still exits 1. The image URLs are pinned to
 the release tag (like the manual link), so they only resolve once `vX.Y.Z` is
 pushed.
 

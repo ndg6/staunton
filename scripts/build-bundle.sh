@@ -88,7 +88,10 @@ files=$(find "$DEST" -type f | wc -l | tr -d ' ')
 size=$(du -sh "$DEST" | cut -f1)
 echo "OK: $files files, $size"
 echo "Verify it compiles standalone, e.g.:"
-echo "  typst compile --root \"$DEST\" \"$DEST/lib.typ\" /dev/null  # (or a small import test)"
+# `--format pdf` is required: Git Bash rewrites /dev/null to `nul`, and without an
+# explicit format typst errors "could not infer output format for path nul" before
+# compiling, which reads as a failure even when the source is fine.
+echo "  typst compile --root \"$DEST\" \"$DEST/lib.typ\" /dev/null --format pdf  # (or a small import test)"
 echo
 echo "Reminder: docs/ (incl. the manual) is NOT in this bundle by design. The"
 echo "manual PDF is a build artifact (gitignored, not committed) -- publish it as a"
