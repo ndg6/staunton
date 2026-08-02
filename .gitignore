@@ -32,6 +32,14 @@ prompts/
 CLAUDE.md
 GOTCHAS.md
 
+# Reference screenshots of OTHER chess programs' UIs, kept locally for design
+# work (measuring their look pixel-by-pixel). Deliberately never tracked: they
+# are third-party product screenshots, nothing in docs/manual.typ references
+# docs/assets/img, and attribution is carried by a citation instead. Note this
+# is a narrow prefix rule on purpose -- lichess_check_example.jpg in the same
+# directory IS tracked, so a blanket ignore would be wrong.
+docs/assets/img/[Cc][Bb]_*.png
+
 # Per-developer local helpers (machine-specific / convenience, not shipped).
 scripts/install-local.sh
 
