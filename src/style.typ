@@ -141,14 +141,15 @@
   // Highlights. Entries: a square name "e4" (uses
   // highlight-shape + highlight-fill), a (square, color) pair (filled, explicit
   // color -- e.g. PGN %csl), or a dict (square:, shape:, color:) for full
-  // control. Shapes: "filled" | "cross" | "circle". By convention a "cross"
-  // marks an EMPTY square (it would clash with a piece); not enforced.
+  // control. Shapes: "filled" | "cross" | "circle" | "frame". By convention a
+  // "cross" marks an EMPTY square (it would clash with a piece); not enforced.
   highlight: (),
   highlight-shape: "filled",  // default shape for plain-string entries
   highlight-fill: default-highlight-base,   // filled-highlight color (opaque base)
   highlight-transparency: 75%,              // applied to highlight-fill
   cross-color: red,           // cross highlight stroke color
   circle-color: green,        // circle highlight stroke color
+  frame-color: green,         // frame highlight stroke color (matches circle-color)
   // Marker strokes / margins are proportional to the square by default, so marks
   // scale with the board. Each accepts `auto` (the default ratio shown), a ratio
   // (e.g. `10%` of the square), or an absolute length. See `_resolve-square-dim`.
@@ -156,6 +157,9 @@
   circle-width: auto,         // circle stroke width;  auto -> 15% of the square
   cross-margin: auto,         // corner-to-tip distance (cross length); auto -> 10% of the square
   circle-margin: auto,        // circle inset from the border; auto -> 3% of the square
+  frame-width: auto,          // frame stroke width;   auto -> 15% of the square
+  frame-margin: auto,         // frame inset from the border; auto -> 3% of the square
+  frame-radius: auto,         // frame outer corner radius; auto -> 22% of the square
   arrows: (),                 // array of arrows, each `(from, to, color)` e.g. ("f3","e5","G")
   arrow-color: default-highlight-base,  // default arrow color (opaque base)
   arrow-transparency: 35%,    // applied to the default arrow color (thin lines need to stay clearly visible)

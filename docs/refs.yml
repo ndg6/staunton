@@ -40,6 +40,22 @@ fairy-art-dabbaba:
     title: Wikimedia Commons
   url: https://commons.wikimedia.org/wiki/File:Black_dabbaba.svg
 
+chessbase-annotations:
+  type: article
+  title: "Annotating in ChessBase: Arrows and highlighted squares"
+  author: "Silver, Albert"
+  date: 2021-10-26
+  parent:
+    type: web
+    title: ChessBase
+  url: https://en.chessbase.com/post/annotating-in-chessbase-arrows-and-highlighted-squares
+
+lichess-boards:
+  type: repository
+  title: "lila — lichess.org (source of the in-check glow's board CSS)"
+  author: "Lichess"
+  url: https://github.com/lichess-org/lila
+
 kokopu-react:
   type: repository
   title: "kokopu-react — chess-related React components (source of nine built-in square-color themes), LGPL-3.0"

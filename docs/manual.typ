@@ -681,14 +681,20 @@ support it and raises "unknown color theme option".
 
 `highlight` marks squares; each entry is a square name (drawn with
 `highlight-shape`, default `"filled"`), a `(square, color)` pair, or a dict
-`(square: .., shape: .., color: ..)` where `shape` is `"filled"`, `"cross"`, or
-`"circle"`. By convention a *cross* marks an empty square.
+`(square: .., shape: .., color: ..)` where `shape` is `"filled"`, `"cross"`,
+`"circle"`, or `"frame"`. By convention a *cross* marks an empty square;
+`"frame"` carries no such convention — it hugs the square border and leaves
+the centre clear, so unlike `"cross"` it reads fine over an occupied square
+too. `"frame"` reproduces the rounded square highlight used by ChessBase
+@chessbase-annotations.#footnote[*staunton* is not affiliated with or
+endorsed by ChessBase; the name is used only to identify the source of the
+look.]
 
 #example(```typ
 #board(
   "8/8/8/4p3/4P3/8/8/8",
   highlight: (
-    "e4",
+    (square: "e4", shape: "frame"),
     (square: "e5", shape: "circle"),
     (square: "d5", shape: "cross"),
   ),
@@ -721,7 +727,9 @@ Two optional markings annotate the *move* rather than arbitrary squares. Both ar
 `check: true` draws a radial glow (`check-color`, default pure red, fading to
 transparent) *under* the king that is in check; the whole glow, including its
 darkening, derives from `check-color`, so setting it to another color reproduces
-the same glow in that color. On a standard position the checked king is located
+the same glow in that color. The glow's profile — its radial extent and its
+darkening-as-it-fades stops — reproduces Lichess's board CSS @lichess-boards.
+On a standard position the checked king is located
 automatically — you only flip the switch (see the combined example below).
 
 `move-quality: true` draws a small disc near the *upper-right* of the last move's
@@ -1906,7 +1914,8 @@ described once here.
 / `size`: a `length` (default: `4cm`), a `ratio` of the available width (default: `60%`), or `auto`.
 
 / `highlight` entry: a square name `"e4"`; a `(square, color)` pair; or a dict
-  `(square:, shape:, color:)` with shape `"filled"` / `"cross"` / `"circle"`.
+  `(square:, shape:, color:)` with shape `"filled"` / `"cross"` / `"circle"` /
+  `"frame"`.
 
 / `arrows` entry: `(from, to)`; `(from, to, color)`; or a dict `(from:, to:, color:)`.
 
@@ -1949,9 +1958,10 @@ setters reject them), though their *styling* options can.
   [`highlight` / `arrows`], raw("()"), [squares / arrows to draw — see the value shapes _(per call only)_],
   raw("highlight-shape"), raw("\"filled\""), [default shape for plain-string highlight entries],
   [`highlight-fill` / `highlight-transparency`], [green, `75%`], [filled-highlight color and its transparency],
-  [`cross-color` / `circle-color`], [red / green], [cross / circle stroke colors],
-  [`cross-width` / `circle-width`], raw("auto"), [cross / circle stroke widths; `auto` → 15% of the square (a `ratio` or absolute length also work)],
-  [`cross-margin` / `circle-margin`], raw("auto"), [cross corner-to-tip distance / circle inset; `auto` → 10% / 3% of the square (ratio / length accepted)],
+  [`cross-color` / `circle-color` / `frame-color`], [red / green / green], [cross / circle / frame stroke colors],
+  [`cross-width` / `circle-width` / `frame-width`], raw("auto"), [cross / circle / frame stroke widths; `auto` → 15% of the square (a `ratio` or absolute length also work)],
+  [`cross-margin` / `circle-margin` / `frame-margin`], raw("auto"), [cross corner-to-tip distance / circle inset / frame inset; `auto` → 10% / 3% / 3% of the square (ratio / length accepted)],
+  raw("frame-radius"), raw("auto"), [frame outer corner radius; `auto` → 22% of the square (ratio / length accepted)],
   [`arrow-color` / `arrow-transparency`], [green, `35%`], [default arrow color and its transparency],
   raw("arrow-width"), raw("auto"), [arrow shaft width; `auto` → 15% of the square (ratio / length accepted)],
   raw("check"), raw("false"), [in-check glow on the checked king (auto-located for standard positions)],
@@ -2153,5 +2163,9 @@ The Typst package #link("https://typst.app/universe/package/boards-n-pieces")[bo
 was an inspiration for some of staunton's features. The square colors of nine of
 the built-in color themes are reproduced from
 #link("https://github.com/yo35/kokopu-react")[kokopu-react] (LGPL-3.0) by Yoann
-Le Montagner (see @themes). This package and its manual were developed with
-assistance from Claude (Opus 4.8) by Anthropic.
+Le Montagner (see @themes). The `"frame"` highlight shape reproduces the
+rounded square highlight used by #link("https://www.chessbase.com")[ChessBase]
+@chessbase-annotations, and the in-check glow's profile reproduces
+#link("https://lichess.org")[Lichess]'s board CSS @lichess-boards. This
+package and its manual were developed with assistance from Claude (Opus 4.8)
+by Anthropic.

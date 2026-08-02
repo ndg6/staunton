@@ -52,7 +52,8 @@
   "label-border-ratio", "file-side", "rank-side", "file-label-corner",
   "rank-label-corner", "border-theme", "border", "grid", "piece-set",
   "piece-scale", "highlight-shape", "highlight-fill", "highlight-transparency",
-  "cross-color", "cross-width", "circle-color", "circle-width", "arrow-color",
+  "cross-color", "cross-width", "circle-color", "circle-width",
+  "frame-color", "frame-width", "arrow-color",
   "arrow-transparency", "arrow-width", "check", "check-color", "check-square",
   "move-quality", "move-quality-colors", "annotation-colors", "white-fill",
   "black-fill", "piece-font", "baseline-inset",
@@ -184,6 +185,10 @@ Colors, shapes and widths are document defaults; the squares are not, so the
   "set-board-defaults(\n  highlight-shape: \"cross\",\n  cross-color: purple, cross-width: 4pt,\n)\nboard(fen, highlight: (\"f3\",))",
   call: (highlight: ("f3",)),
   highlight-shape: "cross", cross-color: purple, cross-width: 4pt)
+#demo(
+  "set-board-defaults(\n  highlight-shape: \"frame\",\n  frame-color: maroon, frame-width: 3pt,\n)\nboard(fen, highlight: (\"c6\",))",
+  call: (highlight: ("c6",)),
+  highlight-shape: "frame", frame-color: maroon, frame-width: 3pt)
 
 = Arrow *styling* (the `arrows` LIST stays per-call)
 #demo(
