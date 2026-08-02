@@ -2167,5 +2167,5 @@ Le Montagner (see @themes). The `"frame"` highlight shape reproduces the
 rounded square highlight used by #link("https://www.chessbase.com")[ChessBase]
 @chessbase-annotations, and the in-check glow's profile reproduces
 #link("https://lichess.org")[Lichess]'s board CSS @lichess-boards. This
-package and its manual were developed with assistance from Claude (Opus 4.8)
-by Anthropic.
+package and its manual were developed with assistance from Claude models by
+Anthropic.

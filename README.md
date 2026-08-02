@@ -419,7 +419,7 @@ Initial release.
 
 - The [boards-n-pieces](https://typst.app/universe/package/boards-n-pieces) Typst
   package was an inspiration for some features.
-- Developed with assistance from Claude (Opus 4.8) by Anthropic.
+- Developed with assistance from Claude models by Anthropic.
 
 ## License
 
