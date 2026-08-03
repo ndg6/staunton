@@ -21,9 +21,10 @@
 #import "san.typ": _split-movetext
 #import "pgn.typ": movetext, _split-quality-suffix
 #import "i18n.typ": notation-langs, lang-piece-chars
-#import "game.typ": mainline, game-result
+#import "game.typ": mainline, game-result, _ply-of
 #import "annotations.typ": interpret-comment, nag-symbol, glyph-to-nag
 #import "style.typ": default-pgn-style, pgn-style-state
+#import "coords.typ": _movenum-of-ply
 
 // The only uppercase letters that denote a piece in SAN -> kind. Files (a-h),
 // ranks, "x", "+", "#", "O-O" and NAGs are never piece letters and pass through.
@@ -35,15 +36,6 @@
 // (Some fonts render the outline glyphs lighter than the solid ones.)
 #let _fig-white = (king: "\u{2654}", queen: "\u{2655}", rook: "\u{2656}", bishop: "\u{2657}", knight: "\u{2658}")
 #let _fig-black = (king: "\u{265A}", queen: "\u{265B}", rook: "\u{265C}", bishop: "\u{265D}", knight: "\u{265E}")
-
-// "12w" -> ply 23 ; "12b" -> ply 24 (same convention as game.typ locators).
-#let _ply-of(loc) = {
-  assert(type(loc) == str and loc.len() >= 2, message: "notation: bad move locator: " + repr(loc))
-  let color = loc.slice(loc.len() - 1)
-  let num = int(loc.slice(0, loc.len() - 1))
-  if color == "w" { 2 * num - 1 } else if color == "b" { 2 * num }
-  else { panic("notation: move locator must end in 'w' or 'b': " + loc) }
-}
 
 // One piece letter rendered as the language letter, or the color-aware figurine
 // glyph (`white` selects the outline vs solid set).
@@ -131,7 +123,7 @@
   let white = calc.odd(ply)
   let num = ""
   if opts.move-numbers {
-    let movenum = int((ply + 1) / 2)
+    let movenum = _movenum-of-ply(ply)
     // White: "24."; a forced Black move (run start / after a variation or comment):
     // "24...". `opts.spaced` (default) then adds a space before the SAN -> "24. Nf3"
     // / "24... Nf6"; dense mode omits it -> "24.Nf3" / "24...Nf6".

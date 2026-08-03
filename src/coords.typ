@@ -88,3 +88,34 @@
 /// - row (int): zero-based row index.
 /// -> bool
 #let is-dark-square(col, row) = calc.even(col + row)
+
+// ---------------------------------------------------------------------------
+// Move locator <-> ply conversion.
+//
+// A mainline locator is "12w" / "12b" (move number + side). Ply numbering:
+// after White's move m -> ply 2m-1; after Black's -> ply 2m. This is the ONE
+// place this arithmetic lives; game.typ, notation.typ and lib.typ all import
+// it rather than re-deriving it.
+// ---------------------------------------------------------------------------
+
+// "30w" -> 59 ; "30b" -> 60
+#let _ply-of-locator(loc) = {
+  assert(type(loc) == str and loc.len() >= 2, message: "bad move locator: " + repr(loc))
+  let color = loc.slice(loc.len() - 1)
+  let num = int(loc.slice(0, loc.len() - 1))
+  if color == "w" { 2 * num - 1 }
+  else if color == "b" { 2 * num }
+  else { panic("move locator must end in 'w' or 'b': " + loc) }
+}
+
+// Locator -> 0-based ply index (index = ply - 1).
+#let _index-of-locator(loc) = _ply-of-locator(loc) - 1
+
+// Inverse of `_index-of-locator`: 0-based ply index -> "12w"/"12b".
+#let _locator-of-index(i) = {
+  let ply = i + 1
+  str(int((ply + 1) / 2)) + (if calc.odd(ply) { "w" } else { "b" })
+}
+
+// 1-based ply -> the move number printed in notation ("24." / "24...").
+#let _movenum-of-ply(ply) = int((ply + 1) / 2)

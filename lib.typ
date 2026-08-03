@@ -17,7 +17,7 @@
 // API are imported with an `_`-prefixed alias, so the clean name is absent from
 // this module's surface (Typst 0.15 has no real export privacy, so this is the
 // convention). Everything else stays reachable via a deep `src/...` import.
-#import "src/coords.typ": parse-square, is-dark-square, square-name as _square-name
+#import "src/coords.typ": parse-square, is-dark-square, square-name as _square-name, _index-of-locator, _locator-of-index
 #import "src/pieces.typ": piece-content, svg-piece-set, named-piece-set, with-fallback
 #import "src/variants.typ": variant-spec as _variant-spec, char-to-piece as _char-to-piece, define-variant
 // `parse-fen` is NOT public API in 2.0.0 -- `position(fen)` is the one spelling
@@ -592,17 +592,10 @@
   _assemble(drawn, white, black, year, game-info, below, diagram-ov, lang, fig-args)
 }
 
-// Mainline locator "12w"/"12b" <-> 0-based ply index (ply = index+1; White's
-// move m is ply 2m-1). Used to slice the movetext into text runs for embedding.
-#let _index-of-loc(loc) = {
-  let color = loc.slice(loc.len() - 1)
-  let num = int(loc.slice(0, loc.len() - 1))
-  (if color == "w" { 2 * num - 1 } else { 2 * num }) - 1
-}
-#let _loc-of-index(i) = {
-  let ply = i + 1
-  str(int((ply + 1) / 2)) + (if calc.odd(ply) { "w" } else { "b" })
-}
+// Mainline locator "12w"/"12b" <-> 0-based ply index. Used to slice the
+// movetext into text runs for embedding (shared arithmetic in coords.typ).
+#let _index-of-loc(loc) = _index-of-locator(loc)
+#let _loc-of-index(i) = _locator-of-index(i)
 
 // The text-only options forwarded to the notation core (i.e. minus the embedding
 // switches `diagrams` / `annotations`, handled here).

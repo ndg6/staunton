@@ -22,16 +22,10 @@
 #import "pgn.typ": movetext, _movetext-tree
 #import "chess960.typ": chess960-start-fen
 #import "annotations.typ": nag-symbol, interpret-comment, glyph-to-nag, quality-nag-codes
+#import "coords.typ": _ply-of-locator
 
-// "30w" -> 59 ; "30b" -> 60
-#let _ply-of(loc) = {
-  assert(type(loc) == str and loc.len() >= 2, message: "bad move locator: " + repr(loc))
-  let color = loc.slice(loc.len() - 1)
-  let num = int(loc.slice(0, loc.len() - 1))
-  if color == "w" { 2 * num - 1 }
-  else if color == "b" { 2 * num }
-  else { panic("move locator must end in 'w' or 'b': " + loc) }
-}
+// "30w" -> 59 ; "30b" -> 60 (shared arithmetic lives in coords.typ)
+#let _ply-of(loc) = _ply-of-locator(loc)
 
 /// The starting position of a game — from its `FEN` tag if present, else from a
 /// Chess960 position-number tag (`FRCPosition` / `Chess960Position`), else the
