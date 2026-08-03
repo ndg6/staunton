@@ -136,6 +136,14 @@
   let result = none
   let pending-comment = none   // comment(s) before the FIRST move of this line
   let cur = none               // the move being assembled, or none before the first
+  // Highest WHITE move number seen on this line, to catch two games that ran
+  // together with neither a roster nor a result to separate them (the one case
+  // no separator can detect: "1. e4 e5\n\n1. d4 d5" is a legal-looking line in
+  // which d4 becomes White's third move). Top-level white move numbers strictly
+  // increase; a repeat or a drop means a new game started. Only `N.` counts --
+  // `N...` is a black-continuation marker, legitimately repeating the number
+  // after a variation, and variations restart numbering by design (top only).
+  let last-white = none
 
   while i < n {
     let t = toks.at(i)
@@ -144,6 +152,24 @@
       i += 1
       break
     } else if t.type == "num" {
+      if top {
+        let digits = t.value.replace(".", "")
+        if t.value.len() - digits.len() == 1 {
+          let num = int(digits)
+          // Not `assert(..)`: its `message:` argument is evaluated EAGERLY, on
+          // every passing call too, which both costs a string build per move
+          // number and would `str(none)`-error on the very first one.
+          if last-white != none and num <= last-white {
+            panic(
+              "malformed PGN: movetext goes back to move " + str(num) + " after move "
+                + str(last-white) + " has already been played. Two games appear to have run "
+                + "together: separate them by terminating each game with a result token "
+                + "(1-0, 0-1, 1/2-1/2, *) or by giving each one a tag roster.",
+            )
+          }
+          last-white = num
+        }
+      }
       i += 1
     } else if t.type == "comment" {
       if cur != none {
@@ -242,6 +268,13 @@
 /// shows only a few positions never parses the rest. Always returns an array,
 /// even for a single game — use `game(input)` when you know there is exactly one.
 ///
+/// Games are separated by a *tag roster* or by a *result token* (`1-0`, `0-1`,
+/// `1/2-1/2`, `*`); blank lines are not separators. Real PGN carries both, so
+/// `games` is the right entry point for it. Movetext pasted from a web page
+/// often carries neither, and two such games run together read as one legal
+/// line — so a game whose move numbers stop increasing is rejected rather than
+/// silently merged. Give each game a result token or a roster.
+///
 /// - input (str, content): the PGN source — a string, or a raw block
 ///   (```` ```…``` ````) / `#raw(..)`.
 /// - lang (str): the language of the movetext's piece letters (e.g. `"de"` for
@@ -269,6 +302,7 @@
   let n = ms.len()
   let out = ()
   let i = 0
+  let prev-start = 0   // movetext start of the last game pushed (for trailer merges)
 
   while i < n {
     // --- roster: a leading run of tag tokens ---
@@ -282,29 +316,59 @@
       i += 1
     }
 
-    // --- movetext: tokens up to the next roster tag (or EOF) ---
+    // --- movetext: tokens up to the next roster tag, a result token, or EOF ---
     // We do not build the tree here; we only need the verbatim span, the result,
     // and an eager top-level paren-balance check (so a stray ')' fails at parse
     // time, matching the documented contract).
+    //
+    // A top-level result token TERMINATES the game, so bare (roster-less)
+    // multi-game input splits too. A result inside a variation does not -- it is
+    // malformed PGN, and stays the tree parser's error to report. A result inside
+    // a comment is invisible here, because `{..}` tokenises as a single token.
     let mv-start = if i < n { ms.at(i).start } else { 0 }
     let mv-end = s.len()
     let last-end = none
     let depth = 0
     let result = none
+    // Does this span hold anything that could be a MOVE? Used only to decide
+    // whether a span is a game at all (see the trailer merge below); once true
+    // we stop classifying, so the cost is a few tokens per game, not per token.
+    let has-move = false
     while i < n and not ms.at(i).text.starts-with("[") {
       let t = ms.at(i).text
       if t == "(" { depth += 1 }
       else if t == ")" {
         assert(depth > 0, message: "malformed PGN: unexpected ')' outside a variation")
         depth -= 1
-      } else if _results.contains(t) { result = t }
+      } else if depth == 0 and _results.contains(t) {
+        result = t
+        last-end = ms.at(i).end
+        i += 1
+        break
+      } else if not has-move and not t.starts-with("{") and not t.starts-with(";") and not t.starts-with("$") and t.match(_num-re) == none {
+        has-move = true
+      }
       last-end = ms.at(i).end
       i += 1
     }
-    if i < n { mv-end = ms.at(i).start }
+    if i < n and ms.at(i).text.starts-with("[") { mv-end = ms.at(i).start }
     else if last-end != none { mv-end = last-end }
 
     let raw = if last-end == none { "" } else { s.slice(mv-start, mv-end).trim() }
+
+    // A span with no roster AND no move is not a game -- it is a TRAILER: a
+    // closing comment, a `;` banner, a stray duplicate result. Splitting on a
+    // result token would otherwise turn every such tail into a phantom game,
+    // and `game()` would reject an ordinary file that merely ends in a comment.
+    // Merge it back into the game it follows, so movetext-raw stays verbatim.
+    if tags.len() == 0 and not has-move and out.len() > 0 {
+      let prev = out.pop()
+      prev.movetext-raw = s.slice(prev-start, mv-end).trim()
+      if result != none and prev.result == "*" { prev.result = result }
+      out.push(prev)
+      continue
+    }
+    prev-start = mv-start
 
     out.push((
       tags: tags,
