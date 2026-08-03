@@ -29,10 +29,7 @@
 #import "src/engine.typ": legal-moves, apply, in-check, checked-king-square as _checked-king-square
 #import "src/san.typ": play, move-to-san
 #import "src/pgn.typ": games, game, movetext
-// `_position-at` is game.typ's provenance-free position lookup: `to-fen` only
-// wants the squares, so it must not pay for provenance it discards. It keeps its
-// underscore, which is also lib's marker for "not public API".
-#import "src/game.typ": mainline, position-after, _position-at, _move-context, game-result, move-san, move-node, with-nags, with-comments, with-variation, game-start, game-variant
+#import "src/game.typ": mainline, position-after, _move-context, game-result, move-san, move-node, with-nags, with-comments, with-variation, game-start, game-variant
 // The text core lives in src/notation.typ; lib defines `notation` on top so
 // it can also embed diagrams (which needs the lib-level `diagram`).
 #import "src/notation.typ": notation as _notation-text
@@ -294,7 +291,7 @@
   if at != none {
     assert(is-game,
       message: "`at:` requires a game — a position already identifies its own move; pass the game (not the position) together with `at:` to select a move within it")
-    (_position-at(source, at), _move-context(source, at))
+    (position-after(source, at), _move-context(source, at))
   } else {
     assert(not is-game,
       message: "a game needs `at:` naming which move to draw (e.g. `at: \"12w\"`) — or use `position-after(game, at)`")
@@ -417,7 +414,7 @@
   if "squares" in source { return _position-fen(source) }
   if "movetext-raw" in source {
     assert(locator != none, message: "to-fen: a game needs a locator (e.g. locator: \"12w\")")
-    return _position-fen(_position-at(source, locator))
+    return _position-fen(position-after(source, locator))
   }
   panic("to-fen: source must be a position (has `squares`) or a game (has `movetext-raw`)")
 }

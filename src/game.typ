@@ -120,14 +120,19 @@
   out
 }
 
-// The bare position at a locator — handles the mainline and (nested) variations.
-// The public `position-after` (defined below) is a thin wrapper around this;
-// they are identical. Kept as a separate internal name because callers that
-// only want the squares — `to-fen`, and any internal replay — reach for this
-// one directly, and because `lib.typ`'s `at:` resolution needs the position and
-// the move context (`_move-context`) as two separate values, not a wrapper that
-// bundles them.
-#let _position-at(game, locator) = {
+/// The position at a locator — handles the mainline and (nested) variations.
+///
+/// The returned position is a plain position, identical to drawing it directly:
+/// it carries no memory of the move it came from. To have `board`/`diagram`
+/// draw that move's `%cal` / `%csl` annotations and its move-quality badge, hand
+/// them the *game* itself together with `at:` (e.g. `diagram(game, at: locator)`)
+/// rather than pre-resolving the position here.
+///
+/// - game (dictionary): a parsed game (from `game`).
+/// - locator (str, dictionary): a mainline `"30w"` / `"30b"`, or a variation path
+///   dict `(line: (..hops..), at: "<move>")`.
+/// -> dictionary
+#let position-after(game, locator) = {
   let loc = if type(locator) == str { (line: (), at: locator) } else { locator }
 
   // Fast path: a pure mainline locator just indexes into the (memoised) mainline
@@ -303,7 +308,7 @@
   // the one in-range locator with no move behind it. There is nothing to derive,
   // so it gets no context rather than a panic out of `move-node` (which would
   // report the misleading "past the end of its line"). Genuinely out-of-range
-  // locators still error, and with the right message: `_position-at` runs first
+  // locators still error, and with the right message: `position-after` runs first
   // and asserts on them before we get here.
   let at = if type(locator) == str { locator } else { locator.at("at") }
   if _ply-of(at) == 0 { return none }
@@ -319,19 +324,6 @@
   )
 }
 
-/// The position at a locator — handles the mainline and (nested) variations.
-///
-/// The returned position is a plain position, identical to drawing it directly:
-/// it carries no memory of the move it came from. To have `board`/`diagram`
-/// draw that move's `%cal` / `%csl` annotations and its move-quality badge, hand
-/// them the *game* itself together with `at:` (e.g. `diagram(game, at: locator)`)
-/// rather than pre-resolving the position here.
-///
-/// - game (dictionary): a parsed game (from `game`).
-/// - locator (str, dictionary): a mainline `"30w"` / `"30b"`, or a variation path
-///   dict `(line: (..hops..), at: "<move>")`.
-/// -> dictionary
-#let position-after(game, locator) = _position-at(game, locator)
 
 // ===========================================================================
 // Programmatic game building (Phase 1: annotate existing moves).

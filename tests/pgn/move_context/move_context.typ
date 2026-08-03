@@ -2,9 +2,9 @@
 // derived data — its %cal/%csl annotations, its move-quality badge, its SAN,
 // locator and the game's roster tags — is now reachable ONLY by handing the
 // GAME itself (never a bare position) to `board`/`diagram` together with `at:`.
-// Positions are uniform: `position-after(g, L)` and `_position-at(g, L)` return
-// the exact same value for every locator, and NO position ever carries the old
-// `_origin` payload — that is the whole point of this release. The mechanism
+// Positions are uniform: `position-after(g, L)` returns an ORDINARY position,
+// indistinguishable from one built any other way, and NO position ever carries
+// the old `_origin` payload — that is the whole point of this release. The mechanism
 // this sheet replaces (a position that "remembers" its move) is gone by design;
 // see git history for `tests/pgn/provenance/provenance.typ` if the old shape is
 // ever needed for reference.
@@ -15,8 +15,8 @@
 // captured values — so `_move-context` / `_apply-origin` / `_resolve-draw` are the
 // only seams where this behaviour is machine-checkable. The visible result is
 // eyeballed via board/markings and notation/embed_diagrams (VISUAL_CHECKS).
-#import "/lib.typ": game, position, with-nags, apply, legal-moves, diagram, _apply-origin, _resolve-draw
-#import "/src/game.typ": position-after, _position-at, _move-context
+#import "/lib.typ": game, position, play, game-start, with-nags, apply, legal-moves, diagram, _apply-origin, _resolve-draw
+#import "/src/game.typ": position-after, _move-context
 
 #let g = game(```
 [White "Morphy"] [Black "Allies"] [Date "1858.11.02"]
@@ -48,12 +48,25 @@
 #assert.eq(_move-context(g, "1w").quality, none)             // absent when unmarked
 
 // ---- positions are uniform: no history rides on the value ------------------
-// `position-after` and the internal lookup must return IDENTICAL values for
-// every locator — that uniformity is the whole point of this release. If either
-// function still special-cased provenance onto its result, this would fail.
-#for loc in ("0b", "1w", "1b", "2w", "2b", "3w", "3b") {
-  assert.eq(position-after(g, loc), _position-at(g, loc),
-    message: "position-after and _position-at must agree at " + loc)
+// A game-derived position must be an ORDINARY position — indistinguishable from
+// one reached by a different route. Any extra field riding on the value
+// (provenance, or the `apply` leak fixed in Phase A) breaks this while leaving
+// the squares identical, which is exactly how both of those defects hid.
+//
+// The independent route is `play` from the game's own start, NOT a FEN
+// round-trip: `to-fen` is deliberately lossy about en passant (strict X-FEN —
+// it records the target square only when a capture is actually available,
+// src/fen.typ), so `position(to-fen(p)) != p` for any position sitting on a
+// live-but-uncapturable e.p. square, such as the one right after `1. e4`.
+// Do not "fix" this by asserting a FEN round-trip here.
+#let sans = ("1. e4", "1. e4 e5", "1. e4 e5 2. Nf3", "1. e4 e5 2. Nf3 Nc6", "1. e4 e5 2. Nf3 Nc6 3. Bb5")
+#for (i, loc) in ("1w", "1b", "2w", "2b", "3w").enumerate() {
+  let p = position-after(g, loc)
+  assert.eq(p, play(game-start(g), sans.at(i)),
+    message: "game-derived position differs from the replayed one at " + loc + ": " + repr(p.keys()))
+  assert.eq(p.keys().sorted(),
+    ("castling", "cols", "en-passant", "fullmove", "halfmove", "rows", "squares", "turn", "variant"),
+    message: "unexpected keys on a game-derived position at " + loc)
 }
 
 // No position — from a game, a FEN, or `apply` — ever carries `_origin`: the
