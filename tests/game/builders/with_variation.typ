@@ -35,7 +35,7 @@
 // --- compose: annotate a move INSIDE the just-added variation ---------------
 #let bc4 = (line: ((at: "3w", into: 0),), at: "3w")
 #assert(
-  s(with-nags(with-variation(g, at: "3w", moves: "Bc4 Bc5"), ((bc4, "!!"),)))
+  s(with-nags(with-variation(g, at: "3w", moves: "Bc4 Bc5"), nags: ((bc4, "!!"),)))
     == "1. e4 e5 2. Nf3 Nc6 3. Bb5 (3. Bc4!! Bc5) 3... a6",
   message: "with-nags into an added variation",
 )
@@ -43,8 +43,8 @@
 // --- navigation into the added line is legal + correct (lazy legality) ------
 #let gv = with-variation(g, at: "3w", moves: "Bc4 Bc5")
 #assert(
-  position-after(gv, (line: ((at: "3w", into: 0),), at: "3b")).squares
-    == play(none, "1. e4 e5 2. Nf3 Nc6 3. Bc4 Bc5").squares,
+  position-after(gv, at: (line: ((at: "3w", into: 0),), at: "3b")).squares
+    == play(none, moves: "1. e4 e5 2. Nf3 Nc6 3. Bc4 Bc5").squares,
   message: "position-after navigates into the added variation",
 )
 

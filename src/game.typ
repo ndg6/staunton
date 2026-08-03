@@ -129,8 +129,9 @@
 /// rather than pre-resolving the position here.
 ///
 /// - game (dictionary): a parsed game (from `game`).
-/// - locator (str, dictionary): a mainline `"30w"` / `"30b"`, or a variation path
-///   dict `(line: (..hops..), at: "<move>")`. Give it positionally or as `at: ..`.
+/// - ..args (arguments): the locator — a mainline `"30w"` / `"30b"`, or a variation
+///   path dict `(line: (..hops..), at: "<move>")`. Give it as `at: ..` (the
+///   positional form still works during the 2.0.0 migration and is removed next).
 /// -> dictionary
 #let position-after(game, ..args) = {
   let locator = _one-of("position-after", args, "at")
@@ -174,8 +175,9 @@
 /// PGN-diagram captions.
 ///
 /// - game (dictionary): a parsed game (from `game`).
-/// - locator (str, dictionary): a mainline `"30w"` / `"30b"`, or a variation path
-///   dict. Give it positionally or as `at: ..`.
+/// - ..args (arguments): the locator — a mainline `"30w"` / `"30b"`, or a
+///   variation path dict. Give it as `at: ..` (the positional form still works during the 2.0.0
+///   migration and is removed in the next checkpoint).
 /// -> str
 #let move-san(game, ..args) = {
   let locator = _one-of("move-san", args, "at")
@@ -199,8 +201,9 @@
 /// PGN `%cal` / `%csl` annotations for a diagram.
 ///
 /// - game (dictionary): a parsed game (from `game`).
-/// - locator (str, dictionary): a mainline `"30w"` / `"30b"`, or a variation path
-///   dict. Give it positionally or as `at: ..`.
+/// - ..args (arguments): the locator — a mainline `"30w"` / `"30b"`, or a
+///   variation path dict. Give it as `at: ..` (the positional form still works during the 2.0.0
+///   migration and is removed in the next checkpoint).
 /// -> dictionary
 #let move-node(game, ..args) = {
   let locator = _one-of("move-node", args, "at")
@@ -225,8 +228,8 @@
 /// only (uses the rules engine). Used to place the move-quality badge.
 ///
 /// - game (dictionary): a parsed game (from `game`).
-/// - locator (str, dictionary): a mainline `"30w"` / `"30b"`, or a variation path
-///   dict.
+/// - locator (str, dictionary): a mainline `"30w"` / `"30b"`, or a variation
+///   path dict `(line: (..hops..), at: "<move>")`.
 /// -> str
 #let move-destination(game, locator) = {
   let loc = if type(locator) == str { (line: (), at: locator) } else { locator }
@@ -270,11 +273,11 @@
 /// Used to place the badge; standard-chess only.
 ///
 /// - game (dictionary): a parsed game (from `game`).
-/// - locator (str, dictionary): a mainline `"30w"` / `"30b"`, or a variation path
-///   dict.
+/// - locator (str, dictionary): a mainline `"30w"` / `"30b"`, or a variation
+///   path dict `(line: (..hops..), at: "<move>")`.
 /// -> dictionary | none
 #let move-quality-mark(game, locator) = {
-  let node = move-node(game, locator)
+  let node = move-node(game, at: locator)
   let symbol = none
   for ng in node.at("nags", default: ()) {
     if quality-nag-codes.contains(ng) { symbol = nag-symbol(ng); break }
@@ -315,7 +318,7 @@
   // and asserts on them before we get here.
   let at = if type(locator) == str { locator } else { locator.at("at") }
   if _ply-of(at) == 0 { return none }
-  let node = move-node(game, locator)
+  let node = move-node(game, at: locator)
   let anno = interpret-comment(node.at("comment-after", default: none))
   (
     locator: locator,
@@ -395,10 +398,9 @@
 /// *new* game (the source is not mutated). Each value *replaces* that move's NAGs.
 ///
 /// - game (dictionary): a parsed game (from `game`).
-/// - overrides (dictionary, array): a dict of mainline locators (`("12w": "!")`)
-///   or an array of `(locator, value)` pairs (a locator may be a variation path
-///   dict). A value is `"$n"`, a suffix glyph (`! ? !! ?? !? ?!`), or an array of
-///   those. Give it positionally or as `nags: ..`.
+/// - ..args (arguments): the NAG map, as `nags: (<locator>: <value>, ..)`.
+///   Give it as `at: ..` (the positional form still works during the 2.0.0
+///   migration and is removed in the next checkpoint).
 /// -> dictionary
 #let with-nags(game, ..args) = {
   let overrides = _one-of("with-nags", args, "nags")
@@ -417,9 +419,9 @@
 /// `comments` switch renders).
 ///
 /// - game (dictionary): a parsed game (from `game`).
-/// - overrides (dictionary, array): a dict of mainline locators or an array of
-///   `(locator, text)` pairs (a locator may be a variation path dict); each
-///   `text` is a plain string. Give it positionally or as `comments: ..`.
+/// - ..args (arguments): the comment map, as `comments: (<locator>: <text>, ..)`.
+///   Give it as `at: ..` (the positional form still works during the 2.0.0
+///   migration and is removed in the next checkpoint).
 /// -> dictionary
 #let with-comments(game, ..args) = {
   let overrides = _one-of("with-comments", args, "comments")

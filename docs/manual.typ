@@ -783,7 +783,7 @@ programmatically, wears a good-move badge on `f7`:
   "1. e4 e5 2. Qh5 Nc6 3. Bc4 Nf6?? 4. Qxf7# 1-0",
 )
 #diagram(
-  with-nags(g, ("4w": "!")), at: "4w",
+  with-nags(g, nags: ("4w": "!")), at: "4w",
   check: true, move-quality: true, size: 4cm,
 )
 ```)
@@ -1192,14 +1192,14 @@ so there is no separate `*-after` function for either.
 #diagram(g, at: "3w", size: 3.4cm)
 ```)
 
-`position-after(g, loc)` still hands you the position at a locator, and it is
+`position-after(g, at: loc)` still hands you the position at a locator, and it is
 an *ordinary* position — identical to one built by `position` or advanced with
 the #link(<engine>)[engine]'s `apply`. Drawing it gives you the board and
 nothing else: no caption, no roster line, no annotations, no badge.
 
 #example(```typ
 // the same squares, drawn WITHOUT the move: no badge, no annotations
-#diagram(position-after(g, "3w"), size: 3.4cm)
+#diagram(position-after(g, at: "3w"), size: 3.4cm)
 ```)
 
 That is what keeps a move-quality badge honest: the badge is tied to a move, so it
@@ -1211,8 +1211,8 @@ square).
 
 A *locator* addresses one position in a game. The simple form is a string —
 `"30w"` / `"30b"`, the position after White's / Black's 30th *mainline* move.
-`position-after(g, loc)`, `diagram(g, at: loc, ..)`, and
-`to-fen(g, locator: ..)` all take this simple string form.
+`position-after(g, at: loc)`, `diagram(g, at: loc, ..)`, and
+`to-fen(g, at: ..)` all take this simple string form.
 
 To address a move *inside a variation* (a PGN 'Recursive Annotation Variantion' or RAV), pass a *path* dict instead:
 `(line: (..hops..), at: "<final move>")`. Each hop is `(at: "<move>", into: <n>)`
@@ -1248,7 +1248,7 @@ move past the end of its line is a hard error.
 == Playing Moves onto a Position
 
 To explore a *new* line, or build a position from a FEN plus some moves, use
-`play(source, moves)`. `source` is `none` (the standard start), a FEN
+`play(source, moves: moves)`. `source` is `none` (the standard start), a FEN
 string, or a position; `moves` is move text or a SAN array. It resolves each move
 against the legal moves (illegal/ambiguous is a hard error) and returns the
 *final* position, never mutating the source. The result is a *position*, not a
@@ -1257,7 +1257,7 @@ game: it carries no move history, roster or PGN — for those, parse a game
 
 #example(```typ
 #diagram(
-  play(none, "1. e4 e5 2. Nf3 Nc6 3. Bb5 a6"),
+  play(none, moves: "1. e4 e5 2. Nf3 Nc6 3. Bb5 a6"),
   size: 4cm,
 )
 ```)
@@ -1274,7 +1274,7 @@ listing, a puzzle solution built move by move, or movetext assembled without a
 PGN in hand:
 
 #example(```typ
-#let pos = play(none, "1. e4 e5 2. Nf3")
+#let pos = play(none, moves: "1. e4 e5 2. Nf3")
 #raw(legal-moves(pos).map(m => move-to-san(pos, m)).join(", "))
 ```, stacked: true)
 
@@ -1378,8 +1378,8 @@ stay mainline-only and don't combine with `line`.)
 
 Beyond `nags: true` (which renders the `$n` NAGs a game *already* carries), you can
 attach NAGs and comments *programmatically* — without editing the PGN — and then
-render them like any parsed game. `with-nags(g, ..)` and
-`with-comments(g, ..)` each return a *new* game (the source is never mutated),
+render them like any parsed game. `with-nags(g, nags: ..)` and
+`with-comments(g, comments: ..)` each return a *new* game (the source is never mutated),
 so they compose:
 
 #example(````typ
@@ -1388,8 +1388,8 @@ so they compose:
 )
 #notation(
   with-comments(
-    with-nags(g, ("3w": "!")),
-    (((line: ((at: "3w", into: 0),), at: "3w"), "a sharp try"),),
+    with-nags(g, nags: ("3w": "!")),
+    comments: (((line: ((at: "3w", into: 0),), at: "3w"), "a sharp try"),),
   ),
   variations: true, nags: true, comments: true,
 )
@@ -1439,7 +1439,7 @@ of the lazy model.
 locator. Standard 8×8 positions round-trip exactly:
 
 #example(```typ
-#raw(to-fen(play(none, "1. e4 e5 2. Nf3")))
+#raw(to-fen(play(none, moves: "1. e4 e5 2. Nf3")))
 ```, stacked: true)
 
 For Chess960 positions `to-fen` emits *X-FEN* — a rook-file castling letter when
@@ -1606,7 +1606,7 @@ rooks on g1 *and* h1 with the king still on e1; the king-side castling rook is t
 inner one on g1, which X-FEN spells `G`:
 
 #example(```typ
-#raw(to-fen(frc, locator: "10b"))
+#raw(to-fen(frc, at: "10b"))
 ```, stacked: true)
 
 == Games
@@ -2152,6 +2152,11 @@ you can lay it out yourself.
 Generate and apply moves, or test for check — for puzzles, analysis, or
 conditional rendering. `move-to-san` names a move dict as canonical SAN (see
 #link(<naming-moves-san>)[Naming Moves as SAN]).
+
+`apply(position, move)`, `in-check(position, color)`, and
+`move-to-san(position, move)` are the exception to the `(subject, at: ..)`
+convention used elsewhere: both arguments are operands of a single operation,
+not a subject plus a setting on it, so both stay positional.
 #show-fns((
   ("/src/engine.typ", "legal-moves"),
   ("/src/engine.typ", "apply"),

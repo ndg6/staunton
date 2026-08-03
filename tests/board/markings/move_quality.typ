@@ -46,7 +46,7 @@
     message: NAG-OF.at(sym) + " must yield " + sym)
 
   // (c) programmatic, via with-nags
-  let prog = with-nags(game(head + "1. e4 e5 *"), ("1w": sym))
+  let prog = with-nags(game(head + "1. e4 e5 *"), nags: ("1w": sym))
   assert.eq(move-quality-mark(prog, "1w"), (square: "e4", symbol: sym),
     message: "with-nags " + sym + " must yield that symbol")
 }
@@ -115,7 +115,7 @@
 // A plain position (from `position-after`) has no history to badge: fed
 // through the same seam, it carries no `move-quality-mark`.
 #assert(
-  "move-quality-mark" not in _resolve-draw(position-after(g, "2w"), none, (:), true).ov,
+  "move-quality-mark" not in _resolve-draw(position-after(g, at: "2w"), none, (:), true).ov,
   message: "a plain position must not carry a badge",
 )
 

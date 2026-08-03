@@ -65,8 +65,8 @@
 //     an INDEPENDENT play-out of the same move sequence ----------------------
 #let nested-loc = (line: ((at: "3w", into: 0), (at: "3b", into: 0)), at: "4w")
 #assert(
-  position-after(gv2, nested-loc).squares
-    == play(none, "1. e4 e5 2. Nf3 Nc6 3. Bc4 Nf6 4. Ng5").squares,
+  position-after(gv2, at: nested-loc).squares
+    == play(none, moves: "1. e4 e5 2. Nf3 Nc6 3. Bc4 Nf6 4. Ng5").squares,
   message: "position-after into the nested variation == independent play",
 )
 

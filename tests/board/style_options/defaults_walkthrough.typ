@@ -30,11 +30,11 @@
 // programmatic `!` on the mating move so it also carries a good-move badge.
 #let mate = with-nags(
   game("1. e4 e5 2. Qh5 Nc6 3. Bc4 Nf6?? 4. Qxf7# 1-0"),
-  ("4w": "!"),
+  nags: ("4w": "!"),
 )
 
-#let main-fen  = to-fen(g, locator: "2b")   // open position after 2...Nc6??
-#let mate-fen  = to-fen(mate, locator: "4w")    // 4.Qxf7#  — Black king in check
+#let main-fen  = to-fen(g, at: "2b")   // open position after 2...Nc6??
+#let mate-fen  = to-fen(mate, at: "4w")    // 4.Qxf7#  — Black king in check
 
 // --- machine-checkable contract --------------------------------------------
 // The three position-specific keys are rejected by the setters (see the guard in

@@ -35,19 +35,19 @@
 // The position at the start of move 11 (after 10...Bf5, before 11.O-O) is exactly
 // Scharnagl's published X-FEN, including the "Gkq" castling field.
 #assert(
-  to-fen(position-after(g, "10b")) == "rn2k1r1/ppp1pp1p/3p2p1/5bn1/P7/2N2B2/1PPPPP2/2BNK1RR w Gkq - 4 11",
-  message: "move-11 X-FEN: " + to-fen(position-after(g, "10b")),
+  to-fen(position-after(g, at: "10b")) == "rn2k1r1/ppp1pp1p/3p2p1/5bn1/P7/2N2B2/1PPPPP2/2BNK1RR w Gkq - 4 11",
+  message: "move-11 X-FEN: " + to-fen(position-after(g, at: "10b")),
 )
 
 // 11.O-O is legal from there: king e1->g1, g1-rook->f1 (the h1-rook stays put),
 // and both White castling rights are then gone.
 #assert(
-  to-fen(position-after(g, "11w")) == "rn2k1r1/ppp1pp1p/3p2p1/5bn1/P7/2N2B2/1PPPPP2/2BN1RKR b kq - 5 11",
-  message: "after 11.O-O: " + to-fen(position-after(g, "11w")),
+  to-fen(position-after(g, at: "11w")) == "rn2k1r1/ppp1pp1p/3p2p1/5bn1/P7/2N2B2/1PPPPP2/2BN1RKR b kq - 5 11",
+  message: "after 11.O-O: " + to-fen(position-after(g, at: "11w")),
 )
 
 = Scharnagl Chess960 game — the "Gkq" X-FEN
 
-#diagram(position-after(g, "10b"), size: 4.5cm,
+#diagram(position-after(g, at: "10b"), size: 4.5cm,
   caption: [Before 11.O-O. White may castle king-side with the g1-rook; the outer
   h1-rook forces the X-FEN file letter, giving `Gkq`.])

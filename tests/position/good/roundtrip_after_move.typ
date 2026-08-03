@@ -29,7 +29,7 @@
 )
 
 #for (label, line) in cases {
-  let played = play(none, line)
+  let played = play(none, moves: line)
   let rebuilt = position(to-fen(played))
 
   assert.eq(played, rebuilt, message: "round trip mismatch for " + label)

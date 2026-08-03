@@ -226,9 +226,9 @@
 ///
 /// - source (none, str, dictionary): the starting point — `none` for the standard
 ///   start, a FEN string, or a position dict.
-/// - moves (str, content, array): move text (a string or a raw block; move
-///   numbers and a trailing result are tolerated and stripped), or an array of
-///   SAN tokens. Give it positionally or as `moves: ..`.
+/// - ..args (arguments): the moves, as `moves: ..` — a move-text string, a raw
+///   block, or an array of SAN strings. Give it as `at: ..` (the positional form still works during the 2.0.0
+///   migration and is removed in the next checkpoint).
 /// -> dictionary
 #let play(source, ..args) = {
   let moves = _one-of("play", args, "moves")

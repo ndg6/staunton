@@ -14,7 +14,7 @@
 ```)
 
 // The annotation survives parsing in the move's trailing comment.
-#let node = move-node(g, "2w")
+#let node = move-node(g, at: "2w")
 #assert(node.comment-after != none, message: "comment-after should hold the annotation")
 #assert(node.comment-after.contains("%cal"), message: "comment should contain %cal")
 

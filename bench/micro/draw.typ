@@ -20,5 +20,5 @@
 #let loc(p) = str(calc.quo(p + 1, 2)) + (if calc.odd(p) { "w" } else { "b" })
 
 #for i in range(n) {
-  board(position-after(g, loc(i + 1)))
+  board(position-after(g, at: loc(i + 1)))
 }

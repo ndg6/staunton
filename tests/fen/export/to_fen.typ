@@ -31,17 +31,17 @@
 
 // from a play result
 #assert(
-  to-fen(play(none, "1. e4 e5 2. Nf3 Nc6"))
+  to-fen(play(none, moves: "1. e4 e5 2. Nf3 Nc6"))
     == "r1bqkbnr/pppp1ppp/2n5/4p3/4P3/5N2/PPPP1PPP/RNBQKB1R w KQkq - 2 3",
   message: "play -> fen",
 )
 
 // from a game + locator (diagram(.., at: ..) locator syntax); "2w" = AFTER White's 2nd
 #let g = game("[White \"A\"][Black \"B\"] 1. e4 e5 2. Nf3 Nc6 *")
-#assert(to-fen(g, locator: "2w") == "rnbqkbnr/pppp1ppp/8/4p3/4P3/5N2/PPPP1PPP/RNBQKB1R b KQkq - 1 2", message: "game@2w -> fen")
-#assert(to-fen(g, locator: "2b") == "r1bqkbnr/pppp1ppp/2n5/4p3/4P3/5N2/PPPP1PPP/RNBQKB1R w KQkq - 2 3", message: "game@2b -> fen")
+#assert(to-fen(g, at: "2w") == "rnbqkbnr/pppp1ppp/8/4p3/4P3/5N2/PPPP1PPP/RNBQKB1R b KQkq - 1 2", message: "game@2w -> fen")
+#assert(to-fen(g, at: "2b") == "r1bqkbnr/pppp1ppp/2n5/4p3/4P3/5N2/PPPP1PPP/RNBQKB1R w KQkq - 2 3", message: "game@2b -> fen")
 
 = to-fen
 
 Starting position: #raw(to-fen(position(starting-fen))) \
-Game after 2...Nc6: #raw(to-fen(g, locator: "2b"))
+Game after 2...Nc6: #raw(to-fen(g, at: "2b"))

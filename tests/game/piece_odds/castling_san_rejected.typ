@@ -7,4 +7,4 @@
 // would then FAIL, surfacing the mistake) — so the only move that can raise "illegal
 // king-side castling" is the final O-O.
 #import "/lib.typ": play
-#let _ = play("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBN1 w Qkq - 0 1", "e4 e5 Nf3 Nc6 Bc4 Nf6 O-O")
+#let _ = play("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBN1 w Qkq - 0 1", moves: "e4 e5 Nf3 Nc6 Bc4 Nf6 O-O")

@@ -18,7 +18,7 @@
 // (Rf1 = the a1-rook returns to f1 after castling rights were never used --
 // a quiet developing move, verified legal.)
 #let g-en = game("1. e4 e5 2. Nf3 Nc6 3. Bc4 Bc5 4. d3 d6 5. Rf1", lang: "en")
-#let p-en = position-after(g-en, "5w")
+#let p-en = position-after(g-en, at: "5w")
 #assert(
   sq(p-en, "f1") != none and sq(p-en, "f1").kind == "rook" and sq(p-en, "f1").color == "white",
   message: "en: f1 must hold the white rook, got " + repr(sq(p-en, "f1")),
@@ -33,7 +33,7 @@
 // letter as the English rook move above but a DIFFERENT piece and a
 // DIFFERENT resulting position.
 #let g-es = game("1. e4 e5 2. Cf3 Cc6 3. Ac4 Ac5 4. d3 d6 5. Rf1", lang: "es")
-#let p-es = position-after(g-es, "5w")
+#let p-es = position-after(g-es, at: "5w")
 #assert(
   sq(p-es, "f1") != none and sq(p-es, "f1").kind == "king" and sq(p-es, "f1").color == "white",
   message: "es: f1 must hold the white king (Rey), got " + repr(sq(p-es, "f1")),

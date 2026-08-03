@@ -5,4 +5,4 @@
 #import "/src/pgn.typ": game
 #import "/src/game.typ": position-after
 #let g = game("1. Zz9 e5 *")
-#let _ = position-after(g, "1w")
+#let _ = position-after(g, at: "1w")

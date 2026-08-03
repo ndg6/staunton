@@ -17,7 +17,7 @@
 #let plies = mainline(g).len()
 #let mid = calc.min(20, plies)
 #let loc = str(calc.quo(mid + 1, 2)) + (if calc.odd(mid) { "w" } else { "b" })
-#let pos = position-after(g, loc)
+#let pos = position-after(g, at: loc)
 
 #let acc = 0
 #for i in range(n) {

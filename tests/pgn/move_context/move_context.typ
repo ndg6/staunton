@@ -61,8 +61,8 @@
 // Do not "fix" this by asserting a FEN round-trip here.
 #let sans = ("1. e4", "1. e4 e5", "1. e4 e5 2. Nf3", "1. e4 e5 2. Nf3 Nc6", "1. e4 e5 2. Nf3 Nc6 3. Bb5")
 #for (i, loc) in ("1w", "1b", "2w", "2b", "3w").enumerate() {
-  let p = position-after(g, loc)
-  assert.eq(p, play(game-start(g), sans.at(i)),
+  let p = position-after(g, at: loc)
+  assert.eq(p, play(game-start(g), moves: sans.at(i)),
     message: "game-derived position differs from the replayed one at " + loc + ": " + repr(p.keys()))
   assert.eq(p.keys().sorted(),
     ("castling", "cols", "en-passant", "fullmove", "halfmove", "rows", "squares", "turn", "variant"),
@@ -71,9 +71,9 @@
 
 // No position — from a game, a FEN, or `apply` — ever carries `_origin`: the
 // mechanism that used to attach it is gone.
-#assert("_origin" not in position-after(g, "2w"), message: "position-after carries no history")
+#assert("_origin" not in position-after(g, at: "2w"), message: "position-after carries no history")
 #assert("_origin" not in position("4k3/8/8/8/8/8/8/4K3 w - - 0 1"), message: "a FEN has no history")
-#let p = position-after(g, "2w")
+#let p = position-after(g, at: "2w")
 #assert("_origin" not in apply(p, legal-moves(p).first()), message: "apply never attaches history")
 
 // ---- _apply-origin: the merge, which the rendered board cannot show --------
@@ -133,7 +133,7 @@
 // `else` branch of `_resolve-at-source`, which returns `mv-context: none`, and
 // `_apply-origin` returns `ov` completely untouched when `mv-context` is `none` —
 // so this assertion is exercising exactly the code path Phase D introduced.
-#let pos-b = _resolve-draw(position-after(g, "2w"), none, (:), true)
+#let pos-b = _resolve-draw(position-after(g, at: "2w"), none, (:), true)
 #assert("move-quality-mark" not in pos-b.ov, message: "a plain position must not carry a badge")
 #assert("arrows" not in pos-b.ov, message: "a plain position must not carry derived arrows")
 #assert("highlight" not in pos-b.ov, message: "a plain position must not carry a derived highlight")

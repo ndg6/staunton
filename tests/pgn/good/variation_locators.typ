@@ -18,7 +18,7 @@
 // A path locator's position must equal an independent play of `line`.
 #let same(loc, line) = {
   assert(
-    position-after(g, loc).squares == play(none, line).squares,
+    position-after(g, at: loc).squares == play(none, moves: line).squares,
     message: "locator " + repr(loc) + " != play(" + line + ")",
   )
 }
@@ -38,10 +38,10 @@
 // nested: into var 0 at 1w, then var 0 at 1b, position after 2.c4
 #same((line: ((at: "1w", into: 0), (at: "1b", into: 0)), at: "2w"), "1. d4 Nf6 2. c4")
 
-// to-fen(g, locator: <path>) delegates to position-after on the same locator
+// to-fen(g, at: <path>) delegates to position-after on the same locator
 #let p = (line: ((at: "1w", into: 0),), at: "1b")
 #assert(
-  to-fen(g, locator: p) == to-fen(position-after(g, p)),
+  to-fen(g, at: p) == to-fen(position-after(g, at: p)),
   message: "to-fen game+path locator delegates to position-after",
 )
 

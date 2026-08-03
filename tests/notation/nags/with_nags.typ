@@ -13,21 +13,21 @@
 #let s(src, ..a) = notation(src, ..((diagrams: false, bold-mainline: false, spaced: true, nags: true, comments: false, variations: false, lang: "en") + a.named()))
 
 // glyph sugar: "!" -> $1 on 1. e4 ; "?!" -> $6 on 2... Nc6
-#let g2 = with-nags(g, ("1w": "!", "2b": "?!"))
+#let g2 = with-nags(g, nags: ("1w": "!", "2b": "?!"))
 #assert(s(g2) == "1. e4! e5 2. Nf3 Nc6?!", message: "glyph sugar maps to $1/$6")
 
 // canonical "$n" form, including a positional glyph ($14 -> "\u{2A72}")
-#let g3 = with-nags(g, ("2w": "$14"))
+#let g3 = with-nags(g, nags: ("2w": "$14"))
 #assert(s(g3) == "1. e4 e5 2. Nf3\u{2A72} Nc6", message: "$n form incl. positional glyph")
 
 // an array value attaches several NAGs to one move
-#let g4 = with-nags(g, ("1w": ("!", "$14")))
+#let g4 = with-nags(g, nags: ("1w": ("!", "$14")))
 #assert(s(g4) == "1. e4!\u{2A72} e5 2. Nf3 Nc6", message: "array of NAGs on one move")
 
 // REPLACE semantics: a NAG parsed from the PGN is overwritten by the mapping
 #let gp = game("[White \"A\"][Black \"B\"] 1. e4 $2 e5 *")
 #assert(s(gp) == "1. e4? e5", message: "parsed $2 renders as ?")
-#assert(s(with-nags(gp, ("1w": "!"))) == "1. e4! e5", message: "mapping replaces the parsed NAG")
+#assert(s(with-nags(gp, nags: ("1w": "!"))) == "1. e4! e5", message: "mapping replaces the parsed NAG")
 
 // still gated by `nags:` -- with-nags only sets data, rendering decides
 // (this case covers the "$n" spelling, attached via with-nags -- $2 on 1w)
@@ -79,4 +79,4 @@
 #assert(movetext(g2).at(0).san == "e4" and movetext(g2).len() == 4, message: "nodes intact")
 
 = Programmatic NAGs
-#s(with-nags(g, ("1w": "!!", "2w": "$14")))
+#s(with-nags(g, nags: ("1w": "!!", "2w": "$14")))

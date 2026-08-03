@@ -19,6 +19,6 @@
 #for i in range(n) {
   let probe = g                      // copy, so the insert below cannot touch `g`
   probe.insert("_bench", i)          // distinct arg -> full replay, no cache hit
-  acc += position-after(probe, loc).squares.len()
+  acc += position-after(probe, at: loc).squares.len()
 }
 #acc

@@ -12,8 +12,8 @@
 #assert(to-fen(game-start(g518)) == chess960-start-fen(518), message: "FRCPosition 518 start")
 // and it replays like standard chess from that start
 #assert(
-  to-fen(position-after(g518, "1b")) == "rnbqkbnr/pppp1ppp/8/4p3/4P3/8/PPPP1PPP/RNBQKBNR w KQkq - 0 2",
-  message: "replay: " + to-fen(position-after(g518, "1b")),
+  to-fen(position-after(g518, at: "1b")) == "rnbqkbnr/pppp1ppp/8/4p3/4P3/8/PPPP1PPP/RNBQKBNR w KQkq - 0 2",
+  message: "replay: " + to-fen(position-after(g518, at: "1b")),
 )
 
 // Chess960Position (alternative spelling) with a genuinely non-standard start.

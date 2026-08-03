@@ -291,7 +291,7 @@
   if at != none {
     assert(is-game,
       message: "`at:` requires a game — a position already identifies its own move; pass the game (not the position) together with `at:` to select a move within it")
-    (position-after(source, at), _move-context(source, at))
+    (position-after(source, at: at), _move-context(source, at))
   } else {
     assert(not is-game,
       message: "a game needs `at:` naming which move to draw (e.g. `at: \"12w\"`) — or use `position-after(game, at)`")

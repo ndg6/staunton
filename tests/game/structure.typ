@@ -23,11 +23,11 @@
 
 #let expected-builder-keys = ("lang", "movetext-nodes", "movetext-raw", "result", "tags")
 
-#let g-nags = with-nags(g, ("1w": "!"))
+#let g-nags = with-nags(g, nags: ("1w": "!"))
 #assert.eq(g-nags.keys().sorted(), expected-builder-keys,
   message: "with-nags: a builder-touched game adds exactly `movetext-nodes`, nothing else")
 
-#let g-comments = with-comments(g, ("1w": "a note"))
+#let g-comments = with-comments(g, comments: ("1w": "a note"))
 #assert.eq(g-comments.keys().sorted(), expected-builder-keys,
   message: "with-comments: a builder-touched game adds exactly `movetext-nodes`, nothing else")
 

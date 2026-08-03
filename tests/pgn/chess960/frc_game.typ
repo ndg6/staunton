@@ -19,17 +19,17 @@
 #assert(to-fen(game-start(g)) == start960, message: "start: " + to-fen(game-start(g)))
 
 // --- replay: parsed game agrees with play from the same start ---
-#let via-cm = play(start960, "Nf3 Nf6 O-O O-O")
-#assert(position-after(g, "2b").squares == via-cm.squares, message: "pgn replay != play")
+#let via-cm = play(start960, moves: "Nf3 Nf6 O-O O-O")
+#assert(position-after(g, at: "2b").squares == via-cm.squares, message: "pgn replay != play")
 
 // After both sides castle king-side: kings on g, rooks on f, castling gone.
 #assert(
-  to-fen(position-after(g, "2b")) == "nrbbqrk1/pppppppp/5n2/8/8/5N2/PPPPPPPP/NRBBQRK1 w - - 4 3",
-  message: "final: " + to-fen(position-after(g, "2b")),
+  to-fen(position-after(g, at: "2b")) == "nrbbqrk1/pppppppp/5n2/8/8/5N2/PPPPPPPP/NRBBQRK1 w - - 4 3",
+  message: "final: " + to-fen(position-after(g, at: "2b")),
 )
 
 = Chess960 game replay
 
 #board(start960, size: 4cm)
-#diagram(position-after(g, "2b"), size: 4cm,
+#diagram(position-after(g, at: "2b"), size: 4cm,
   caption: [After 2.O-O O-O — both kings castled from the f-file start.])

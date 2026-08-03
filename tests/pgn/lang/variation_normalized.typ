@@ -8,7 +8,7 @@
 // alternative).
 #let g = game("1. e4 e5 2. Sf3 (2. Lc4 Lc5) Sc6 3. Lb5 a6", lang: "de")
 
-#let node2w = move-node(g, "2w")
+#let node2w = move-node(g, at: "2w")
 #assert(node2w.san == "Nf3", message: "mainline 2w should normalize to Nf3, got " + node2w.san)
 #assert(node2w.variations.len() == 1, message: "expected exactly one variation at 2w")
 

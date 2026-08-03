@@ -14,7 +14,7 @@
 // must land on the SAME square each time and only the glyph/colour changes. The
 // badge is now reachable ONLY by handing the game itself, plus `at:`, to `board`/
 // `diagram` — a plain `position-after` position has no move to badge.
-#let game-e4(sym) = with-nags(game(head + "1. e4 e5 *"), ("1w": sym))
+#let game-e4(sym) = with-nags(game(head + "1. e4 e5 *"), nags: ("1w": sym))
 
 = All six symbols (`board`, `move-quality: true`)
 

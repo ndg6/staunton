@@ -176,6 +176,95 @@ check_dead() {
 }
 run_check "no unreachable symbols in src/" check_dead
 
+# ---------------------------------------------------------------------------
+# 4. A `///` docstring must document parameters the signature actually has.
+#    `@preview/tidy` (which builds the manual's API reference) ASSERTS that every
+#    documented parameter name appears in the function's argument list. So a
+#    signature change that leaves its docstring behind breaks the MANUAL BUILD --
+#    and tests/run.sh cannot see it, because the manual is not a test sheet.
+#    Both directions fail the same assertion:
+#      * documenting `locator` on a function whose signature became `(game, ..args)`
+#      * documenting `..args` on a function that has no sink at all
+#    2.0.0 Phase C shipped the first as a "green" commit (suite 196/0, manual
+#    unbuildable), and an over-broad fix to it then introduced the second.
+#    ONE awk pass over lib.typ + src/: track the `///` block preceding each
+#    `#let name(...)`, then reconcile.
+# ---------------------------------------------------------------------------
+check_docstring_params() {
+  find lib.typ src -name '*.typ' 2>/dev/null | sort | tr '\n' '\0' \
+    | xargs -0 awk '
+    # Extracting a signature is fiddlier than it looks, and getting it wrong
+    # produces FALSE POSITIVES -- which is worse than no check, because a linter
+    # that cries wolf gets waved through. Three shapes must all work:
+    #   nested defaults   match-points: (win: 2, draw: 1)   -> not the first ")"
+    #   one-line bodies   #let set-lang(code) = st.update(..) -> not the last ")"
+    #   multi-line sigs   #let diagram(\n  source,\n  ..)    -> not one line
+    # So: scan for the paren that MATCHES the opening one, accumulating lines
+    # until it is found, and split on top-level commas only.
+    function sig_end(str,   i, c, d) {   # index of the matching ")", or 0
+      d = 1
+      for (i = 1; i <= length(str); i++) {
+        c = substr(str, i, 1)
+        if (c == "(") d++
+        else if (c == ")") { d--; if (d == 0) return i }
+      }
+      return 0
+    }
+    function report(fn, sig,   i, n, parts, pn, c, d, has_sink, bare, j) {
+      has_sink = (index(sig, "..") > 0)
+      delete have
+      n = 0; d = 0; pn = ""
+      for (i = 1; i <= length(sig); i++) {
+        c = substr(sig, i, 1)
+        if (c == "(") d++
+        else if (c == ")") d--
+        if (c == "," && d == 0) { parts[++n] = pn; pn = "" } else { pn = pn c }
+      }
+      parts[++n] = pn
+      for (i = 1; i <= n; i++) {
+        pn = parts[i]
+        gsub(/^[ \t]+|[ \t]+$/, "", pn)
+        sub(/:.*$/, "", pn)
+        sub(/^\.\./, "", pn)
+        if (pn != "") have[pn] = 1
+      }
+      for (j = 1; j <= nd; j++) {
+        bare = doc[j]; sub(/^\.\./, "", bare)
+        if (substr(doc[j], 1, 2) == "..") {
+          if (!has_sink)
+            print "DOCSTRING: " FILENAME " :: " fn " documents `" doc[j] "` but the signature has no sink"
+        } else if (!(bare in have))
+          print "DOCSTRING: " FILENAME " :: " fn " documents `" doc[j] "` which is not a parameter"
+      }
+    }
+    function finish(   e) {
+      e = sig_end(buf)
+      if (e == 0) return 0
+      report(pend_fn, substr(buf, 1, e - 1))
+      collecting = 0; delete doc; nd = 0
+      return 1
+    }
+    FNR == 1 { delete doc; nd = 0; collecting = 0 }
+    collecting { buf = buf " " $0; finish(); next }
+    /^\/\/\/ - / {
+      line = $0; sub(/^\/\/\/ - /, "", line)
+      name = line; sub(/[ (].*$/, "", name)
+      doc[++nd] = name
+      next
+    }
+    /^\/\/\// { next }
+    /^#let [A-Za-z_][A-Za-z0-9_-]*\(/ {
+      if (nd == 0) { delete doc; next }
+      pend_fn = $0; sub(/^#let /, "", pend_fn); sub(/\(.*$/, "", pend_fn)
+      buf = $0; sub(/^#let [A-Za-z_][A-Za-z0-9_-]*\(/, "", buf)
+      if (!finish()) collecting = 1
+      next
+    }
+    { delete doc; nd = 0 }
+  ' | sort
+}
+run_check "docstring params match signatures" check_docstring_params
+
 echo "----------------------------------------"
 if [ "$fail" -eq 0 ]; then
   echo "lint-docs: clean"

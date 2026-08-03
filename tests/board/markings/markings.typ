@@ -80,7 +80,7 @@ suffix (the badge always sits on the addressed move's destination).
 )
 
 #grid(columns: 2, gutter: 1cm,
-  diagram(with-nags(g, ("4w": "!")), at: "4w",
+  diagram(with-nags(g, nags: ("4w": "!")), at: "4w",
     check: true, move-quality: true, size: 5cm),
   diagram(g, at: "3b",
     check: true, move-quality: true, size: 5cm),   // Nf6?? badge on f6
