@@ -17,7 +17,7 @@
 // API are imported with an `_`-prefixed alias, so the clean name is absent from
 // this module's surface (Typst 0.15 has no real export privacy, so this is the
 // convention). Everything else stays reachable via a deep `src/...` import.
-#import "src/coords.typ": parse-square, is-dark-square, square-name as _square-name, _index-of-locator, _locator-of-index
+#import "src/coords.typ": parse-square, is-dark-square, square-name as _square-name, _index-of-locator, _locator-of-index, _default-start
 #import "src/pieces.typ": piece-content, svg-piece-set, named-piece-set, with-fallback
 #import "src/variants.typ": variant-spec as _variant-spec, char-to-piece as _char-to-piece, define-variant
 // `parse-fen` is NOT public API in 2.0.0 -- `position(fen)` is the one spelling
@@ -592,10 +592,12 @@
   _assemble(drawn, white, black, year, game-info, below, diagram-ov, lang, fig-args)
 }
 
-// Mainline locator "12w"/"12b" <-> 0-based ply index. Used to slice the
-// movetext into text runs for embedding (shared arithmetic in coords.typ).
-#let _index-of-loc(loc) = _index-of-locator(loc)
-#let _loc-of-index(i) = _locator-of-index(i)
+// Mainline locator "12w"/"12b" <-> 0-based ply index, relative to a game's own
+// starting move (`start`, a `game-start` dict; defaults to a standard game).
+// Used to slice the movetext into text runs for embedding (shared arithmetic
+// in coords.typ).
+#let _index-of-loc(loc, start: _default-start) = _index-of-locator(loc, start: start)
+#let _loc-of-index(i, start: _default-start) = _locator-of-index(i, start: start)
 
 // The text-only options forwarded to the notation core (i.e. minus the embedding
 // switches `diagrams` / `annotations`, handled here).
@@ -653,8 +655,9 @@
       _notation-text(source, .._text-opts(named, all-opts))
     } else {
       let nodes = movetext(source)
-      let lo = if named.at("from", default: none) != none { _index-of-loc(named.from) } else { 0 }
-      let hi = if named.at("to", default: none) != none { _index-of-loc(named.to) } else { nodes.len() - 1 }
+      let numbering-start = game-start(source)
+      let lo = if named.at("from", default: none) != none { _index-of-loc(named.from, start: numbering-start) } else { 0 }
+      let hi = if named.at("to", default: none) != none { _index-of-loc(named.to, start: numbering-start) } else { nodes.len() - 1 }
       let process-anno = if named.at("annotations", default: auto) != auto { named.annotations } else { pg.annotations }
       let run-opts = _text-opts(named, ("figurine", "lang", "nags", "comments", "variations", "variation-style", "bold-mainline", "move-numbers", "spaced"))
 
@@ -663,7 +666,7 @@
       for idx in range(lo, hi + 1) {
         let info = _interpret-comment(nodes.at(idx).at("comment-after", default: none))
         if info.diagram != none {
-          parts.push(_notation-text(source, from: _loc-of-index(run-start), to: _loc-of-index(idx), result: false, ..run-opts))
+          parts.push(_notation-text(source, from: _loc-of-index(run-start, start: numbering-start), to: _loc-of-index(idx, start: numbering-start), result: false, ..run-opts))
           let cap = if info.diagram.caption == none { none } else { [#info.diagram.caption] }
           // An embedded diagram is an ORDINARY diagram: handing `source` (the
           // game) with `at:` gets the %cal/%csl and quality badge from `diagram`
@@ -675,7 +678,7 @@
           // could pass, not a privileged path.
           parts.push(diagram(
             source,
-            at: _loc-of-index(idx),
+            at: _loc-of-index(idx, start: numbering-start),
             caption: cap,
             game-info: none,
             annotations: process-anno,
@@ -684,7 +687,7 @@
         }
       }
       if run-start <= hi {
-        parts.push(_notation-text(source, from: _loc-of-index(run-start), to: _loc-of-index(hi), result: false, ..run-opts))
+        parts.push(_notation-text(source, from: _loc-of-index(run-start, start: numbering-start), to: _loc-of-index(hi, start: numbering-start), result: false, ..run-opts))
       }
       let body = parts.map(c => [#c]).join()
       if named.at("result", default: false) { body = [#body #game-result(source)] }

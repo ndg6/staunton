@@ -22,10 +22,12 @@
 #import "pgn.typ": movetext, _movetext-tree
 #import "chess960.typ": chess960-start-fen
 #import "annotations.typ": nag-symbol, interpret-comment, glyph-to-nag, quality-nag-codes
-#import "coords.typ": _ply-of-locator
+#import "coords.typ": _ply-of-locator, _default-start
 
-// "30w" -> 59 ; "30b" -> 60 (shared arithmetic lives in coords.typ)
-#let _ply-of(loc) = _ply-of-locator(loc)
+// PGN-numbered locator -> local 1-based ply, given the game's `start` (shared
+// arithmetic lives in coords.typ; `start` defaults to a standard game so this
+// stays the old move-1-relative arithmetic when no start is passed).
+#let _ply-of(loc, start: _default-start) = _ply-of-locator(loc, start: start)
 
 /// The starting position of a game — from its `FEN` tag if present, else from a
 /// Chess960 position-number tag (`FRCPosition` / `Chess960Position`), else the
@@ -129,12 +131,13 @@
   assert(at != none, message: "position-after: `at` is required")
   let locator = at
   let loc = if type(locator) == str { (line: (), at: locator) } else { locator }
+  let start = game-start(game)
 
   // Fast path: a pure mainline locator just indexes into the (memoised) mainline
   // positions -- no re-walking, no extra generator runs across diagrams.
   if loc.at("line", default: ()).len() == 0 {
     let all = _mainline-positions(game)
-    let target = _ply-of(loc.at("at"))
+    let target = _ply-of(loc.at("at"), start: start)
     assert(target >= 0 and target < all.len(), message: "locator out of range: addressed move past end of line")
     return all.at(target)
   }
@@ -143,10 +146,10 @@
   // mainline case above is.
   let line = movetext(game)
   let branch-ply = 1
-  let pos = game-start(game)
+  let pos = start
 
   for hop in loc.at("line", default: ()) {
-    let target = _ply-of(hop.at("at"))
+    let target = _ply-of(hop.at("at"), start: start)
     let k = target - branch-ply // moves before the branch point
     assert(k >= 0 and k < line.len() + 1, message: "locator hop out of range at " + hop.at("at"))
     pos = _advance(pos, line, k)
@@ -158,7 +161,7 @@
     branch-ply = target
   }
 
-  let target = _ply-of(loc.at("at"))
+  let target = _ply-of(loc.at("at"), start: start)
   let k = target - branch-ply + 1 // inclusive of the addressed move
   assert(k >= 0 and k <= line.len(), message: "locator out of range: addressed move past end of line")
   _advance(pos, line, k)
@@ -177,16 +180,17 @@
   assert(at != none, message: "move-node: `at` is required")
   let locator = at
   let loc = if type(locator) == str { (line: (), at: locator) } else { locator }
+  let start = game-start(game)
   let line = movetext(game)
   let branch-ply = 1
   for hop in loc.at("line", default: ()) {
-    let target = _ply-of(hop.at("at"))
+    let target = _ply-of(hop.at("at"), start: start)
     let k = target - branch-ply
     let node = line.at(k)
     line = node.at("variations").at(hop.at("into"))
     branch-ply = target
   }
-  let k = _ply-of(loc.at("at")) - branch-ply
+  let k = _ply-of(loc.at("at"), start: start) - branch-ply
   assert(k >= 0 and k < line.len(), message: "move-node: locator addresses a move past the end of its line")
   line.at(k)
 }
@@ -202,13 +206,14 @@
 //   `kind`/`promotion`, as `san-to-move` gives).
 #let _resolved-move(game, locator) = {
   let loc = if type(locator) == str { (line: (), at: locator) } else { locator }
+  let start = game-start(game)
   let before = none
   let san = none
   // Mainline fast path: the position before ply p is the (memoised) position at
   // ply p-1; the SAN is that node's.
   if loc.at("line", default: ()).len() == 0 {
     let all = _mainline-positions(game)
-    let target = _ply-of(loc.at("at"))
+    let target = _ply-of(loc.at("at"), start: start)
     assert(target >= 1 and target < all.len(), message: "move-destination: locator out of range")
     before = all.at(target - 1)
     san = movetext(game).at(target - 1).san
@@ -217,15 +222,15 @@
     // to just before the addressed move.
     let line = movetext(game)
     let branch-ply = 1
-    let pos = game-start(game)
+    let pos = start
     for hop in loc.at("line", default: ()) {
-      let target = _ply-of(hop.at("at"))
+      let target = _ply-of(hop.at("at"), start: start)
       let k = target - branch-ply
       pos = _advance(pos, line, k)
       line = line.at(k).at("variations").at(hop.at("into"))
       branch-ply = target
     }
-    let k = _ply-of(loc.at("at")) - branch-ply
+    let k = _ply-of(loc.at("at"), start: start) - branch-ply
     assert(k >= 0 and k < line.len(), message: "move-destination: locator addresses a move past the end of its line")
     before = _advance(pos, line, k)
     san = line.at(k).san
@@ -303,7 +308,7 @@
   // locators still error, and with the right message: `position-after` runs first
   // and asserts on them before we get here.
   let loc-at = if type(locator) == str { locator } else { locator.at("at") }
-  if _ply-of(loc-at) == 0 { return none }
+  if _ply-of(loc-at, start: game-start(game)) == 0 { return none }
   let node = move-node(game, at: locator)
   let mv = _resolved-move(game, locator)
   let anno = interpret-comment(node.at("comment-after", default: none))
@@ -341,35 +346,35 @@
 
 // Apply `f` to the node addressed by (hops, final) within `line`, whose first
 // node is at ply `branch-ply`. Functional (immutable) update: returns a new line.
-#let _update-in-line(line, branch-ply, hops, final, f) = {
+#let _update-in-line(line, branch-ply, hops, final, f, start: _default-start) = {
   if hops.len() == 0 {
-    let k = _ply-of(final) - branch-ply
+    let k = _ply-of(final, start: start) - branch-ply
     assert(k >= 0 and k < line.len(), message: "locator addresses a move past the end of its line: " + final)
     line.at(k) = f(line.at(k))
     return line
   }
   let hop = hops.first()
-  let target = _ply-of(hop.at("at"))
+  let target = _ply-of(hop.at("at"), start: start)
   let k = target - branch-ply
   assert(k >= 0 and k < line.len(), message: "locator hop out of range at " + hop.at("at"))
   let node = line.at(k)
   let vars = node.at("variations", default: ())
   let into = hop.at("into")
   assert(into < vars.len(), message: "no variation #" + str(into) + " at move " + hop.at("at"))
-  vars.at(into) = _update-in-line(vars.at(into), target, hops.slice(1), final, f)
+  vars.at(into) = _update-in-line(vars.at(into), target, hops.slice(1), final, f, start: start)
   node.variations = vars
   line.at(k) = node
   line
 }
 
 // Update the node addressed by `locator` in the top-level `nodes` tree.
-#let _update-node-at(nodes, locator, f) = {
+#let _update-node-at(nodes, locator, f, start: _default-start) = {
   let loc = if type(locator) == str { (line: (), at: locator) }
     else if type(locator) == dictionary { locator }
     else { panic("locator must be a mainline string or a path dict; got " + repr(locator)) }
   let final = loc.at("at", default: none)
   assert(final != none, message: "locator must address a move (its `at`)")
-  _update-in-line(nodes, 1, loc.at("line", default: ()), final, f)
+  _update-in-line(nodes, 1, loc.at("line", default: ()), final, f, start: start)
 }
 
 // Normalise a builder's overrides into an array of (locator, value) pairs. The
@@ -404,9 +409,10 @@
   let overrides = nags
   assert(type(game) == dictionary and "movetext-raw" in game, message: "with-nags: first argument must be a parsed game (from game())")
   let nodes = movetext(game)
+  let start = game-start(game)
   for (loc, val) in _overrides-pairs(overrides) {
     let codes = if type(val) == array { val.map(_norm-nag) } else { (_norm-nag(val),) }
-    nodes = _update-node-at(nodes, loc, node => { node.nags = codes; node })
+    nodes = _update-node-at(nodes, loc, node => { node.nags = codes; node }, start: start)
   }
   _stash(game, nodes)
 }
@@ -426,9 +432,10 @@
   let overrides = comments
   assert(type(game) == dictionary and "movetext-raw" in game, message: "with-comments: first argument must be a parsed game (from game())")
   let nodes = movetext(game)
+  let start = game-start(game)
   for (loc, val) in _overrides-pairs(overrides) {
     assert(type(val) == str, message: "with-comments: a comment must be a string; got " + repr(type(val)))
-    nodes = _update-node-at(nodes, loc, node => { node.insert("comment-after", val); node })
+    nodes = _update-node-at(nodes, loc, node => { node.insert("comment-after", val); node }, start: start)
   }
   _stash(game, nodes)
 }
@@ -460,6 +467,6 @@
     vars.push(sub)
     node.variations = vars
     node
-  })
+  }, start: game-start(game))
   _stash(game, nodes)
 }

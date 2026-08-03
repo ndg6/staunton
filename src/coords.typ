@@ -92,14 +92,24 @@
 // ---------------------------------------------------------------------------
 // Move locator <-> ply conversion.
 //
-// A mainline locator is "12w" / "12b" (move number + side). Ply numbering:
-// after White's move m -> ply 2m-1; after Black's -> ply 2m. This is the ONE
-// place this arithmetic lives; game.typ, notation.typ and lib.typ all import
-// it rather than re-deriving it.
+// A mainline locator is "12w" / "12b" (move number + side), and its numbers are
+// the game's OWN PGN numbering -- which need not start at move 1, White to
+// move: a `[FEN]` start can begin at any move number, on either side (see
+// `game-start`'s `fullmove`/`turn`). So every conversion here takes an optional
+// `start` (a `(fullmove: <int>, turn: "w"|"b")` dict, as `game-start` returns)
+// and is expressed relative to it; the default is a standard game (move 1,
+// White to move), for which this is exactly the old move-1-relative
+// arithmetic -- after White's move m -> ply 2m-1; after Black's -> ply 2m.
+// This is the ONE place this arithmetic lives; game.typ, notation.typ and
+// lib.typ all import it rather than re-deriving it.
 // ---------------------------------------------------------------------------
 
-// "30w" -> 59 ; "30b" -> 60
-#let _ply-of-locator(loc) = {
+#let _default-start = (fullmove: 1, turn: "w")
+
+// A locator's ply on the ABSOLUTE PGN-numbering scale (as if the game began at
+// move 1, White to move) -- "30w" -> 59 ; "30b" -> 60. Not offset by a game's
+// actual start; only `_start-ply` and the wrappers below use this directly.
+#let _raw-ply-of-locator(loc) = {
   assert(type(loc) == str and loc.len() >= 2, message: "bad move locator: " + repr(loc))
   let color = loc.slice(loc.len() - 1)
   let num = int(loc.slice(0, loc.len() - 1))
@@ -108,14 +118,36 @@
   else { panic("move locator must end in 'w' or 'b': " + loc) }
 }
 
-// Locator -> 0-based ply index (index = ply - 1).
-#let _index-of-locator(loc) = _ply-of-locator(loc) - 1
+// The absolute-scale ply of a game's very first recorded move, given its
+// `start` -- e.g. a FEN starting "b ... 12" (Black to move, move 12) has its
+// first move at raw ply 24.
+#let _start-ply(start) = _raw-ply-of-locator(str(start.fullmove) + start.turn)
 
-// Inverse of `_index-of-locator`: 0-based ply index -> "12w"/"12b".
-#let _locator-of-index(i) = {
+// A PGN-numbered locator ("30w"/"30b", using the game's OWN numbering) -> the
+// LOCAL 1-based ply -- i.e. position within the game's own recorded move list,
+// matching `movetext(game)`'s indices (ply 1 = the first recorded move). For
+// the default `start` this is the same value as the old move-1-relative
+// arithmetic.
+#let _ply-of-locator(loc, start: _default-start) = _raw-ply-of-locator(loc) - _start-ply(start) + 1
+
+// Locator -> 0-based ply index (index = ply - 1).
+#let _index-of-locator(loc, start: _default-start) = _ply-of-locator(loc, start: start) - 1
+
+// Inverse of `_index-of-locator`: 0-based ply index -> "12w"/"12b" (in the
+// game's own PGN numbering).
+#let _locator-of-index(i, start: _default-start) = {
   let ply = i + 1
-  str(int((ply + 1) / 2)) + (if calc.odd(ply) { "w" } else { "b" })
+  let raw = ply + _start-ply(start) - 1
+  str(int((raw + 1) / 2)) + (if calc.odd(raw) { "w" } else { "b" })
 }
 
-// 1-based ply -> the move number printed in notation ("24." / "24...").
-#let _movenum-of-ply(ply) = int((ply + 1) / 2)
+// Local 1-based ply -> raw (absolute-scale) ply, given `start`.
+#let _raw-ply-of-local(ply, start: _default-start) = ply + _start-ply(start) - 1
+
+// Local 1-based ply -> the move number printed in notation ("24." / "24...").
+#let _movenum-of-ply(ply, start: _default-start) = int((_raw-ply-of-local(ply, start: start) + 1) / 2)
+
+// Whether a local 1-based ply is White's (for notation's number-vs-dots choice
+// and the color-aware figurine glyph) -- ply 1 is White's only when the game
+// itself starts on White's move.
+#let _ply-is-white(ply, start: _default-start) = calc.odd(_raw-ply-of-local(ply, start: start))
