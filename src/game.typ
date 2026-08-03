@@ -12,6 +12,9 @@
 //     read as: from the mainline, at White's move 2 descend into variation 0,
 //     then at Black's move 2 descend into variation 0, then take the position
 //     after White's move 3.
+//     `into` is OPTIONAL and defaults to 0, so a move with a single variation
+//     -- the common case -- is addressed by `(at: "2w")` alone. The hop above
+//     may equally be written (line: ( (at: "2w"), (at: "2b") ), at: "3w").
 //
 // Ply numbering: after White's move m -> ply 2m-1; after Black's -> ply 2m.
 // ===========================================================================
@@ -155,7 +158,7 @@
     pos = _advance(pos, line, k)
     let node = line.at(k)
     let vars = node.at("variations", default: ())
-    let into = hop.at("into")
+    let into = hop.at("into", default: 0)
     assert(into < vars.len(), message: "no variation #" + str(into) + " at move " + hop.at("at"))
     line = vars.at(into)
     branch-ply = target
@@ -187,7 +190,7 @@
     let target = _ply-of(hop.at("at"), start: start)
     let k = target - branch-ply
     let node = line.at(k)
-    line = node.at("variations").at(hop.at("into"))
+    line = node.at("variations").at(hop.at("into", default: 0))
     branch-ply = target
   }
   let k = _ply-of(loc.at("at"), start: start) - branch-ply
@@ -227,7 +230,7 @@
       let target = _ply-of(hop.at("at"), start: start)
       let k = target - branch-ply
       pos = _advance(pos, line, k)
-      line = line.at(k).at("variations").at(hop.at("into"))
+      line = line.at(k).at("variations").at(hop.at("into", default: 0))
       branch-ply = target
     }
     let k = _ply-of(loc.at("at"), start: start) - branch-ply
@@ -359,7 +362,7 @@
   assert(k >= 0 and k < line.len(), message: "locator hop out of range at " + hop.at("at"))
   let node = line.at(k)
   let vars = node.at("variations", default: ())
-  let into = hop.at("into")
+  let into = hop.at("into", default: 0)
   assert(into < vars.len(), message: "no variation #" + str(into) + " at move " + hop.at("at"))
   vars.at(into) = _update-in-line(vars.at(into), target, hops.slice(1), final, f, start: start)
   node.variations = vars

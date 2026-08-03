@@ -243,7 +243,7 @@
     let k = target - branch-ply
     assert(k >= 0 and k < line.len(), message: "notation: `line:` hop out of range at " + hop.at("at"))
     let vars = line.at(k).at("variations", default: ())
-    let into = hop.at("into")
+    let into = hop.at("into", default: 0)
     assert(into < vars.len(), message: "notation: no variation #" + str(into) + " at move " + hop.at("at"))
     line = vars.at(into)
     branch-ply = target
