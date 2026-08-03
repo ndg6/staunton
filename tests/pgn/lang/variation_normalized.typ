@@ -2,7 +2,9 @@
 // into (R)AV variations, not just the mainline. `movetext(game)` builds the
 // whole tree (mainline + nested variations) in one pass, so a variation
 // missing normalisation would be a distinct bug from the mainline working.
-#import "/lib.typ": game, move-node
+#import "/lib.typ": game
+// internal tree accessor; the public record is `move-at`
+#import "/src/game.typ": move-node
 
 // German movetext with a variation at move 2 (2. Sf3 mainline; 2. Lc4 Lc5
 // alternative).

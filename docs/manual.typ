@@ -1945,8 +1945,8 @@ described once here.
   *string form* (rank-per-line rows, `.` = empty; one raw block or several row
   strings).
 
-/ `locator`: for `position-after`, `diagram(g, at: ..)`, `to-fen`, `move-san`,
-  `move-node`, and builder addresses — a *mainline* string `"12w"` / `"12b"`, or a
+/ `locator`: for `position-after`, `diagram(g, at: ..)`, `to-fen`, `move-at`,
+  and builder addresses — a *mainline* string `"12w"` / `"12b"`, or a
   *path* dict `(line: (..hops..), at: "<move>")`, each hop `(at: "<move>", into:
   <n>)` (descend into variation `n` at that move), to reach a move inside a (possibly nested)
   variation. `notation`'s `line:` also takes a bare hops array; its `from`/`to` are
@@ -2069,8 +2069,7 @@ source docstring: its signature, then every parameter with its type and default.
   ("/src/game.typ", "game-start"),
   ("/src/game.typ", "game-variant"),
   ("/src/game.typ", "position-after"),
-  ("/src/game.typ", "move-san"),
-  ("/src/game.typ", "move-node"),
+  ("/src/game.typ", "move-at"),
   ("/src/san.typ", "play"),
 ))
 

@@ -29,7 +29,7 @@
 #import "src/engine.typ": legal-moves, apply, in-check, checked-king-square as _checked-king-square
 #import "src/san.typ": play, move-to-san
 #import "src/pgn.typ": games, game, movetext
-#import "src/game.typ": mainline, position-after, move-at, game-result, move-san, move-node, with-nags, with-comments, with-variation, game-start, game-variant
+#import "src/game.typ": mainline, position-after, move-at, game-result, with-nags, with-comments, with-variation, game-start, game-variant
 // The text core lives in src/notation.typ; lib defines `notation` on top so
 // it can also embed diagrams (which needs the lib-level `diagram`).
 #import "src/notation.typ": notation as _notation-text

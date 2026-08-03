@@ -23,9 +23,13 @@
 // eyeballed via board/markings and notation/embed_diagrams (VISUAL_CHECKS).
 #import "/lib.typ": (
   game, position, play, game-start, with-nags, apply, legal-moves, diagram,
-  _apply-origin, _resolve-draw, move-at, move-node,
+  _apply-origin, _resolve-draw, move-at,
 )
-#import "/src/game.typ": position-after
+// `move-node` is the INTERNAL tree accessor (dropped from the public API in
+// 2.0.0 -- `move-at` is the one public way to ask about a move). This sheet
+// still reaches for it deliberately, to cross-check that `move-at`'s node
+// half agrees with the tree it is built from.
+#import "/src/game.typ": position-after, move-node
 #import "/src/san.typ": san-to-move
 
 #let g = game(```

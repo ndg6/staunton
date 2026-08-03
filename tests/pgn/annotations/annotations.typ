@@ -3,7 +3,10 @@
 // letters (G/R/Y/B/O) resolve through the board's stylable `annotation-colors`.
 // Processing is OFF by default: opt in with `annotations: true` per
 // call or `set-pgn-defaults(annotations: true)` document-wide.
-#import "/lib.typ": game, diagram, move-node, set-board-defaults, set-pgn-defaults
+#import "/lib.typ": game, diagram, set-board-defaults, set-pgn-defaults
+// `move-node` is the internal tree accessor (not public API since 2.0.0 -- the
+// public one is `move-at`); tests may reach into src/ directly.
+#import "/src/game.typ": move-node
 
 #set page(width: 13cm, height: auto, margin: 1.2cm)
 #set text(font: "Libertinus Serif", size: 10pt)

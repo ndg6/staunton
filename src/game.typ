@@ -170,30 +170,6 @@
   _advance(pos, line, k)
 }
 
-/// The SAN of the move addressed by `locator` (e.g. `"O-O-O"`). Used to build
-/// PGN-diagram captions.
-///
-/// - game (dictionary): a parsed game (from `game`).
-/// - at (str, dictionary): the locator — a mainline `"30w"` / `"30b"`, or a
-///   variation path dict — required.
-/// -> str
-#let move-san(game, at: none) = {
-  assert(at != none, message: "move-san: `at` is required")
-  let locator = at
-  let loc = if type(locator) == str { (line: (), at: locator) } else { locator }
-  let line = movetext(game)
-  let branch-ply = 1
-  for hop in loc.at("line", default: ()) {
-    let target = _ply-of(hop.at("at"))
-    let k = target - branch-ply
-    let node = line.at(k)
-    line = node.at("variations").at(hop.at("into"))
-    branch-ply = target
-  }
-  let k = _ply-of(loc.at("at")) - branch-ply
-  assert(k >= 0 and k < line.len(), message: "move-san: locator addresses a move past the end of its line")
-  line.at(k).san
-}
 
 /// The full move node addressed by `locator` — its SAN plus `nags`, comments
 /// (`comment-before` / `comment-after`) and `variations`. Used e.g. to recover
