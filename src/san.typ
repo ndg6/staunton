@@ -14,6 +14,24 @@
 #import "engine.typ": legal-moves, apply, in-check
 #import "fen.typ": parse-fen, starting-fen
 
+// Resolve a function's second argument, which C1 accepts either positionally
+// (the old spelling) or as the named argument `name` (the new spelling) —
+// exactly one of the two forms may be given. `args` is a `..sink` capturing
+// whatever followed the required first argument. Shared by game.typ and
+// san.typ (and reachable from lib.typ) so the "both"/"neither" checks and
+// their wording live in one place instead of seven.
+#let _one-of(fn, args, name) = {
+  let pos = args.pos()
+  let named = args.named()
+  let has-pos = pos.len() > 0
+  let has-named = name in named
+  assert(not (has-pos and has-named),
+    message: fn + ": give the second argument only once — use the named `" + name + ": ..` form, not both positional and named")
+  assert(has-pos or has-named,
+    message: fn + ": `" + name + "` is required (give it positionally or as `" + name + ": ..`)")
+  if has-pos { pos.first() } else { named.at(name) }
+}
+
 #let _promo-map = (Q: "queen", R: "rook", B: "bishop", N: "knight")
 #let _piece-map = (K: "king", Q: "queen", R: "rook", B: "bishop", N: "knight")
 
@@ -210,9 +228,10 @@
 ///   start, a FEN string, or a position dict.
 /// - moves (str, content, array): move text (a string or a raw block; move
 ///   numbers and a trailing result are tolerated and stripped), or an array of
-///   SAN tokens.
+///   SAN tokens. Give it positionally or as `moves: ..`.
 /// -> dictionary
-#let play(source, moves) = {
+#let play(source, ..args) = {
+  let moves = _one-of("play", args, "moves")
   let pos = if source == none { parse-fen(starting-fen) }
     else if type(source) == str { parse-fen(source) }
     else if type(source) == dictionary and "squares" in source { source }

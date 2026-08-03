@@ -17,7 +17,7 @@
 // ===========================================================================
 
 #import "fen.typ": parse-fen, starting-fen
-#import "san.typ": san-to-move
+#import "san.typ": san-to-move, _one-of
 #import "engine.typ": apply
 #import "pgn.typ": movetext, _movetext-tree
 #import "chess960.typ": chess960-start-fen
@@ -130,9 +130,10 @@
 ///
 /// - game (dictionary): a parsed game (from `game`).
 /// - locator (str, dictionary): a mainline `"30w"` / `"30b"`, or a variation path
-///   dict `(line: (..hops..), at: "<move>")`.
+///   dict `(line: (..hops..), at: "<move>")`. Give it positionally or as `at: ..`.
 /// -> dictionary
-#let position-after(game, locator) = {
+#let position-after(game, ..args) = {
+  let locator = _one-of("position-after", args, "at")
   let loc = if type(locator) == str { (line: (), at: locator) } else { locator }
 
   // Fast path: a pure mainline locator just indexes into the (memoised) mainline
@@ -174,9 +175,10 @@
 ///
 /// - game (dictionary): a parsed game (from `game`).
 /// - locator (str, dictionary): a mainline `"30w"` / `"30b"`, or a variation path
-///   dict.
+///   dict. Give it positionally or as `at: ..`.
 /// -> str
-#let move-san(game, locator) = {
+#let move-san(game, ..args) = {
+  let locator = _one-of("move-san", args, "at")
   let loc = if type(locator) == str { (line: (), at: locator) } else { locator }
   let line = movetext(game)
   let branch-ply = 1
@@ -198,9 +200,10 @@
 ///
 /// - game (dictionary): a parsed game (from `game`).
 /// - locator (str, dictionary): a mainline `"30w"` / `"30b"`, or a variation path
-///   dict.
+///   dict. Give it positionally or as `at: ..`.
 /// -> dictionary
-#let move-node(game, locator) = {
+#let move-node(game, ..args) = {
+  let locator = _one-of("move-node", args, "at")
   let loc = if type(locator) == str { (line: (), at: locator) } else { locator }
   let line = movetext(game)
   let branch-ply = 1
@@ -395,9 +398,10 @@
 /// - overrides (dictionary, array): a dict of mainline locators (`("12w": "!")`)
 ///   or an array of `(locator, value)` pairs (a locator may be a variation path
 ///   dict). A value is `"$n"`, a suffix glyph (`! ? !! ?? !? ?!`), or an array of
-///   those.
+///   those. Give it positionally or as `nags: ..`.
 /// -> dictionary
-#let with-nags(game, overrides) = {
+#let with-nags(game, ..args) = {
+  let overrides = _one-of("with-nags", args, "nags")
   assert(type(game) == dictionary and "movetext-raw" in game, message: "with-nags: first argument must be a parsed game (from game())")
   let nodes = movetext(game)
   for (loc, val) in _overrides-pairs(overrides) {
@@ -415,9 +419,10 @@
 /// - game (dictionary): a parsed game (from `game`).
 /// - overrides (dictionary, array): a dict of mainline locators or an array of
 ///   `(locator, text)` pairs (a locator may be a variation path dict); each
-///   `text` is a plain string.
+///   `text` is a plain string. Give it positionally or as `comments: ..`.
 /// -> dictionary
-#let with-comments(game, overrides) = {
+#let with-comments(game, ..args) = {
+  let overrides = _one-of("with-comments", args, "comments")
   assert(type(game) == dictionary and "movetext-raw" in game, message: "with-comments: first argument must be a parsed game (from game())")
   let nodes = movetext(game)
   for (loc, val) in _overrides-pairs(overrides) {
