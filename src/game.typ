@@ -102,7 +102,7 @@
 
 // All mainline positions: (start, after ply 1, after ply 2, ...). Each SAN is
 // resolved once, so the move generator runs N times TOTAL here. Typst memoises a
-// pure call by its arguments, so repeated `position-after` (or `board`/`diagram`
+// pure call by its arguments, so repeated `_position-after` (or `board`/`diagram`
 // drawn with `at:`) calls on the SAME game reuse this list instead of
 // re-walking from the start every time --
 // the "fast-track": O(N) once, then O(1) per mainline locator, rather than
@@ -130,8 +130,8 @@
 /// - at (str, dictionary): the locator — a mainline `"30w"` / `"30b"`, or a
 ///   variation path dict `(line: (..hops..), at: "<move>")` — required.
 /// -> dictionary
-#let position-after(game, at: none) = {
-  assert(at != none, message: "position-after: `at` is required")
+#let _position-after(game, at: none) = {
+  assert(at != none, message: "_position-after: `at` is required")
   let locator = at
   let loc = if type(locator) == str { (line: (), at: locator) } else { locator }
   let start = game-start(game)
@@ -221,7 +221,7 @@
     before = all.at(target - 1)
     san = movetext(game).at(target - 1).san
   } else {
-    // Variations: walk to the branch line (as position-after does), then advance
+    // Variations: walk to the branch line (as _position-after does), then advance
     // to just before the addressed move.
     let line = movetext(game)
     let branch-ply = 1
@@ -308,7 +308,7 @@
   // the one in-range locator with no move behind it. There is nothing to derive,
   // so it gets `none` rather than a panic out of `move-node` (which would
   // report the misleading "past the end of its line"). Genuinely out-of-range
-  // locators still error, and with the right message: `position-after` runs first
+  // locators still error, and with the right message: `_position-after` runs first
   // and asserts on them before we get here.
   let loc-at = if type(locator) == str { locator } else { locator.at("at") }
   if _ply-of(loc-at, start: game-start(game)) == 0 { return none }

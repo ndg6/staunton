@@ -4,7 +4,8 @@
 // {comments}; a plain SAN run is the simple case. It composes with
 // with-nags/with-comments, navigates like a parsed game, and never mutates the
 // source. (The continuation mode, `at:` absent, is covered in with_line_continue.typ.)
-#import "/lib.typ": game, notation, with-line, with-nags, position-after, play, move-at
+#import "/lib.typ": game, notation, with-line, with-nags, play, move-at
+#import "/src/game.typ": _position-after
 
 #set page(width: auto, height: auto, margin: 1cm)
 #set text(font: "Libertinus Serif", size: 10pt)
@@ -44,9 +45,9 @@
 // --- navigation into the added line is legal + correct (lazy legality) ------
 #let gv = with-line(g, at: "3w", moves: "Bc4 Bc5")
 #assert(
-  position-after(gv, at: (line: ((at: "3w", into: 0),), at: "3b")).squares
+  _position-after(gv, at: (line: ((at: "3w", into: 0),), at: "3b")).squares
     == play(none, moves: "1. e4 e5 2. Nf3 Nc6 3. Bc4 Bc5").squares,
-  message: "position-after navigates into the added variation",
+  message: "_position-after navigates into the added variation",
 )
 
 // --- source game is untouched -----------------------------------------------

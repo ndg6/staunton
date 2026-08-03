@@ -29,7 +29,7 @@
 #import "src/engine.typ": legal-moves, apply, in-check, checked-king-square as _checked-king-square
 #import "src/san.typ": play, move-to-san
 #import "src/pgn.typ": games, game, movetext
-#import "src/game.typ": mainline, position-after, move-at, game-result, with-nags, with-comments, with-line, game-start, game-variant
+#import "src/game.typ": mainline, _position-after, move-at, game-result, with-nags, with-comments, with-line, game-start, game-variant
 // The text core lives in src/notation.typ; lib defines `notation` on top so
 // it can also embed diagrams (which needs the lib-level `diagram`).
 #import "src/notation.typ": notation as _notation-text
@@ -291,10 +291,10 @@
   if at != none {
     assert(is-game,
       message: "`at:` requires a game — a position already identifies its own move; pass the game (not the position) together with `at:` to select a move within it")
-    (position-after(source, at: at), move-at(source, at: at))
+    (_position-after(source, at: at), move-at(source, at: at))
   } else {
     assert(not is-game,
-      message: "a game needs `at:` naming which move to draw (e.g. `at: \"12w\"`) — or use `position-after(game, at)`")
+      message: "a game needs `at:` naming which move to draw (e.g. `board(game, at: \"12w\")` or `diagram(game, at: \"12w\")`)")
     (source, none)
   }
 }
@@ -374,7 +374,7 @@
 /// When `source` is a game drawn via `at:`, the board remembers that move: its
 /// `%cal` / `%csl` annotations and its move-quality badge are drawn
 /// automatically. A FEN string, a hand-built position, or a plain position
-/// (including one from `position-after`) has no such history and is drawn
+/// (such as one built from a FEN) has no such history and is drawn
 /// plain — the game itself must be handed to `board`/`diagram` with `at:` for
 /// the badge and annotations to appear.
 ///
@@ -385,9 +385,8 @@
 ///   `set-pgn-defaults` (off by default). No effect without a game handed in
 ///   via `at:`.
 /// - at (str, dictionary, none): when `source` is a *game*, which move to draw
-///   — a mainline `"12w"` / `"12b"` or a variation path dict, exactly like
-///   `position-after`'s `locator`. Required with a game; an error otherwise (a
-///   position already identifies its own move).
+///   — a mainline `"12w"` / `"12b"` or a variation path dict. Required with a
+///   game; an error otherwise (a position already identifies its own move).
 /// - ..overrides (arguments): any board *style* option (`size`, `light`, `dark`,
 ///   `labels`, `label-mode`, `file-side`, `rank-side`, `piece-set`, `highlight`,
 ///   `arrows`, `grid`, …) — see #link(<board-options>)[Board style options].
@@ -415,7 +414,7 @@
   if "squares" in source { return _position-fen(source) }
   if "movetext-raw" in source {
     assert(loc != none, message: "to-fen: a game needs a locator (e.g. at: \"12w\")")
-    return _position-fen(position-after(source, at: loc))
+    return _position-fen(_position-after(source, at: loc))
   }
   panic("to-fen: source must be a position (has `squares`) or a game (has `movetext-raw`)")
 }

@@ -176,7 +176,7 @@ typst compile --root . docs/examples/showcase.typ showcase.pdf
 |---|---|
 | diagrams | `diagram`, `board` |
 | positions | `position`, `to-fen`, `starting-fen`, `chess960-start-fen` |
-| games (PGN) | `game`, `games`, `movetext`, `mainline`, `position-after`, `play`, `game-start`, `game-variant` |
+| games (PGN) | `game`, `games`, `movetext`, `mainline`, `play`, `game-start`, `game-variant` |
 | annotate / build | `with-nags`, `with-comments`, `with-line` |
 | notation | `notation` |
 | tables | `standings-table`, `crosstable-table`, `progress-table`, `games-by-event` (+ compute: `standings`, `crosstable`, `progress`) |

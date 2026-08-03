@@ -6,7 +6,8 @@
 // indented one level per nesting depth. We assert the line texts (layout-agnostic)
 // AND the indent levels; the inline form and an independent legality check back it
 // up.
-#import "/lib.typ": game, with-line, notation, position-after, play
+#import "/lib.typ": game, with-line, notation, play
+#import "/src/game.typ": _position-after
 
 #set page(width: auto, height: auto, margin: 1cm)
 #set text(font: "Libertinus Serif", size: 10pt)
@@ -65,9 +66,9 @@
 //     an INDEPENDENT play-out of the same move sequence ----------------------
 #let nested-loc = (line: ((at: "3w", into: 0), (at: "3b", into: 0)), at: "4w")
 #assert(
-  position-after(gv2, at: nested-loc).squares
+  _position-after(gv2, at: nested-loc).squares
     == play(none, moves: "1. e4 e5 2. Nf3 Nc6 3. Bc4 Nf6 4. Ng5").squares,
-  message: "position-after into the nested variation == independent play",
+  message: "_position-after into the nested variation == independent play",
 )
 
 = Nested variation, block style

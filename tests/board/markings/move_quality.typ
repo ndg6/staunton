@@ -10,11 +10,11 @@
 // in which colour) cannot be queried out of a rendered board — see
 // move_quality_render.typ + VISUAL_CHECKS for that half.
 #import "/lib.typ": (
-  game, position, with-nags, board, diagram, position-after, chess-kind,
+  game, position, with-nags, board, diagram, chess-kind,
   board-non-default-keys, board-style-keys,
   _apply-origin, _resolve-draw,
 )
-#import "/src/game.typ": move-quality-mark, move-at
+#import "/src/game.typ": move-quality-mark, move-at, _position-after
 #import "/src/board.typ": _mq-category
 
 #let SYMBOLS = ("!", "?", "!!", "??", "!?", "?!")
@@ -99,7 +99,7 @@
 // ---------------------------------------------------------------------------
 // 4. Both drawing entry points get the badge, by the same route.
 //    Since Phase D the mark is reachable only via a game handed to `board`/
-//    `diagram` with `at:` — a plain position (even from `position-after`) has
+//    `diagram` with `at:` — a plain position (even from `_position-after`) has
 //    no history to badge. `board` and `diagram` are fed identically -- `diagram`
 //    adds only the figure wrapper. This is the assertion that would fail if the
 //    badge ever became figure-only again.
@@ -112,10 +112,10 @@
 #assert.eq(_apply-origin((:), move-at(g, at: "2w"), false).at("move-quality-mark"),
   (square: "f3", symbol: "!!"), message: "the badge reaches the renderer's override dict")
 
-// A plain position (from `position-after`) has no history to badge: fed
+// A plain position (from `_position-after`) has no history to badge: fed
 // through the same seam, it carries no `move-quality-mark`.
 #assert(
-  "move-quality-mark" not in _resolve-draw(position-after(g, at: "2w"), none, (:), true).ov,
+  "move-quality-mark" not in _resolve-draw(_position-after(g, at: "2w"), none, (:), true).ov,
   message: "a plain position must not carry a badge",
 )
 

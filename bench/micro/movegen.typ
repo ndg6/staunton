@@ -7,7 +7,8 @@
 // loop we insert a distinct junk key per iteration. The move generator ignores
 // the extra key, so the WORK is identical, but the argument identity differs so
 // Typst recomputes instead of returning a cached result.
-#import "/lib.typ": game, mainline, position-after, legal-moves
+#import "/lib.typ": game, mainline, legal-moves
+#import "/src/game.typ": _position-after
 #set page(width: auto, height: auto)
 
 #let n = int(sys.inputs.at("n", default: "0"))
@@ -17,7 +18,7 @@
 #let plies = mainline(g).len()
 #let mid = calc.min(20, plies)
 #let loc = str(calc.quo(mid + 1, 2)) + (if calc.odd(mid) { "w" } else { "b" })
-#let pos = position-after(g, at: loc)
+#let pos = _position-after(g, at: loc)
 
 #let acc = 0
 #for i in range(n) {

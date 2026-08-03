@@ -258,7 +258,7 @@
   // A game patched by the builders (`with-nags` / `with-comments` /
   // `with-line`, game.typ) carries a precomputed node tree (already in
   // canonical English SAN); honour it so the change flows through every consumer
-  // (notation, position-after, ...). Unpatched games build (and memoise) from the
+  // (notation, _position-after, ...). Unpatched games build (and memoise) from the
   // raw text, then normalize.
   let pre = game.at("movetext-nodes", default: none)
   if pre != none { pre } else { _normalize-nodes(_movetext-tree(game.movetext-raw), game.lang) }

@@ -1,7 +1,8 @@
 // Chess960 games may declare their start by NUMBER instead of a FEN, via a
 // [FRCPosition N] or [Chess960Position N] tag. game-start resolves it through the
 // Scharnagl numbering; an explicit [FEN] still wins when both are present.
-#import "/lib.typ": game, game-start, game-variant, to-fen, position-after, chess960-start-fen
+#import "/lib.typ": game, game-start, game-variant, to-fen, chess960-start-fen
+#import "/src/game.typ": _position-after
 
 #set page(width: auto, height: auto, margin: 1cm)
 #set text(font: "Libertinus Serif", size: 9pt)
@@ -12,8 +13,8 @@
 #assert(to-fen(game-start(g518)) == chess960-start-fen(518), message: "FRCPosition 518 start")
 // and it replays like standard chess from that start
 #assert(
-  to-fen(position-after(g518, at: "1b")) == "rnbqkbnr/pppp1ppp/8/4p3/4P3/8/PPPP1PPP/RNBQKBNR w KQkq - 0 2",
-  message: "replay: " + to-fen(position-after(g518, at: "1b")),
+  to-fen(_position-after(g518, at: "1b")) == "rnbqkbnr/pppp1ppp/8/4p3/4P3/8/PPPP1PPP/RNBQKBNR w KQkq - 0 2",
+  message: "replay: " + to-fen(_position-after(g518, at: "1b")),
 )
 
 // Chess960Position (alternative spelling) with a genuinely non-standard start.

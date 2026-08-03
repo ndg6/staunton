@@ -54,8 +54,8 @@ together are independent of A/D/E. Tournament (D) works off PGN tags/results onl
    which replays moves through `game`/`engine`/`san`/`pgn`. It belongs with C.
    `tests/board` is mostly pure rendering, but not entirely: `board`/`diagram`
    handed a *game* with `at:` derive that move's annotations and quality badge
-   via `_move-context` (in `game.typ`) — a bare position (even one from
-   `position-after`) has no such history. So a `game.typ` change can move what a
+   via `move-at` (in `game.typ`) — a bare position (even one from the internal
+   `_position-after`) has no such history. So a `game.typ` change can move what a
    **board** renders (when called with a game + `at:`), not just what a diagram
    does.
 2. **`tests/output_formats` is cross-cutting integration** — HTML export exercises

@@ -11,7 +11,7 @@
 // `tags` is deliberately NOT part of the record — a roster belongs to the game,
 // not to a move; a caller that needs it reads `game.tags` directly.
 //
-// Positions are uniform: `position-after(g, L)` returns an ORDINARY position,
+// Positions are uniform: `_position-after(g, L)` returns an ORDINARY position,
 // indistinguishable from one built any other way, and NO position ever carries
 // the old `_origin` payload — that is still the whole point of this release.
 //
@@ -29,7 +29,7 @@
 // 2.0.0 -- `move-at` is the one public way to ask about a move). This sheet
 // still reaches for it deliberately, to cross-check that `move-at`'s node
 // half agrees with the tree it is built from.
-#import "/src/game.typ": position-after, move-node
+#import "/src/game.typ": _position-after, move-node
 #import "/src/san.typ": san-to-move
 
 #let g = game(```
@@ -77,7 +77,7 @@
 // ENGINE half: from/to/piece/capture/kind/promotion must match what the engine
 // itself resolves for the same SAN against the position just before the move --
 // independently, via `san-to-move`, not through `move-at`'s own machinery.
-#let before-2w = position-after(g, at: "1b")
+#let before-2w = _position-after(g, at: "1b")
 #let engine-mv = san-to-move(before-2w, mv.san)
 #assert.eq(mv.from, engine-mv.from, message: "move-at's from must match the engine's")
 #assert.eq(mv.to, engine-mv.to, message: "move-at's to must match the engine's")
@@ -138,17 +138,17 @@
 
 // ---- (e) ply 0 is a legal thing to address, not a panic ---------------------
 // "0b" is ply 0 -- the position before any move -- valid per `_ply-of`/
-// `position-after`'s own range check (`target >= 0`). There is no move behind
+// `_position-after`'s own range check (`target >= 0`). There is no move behind
 // it, so `move-at` returns `none` rather than erroring.
 #assert.eq(move-at(g, at: "0b"), none, message: "ply 0 (before any move) must yield none, not panic")
-#assert.eq(position-after(g, at: "0b"), game-start(g),
+#assert.eq(_position-after(g, at: "0b"), game-start(g),
   message: "ply 0's position is the game's own start")
 
 // ---- (f) E1: legal-moves/apply speak square-name STRINGS, not (col,row) -----
 // Pins the representation so a partial revert to the old tuple shape cannot
 // silently pass: `from`/`to` are strings, and a specific known value confirms
 // they are square NAMES ("e2"), not some other stringified shape.
-#let start-pos = position-after(g, at: "0b")
+#let start-pos = _position-after(g, at: "0b")
 #let first-legal = legal-moves(start-pos).first()
 #assert.eq(str(type(first-legal.from)), "string", message: "legal-moves' `from` must be a string")
 #assert.eq(str(type(first-legal.to)), "string", message: "legal-moves' `to` must be a string")
@@ -171,7 +171,7 @@
 // Do not "fix" this by asserting a FEN round-trip here.
 #let sans = ("1. e4", "1. e4 e5", "1. e4 e5 2. Nf3", "1. e4 e5 2. Nf3 Nc6", "1. e4 e5 2. Nf3 Nc6 3. Bb5")
 #for (i, loc) in ("1w", "1b", "2w", "2b", "3w").enumerate() {
-  let p = position-after(g, at: loc)
+  let p = _position-after(g, at: loc)
   assert.eq(p, play(game-start(g), moves: sans.at(i)),
     message: "game-derived position differs from the replayed one at " + loc + ": " + repr(p.keys()))
   assert.eq(p.keys().sorted(),
@@ -181,9 +181,9 @@
 
 // No position — from a game, a FEN, or `apply` — ever carries `_origin`: the
 // mechanism that used to attach it is gone.
-#assert("_origin" not in position-after(g, at: "2w"), message: "position-after carries no history")
+#assert("_origin" not in _position-after(g, at: "2w"), message: "_position-after carries no history")
 #assert("_origin" not in position("4k3/8/8/8/8/8/8/4K3 w - - 0 1"), message: "a FEN has no history")
-#let p = position-after(g, at: "2w")
+#let p = _position-after(g, at: "2w")
 #assert("_origin" not in apply(p, legal-moves(p).first()), message: "apply never attaches history")
 
 // ---- _apply-origin: the merge, which the rendered board cannot show --------
@@ -235,7 +235,7 @@
 #assert.eq(pos-a.ov.highlight, (("e5", "R"),))
 
 // (b) NEGATIVE — the most important one: the SAME move, addressed as a plain
-// `position-after` position with `at: none`, must derive NONE of the three keys.
+// `_position-after` position with `at: none`, must derive NONE of the three keys.
 // This is the behaviour change of the whole release: a plain position no longer
 // draws a badge or its move's annotations. A suite that only asserted (a) would
 // still pass even if the game path were wired to nothing — this is what catches
@@ -243,7 +243,7 @@
 // `else` branch of `_resolve-at-source`, which returns `mv-context: none`, and
 // `_apply-origin` returns `ov` completely untouched when `mv-context` is `none` —
 // so this assertion is exercising exactly the code path Phase D introduced.
-#let pos-b = _resolve-draw(position-after(g, at: "2w"), none, (:), true)
+#let pos-b = _resolve-draw(_position-after(g, at: "2w"), none, (:), true)
 #assert("move-quality-mark" not in pos-b.ov, message: "a plain position must not carry a badge")
 #assert("arrows" not in pos-b.ov, message: "a plain position must not carry derived arrows")
 #assert("highlight" not in pos-b.ov, message: "a plain position must not carry a derived highlight")

@@ -771,7 +771,7 @@ piece and spills slightly into the neighbours; recolor the categories with
 A badge is tied to a *move*, so it appears only when you
 #link(<position-provenance>)[draw a game with `at:`] — `board(g, at: "24w")` or
 `diagram(g, at: "24w")`. The badge lands on the move's destination square.
-A FEN, a hand-built position, or a bare `position-after` result has no move
+A FEN or a hand-built position has no move
 attached, so it cannot carry a badge, and
 setting `move-quality-mark` yourself is an error. The assessment is read
 identically whether written as a literal `?!` suffix, a PGN NAG, or set with
@@ -1192,14 +1192,15 @@ so there is no separate `*-after` function for either.
 #diagram(g, at: "3w", size: 3.4cm)
 ```)
 
-`position-after(g, at: loc)` still hands you the position at a locator, and it is
-an *ordinary* position — identical to one built by `position` or advanced with
-the #link(<engine>)[engine]'s `apply`. Drawing it gives you the board and
-nothing else: no caption, no roster line, no annotations, no badge.
+Pull the FEN at that same locator with `to-fen(g, at: loc)` and rebuild a *bare*
+position from it with `position(fen)` — an *ordinary* position, identical to one
+built by `position` directly or advanced with the #link(<engine>)[engine]'s
+`apply`. It carries no move, so drawing it gives you the board and nothing else:
+no caption, no roster line, no annotations, no badge.
 
 #example(```typ
 // the same squares, drawn WITHOUT the move: no badge, no annotations
-#diagram(position-after(g, at: "3w"), size: 3.4cm)
+#diagram(position(to-fen(g, at: "3w")), size: 3.4cm)
 ```)
 
 That is what keeps a move-quality badge honest: the badge is tied to a move, so it
@@ -1211,7 +1212,7 @@ square).
 
 A *locator* addresses one position in a game. The simple form is a string —
 `"30w"` / `"30b"`, the position after White's / Black's 30th *mainline* move.
-`position-after(g, at: loc)`, `diagram(g, at: loc, ..)`, and
+`board(g, at: loc, ..)`, `diagram(g, at: loc, ..)`, and
 `to-fen(g, at: ..)` all take this simple string form.
 
 To address a move *inside a variation* (a PGN 'Recursive Annotation Variantion' or RAV), pass a *path* dict instead:
@@ -1976,7 +1977,7 @@ described once here.
   *string form* (rank-per-line rows, `.` = empty; one raw block or several row
   strings).
 
-/ `locator`: for `position-after`, `diagram(g, at: ..)`, `to-fen`, `move-at`,
+/ `locator`: for `board(g, at: ..)`, `diagram(g, at: ..)`, `to-fen`, `move-at`,
   and builder addresses — a *mainline* string `"12w"` / `"12b"`, or a
   *path* dict `(line: (..hops..), at: "<move>")`, each hop `(at: "<move>", into:
   <n>)` (descend into variation `n` at that move), to reach a move inside a (possibly nested)
@@ -2099,7 +2100,6 @@ source docstring: its signature, then every parameter with its type and default.
   ("/src/game.typ", "game-result"),
   ("/src/game.typ", "game-start"),
   ("/src/game.typ", "game-variant"),
-  ("/src/game.typ", "position-after"),
   ("/src/game.typ", "move-at"),
   ("/src/san.typ", "play"),
 ))

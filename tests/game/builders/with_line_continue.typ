@@ -8,7 +8,7 @@
 // for publication). Legality is checked lazily: `with-line` itself never plays
 // out the position, so an illegal continuation is only caught later, when
 // something navigates into it.
-#import "/lib.typ": game, with-line, notation, mainline, move-at, position-after, play, to-fen
+#import "/lib.typ": game, with-line, notation, mainline, move-at, play, to-fen
 
 #set page(width: auto, height: auto, margin: 1cm)
 #set text(font: "Libertinus Serif", size: 10pt)

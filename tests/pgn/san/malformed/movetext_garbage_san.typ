@@ -3,6 +3,6 @@
 // ("z9" is off an 8x8 board). Geometry-aware parse-square reports it as out of
 // range.
 #import "/src/pgn.typ": game
-#import "/src/game.typ": position-after
+#import "/src/game.typ": _position-after
 #let g = game("1. Zz9 e5 *")
-#let _ = position-after(g, at: "1w")
+#let _ = _position-after(g, at: "1w")

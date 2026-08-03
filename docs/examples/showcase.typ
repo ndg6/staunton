@@ -7,7 +7,7 @@
 // Compile with the package root:  typst compile --root . examples/showcase.typ
 #import "/lib.typ": (
   game, games, board, diagram, diagram-outline,
-  mainline, game-result, position-after, play, set-chess-defaults, starting-fen,
+  mainline, game-result, play, set-chess-defaults, starting-fen,
   color-theme, standings-table,
 )
 
@@ -83,10 +83,10 @@ The same final position drawn three ways, plus flipped to Black's view.
   columns: 4,
   gutter: 8pt,
   align: bottom + center,
-  board(position-after(g-main, at: final-locator(g-main)), size: 3.2cm, label-mode: "on-square"),
-  board(position-after(g-main, at: final-locator(g-main)), size: 3.2cm, label-mode: "outside"),
-  board(position-after(g-main, at: final-locator(g-main)), size: 3.2cm, label-mode: "border"),
-  board(position-after(g-main, at: final-locator(g-main)), size: 3.2cm, label-mode: "border", flip: true),
+  board(g-main, at: final-locator(g-main), size: 3.2cm, label-mode: "on-square"),
+  board(g-main, at: final-locator(g-main), size: 3.2cm, label-mode: "outside"),
+  board(g-main, at: final-locator(g-main), size: 3.2cm, label-mode: "border"),
+  board(g-main, at: final-locator(g-main), size: 3.2cm, label-mode: "border", flip: true),
   [on-square], [outside], [border], [border, flipped],
 )
 
@@ -117,7 +117,7 @@ for the start) and returns the resulting position, without mutating anything.
 Explicit arrows (tuple / dict forms), square highlights, and the optional grid:
 
 #board(
-  position-after(g-main, at: "6w"),
+  g-main, at: "6w",
   size: 6cm,
   grid: true,
   highlight: ("e4", "e5"),
@@ -150,11 +150,11 @@ here, but equally valid as document-wide defaults through `set-board-defaults`.
 
 #grid(
   columns: 3, gutter: 10pt, align: horizon,
-  board(position-after(g-main, at: "8w"), size: 3.6cm,
+  board(g-main, at: "8w", size: 3.6cm,
     color-theme: "marine"),
-  board(position-after(g-main, at: "8w"), size: 3.6cm,
+  board(g-main, at: "8w", size: 3.6cm,
     color-theme: color-theme(light: rgb("#d9b98a"), dark: rgb("#6b4a2f"), pattern: "wood")),
-  board(position-after(g-main, at: "8w"), size: 3.6cm,
+  board(g-main, at: "8w", size: 3.6cm,
     label-mode: "border", border-theme: "marble",
     color-theme: color-theme(base: "emerald", pattern: "marble", brightness: -15%, contrast: 30%)),
 )
