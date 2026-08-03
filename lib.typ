@@ -405,16 +405,13 @@
 /// positions round-trip exactly.
 ///
 /// - source (dictionary): a *position* dict, or a *game* (from `game` / `games`).
-/// - locator (str, dictionary): required when `source` is a game — which move's
+/// - at (str, dictionary): required when `source` is a game — which move's
 ///   position to serialise (a mainline `"12w"` or a path dict). Ignored for a
-///   position. Accepted as either `locator: ..` (old spelling) or `at: ..` (new
-///   spelling) — give exactly one.
+///   position.
 /// -> str
-#let to-fen(source, locator: none, at: none) = {
+#let to-fen(source, at: none) = {
   assert(type(source) == dictionary, message: "to-fen: expected a position or a game dict")
-  assert(not (locator != none and at != none),
-    message: "to-fen: give the locator only once — use the named `at: ..` form, not both `locator:` and `at:`")
-  let loc = if at != none { at } else { locator }
+  let loc = at
   if "squares" in source { return _position-fen(source) }
   if "movetext-raw" in source {
     assert(loc != none, message: "to-fen: a game needs a locator (e.g. at: \"12w\")")

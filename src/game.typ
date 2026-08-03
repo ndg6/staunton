@@ -17,7 +17,7 @@
 // ===========================================================================
 
 #import "fen.typ": parse-fen, starting-fen
-#import "san.typ": san-to-move, _one-of
+#import "san.typ": san-to-move
 #import "engine.typ": apply
 #import "pgn.typ": movetext, _movetext-tree
 #import "chess960.typ": chess960-start-fen
@@ -129,12 +129,12 @@
 /// rather than pre-resolving the position here.
 ///
 /// - game (dictionary): a parsed game (from `game`).
-/// - ..args (arguments): the locator — a mainline `"30w"` / `"30b"`, or a variation
-///   path dict `(line: (..hops..), at: "<move>")`. Give it as `at: ..` (the
-///   positional form still works during the 2.0.0 migration and is removed next).
+/// - at (str, dictionary): the locator — a mainline `"30w"` / `"30b"`, or a
+///   variation path dict `(line: (..hops..), at: "<move>")` — required.
 /// -> dictionary
-#let position-after(game, ..args) = {
-  let locator = _one-of("position-after", args, "at")
+#let position-after(game, at: none) = {
+  assert(at != none, message: "position-after: `at` is required")
+  let locator = at
   let loc = if type(locator) == str { (line: (), at: locator) } else { locator }
 
   // Fast path: a pure mainline locator just indexes into the (memoised) mainline
@@ -175,12 +175,12 @@
 /// PGN-diagram captions.
 ///
 /// - game (dictionary): a parsed game (from `game`).
-/// - ..args (arguments): the locator — a mainline `"30w"` / `"30b"`, or a
-///   variation path dict. Give it as `at: ..` (the positional form still works during the 2.0.0
-///   migration and is removed in the next checkpoint).
+/// - at (str, dictionary): the locator — a mainline `"30w"` / `"30b"`, or a
+///   variation path dict — required.
 /// -> str
-#let move-san(game, ..args) = {
-  let locator = _one-of("move-san", args, "at")
+#let move-san(game, at: none) = {
+  assert(at != none, message: "move-san: `at` is required")
+  let locator = at
   let loc = if type(locator) == str { (line: (), at: locator) } else { locator }
   let line = movetext(game)
   let branch-ply = 1
@@ -201,12 +201,12 @@
 /// PGN `%cal` / `%csl` annotations for a diagram.
 ///
 /// - game (dictionary): a parsed game (from `game`).
-/// - ..args (arguments): the locator — a mainline `"30w"` / `"30b"`, or a
-///   variation path dict. Give it as `at: ..` (the positional form still works during the 2.0.0
-///   migration and is removed in the next checkpoint).
+/// - at (str, dictionary): the locator — a mainline `"30w"` / `"30b"`, or a
+///   variation path dict — required.
 /// -> dictionary
-#let move-node(game, ..args) = {
-  let locator = _one-of("move-node", args, "at")
+#let move-node(game, at: none) = {
+  assert(at != none, message: "move-node: `at` is required")
+  let locator = at
   let loc = if type(locator) == str { (line: (), at: locator) } else { locator }
   let line = movetext(game)
   let branch-ply = 1
@@ -398,12 +398,13 @@
 /// *new* game (the source is not mutated). Each value *replaces* that move's NAGs.
 ///
 /// - game (dictionary): a parsed game (from `game`).
-/// - ..args (arguments): the NAG map, as `nags: (<locator>: <value>, ..)`.
-///   Give it as `at: ..` (the positional form still works during the 2.0.0
-///   migration and is removed in the next checkpoint).
+/// - nags (dictionary, array): the NAG map, as `(<locator>: <value>, ..)`, or
+///   an array of `(locator, value)` pairs to reach moves inside variations —
+///   required.
 /// -> dictionary
-#let with-nags(game, ..args) = {
-  let overrides = _one-of("with-nags", args, "nags")
+#let with-nags(game, nags: none) = {
+  assert(nags != none, message: "with-nags: `nags` is required")
+  let overrides = nags
   assert(type(game) == dictionary and "movetext-raw" in game, message: "with-nags: first argument must be a parsed game (from game())")
   let nodes = movetext(game)
   for (loc, val) in _overrides-pairs(overrides) {
@@ -419,12 +420,13 @@
 /// `comments` switch renders).
 ///
 /// - game (dictionary): a parsed game (from `game`).
-/// - ..args (arguments): the comment map, as `comments: (<locator>: <text>, ..)`.
-///   Give it as `at: ..` (the positional form still works during the 2.0.0
-///   migration and is removed in the next checkpoint).
+/// - comments (dictionary, array): the comment map, as `(<locator>: <text>, ..)`,
+///   or an array of `(locator, text)` pairs to reach moves inside variations —
+///   required.
 /// -> dictionary
-#let with-comments(game, ..args) = {
-  let overrides = _one-of("with-comments", args, "comments")
+#let with-comments(game, comments: none) = {
+  assert(comments != none, message: "with-comments: `comments` is required")
+  let overrides = comments
   assert(type(game) == dictionary and "movetext-raw" in game, message: "with-comments: first argument must be a parsed game (from game())")
   let nodes = movetext(game)
   for (loc, val) in _overrides-pairs(overrides) {
