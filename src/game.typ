@@ -22,7 +22,7 @@
 #import "fen.typ": parse-fen, starting-fen
 #import "san.typ": san-to-move
 #import "engine.typ": apply
-#import "pgn.typ": movetext, _movetext-tree
+#import "pgn.typ": movetext, _movetext-tree, _normalize-nodes, _tokenize
 #import "chess960.typ": chess960-start-fen
 #import "annotations.typ": nag-symbol, interpret-comment, glyph-to-nag, quality-nag-codes
 #import "coords.typ": _ply-of-locator, _default-start
@@ -443,33 +443,54 @@
   _stash(game, nodes)
 }
 
-/// Add a variation (RAV) as an *alternative* to the move at `at`, returning a
-/// *new* game (the source is never mutated). The variation is appended to that
-/// move's variations (its `into` index is the previous count) and numbered from
-/// the move's ply at render time. Legality is checked only if you later navigate
-/// into the line (e.g. by drawing `board(game, at: ..)` on that variation).
+/// Add a line of moves to a game, returning a *new* game (the source is never
+/// mutated). Which operation runs depends on `at`:
+///
+/// With `at` given, the moves are added as a variation (RAV) — an
+/// *alternative* to the move at `at`, appended to that move's variations (its
+/// `into` index is the previous count) and numbered from the move's ply at
+/// render time.
+///
+/// With `at` omitted, the moves are appended to the *end of the mainline*,
+/// continuing the game. The game's `result` (if decisive) is preserved
+/// unchanged, since it is a game-level token rendered after the moves, not
+/// part of the movetext.
+///
+/// Legality is checked only if you later navigate into the line (e.g. by
+/// drawing `board(game, at: ..)` on that variation, or on the continuation).
 ///
 /// - game (dictionary): a parsed game (from `game`).
-/// - at (str, dictionary): the move to branch at — a *mainline* locator
+/// - at (none, str, dictionary): the move to branch at — a *mainline* locator
 ///   (`"3w"` / `"3b"`), or a *path* dict `(line: (..hops..), at: "<move>")` to
-///   reach a move inside a (possibly nested) variation.
+///   reach a move inside a (possibly nested) variation. If omitted (or given
+///   as `none`), the moves continue the mainline instead of branching from it.
 /// - moves (str, content): a PGN movetext fragment — a plain SAN run like
 ///   `"Bc4 Bc5"`, or richer text with nested `()`, `$n` NAGs and `{comments}`.
+///   Must not contain a result token (`1-0`, `0-1`, `1/2-1/2`, `*`) — the
+///   result is a game-level field carried from the source game.
 /// -> dictionary
-#let with-variation(game, at: none, moves: none) = {
-  assert(type(game) == dictionary and "movetext-raw" in game, message: "with-variation: first argument must be a parsed game (from game())")
-  assert(at != none, message: "with-variation: `at` (a move locator) is required")
-  assert(moves != none, message: "with-variation: `moves` (a movetext fragment) is required")
+#let with-line(game, at: none, moves: none) = {
+  assert(type(game) == dictionary and "movetext-raw" in game, message: "with-line: first argument must be a parsed game (from game())")
+  assert(moves != none, message: "with-line: `moves` (a movetext fragment) is required")
   let text = if type(moves) == str { moves }
     else if type(moves) == content and moves.func() == raw { moves.text }
-    else { panic("with-variation: `moves` must be a movetext string or raw block; got " + repr(type(moves))) }
-  let sub = _movetext-tree(text)
-  assert(sub.len() > 0, message: "with-variation: `moves` produced no moves")
-  let nodes = _update-node-at(movetext(game), at, node => {
-    let vars = node.at("variations", default: ())
-    vars.push(sub)
-    node.variations = vars
-    node
-  }, start: game-start(game))
-  _stash(game, nodes)
+    else { panic("with-line: `moves` must be a movetext string or raw block; got " + repr(type(moves))) }
+  assert(
+    not _tokenize(text).any(t => t.type == "result"),
+    message: "with-line: `moves` must not contain a result token (1-0, 0-1, 1/2-1/2, *) — "
+      + "the result is a game-level field carried from the source game, not part of `moves:`",
+  )
+  let sub = _normalize-nodes(_movetext-tree(text), game.lang)
+  assert(sub.len() > 0, message: "with-line: `moves` produced no moves")
+  if at == none {
+    _stash(game, movetext(game) + sub)
+  } else {
+    let nodes = _update-node-at(movetext(game), at, node => {
+      let vars = node.at("variations", default: ())
+      vars.push(sub)
+      node.variations = vars
+      node
+    }, start: game-start(game))
+    _stash(game, nodes)
+  }
 }

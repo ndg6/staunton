@@ -1408,18 +1408,29 @@ for `$1`–`$6`), or an array of those; `with-comments` values are plain-text
 strings. Both *replace* what was on the move. Comments show only with `comments:
 true`, NAGs only with `nags: true`.
 
-=== Adding Variations
+=== Adding Variations and Continuations
 
-`with-variation(g, at:, moves:)` grows the tree: it adds a variation as an
-*alternative* to the move at `at` (a mainline locator or a path dict). `moves` is
-a PGN movetext fragment — the same syntax `game` reads — so one call can carry
-move numbers (recomputed), nested `()` variations, `$n` NAGs, and `{comments}`; a
-plain SAN run like `"Bc4 Bc5"` is the simplest case:
+`with-line(g, at:, moves:)` grows the tree. `moves` is a PGN movetext
+fragment — the same syntax `game` reads — so one call can carry move numbers
+(recomputed), nested `()` variations, `$n` NAGs, and `{comments}`. Which of
+its two operations runs depends on whether `at:` is given:
+
+- *`at:` given* — the moves are added as a variation (RAV), an *alternative*
+  to the move at `at` (a mainline locator or a path dict).
+- *`at:` omitted* — the moves are appended to the *end of the mainline*,
+  continuing the game.
+
+Both return a *new* game; the source is never mutated. Moves are *not*
+checked for legality when added — an illegal move surfaces only if you
+navigate into the line (`diagram(g, at: ..)`), matching the rest of the lazy
+model.
+
+*Adding a variation.* A plain SAN run like `"Bc4 Bc5"` is the simplest case:
 
 #example(```typ
 #let g = game("1. e4 e5 2. Nf3 Nc6 3. Bb5 a6 *")
 #notation(
-  with-variation(g, at: "3w",
+  with-line(g, at: "3w",
     moves: "3. Bc4 Bc5! (3... Nf6 4. d4) {a sharp alternative}"),
   variations: true, nags: true, comments: true,
 )
@@ -1429,9 +1440,29 @@ The variation is *appended* to the move's variations (its index `into` is the
 previous count — `0` for a move with none yet), so you can address into it
 afterwards and it composes with `with-nags`/`with-comments`. Together these let you
 build a whole annotated tree from a bare game, then render or navigate it exactly
-like a parsed PGN. Moves are *not* checked for legality when added — an illegal
-move surfaces only if you navigate into the line (`diagram(g, at: ..)`), matching the rest
-of the lazy model.
+like a parsed PGN.
+
+*Continuing the mainline.* Omitting `at:` appends `moves` to the end of the mainline instead of
+branching from it. This is the tool for the case where a game was recorded
+with a `result` token before it was actually finished on the board — say, a
+game scored `1-0` because the loser resigned a move before an unplayed mate —
+and you want to publish the mate itself. The `result` is a game-level field,
+so it is carried unchanged to the end of the new movetext:
+
+#example(```typ
+#let g = game("1. e4 e5 2. Qh5 Nc6 3. Bc4 Nf6 1-0")
+#notation(
+  with-line(g, moves: "4. Qxf7#"),
+  variations: true,
+)
+```, stacked: true)
+
+`moves:` must not contain a result token (`1-0`, `0-1`, `1/2-1/2`, `*`) of its
+own — it is a hard error, since the result is carried from the source game,
+not part of `moves:`. `moves:` may carry its own move numbers, and they are
+not checked against anything; this also works for FEN-start games, whose
+numbering does not begin at 1. The appended moves are addressable by locator
+afterwards, just like any other move.
 
 == Exporting FEN
 
@@ -2077,7 +2108,7 @@ source docstring: its signature, then every parameter with its type and default.
 #show-fns((
   ("/src/game.typ", "with-nags"),
   ("/src/game.typ", "with-comments"),
-  ("/src/game.typ", "with-variation"),
+  ("/src/game.typ", "with-line"),
 ))
 
 == Notation

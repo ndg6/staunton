@@ -5,13 +5,13 @@
 // ANY builder is that PLUS `movetext-nodes` (the precomputed tree the builder
 // installs via the shared `_stash` helper so its edit sticks without
 // re-parsing the raw text). All three builders (`with-nags`, `with-comments`,
-// `with-variation`) route through `_stash`, so all three are checked here
+// `with-line`) route through `_stash`, so all three are checked here
 // rather than just one.
 //
 // `lang` is ALWAYS present (defaulting to `"en"`) rather than sometimes-3-
 // sometimes-4, so the key set stays stable regardless of whether the caller
 // passed `lang:` explicitly.
-#import "/lib.typ": game, with-nags, with-comments, with-variation
+#import "/lib.typ": game, with-nags, with-comments, with-line
 
 #let g = game("[White \"A\"][Black \"B\"] 1. e4 e5 2. Nf3 Nc6 *")
 #assert.eq(g.keys().sorted(), ("lang", "movetext-raw", "result", "tags"), message: "a parsed game must have exactly these keys")
@@ -31,8 +31,8 @@
 #assert.eq(g-comments.keys().sorted(), expected-builder-keys,
   message: "with-comments: a builder-touched game adds exactly `movetext-nodes`, nothing else")
 
-#let g-variation = with-variation(g, at: "1w", moves: "d4")
+#let g-variation = with-line(g, at: "1w", moves: "d4")
 #assert.eq(g-variation.keys().sorted(), expected-builder-keys,
-  message: "with-variation: a builder-touched game adds exactly `movetext-nodes`, nothing else")
+  message: "with-line: a builder-touched game adds exactly `movetext-nodes`, nothing else")
 
-Game structure contract: a parsed game is `(tags, movetext-raw, result, lang)`, with `lang` always present (defaulting to `"en"`); each of the three builders (`with-nags`, `with-comments`, `with-variation`) adds exactly `movetext-nodes`.
+Game structure contract: a parsed game is `(tags, movetext-raw, result, lang)`, with `lang` always present (defaulting to `"en"`); each of the three builders (`with-nags`, `with-comments`, `with-line`) adds exactly `movetext-nodes`.

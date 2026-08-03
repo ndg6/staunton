@@ -4,7 +4,7 @@
 // resolution, the general path), game.typ:190 (`move-node`'s variation
 // descent) and game.typ:230 (`_resolved-move`'s descent) — plus game.typ:362
 // (`_update-in-line`, the BUILDER path under with-nags/with-comments/
-// with-variation). The property is an EQUIVALENCE: omitting `into` on a hop
+// with-line). The property is an EQUIVALENCE: omitting `into` on a hop
 // must produce exactly what `into: 0` produces — asserted both as `==`
 // between the two forms AND against a concrete expected value, so the check
 // cannot pass by both sides silently degrading the same way.

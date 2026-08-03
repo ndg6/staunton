@@ -256,7 +256,7 @@
 /// -> array
 #let movetext(game) = {
   // A game patched by the builders (`with-nags` / `with-comments` /
-  // `with-variation`, game.typ) carries a precomputed node tree (already in
+  // `with-line`, game.typ) carries a precomputed node tree (already in
   // canonical English SAN); honour it so the change flows through every consumer
   // (notation, position-after, ...). Unpatched games build (and memoise) from the
   // raw text, then normalize.
