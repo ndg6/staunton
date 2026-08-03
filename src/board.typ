@@ -462,6 +462,19 @@
   ))
 }
 
+// Does a badge symbol fit inside its disc at the badge font size? Extracted so
+// the fit is machine-checkable: `_draw-move-quality` draws into a `place`, and a
+// rendered board is not queryable, so this is the only seam where "the glyph
+// stays inside the circle" can be asserted. Must be called in a `context`.
+// Returns the bounding box as fractions of the disc: (width-frac, corner-frac),
+// both of which must stay < 1.
+#let _mq-fits(r, symbol) = {
+  let m = measure(text(size: r * 1.2, weight: "bold", symbol))
+  let half-diag = calc.sqrt(
+    (m.width / 2 / 1pt) * (m.width / 2 / 1pt) + (m.height / 2 / 1pt) * (m.height / 2 / 1pt))
+  (width-frac: m.width / (2 * r), corner-frac: half-diag * 1pt / r)
+}
+
 // Move-quality symbol -> category. The six recognised glyphs only.
 #let _mq-category(symbol) = {
   if symbol == "!" or symbol == "!!" { "good" }
@@ -475,14 +488,20 @@
 // belonging to that square) while still spilling over the top-right edge into the
 // neighbours. Prompt 28 enlarged the disc (r ≈ 0.28·sq) and moved the centre off
 // the bare corner. `colors` is the per-category background map; the symbol text is
-// always white. Two-glyph symbols ("!!") shrink to fit. Drawn on top of
-// everything. The corner is orientation-agnostic (always screen upper-right),
-// matching the Lichess look under a flip.
+// always white. Drawn on top of everything. The corner is orientation-agnostic
+// (always screen upper-right), matching the Lichess look under a flip.
+//
+// ONE font size for all six symbols. Two-glyph symbols used to shrink to
+// `r * 0.85`, which was unnecessary and made "!!"/"??" read lighter than "!"/"?"
+// — a difference in emphasis the glyphs do not mean. Measured at `r * 1.2`, the
+// WIDEST symbol ("??") spans 51.6% of the disc's diameter, its bounding-box
+// corner reaching 64.5% of the radius: it fits with room to spare, and a font
+// would have to be nearly twice as wide to overflow. `_mq-fits` pins that.
 #let _draw-move-quality(dx, dy, sq, symbol, colors) = {
   let bg = colors.at(_mq-category(symbol))
   let r = sq * 0.28
   let inset = r * 0.5   // pull the centre down-and-left, into the move's square
-  let fs = if symbol.clusters().len() >= 2 { r * 0.85 } else { r * 1.2 }
+  let fs = r * 1.2
   // box top-left so the disc centre lands at (dx + sq - inset, dy + inset)
   place(dx: dx + sq - inset - r, dy: dy + inset - r, box(width: 2 * r, height: 2 * r, {
     place(circle(radius: r, fill: bg, stroke: none))

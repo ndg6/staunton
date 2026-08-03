@@ -72,7 +72,14 @@ Then open the PDFs below and check the noted property. (The expected-*fail* test
         reads as a soft vignette/glow rather than stone — that construction was
         tried and rejected.
 - [ ] `board/markings/move_quality_render.pdf` — the badge as drawn, four
-      sections. (1) **All six symbols** on `board`: `!` `!!` share one colour
+      sections. Since 2.0.0 all six glyphs render at ONE font size — the
+      two-glyph ones (`!!` `??` `!?` `?!`) used to shrink and read visibly
+      lighter than `!` `?`, which implied an emphasis difference the glyphs do
+      not carry. Check the doubles are the SAME weight as the singles and still
+      sit comfortably inside their disc (the fit is asserted by
+      `board/markings/badge_fit.typ`; this is the "does it look right" half).
+      Note the boards on this sheet are small — judge glyph size on a
+      full-size diagram, not here. (1) **All six symbols** on `board`: `!` `!!` share one colour
       (good), `?` `??` a second (bad), `!?` `?!` a third (interesting); every
       disc sits on the SAME square (e4), top-right corner, on top of the piece.
       (2) **`diagram` vs `board`** with `!!` — the *board area* must be identical
