@@ -221,16 +221,16 @@
   line.at(k)
 }
 
-/// The destination square (e.g. `"e5"`, or the king's `"g1"` for `O-O`) of the
-/// move addressed by `locator`. Resolves the move's SAN against the position
-/// *before* it, so it works for captures, castling and promotions. Standard-chess
-/// only (uses the rules engine). Used to place the move-quality badge.
-///
-/// - game (dictionary): a parsed game (from `game`).
-/// - locator (str, dictionary): a mainline `"30w"` / `"30b"`, or a variation
-///   path dict `(line: (..hops..), at: "<move>")`.
-/// -> str
-#let move-destination(game, locator) = {
+// The position BEFORE the move addressed by `locator`, resolved against its
+// SAN — the shared derivation behind both `move-destination` and `move-at`'s
+// engine half, so there is one walk of the game tree, not two.
+//
+// - game (dictionary): a parsed game (from `game`).
+// - locator (str, dictionary): a mainline `"30w"` / `"30b"`, or a variation
+//   path dict `(line: (..hops..), at: "<move>")`.
+// -> dictionary — the resolved move (`from`/`to`/`piece`/`color`/`capture`/
+//   `kind`/`promotion`, as `san-to-move` gives).
+#let _resolved-move(game, locator) = {
   let loc = if type(locator) == str { (line: (), at: locator) } else { locator }
   let before = none
   let san = none
@@ -260,9 +260,19 @@
     before = _advance(pos, line, k)
     san = line.at(k).san
   }
-  let mv = san-to-move(before, san)
-  mv.to
+  san-to-move(before, san)
 }
+
+/// The destination square (e.g. `"e5"`, or the king's `"g1"` for `O-O`) of the
+/// move addressed by `locator`. Resolves the move's SAN against the position
+/// *before* it, so it works for captures, castling and promotions. Standard-chess
+/// only (uses the rules engine). Used to place the move-quality badge.
+///
+/// - game (dictionary): a parsed game (from `game`).
+/// - locator (str, dictionary): a mainline `"30w"` / `"30b"`, or a variation
+///   path dict `(line: (..hops..), at: "<move>")`.
+/// -> str
+#let move-destination(game, locator) = _resolved-move(game, locator).to
 
 /// The move-quality badge data for the move at `locator`: a dict
 /// `(square: <dest>, symbol: <! ? !! ?? !? ?!>)`, or `none` when the move carries
@@ -286,46 +296,64 @@
 }
 
 // ---------------------------------------------------------------------------
-// Move context (2.0.0 Phase D)
+// Move record (2.0.0 Phase D / §2.4)
 //
-// This is the DERIVATION a game move contributes to a drawing — its `%cal`/
-// `%csl` annotations, its move-quality badge, its locator/SAN, and the game's
-// roster tags — used when `board`/`diagram` are handed a game directly via
-// `at:` (see `_resolve-at-source` in lib.typ). It travels as its OWN value
-// from there to the drawing seam; it is never attached to a position (earlier
-// designs stashed it on the position as `_origin`, which meant a position
-// could carry a badge with no game in the caller's hand at all — a category
-// error this closes: a badge is now reachable only by handing over the game).
+// `move-at` is the single public MOVE RECORD, the union of what the movetext
+// node (`move-node`) and the engine (via `_resolved-move`) each know about a
+// move, plus what's derived from those (`move-quality-mark`,
+// `interpret-comment`). It is what `board`/`diagram` derive their overlay from
+// when handed a game directly via `at:` (see `_resolve-at-source` in
+// lib.typ), and it travels as its OWN value from there to the drawing seam —
+// never attached to a position (earlier designs stashed it on the position as
+// `_origin`, which meant a position could carry a badge with no game in the
+// caller's hand at all — a category error this closes: a badge is now
+// reachable only by handing over the game).
 //
-// The payload is deliberately FLAT and SMALL — derived data, never the game
-// itself. Embedding the game would make `repr(..)` explode into the whole
-// movetext tree, which would wreck assert messages, panics and the line-based
-// `// EXPECT:` fixtures in tests/run.sh.
-//
-// `tags` rides along RAW rather than pre-interpreted into white/black/year: which
-// tags feed the info line, and how a Date becomes a year, are presentation
-// decisions that belong to lib.typ, not here.
-//
-// Underscore-prefixed because it is NOT public API: it is only ever produced
-// and consumed inside lib.typ's `at:` resolution.
-#let _move-context(game, locator) = {
+// `tags` is deliberately NOT part of the record — a roster belongs to the
+// game, not to a move; callers that need it read `game.tags` directly.
+///
+/// The MOVE RECORD addressed by `at`: everything known about a single move,
+/// from both the movetext (SAN, `nags`, `comment-before`/`comment-after`,
+/// `variations`) and the rules engine (`from`/`to`/`piece`/`color`/`capture`/
+/// `kind`/`promotion`, resolved against the position *before* the move), plus
+/// what's derived from those (`quality`, `arrows`, `highlights`). Standard-chess
+/// only (uses the rules engine).
+///
+/// - game (dictionary): a parsed game (from `game`).
+/// - at (str, dictionary): the locator — a mainline `"30w"` / `"30b"`, or a
+///   variation path dict `(line: (..hops..), at: "<move>")` — required.
+/// -> dictionary | none — `none` for ply 0 (the position before any move).
+#let move-at(game, at: none) = {
+  assert(at != none, message: "move-at: `at` is required")
+  let locator = at
   // Ply 0 is the position BEFORE any move — a legitimate thing to address, and
   // the one in-range locator with no move behind it. There is nothing to derive,
-  // so it gets no context rather than a panic out of `move-node` (which would
+  // so it gets `none` rather than a panic out of `move-node` (which would
   // report the misleading "past the end of its line"). Genuinely out-of-range
   // locators still error, and with the right message: `position-after` runs first
   // and asserts on them before we get here.
-  let at = if type(locator) == str { locator } else { locator.at("at") }
-  if _ply-of(at) == 0 { return none }
+  let loc-at = if type(locator) == str { locator } else { locator.at("at") }
+  if _ply-of(loc-at) == 0 { return none }
   let node = move-node(game, at: locator)
+  let mv = _resolved-move(game, locator)
   let anno = interpret-comment(node.at("comment-after", default: none))
   (
-    locator: locator,
     san: node.san,
+    nags: node.at("nags", default: ()),
+    comment-before: node.at("comment-before", default: none),
+    comment-after: node.at("comment-after", default: none),
+    variations: node.at("variations", default: ()),
+    from: mv.from,
+    to: mv.to,
+    piece: mv.piece,
+    color: mv.color,
+    capture: mv.capture,
+    kind: mv.kind,
+    promotion: mv.promotion,
     quality: move-quality-mark(game, locator),
     arrows: anno.arrows,
     highlights: anno.highlights,
-    tags: game.at("tags", default: (:)),
+    locator: locator,
   )
 }
 

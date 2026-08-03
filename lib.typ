@@ -29,7 +29,7 @@
 #import "src/engine.typ": legal-moves, apply, in-check, checked-king-square as _checked-king-square
 #import "src/san.typ": play, move-to-san
 #import "src/pgn.typ": games, game, movetext
-#import "src/game.typ": mainline, position-after, _move-context, game-result, move-san, move-node, with-nags, with-comments, with-variation, game-start, game-variant
+#import "src/game.typ": mainline, position-after, move-at, game-result, move-san, move-node, with-nags, with-comments, with-variation, game-start, game-variant
 // The text core lives in src/notation.typ; lib defines `notation` on top so
 // it can also embed diagrams (which needs the lib-level `diagram`).
 #import "src/notation.typ": notation as _notation-text
@@ -275,7 +275,7 @@
 }
 
 // Resolve `source`/`at` into a `(position, context)` pair. `context` is the
-// move's derived data (`_move-context`, see src/game.typ) when `source` is a
+// move's record (`move-at`, see src/game.typ) when `source` is a
 // game and `at:` names a move — `none` otherwise. The context travels as its
 // own value alongside the position from here on; it is never attached TO the
 // position (a position dict never carries move data — that would let a
@@ -291,7 +291,7 @@
   if at != none {
     assert(is-game,
       message: "`at:` requires a game — a position already identifies its own move; pass the game (not the position) together with `at:` to select a move within it")
-    (position-after(source, at: at), _move-context(source, at))
+    (position-after(source, at: at), move-at(source, at: at))
   } else {
     assert(not is-game,
       message: "a game needs `at:` naming which move to draw (e.g. `at: \"12w\"`) — or use `position-after(game, at)`")
@@ -569,7 +569,10 @@
   // (a plain position paired with a still-non-none `at` looks like misuse).
   let (_, mv-context) = _resolve-at-source(source, at)
   let (board-ov, diagram-ov, fig-args) = _split-args(args.named())
-  let tags = if mv-context != none { mv-context.tags } else { (:) }
+  // `move-at` doesn't carry `tags` (a roster belongs to the game, not a move):
+  // read it straight from the game when `source` is one.
+  let is-game = type(source) == dictionary and "movetext-raw" in source
+  let tags = if is-game { source.at("tags", default: (:)) } else { (:) }
   let below = if caption != auto { caption }
     else if mv-context != none { context _pgn-caption(mv-context.locator, mv-context.san, mv-context.quality, lang) }
     else if type(source) == str {

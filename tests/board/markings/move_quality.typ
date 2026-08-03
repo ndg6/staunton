@@ -14,7 +14,7 @@
   board-non-default-keys, board-style-keys,
   _apply-origin, _resolve-draw,
 )
-#import "/src/game.typ": move-quality-mark, _move-context
+#import "/src/game.typ": move-quality-mark, move-at
 #import "/src/board.typ": _mq-category
 
 #let SYMBOLS = ("!", "?", "!!", "??", "!?", "?!")
@@ -105,11 +105,11 @@
 //    badge ever became figure-only again.
 // ---------------------------------------------------------------------------
 #let g = game(head + "1. e4 e5 2. Nf3!! Nc6 *")
-#assert.eq(_move-context(g, "2w").quality, (square: "f3", symbol: "!!"),
+#assert.eq(move-at(g, at: "2w").quality, (square: "f3", symbol: "!!"),
   message: "the move carries the badge data")
 
 // The fold that both entry points share inserts the style key the renderer reads.
-#assert.eq(_apply-origin((:), _move-context(g, "2w"), false).at("move-quality-mark"),
+#assert.eq(_apply-origin((:), move-at(g, at: "2w"), false).at("move-quality-mark"),
   (square: "f3", symbol: "!!"), message: "the badge reaches the renderer's override dict")
 
 // A plain position (from `position-after`) has no history to badge: fed

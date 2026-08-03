@@ -5,7 +5,7 @@
 // (when annotations on) its %cal/%csl. Default off -> plain text, unchanged.
 #import "/lib.typ": game, notation, set-pgn-defaults, set-board-defaults, movetext
 #import "/src/annotations.typ": interpret-comment  // internal helper, tested directly
-#import "/src/game.typ": _move-context               // move-context builder, tested directly
+#import "/src/game.typ": move-at                      // move record, tested directly
 
 #set page(width: 14cm, height: auto, margin: 1cm)
 #set text(font: "Libertinus Serif", size: 10pt)
@@ -38,7 +38,7 @@
 // runs `interpret-comment` per move to spot the DIAGRAM MARKER, but it does not
 // extract the arrows/highlights itself: the spliced board is an ordinary
 // `diagram(game, at: locator)` call, which derives that move's annotations (and
-// its quality badge) from the game itself via `_move-context`. Deriving them
+// its quality badge) from the game itself via `move-at`. Deriving them
 // here as well would DOUBLE them -- the merge is asserted directly in
 // tests/pgn/move_context.
 // We assert the data SOURCE here; the wiring + gating are shown by the annotated
@@ -61,7 +61,7 @@
 // is a visual check, and is gated by
 // the `move-quality` style switch (default OFF), which is why the sheet below has
 // to turn it on before a badge can appear at all.
-#assert.eq(_move-context(ga, "2w").quality, (square: "f3", symbol: "!"),
+#assert.eq(move-at(ga, at: "2w").quality, (square: "f3", symbol: "!"),
   message: "the marker-bearing move carries a quality mark for the spliced board")
 
 = Diagrams off (plain text)
