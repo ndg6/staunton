@@ -10,7 +10,7 @@
 // A move that matches more than one is ambiguous -> hard error.
 // ===========================================================================
 
-#import "coords.typ": parse-square, square-name, file-letters, rank-digits
+#import "coords.typ": parse-square, file-letters, rank-digits
 #import "engine.typ": legal-moves, apply, in-check
 #import "fen.typ": parse-fen, starting-fen
 
@@ -91,9 +91,9 @@
 
   let cand = legal.filter(m =>
     m.piece == piece
-      and m.to.at(0) == dsq.col and m.to.at(1) == dsq.row
-      and (from-file == none or m.from.at(0) == from-file)
-      and (from-rank == none or m.from.at(1) == from-rank)
+      and m.to == dest
+      and (from-file == none or file-letters.position(x => x == m.from.slice(0, 1)) == from-file)
+      and (from-rank == none or int(m.from.slice(1)) - 1 == from-rank)
   )
   // a non-promotion SAN must not match promotion moves, and vice versa
   cand = if promo == none {
@@ -140,9 +140,9 @@
   } else if move.piece == "pawn" {
     san = ""
     if move.capture != none {
-      san += square-name(move.from.at(0), move.from.at(1)).slice(0, 1) + "x"
+      san += move.from.slice(0, 1) + "x"
     }
-    san += square-name(move.to.at(0), move.to.at(1))
+    san += move.to
     if move.kind == "promotion" {
       san += "=" + _piece-letter(move.promotion).clusters().at(0)
     }
@@ -153,17 +153,17 @@
     )
     let disambig = ""
     if others.len() > 0 {
-      let same-file = others.filter(m => m.from.at(0) == move.from.at(0)).len() > 0
-      let same-rank = others.filter(m => m.from.at(1) == move.from.at(1)).len() > 0
+      let same-file = others.filter(m => m.from.slice(0, 1) == move.from.slice(0, 1)).len() > 0
+      let same-rank = others.filter(m => m.from.slice(1) == move.from.slice(1)).len() > 0
       if not same-file {
-        disambig = file-letters.at(move.from.at(0))
+        disambig = move.from.slice(0, 1)
       } else if not same-rank {
-        disambig = rank-digits.at(move.from.at(1))
+        disambig = move.from.slice(1)
       } else {
-        disambig = file-letters.at(move.from.at(0)) + rank-digits.at(move.from.at(1))
+        disambig = move.from
       }
     }
-    san = letter + disambig + (if move.capture != none { "x" } else { "" }) + square-name(move.to.at(0), move.to.at(1))
+    san = letter + disambig + (if move.capture != none { "x" } else { "" }) + move.to
   }
 
   let opponent = if color == "white" { "black" } else { "white" }

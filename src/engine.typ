@@ -12,10 +12,12 @@
 // detection, castling-through-check, and (later) mate/stalemate.
 //
 // A `move` is:
-//   (from: (col,row), to: (col,row), piece, color,
+//   (from: square-name, to: square-name, piece, color,
 //    capture: none|kind, kind: "normal"|"double-push"|"en-passant"
 //                              |"castle-k"|"castle-q"|"promotion",
 //    promotion: none|kind)
+// `from`/`to` are square names ("g1"), not (col,row) tuples — this is the
+// ONLY move shape, internal or public.
 // ===========================================================================
 
 #import "coords.typ": square-name, parse-square
@@ -30,7 +32,7 @@
 #let _other(color) = if color == "white" { "black" } else { "white" }
 
 #let _mv(fc, fr, tc, tr, piece, color, capture: none, kind: "normal", promotion: none) = (
-  from: (fc, fr), to: (tc, tr), piece: piece, color: color,
+  from: square-name(fc, fr), to: square-name(tc, tr), piece: piece, color: color,
   capture: capture, kind: kind, promotion: promotion,
 )
 
@@ -291,10 +293,12 @@
 #let apply(position, move) = {
   let board = position.squares
   let color = move.color
-  let (fc, fr) = move.from
-  let (tc, tr) = move.to
-  let from-name = square-name(fc, fr)
-  let to-name = square-name(tc, tr)
+  let from-name = move.from
+  let to-name = move.to
+  let from-sq = parse-square(from-name)
+  let to-sq = parse-square(to-name)
+  let (fc, fr) = (from-sq.col, from-sq.row)
+  let (tc, tr) = (to-sq.col, to-sq.row)
 
   // NOTE: `dict.remove(k)` RETURNS the removed value, and a bare statement's
   // value is joined into the enclosing block's result -- which silently merged

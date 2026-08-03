@@ -2,15 +2,12 @@
 // per case, each isolated on its own FEN so the assertion pins down exactly the
 // behaviour named in its comment.
 #import "/lib.typ": position, starting-fen, legal-moves, move-to-san
-#import "/src/coords.typ": parse-square
 
 // The one legal move between two squares (optionally filtered by promotion
 // piece, for the two candidate promotions from the same pawn push).
 #let move-at(pos, from, to, promotion: none) = {
-  let f = parse-square(from)
-  let t = parse-square(to)
   let cand = legal-moves(pos).filter(m =>
-    m.from == (f.col, f.row) and m.to == (t.col, t.row)
+    m.from == from and m.to == to
       and (promotion == none or m.promotion == promotion)
   )
   assert(cand.len() == 1, message: "move-at: expected exactly one legal move " + from + "-" + to + ", got " + str(cand.len()))

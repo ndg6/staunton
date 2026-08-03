@@ -21,7 +21,6 @@
 #import "engine.typ": apply
 #import "pgn.typ": movetext, _movetext-tree
 #import "chess960.typ": chess960-start-fen
-#import "coords.typ": square-name
 #import "annotations.typ": nag-symbol, interpret-comment, glyph-to-nag, quality-nag-codes
 
 // "30w" -> 59 ; "30b" -> 60
@@ -262,7 +261,7 @@
     san = line.at(k).san
   }
   let mv = san-to-move(before, san)
-  square-name(mv.to.at(0), mv.to.at(1))
+  mv.to
 }
 
 /// The move-quality badge data for the move at `locator`: a dict
