@@ -84,6 +84,25 @@
 #let regression = game("[Event \"T\"]\n1. e4 e5 1-0\n\n; end of file\n")
 #assert(regression.result == "1-0", message: "single game with trailing comment banner must parse cleanly")
 
+// -- a bare REPEAT of the same move number (no ellipsis) is now ALLOWED -----
+// 2.0.0 prompt 53 follow-up: the top-level move-number guard narrowed from
+// "strictly increasing" to "reject only on going BACKWARD or returning to 1".
+// A plain repeat like "2. Nf3 2. Nc6" (missing the "2..." ellipsis PGN wants
+// for Black's move) is common in exported/hand-edited files and must parse,
+// not error, even though it is non-standard. Drops and returns-to-1 are still
+// rejected (see tests/pgn/handling/malformed/movetext_*.typ).
+#let repeat-after-variation = games("1. e4 e5 2. Nf3 (2. d4) 2. Nc6 3. Bb5")
+#assert(
+  mainline(repeat-after-variation.first()) == ("e4", "e5", "Nf3", "Nc6", "Bb5"),
+  message: "bare repeat of a move number after a variation must parse and keep the mainline",
+)
+
+#let repeat-bare = games("1. e4 e5 2. Nf3 2. d4")
+#assert(
+  mainline(repeat-bare.first()) == ("e4", "e5", "Nf3", "d4"),
+  message: "bare repeat of a move number with no variation in between must also parse",
+)
+
 // The eager split path must stay clean for leading prose before the movetext
 // -- reading tags/results should never touch move semantics. (mainline() on
 // this DOES error -- that's fine, and unchanged from before this fix; only

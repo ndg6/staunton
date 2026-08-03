@@ -139,10 +139,20 @@
   // Highest WHITE move number seen on this line, to catch two games that ran
   // together with neither a roster nor a result to separate them (the one case
   // no separator can detect: "1. e4 e5\n\n1. d4 d5" is a legal-looking line in
-  // which d4 becomes White's third move). Top-level white move numbers strictly
-  // increase; a repeat or a drop means a new game started. Only `N.` counts --
-  // `N...` is a black-continuation marker, legitimately repeating the number
-  // after a variation, and variations restart numbering by design (top only).
+  // which d4 becomes White's third move).
+  //
+  // Suspicious = the number DROPS, or returns to 1. A plain REPEAT above 1 is
+  // deliberately allowed: `2. Nf3 (2. d4) 2. Nc6` writes Black's move number
+  // without the ellipsis PGN asks for, which is non-standard but common in
+  // exported and hand-edited files. Rejecting it would hard-error a document
+  // that used to render -- a false positive is worse here than the silent
+  // merge we are guarding against, because it has no workaround short of
+  // editing the source. `1. e4 1. e5` in that style is genuinely ambiguous
+  // with two concatenated games, and is read as the latter.
+  //
+  // Only `N.` counts -- `N...` is a black-continuation marker, legitimately
+  // repeating the number after a variation, and variations restart numbering
+  // by design (hence `top` only).
   let last-white = none
 
   while i < n {
@@ -159,7 +169,7 @@
           // Not `assert(..)`: its `message:` argument is evaluated EAGERLY, on
           // every passing call too, which both costs a string build per move
           // number and would `str(none)`-error on the very first one.
-          if last-white != none and num <= last-white {
+          if last-white != none and (num < last-white or num == 1) {
             panic(
               "malformed PGN: movetext goes back to move " + str(num) + " after move "
                 + str(last-white) + " has already been played. Two games appear to have run "
