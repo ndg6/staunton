@@ -468,8 +468,15 @@
 // stays inside the circle" can be asserted. Must be called in a `context`.
 // Returns the bounding box as fractions of the disc: (width-frac, corner-frac),
 // both of which must stay < 1.
+// The badge font size, as a multiple of the disc radius. ONE definition, used by
+// both the drawing code and the fit check — they must not each carry their own
+// copy. They did at first, and the fit test was consequently blind to the thing
+// it existed to guard: doubling the DRAWN size left `badge_fit.typ` green,
+// because it went on measuring its own `r * 1.2`.
+#let _MQ-FONT-RATIO = 1.2
+
 #let _mq-fits(r, symbol) = {
-  let m = measure(text(size: r * 1.2, weight: "bold", symbol))
+  let m = measure(text(size: r * _MQ-FONT-RATIO, weight: "bold", symbol))
   let half-diag = calc.sqrt(
     (m.width / 2 / 1pt) * (m.width / 2 / 1pt) + (m.height / 2 / 1pt) * (m.height / 2 / 1pt))
   (width-frac: m.width / (2 * r), corner-frac: half-diag * 1pt / r)
@@ -493,7 +500,7 @@
 //
 // ONE font size for all six symbols. Two-glyph symbols used to shrink to
 // `r * 0.85`, which was unnecessary and made "!!"/"??" read lighter than "!"/"?"
-// — a difference in emphasis the glyphs do not mean. Measured at `r * 1.2`, the
+// — a difference in emphasis the glyphs do not mean. Measured at that ratio, the
 // WIDEST symbol ("??") spans 51.6% of the disc's diameter, its bounding-box
 // corner reaching 64.5% of the radius: it fits with room to spare, and a font
 // would have to be nearly twice as wide to overflow. `_mq-fits` pins that.
@@ -501,7 +508,7 @@
   let bg = colors.at(_mq-category(symbol))
   let r = sq * 0.28
   let inset = r * 0.5   // pull the centre down-and-left, into the move's square
-  let fs = r * 1.2
+  let fs = r * _MQ-FONT-RATIO
   // box top-left so the disc centre lands at (dx + sq - inset, dy + inset)
   place(dx: dx + sq - inset - r, dy: dy + inset - r, box(width: 2 * r, height: 2 * r, {
     place(circle(radius: r, fill: bg, stroke: none))
