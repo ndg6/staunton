@@ -441,12 +441,26 @@
 // convention, language-neutral); the catalog `pgn-caption` closure supplies the
 // surrounding wording. Takes the locator and SAN straight from the position's
 // provenance, so no game is needed. Must be called inside a `context`.
-#let _pgn-caption(locator, san, lang) = {
+// The automatic "Position after 24. Nf3" caption. `quality` is the move's grade
+// symbol (`!`, `??`, …) or `none`; it is appended to the move so a graded move
+// reads "Position after 3... Nf6??".
+//
+// The grade belongs here and not only on the board: the move-quality BADGE is
+// off by default (`move-quality: false`, src/style.typ), so for most documents
+// the caption is the only place a grade appears at all.
+//
+// Since 2.0.0 this is also more consistent than it used to be. The caption was
+// previously built from the raw `san`, which carried a literal `??` suffix but
+// never a `$4` NAG — so "3... Nf6??" captioned with the glyph while the
+// equivalent "3... Nf6 $4" captioned without it. Both spellings now normalise to
+// the same NAG (Phase A), so both caption identically.
+#let _pgn-caption(locator, san, quality, lang) = {
   let at = if type(locator) == str { locator } else { locator.at("at") }
   let color = at.slice(at.len() - 1)
   let num = at.slice(0, at.len() - 1)
   let prefix = if color == "w" { num + ". " } else { num + "... " }
-  (_ui-string(lang, "pgn-caption"))(prefix + san)
+  let grade = if quality != none { quality.symbol } else { "" }
+  (_ui-string(lang, "pgn-caption"))(prefix + san + grade)
 }
 
 // Year extracted from a PGN "Date" tag ("1972.07.11" -> "1972"). Takes the raw
@@ -556,7 +570,7 @@
   let (board-ov, diagram-ov, fig-args) = _split-args(args.named())
   let tags = if mv-context != none { mv-context.tags } else { (:) }
   let below = if caption != auto { caption }
-    else if mv-context != none { context _pgn-caption(mv-context.locator, mv-context.san, lang) }
+    else if mv-context != none { context _pgn-caption(mv-context.locator, mv-context.san, mv-context.quality, lang) }
     else if type(source) == str {
       let pos = _parse-fen(source)
       context _fen-caption(pos, lang)
