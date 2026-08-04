@@ -539,9 +539,9 @@ look.]
     (square: "e5", shape: "circle"),
     (square: "d5", shape: "cross"),
   ),
-  size: 4cm,
+  size: 3.4cm,
 )
-```, stacked: true)
+```)
 
 Each shape's *color* and *geometry* are settable, and there are three places to
 set them. A `color:` on the entry itself wins, and applies to that square only.
@@ -565,7 +565,7 @@ for the full list and defaults.
   frame-width: 14%,      // ratio of the square (auto = 10%)
   size: 4cm,
 )
-```)
+```, stacked: true)
 
 A `(square, color)` pair is the short form when every mark is the same shape: it
 sets the color and leaves the shape to `highlight-shape`, so
@@ -598,15 +598,15 @@ call, or document-wide with `set-board-defaults`:
   "8/8/8/8/8/8/8/8",
   arrows: (("a1", "a8"),),
   arrow-tip: "hook",
-  size: 3cm,
+  size: 3.4cm,
 )
 #board(
   "8/8/8/8/8/8/8/8",
   arrows: (("a1", "a8"),),
   arrow-tip: "triangle",
-  size: 3cm,
+  size: 3.4cm,
 )
-```, stacked: true)
+```)
 
 `arrow-fade`, `none` by default, fades the shaft toward its *tail* — the ratio
 is the tail's opacity *relative to the head's*, so it composes correctly with
@@ -1360,6 +1360,40 @@ separate choice, made later with `set-lang` or `notation(.., lang: ..)`
 (@language). You can therefore read a Spanish game and typeset it in German.
 Omitting `lang:` on non-English input is the error to watch for: the letters are
 then taken as English and either denote the wrong piece or fail outright.
+
+The other common real-world form is *figurine notation*: movetext that uses the
+actual Unicode chess piece symbols (♔♕♖♗♘♙ and ♚♛♜♝♞♟, U+2654 through U+265F)
+in place of letters. Chess Informator is the best-known publisher to typeset
+games this way. Both `game(..)` and `games(..)` accept figurines directly, no
+`lang:` needed — figurines are language-neutral, which is exactly why
+publications use them:
+
+#example(```typ
+#let g = game("1. e4 e5 2. ♘f3 ♞c6 3. ♗b5 *")
+#mainline(g).join(" ")
+```, stacked: true)
+
+Either colour set works (white ♔♕♖♗♘♙ or black ♚♛♜♝♞♟), and you may use either
+for either side: staunton's own `notation(figurine: true)` output is
+colour-aware, but on *input* the colour is redundant information — whose move
+it is already follows from the move number — so it is not checked. A pawn
+glyph (♙/♟) is accepted and simply dropped, since SAN never writes a pawn
+letter; promotions work as expected (`e8=♕`). Figurines and ordinary letters
+can even be mixed within one game, and mixing works together with `lang:` too:
+set `lang:` for whichever moves are written with localized letters, and the
+figurines are unaffected by it.
+
+Figurines only work when they are *real Unicode codepoints* in that range —
+not an image standing in for a piece, and not a "figurine font" that redraws
+the ordinary letters `N`, `B`, `K`, `Q`, `R` to look like piece glyphs. That
+second case is easy to be fooled by: a PDF or a screen can display `Nf3` in a
+chess font so it looks exactly like a figurine, but at the byte level it is
+still the plain letter `N`, and staunton reads it as ordinary English SAN
+(which is fine — just add `lang:` if those underlying letters are localized,
+same as any other letter input). The reliable test is to copy the move out of
+its source into a plain text editor: if a piece symbol survives the copy, it
+is real Unicode and figurine input works; if a Latin letter appears instead,
+it was a font effect and the text is ordinary SAN.
 
 Games are separated by a *tag roster* or by a *result token* (`1-0`, `0-1`,
 `1/2-1/2`, `*`) — blank lines are *not* a separator. Real PGN files carry both,
@@ -2128,6 +2162,11 @@ diagram and table buckets; the umbrella routes them to *diagram*, so use
 Package *staunton* supports localisation of text-related output. At the moment we support seven different languages; apart from the standard English, we offer German, French, Spanish, Italian, Portuguese, and Russian. We can easily extend the list of supported languages by adding new translation files.
 
 The `notation` function localises the piece letters, and the `diagram` / `chess-table` figures carry language-aware titles and captions. The `lang:` argument on each function overrides the document default, and the document default is set with `set-lang`.
+
+Localized piece letters are only relevant to *input* written with letters at
+all. Movetext written in *figurine notation* (real Unicode piece symbols) needs
+no `lang:` on input, since figurines are language-neutral — see @games for
+details.
 
 A single document *language* drives every language-aware string — diagram and
 table supplements, outline titles, automatic diagram captions ("Position after
