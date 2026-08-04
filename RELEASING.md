@@ -175,6 +175,20 @@ Universe PR, a README fix needs a new version, not a moved tag.
      new-submission checklist and the template-license box (both are for new
      packages / templates only). `gh pr create --repo typst/packages --base main`
      picks up the template into the editor; keep the parts above and drop the rest.
+     Note that `--body-file` does **not** pick the template up — if you build the
+     body non-interactively you must read the template yourself first (see below)
+     and start from it.
+   - **The fork clone is sparse** (`packages/preview/staunton` only) and cloned
+     with `--filter=tree:0`, so `.github/` is **not on disk** — `cat`ing the
+     template fails and it is easy to misread that as "there is no template".
+     Read it out of git instead:
+     `MSYS_NO_PATHCONV=1 git show upstream/main:.github/pull_request_template.md`.
+     The `MSYS_NO_PATHCONV=1` is required: Git Bash mangles the `rev:path`
+     argument into `upstream\main;.github\...` and the command dies with
+     "ambiguous argument" (same path-conversion trap as CLAUDE.md §4's
+     `typst eval` note).
+   - **Keep the fork branch until the PR is merged** — it is what the PR is built
+     from. Delete it only after the merge, along with the merged feature branches.
 
 **Order:** land on GitHub first, then submit to Universe. **Never** push to GitHub
 or submit to Universe without explicit, per-time approval.
