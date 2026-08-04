@@ -532,7 +532,7 @@ look.]
   ),
   size: 4cm,
 )
-```)
+```, stacked: true)
 
 Each shape's *color* and *geometry* are settable, and there are three places to
 set them. A `color:` on the entry itself wins, and applies to that square only.
@@ -1375,7 +1375,7 @@ The top-level `at` is where you stop within the line you reached:
 #diagram(
   g,
   at: (line: ((at: "1w", into: 0),), at: "2w"),
-  size: 3.4cm,
+  size: 4.0cm,
 )
 ```, stacked: true)
 
