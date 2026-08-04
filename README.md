@@ -16,7 +16,7 @@ Install the package, parse a PGN, and drop a captioned diagram of any position �
 the players, the year, and the move just played are filled in automatically:
 
 ```typ
-#import "@preview/staunton:1.1.0": game, diagram, notation, standings-table
+#import "@preview/staunton:2.0.0": game, diagram, notation, standings-table
 
 #let opera = game(```
 [White "Morphy"] [Black "Allies"] [Date "1858"]
@@ -29,7 +29,7 @@ the players, the year, and the move just played are filled in automatically:
 #diagram(opera, at: "17w", check: true)
 ```
 
-![Morphy – Allies (1858): the final mate, the black king glowing, captioned "Position after 17. Rd8#"](https://raw.githubusercontent.com/ndg6/staunton/v1.1.0/docs/img/showcase-diagram.png)
+![Morphy – Allies (1858): the final mate, the black king glowing, captioned "Position after 17. Rd8#"](https://raw.githubusercontent.com/ndg6/staunton/v2.0.0/docs/img/showcase-diagram.png)
 
 ## Move notation
 
@@ -42,7 +42,7 @@ localized to the document language — output no board-only package produces:
 #notation(g, figurine: true, variations: true, nags: true)
 ```
 
-![Figurine Ruy Lopez notation with an inline variation and a “!?” annotation](https://raw.githubusercontent.com/ndg6/staunton/v1.1.0/docs/img/showcase-notation.png)
+![Figurine Ruy Lopez notation with an inline variation and a “!?” annotation](https://raw.githubusercontent.com/ndg6/staunton/v2.0.0/docs/img/showcase-notation.png)
 
 ## Tournament tables
 
@@ -62,7 +62,7 @@ with Buchholz / Sonneborn-Berger tie-breaks:
 #standings-table(gs, caption: [Final standings])
 ```
 
-![A final-standings table: rank, player, played, +/=/−, points, Buchholz and Sonneborn-Berger tie-breaks](https://raw.githubusercontent.com/ndg6/staunton/v1.1.0/docs/img/showcase-table.png)
+![A final-standings table: rank, player, played, +/=/−, points, Buchholz and Sonneborn-Berger tie-breaks](https://raw.githubusercontent.com/ndg6/staunton/v2.0.0/docs/img/showcase-table.png)
 
 ## Annotated diagrams
 
@@ -75,7 +75,7 @@ and a `!` / `?` grade becomes a move-quality badge — composited onto the board
 #diagram(g, at: "2w", annotations: true, move-quality: true)
 ```
 
-![Board after 2.Nf3 with a green and a red arrow, a highlighted square, and a blue “!” badge](https://raw.githubusercontent.com/ndg6/staunton/v1.1.0/docs/img/showcase-annotations.png)
+![Board after 2.Nf3 with a green and a red arrow, a highlighted square, and a blue “!” badge](https://raw.githubusercontent.com/ndg6/staunton/v2.0.0/docs/img/showcase-annotations.png)
 
 ## Themed boards
 
@@ -92,7 +92,7 @@ everything from a flat two-color pairing to a full "look": square patterns
 )
 ```
 
-![A board with a marble-veined border band and marbled squares, the "coral" theme darkened and sharpened](https://raw.githubusercontent.com/ndg6/staunton/v1.1.0/docs/img/showcase-marble.png)
+![A board with a marble-veined border band and marbled squares, the "coral" theme darkened and sharpened](https://raw.githubusercontent.com/ndg6/staunton/v2.0.0/docs/img/showcase-marble.png)
 
 The same machinery in wood — the grain runs across **both** square colors, so the
 board reads as *inlaid* light and dark timber (set `pattern-light: false` for the
@@ -108,7 +108,7 @@ and shadow only, so the hue always comes from your `color-theme`:
 )
 ```
 
-![A board of inlaid light and dark timber with flowing grain on every square, framed by a matching wood band](https://raw.githubusercontent.com/ndg6/staunton/v1.1.0/docs/img/showcase-wood.png)
+![A board of inlaid light and dark timber with flowing grain on every square, framed by a matching wood band](https://raw.githubusercontent.com/ndg6/staunton/v2.0.0/docs/img/showcase-wood.png)
 
 ## …and the basics
 
@@ -121,7 +121,7 @@ or a squares dict:
 #diagram("rnbqkbnr/pp1ppppp/8/2p5/4P3/5N2/PPPP1PPP/RNBQKB1R b KQkq - 1 2")
 ```
 
-![A chess diagram of the position after 1.e4 c5 2.Nf3, captioned "Black to move"](https://raw.githubusercontent.com/ndg6/staunton/v1.1.0/docs/img/quickstart-1.png)
+![A chess diagram of the position after 1.e4 c5 2.Nf3, captioned "Black to move"](https://raw.githubusercontent.com/ndg6/staunton/v2.0.0/docs/img/quickstart-1.png)
 
 ## Features
 
@@ -161,10 +161,10 @@ or a squares dict:
 
 - **User manual** — the complete reference (every function, option, and example),
   with each feature shown as the code you type beside the board it produces.
-  Download the compiled **[PDF](https://github.com/ndg6/staunton/releases/download/v1.1.0/manual.pdf)** (attached to each release), or build it yourself
-  from its Typst source, [`docs/manual.typ`](https://github.com/ndg6/staunton/blob/v1.1.0/docs/manual.typ). The manual is part
+  Download the compiled **[PDF](https://github.com/ndg6/staunton/releases/download/v2.0.0/manual.pdf)** (attached to each release), or build it yourself
+  from its Typst source, [`docs/manual.typ`](https://github.com/ndg6/staunton/blob/v2.0.0/docs/manual.typ). The manual is part
   of the repo only — it is not shipped in the package bundle.
-- **[Showcase](https://github.com/ndg6/staunton/blob/v1.1.0/docs/examples/showcase.typ)** — a runnable capability tour.
+- **[Showcase](https://github.com/ndg6/staunton/blob/v2.0.0/docs/examples/showcase.typ)** — a runnable capability tour.
 
 Compile the manual and the showcase locally with the package folder as root
 (the manual's own styling uses a 0.15 builtin, so *building* it needs Typst
@@ -203,7 +203,7 @@ and [LICENSE-PIECES](LICENSE-PIECES). The package manifest declares
 A `"unicode"` glyph fallback needs no SVGs. To use other art, pass `piece-set` a
 loader (`named-piece-set` / `svg-piece-set`, or `with-fallback` for mixed and
 fairy boards) — see the *Pieces and fonts* and *Non-standard pieces* sections of
-the [manual](https://github.com/ndg6/staunton/blob/v1.1.0/docs/manual.typ).
+the [manual](https://github.com/ndg6/staunton/blob/v2.0.0/docs/manual.typ).
 (Other popular lichess sets carry non-commercial licenses and are not bundled.)
 The manual and tests also embed **CC BY-SA 4.0** fairy demo art (under `docs/` and
 `tests/`), which is *not* part of the shipped package — see [LICENSE-PIECES](LICENSE-PIECES).
@@ -240,7 +240,10 @@ header must error with that message, any other must compile. Files/dirs prefixed
 
 <!-- RELEASE NOTE (not user-facing): the top changelog section is the version
      currently in development. Keep its heading version-only (e.g. "### 0.3.0") —
-     never add "(unreleased)" or similar to user-visible text. -->
+     never add "(unreleased)" or similar to user-visible text.
+     This applies to the IN-DEVELOPMENT heading only. A past entry may carry a
+     factual distribution qualifier — see "### 1.1.0 — GitHub release only",
+     which records that it never went to Universe. Do not strip that. -->
 
 ### 2.0.0
 
@@ -265,9 +268,21 @@ two rules:
 - **`position-after` is now internal.** It returned a bare position, silently
   discarding the move, which made `diagram(position-after(g, L))` quietly lose
   its badge and annotations. Pass the game with `at:` instead.
-- **Named arguments throughout**: the positional locator / payload forms are
-  gone. `to-fen(source, at: ..)`, `play(source, moves: ..)`,
-  `with-nags(game, nags: ..)`, `with-comments(game, comments: ..)`.
+- **One positional argument, then named ones.** The shape of nearly every
+  function is now `f(subject, setting: .., ..)` — the thing being acted on is
+  positional, everything that configures the action is named. The transitional
+  positional locator / payload forms are gone: `to-fen(source, at: ..)`,
+  `play(source, moves: ..)`, `with-nags(game, nags: ..)`,
+  `with-comments(game, comments: ..)`. Calls no longer depend on argument
+  order, and adding an option can never shift the meaning of an existing one.
+
+  The deliberate exceptions are the places where there is no single subject:
+  `apply(position, move)`, `in-check(position, color)` and
+  `move-to-san(position, move)` take two co-equal operands of one operation
+  rather than a subject plus a setting; `is-dark-square(col, row)` and
+  `piece-content(kind, color, size)` likewise take an inseparable tuple; and
+  `position(..)` stays variadic so a board can be written as one row string
+  per line.
 - **One move accessor**: `move-san` and `move-node` are removed in favour of
   **`move-at(game, at: ..)`**, which returns the whole record — SAN, NAGs,
   comments, variations, and the resolved `from` / `to` / `piece` / `capture` /
@@ -308,7 +323,12 @@ New in the same release:
   standard SAN, so the reading language and the printing language are
   independent.
 
-### 1.1.0
+### 1.1.0 — GitHub release only
+
+*Never published to Typst Universe, which went from 1.0.0 straight to
+2.0.0. The tag and the GitHub Release exist; if you install from Universe
+you will not have seen this version, and its changes reach you as part of
+2.0.0.*
 
 - **Positions remember the move they came from.** `position-after` (and
   anything built on it) now folds a small provenance payload — locator, SAN,
