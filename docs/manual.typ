@@ -14,7 +14,16 @@
 // show realistic unqualified calls; the front-matter figure lists below are the
 // one place the manual itself calls the API, so pull in just that function. The
 // dev build reads `/lib.typ`; a reader would `#import "@preview/staunton:..": *`.
-#import "/lib.typ": diagram-outline, table-outline
+#import "/lib.typ": diagram-outline, table-outline, set-board-defaults
+
+// The examples in this manual omit `size:` unless sizing is the point of the
+// example. One document-wide default keeps every board the same size and keeps
+// the shown code focused on the feature under discussion -- which is also the
+// pattern the manual recommends to readers in "Common Publishing Tasks".
+// Without it each
+// board would fall back to the package default of 6.4cm, far larger than these
+// pages want.
+#set-board-defaults(size: 4cm)
 #import "@preview/tidy:0.4.1"
 
 // --- compact tidy style ------------------------------------------------------
@@ -291,7 +300,6 @@ Typst package *staunton* aims to deliver a complete, convenient and flexible sol
 #diagram(
   "r1bqkbnr/pppp1ppp/2n5/4p3/4P3/5N2/PPPP1PPP/RNBQKB1R",
   caption: [The Ruy Lopez, three moves in.],
-  size: 4cm,
 )
 ```)
 
@@ -355,7 +363,16 @@ diagrams and tables only reach an HTML target from 0.15 onwards. Paged output
 
 In every framed example, the left side is *the code you type* and the right side
 is *exactly what it renders* — the manual compiles its own examples, so the two
-can never disagree.#footnote[
+can never disagree. The examples also assume one line of setup that is not
+repeated in each of them:
+
+```typ
+#set-board-defaults(size: 4cm)
+```
+
+so that `size:` appears only where sizing is actually the point. Copy an example
+without it and the board comes out at *staunton*'s own default, which is larger
+(@sizing).#footnote[
   Where the code is long or the output is wide, the example is _stacked_ instead:
   the code on top, the rendering underneath, each across the full width. Nothing
   else changes — it is the same code and the same rendering, only laid out
@@ -417,7 +434,7 @@ White's #notation(g, from: "3w", to: "3w") pressures the knight defending e5,
 the point of the Ruy Lopez.
 
 #diagram(g, at: "5w", caption: [Position after White castles.])
-```, stacked: true)
+```)
 
 That is the whole workflow: set the look once, then alternate text with
 `board` / `diagram` calls as the game unfolds. A common addition to that first
@@ -446,7 +463,6 @@ primary building block every diagram builds on. `source` is one of: a *FEN strin
 #example(```typ
 #board(
   "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR",
-  size: 4cm,
 )
 ```)
 
@@ -479,7 +495,6 @@ themed band, styled by `border-theme`). `labels: false` suppresses labels comple
   "8/5k2/8/8/3Q4/8/4K3/8",
   label-mode: "border",
   border-theme: "brown",
-  size: 3.8cm,
 )
 ```)
 
@@ -514,7 +529,6 @@ in play instead of fighting it, and needs no separate palette of its own:
   label-mode: "border",
   border-theme: "marble",
   color-theme: "emerald",
-  size: 3.8cm,
 )
 ```)
 
@@ -539,7 +553,6 @@ look.]
     (square: "e5", shape: "circle"),
     (square: "d5", shape: "cross"),
   ),
-  size: 3.4cm,
 )
 ```)
 
@@ -563,9 +576,8 @@ for the full list and defaults.
   ),
   frame-color: purple,   // per call; set-board-defaults takes it too
   frame-width: 14%,      // ratio of the square (auto = 10%)
-  size: 4cm,
 )
-```, stacked: true)
+```)
 
 A `(square, color)` pair is the short form when every mark is the same shape: it
 sets the color and leaves the shape to `highlight-shape`, so
@@ -585,9 +597,8 @@ lines between the squares.
   grid: true,
   highlight: ("f7",),
   arrows: (("c4", "f7"), ("f3", "e5", rgb(0, 70, 160, 200))),
-  size: 4.4cm,
 )
-```, stacked: true)
+```)
 
 `arrow-tip` chooses the head shape: `"hook"` (the default), a barbed head whose
 wings sweep back to points, or `"triangle"`, a plain solid triangle. Set it per
@@ -598,13 +609,11 @@ call, or document-wide with `set-board-defaults`:
   "8/8/8/8/8/8/8/8",
   arrows: (("a1", "a8"),),
   arrow-tip: "hook",
-  size: 3.4cm,
 )
 #board(
   "8/8/8/8/8/8/8/8",
   arrows: (("a1", "a8"),),
   arrow-tip: "triangle",
-  size: 3.4cm,
 )
 ```)
 
@@ -619,7 +628,6 @@ board the tail is information — it is the move's origin square.
   "8/8/8/8/8/8/8/8",
   arrows: (("a1", "h8"),),
   arrow-fade: 20%,
-  size: 4cm,
 )
 ```)
 
@@ -634,7 +642,6 @@ to every other arrow that does not specify its own:
     (from: "a1", to: "a8", color: "G"),
     (from: "h1", to: "h8", color: "R", tip: "triangle", fade: 20%),
   ),
-  size: 4cm,
 )
 ```)
 
@@ -674,7 +681,7 @@ programmatically, wears a good-move badge on `f7`:
 )
 #diagram(
   with-nags(g, nags: ("4w": "!")), at: "4w",
-  check: true, move-quality: true, size: 4cm,
+  check: true, move-quality: true,
 )
 ```)
 
@@ -697,9 +704,9 @@ unaffected. Standard chess only, like the badge above.
 
 #example(```typ
 #let g = game("1. e4 e5 2. Nf3 Nc6 3. Bb5 a6")
-#diagram(g, at: "3w", last-move: "arrow", size: 3.6cm)
-#diagram(g, at: "3w", last-move: "squares", size: 3.6cm)
-```, stacked: true)
+#diagram(g, at: "3w", last-move: "arrow")
+#diagram(g, at: "3w", last-move: "squares")
+```)
 
 Unlike `arrows` / `highlight`, `last-move` is a *policy*, not position data, so
 it can be set document-wide with `set-board-defaults(last-move: "arrow")` —
@@ -726,7 +733,6 @@ square while the board itself becomes rectangular:
     "......",
     "RN..KR",
   ),
-  size: 4cm,
 )
 ```)
 
@@ -736,7 +742,7 @@ is how a squares dict reaches a non-8×8 board — or let a custom `variant` car
 the geometry for you (@fairy-pieces). A FEN is the one input that cannot: the
 format is 8×8 by definition.
 
-== Sizing
+== Sizing<sizing>
 
 The default board size suits an A4 two-column layout. A board reads the available
 space at its insertion point via `layout`, so it adapts to any column or page size
@@ -761,7 +767,6 @@ without being told the geometry, and shrinks to fit if asked for more than fits.
   "8/8/8/3qk3/3QK3/8/8/8",
   light: rgb("#eeeed2"),
   dark: rgb("#769656"),
-  size: 3.8cm,
 )
 ```)
 
@@ -819,7 +824,6 @@ To pattern the dark squares only, set `pattern-light: false`:
     pattern: "wood",
   ),
   pattern-light: false,
-  size: 3.8cm,
 )
 ```)
 
@@ -832,7 +836,6 @@ An unknown `pattern` value raises a clear error.
     light: rgb("#eeeed2"), dark: rgb("#769656"),
     pattern: "stripes",
   ),
-  size: 3.8cm,
 )
 ```)
 
@@ -846,7 +849,6 @@ pair that suits the material. Two pairings that work well:
     light: rgb("#eeeed2"), dark: rgb("#3f6b4a"),
     pattern: "marble",
   ),
-  size: 3.8cm,
 )
 ```)
 
@@ -857,7 +859,6 @@ pair that suits the material. Two pairings that work well:
     light: rgb("#d9b98a"), dark: rgb("#6b4a2f"),
     pattern: "wood",
   ),
-  size: 3.8cm,
 )
 ```)
 
@@ -882,13 +883,11 @@ the checkerboard, and `light` always ends up the lighter of the two.
   "8/5k2/8/8/3Q4/8/4K3/8",
   color-theme: "dutch-gray",
   brightness: 10%,
-  size: 3.8cm,
 )
 #board(
   "8/5k2/8/8/3Q4/8/4K3/8",
   color-theme: "dutch-gray",
   contrast: 30%,
-  size: 3.8cm,
 )
 ```)
 
@@ -901,7 +900,6 @@ Two new board style fields put themes to work — `color-theme` and
 #board(
   "8/5k2/8/8/3Q4/8/4K3/8",
   board-theme: "dutch-gray",
-  size: 3.8cm,
 )
 ```)
 
@@ -974,7 +972,6 @@ re-specifying the whole theme by hand.
 #board(
   "8/5k2/8/8/3Q4/8/4K3/8",
   color-theme: my-dutch-gray,
-  size: 3.8cm,
 )
 ```)
 
@@ -990,7 +987,6 @@ while keeping the base's chrome (labels, border, and so on):
     base: "dutch-gray",
     color-theme: (light: rgb("#ffe0e0")),
   ),
-  size: 3.8cm,
 )
 ```)
 
@@ -1028,7 +1024,7 @@ spot — `a1` moves from the lower-left to the upper-right:
   board("8/8/8/3k4/3K4/8/8/8", flip: true,
     label-mode: "border", border-theme: "brown", size: 3.4cm),
 )
-```, stacked: true)
+```)
 
 == Piece Sets and Fonts
 
@@ -1051,7 +1047,7 @@ with `piece-set:` per board, or document-wide with `set-piece-set` (see
   board(pos, size: 3.4cm, piece-set: "merida"),
   board(pos, size: 3.4cm, piece-set: "unicode"),
 )
-```, stacked: true)
+```)
 
 `piece-set: "unicode"` (or `none`) selects the glyph fallback — solid Unicode chess
 glyphs distinguished by fill and a contrasting stroke; it needs a font carrying them.
@@ -1143,6 +1139,10 @@ deliberately limited to *drawing*: there is no FEN, PGN, move generation or
 legality for custom kinds. You place them by hand — a squares dict or the string
 form — and render them; that is all.
 
+The `variant` this creates describes the *pieces and board* only. It is a
+different notion from the one `game-variant` reports, which is about the kind of
+game a PGN declares — see @two-variants if you meet both.
+
 Two structural assumptions still hold, whatever the pieces: the board is a
 *rectangular* grid of *square* cells, and there are exactly *two* piece colors
 (white and black). Non-square fields, hexagonal boards or a third side are out of
@@ -1197,7 +1197,7 @@ from your loader:
   position((e1: "K", e8: "k", c3: "A", d4: "d", f5: "F"), variant: fairy),
   piece-set: art, size: 4.6cm,
 )
-```, stacked: true)
+```)
 
 _Fairy art above, Wikimedia Commons, CC BY-SA 4.0: alfil (elephant) and ferz from
 the Xogos da Meiga chess icons family by Iago Casabiell González @fairy-art;
@@ -1237,7 +1237,6 @@ the figure *caption* below it.
   "r1bqkbnr/pppp1ppp/2n5/4p3/4P3/5N2/PPPP1PPP/RNBQKB1R",
   white: "Morphy", black: "NN", year: 1858,
   caption: [After 2...Nc6],
-  size: 4.2cm,
 )
 ```)
 
@@ -1275,9 +1274,8 @@ abbreviation, or a bare letter (UPPER = white, lower = black):
     d8: (kind: "q", color: "black"),    // kind
     e4: "P",                            // letter
   )),
-  size: 4cm,
 )
-```, stacked: true)
+```)
 
 The *string form* reads like the board itself — first line is the TOP rank, `.`
 is empty. Pass it as a raw block, as below — the most legible, least error-prone
@@ -1297,7 +1295,6 @@ that aren't a valid piece abbreviation or `.`:
     ..P..K..
     ........
   ```),
-  size: 4.2cm,
 )
 ````)
 
@@ -1350,7 +1347,7 @@ Cyrillic:
 #let ru = game("1. e4 e5 2. Кf3 Кc6 3. Сb5 *", lang: "ru")
 #mainline(es).join(" ") \
 #mainline(ru).join(" ")
-```, stacked: true)
+```)
 
 Both read back as the same moves, because the language is resolved *at input
 time*: the letters are converted once to canonical English SAN, and nothing
@@ -1371,7 +1368,7 @@ publications use them:
 #example(```typ
 #let g = game("1. e4 e5 2. ♘f3 ♞c6 3. ♗b5 *")
 #mainline(g).join(" ")
-```, stacked: true)
+```)
 
 Either colour set works (white ♔♕♖♗♘♙ or black ♚♛♜♝♞♟), and you may use either
 for either side: staunton's own `notation(figurine: true)` output is
@@ -1410,7 +1407,7 @@ silently drawing or listing a merged, illegal line.
 
 #example(```typ
 #games("1. e4 e5 2. Nf3 1-0 1. d4 d5 2. c4 *").map(g => g.result)
-```, stacked: true)
+```)
 
 The examples below assume a single parsed game is in scope:
 
@@ -1429,10 +1426,10 @@ for a position. So a tournament file read only for results and never tokenises m
 
 #example(```typ
 #notation(g)
-```, stacked: true)
+```)
 
 #example(```typ
-#diagram(g, at: "3w", size: 4cm)
+#diagram(g, at: "3w")
 ```)
 
 === Drawing a move, not just a position<position-provenance>
@@ -1455,7 +1452,7 @@ which move with `at:`:
 so there is no separate `*-after` function for either.
 
 #example(```typ
-#diagram(g, at: "3w", size: 3.4cm)
+#diagram(g, at: "3w")
 ```)
 
 Pull the FEN at that same locator with `to-fen(g, at: loc)` and rebuild a *bare*
@@ -1466,7 +1463,7 @@ no caption, no roster line, no annotations, no badge, no `last-move` marking.
 
 #example(```typ
 // the same squares, drawn WITHOUT the move: no badge, no annotations
-#diagram(position(to-fen(g, at: "3w")), size: 3.4cm)
+#diagram(position(to-fen(g, at: "3w")))
 ```)
 
 That is what keeps a move-quality badge honest: the badge is tied to a move, so it
@@ -1498,9 +1495,8 @@ The top-level `at` is where you stop within the line you reached:
 #diagram(
   g,
   at: (line: ((at: "1w", into: 0),), at: "2w"),
-  size: 4.0cm,
 )
-```, stacked: true)
+```)
 
 Two easy traps:
 
@@ -1527,7 +1523,6 @@ game: it carries no move history, roster or PGN — for those, parse a game
 #example(```typ
 #diagram(
   play(none, moves: "1. e4 e5 2. Nf3 Nc6 3. Bb5 a6"),
-  size: 4cm,
 )
 ```)
 
@@ -1545,7 +1540,7 @@ PGN in hand:
 #example(```typ
 #let pos = play(none, moves: "1. e4 e5 2. Nf3")
 #raw(legal-moves(pos).map(m => move-to-san(pos, m)).join(", "))
-```, stacked: true)
+```)
 
 == Notation Output
 
@@ -1568,11 +1563,11 @@ renders figurine glyphs:
 
 #example(```typ
 #notation(g, lang: "de")
-```, stacked: true)
+```)
 
 #example(```typ
 #notation(g, figurine: true)
-```, stacked: true)
+```)
 
 `from` / `to` restrict output to an *inclusive* slice of moves. Both are the
 simple `"8b"` / `"12w"` locators; `from` defaults to the first move, `to` to the
@@ -1580,7 +1575,7 @@ last:
 
 #example(```typ
 #notation(g, from: "2w", to: "3b")
-```, stacked: true)
+```)
 
 `from` / `to` bound a slice of the *mainline*: they are the simple `"8b"` /
 `"12w"` locators, not the variation *path* form that `diagram(g, at: ..)` takes
@@ -1608,7 +1603,7 @@ mainline move re-shows its number:
   ),
   variations: true,
 )
-```, stacked: true)
+```)
 
 Variations nest to any depth and honour `nags` / `comments` / `figurine` / `lang`
 inside the parentheses. `variation-style: "block"` keeps the parentheses but breaks
@@ -1624,7 +1619,7 @@ layout:
   variations: true,
   variation-style: "block",
 )
-```, stacked: true, left-align: true)
+```, left-align: true)
 
 To render *one specific* variation on its own, pass `line:` — a path locator
 (the same `diagram(g, at: ..)` shape, or just its hops array) that descends into the
@@ -1637,7 +1632,7 @@ write it in analysis:
 )
 // the 2...d6 side line, on its own:
 #notation(g, line: ((at: "2b", into: 0),))
-```, stacked: true)
+```)
 
 Each hop is `(at: "<move>", into: <n>)` — nest hops to reach a deeper line. The
 addressed line's *own* variations follow the `variations` flag. (`from` / `to`
@@ -1662,7 +1657,7 @@ so they compose:
   ),
   variations: true, nags: true, comments: true,
 )
-````, stacked: true)
+````)
 
 Moves are addressed the same way everywhere — a *mainline* locator (`"3w"`) or a
 variation *path* dict — so you can annotate a move *inside* a (nested) variation,
@@ -1703,7 +1698,7 @@ model.
     moves: "3. Bc4 Bc5! (3... Nf6 4. d4) {a sharp alternative}"),
   variations: true, nags: true, comments: true,
 )
-```, stacked: true)
+```)
 
 The variation is *appended* to the move's variations (its index `into` is the
 previous count — `0` for a move with none yet), so you can address into it
@@ -1724,7 +1719,7 @@ so it is carried unchanged to the end of the new movetext:
   with-line(g, moves: "4. Qxf7#"),
   variations: true,
 )
-```, stacked: true)
+```)
 
 `moves:` must not contain a result token (`1-0`, `0-1`, `1/2-1/2`, `*`) of its
 own — it is a hard error, since the result is carried from the source game,
@@ -1740,7 +1735,7 @@ locator. Standard 8×8 positions round-trip exactly:
 
 #example(```typ
 #raw(to-fen(play(none, moves: "1. e4 e5 2. Nf3")))
-```, stacked: true)
+```)
 
 For Chess960 positions `to-fen` emits *X-FEN* — a rook-file castling letter when
 `KQkq` would be ambiguous — and it writes en-passant targets strictly; see @chess960.
@@ -1762,7 +1757,7 @@ demo game annotates its 2nd move:
 
 #example(```typ
 // move 2: {[%cal Gf3e5] [%csl Re5]}
-#diagram(g, at: "2w", annotations: true, size: 4cm)
+#diagram(g, at: "2w", annotations: true)
 ```)
 
 The color letters (`G R Y B O`) resolve through the `annotation-colors` board
@@ -1780,9 +1775,8 @@ and the circle on `d4` are added programmatically:
   annotations: true,                              // Gf3e5 + Re5, from the PGN
   arrows: (("b1", "c3"),),                        // added here
   highlight: ((square: "d4", shape: "circle"),),  // added here
-  size: 4cm,
 )
-```, stacked: true)
+```)
 
 *With embedded diagrams.* The `diagrams` switch (PGN handling) makes
 `notation(diagrams: true)` splice a board after each move whose comment carries a
@@ -1882,6 +1876,12 @@ of the 960 back-rank arrangements, and *castling is generalised* (the king and
 its rook may begin on other files). So most of this manual already applies; this
 chapter covers just the 960-specific pieces.
 
+One consequence to know before it surprises you: a Chess960 game's *positions*
+carry `variant: "standard"`, because the pieces and the board are entirely
+standard — the Chess960-ness lives in the game, not in the position. So
+`game-variant(g)` says `"chess960"` while the same game's positions say
+`"standard"`, and both are right. See @two-variants.
+
 == Boards and start positions
 
 Draw a Chess960 board or diagram with the same `board` / `diagram` entry points
@@ -1891,7 +1891,7 @@ the 960 back-rank arrangements @scharnagl, running `0`–`959` (`518` is standar
 chess) — with `chess960-start-fen`, then hand the FEN to `position`:
 
 #example(```typ
-#diagram(position(chess960-start-fen(356)), size: 4cm)
+#diagram(position(chess960-start-fen(356)))
 ```)
 
 == X-FEN castling
@@ -1907,7 +1907,7 @@ inner one on g1, which X-FEN spells `G`:
 
 #example(```typ
 #raw(to-fen(frc, at: "10b"))
-```, stacked: true)
+```)
 
 == Games
 
@@ -1919,7 +1919,7 @@ tag, or a position number in an `[FRCPosition N]` / `[Chess960Position N]` tag
 
 #example(```typ
 #game-variant(frc)
-```, stacked: true)
+```)
 
 Everything else is unchanged — locators, `notation`, `diagram(g, at: ..)`, move
 play-out and FEN export all behave as in @games. Here is the position right after
@@ -1927,7 +1927,7 @@ White castles king-side: the king lands on g1 and the g1-rook on f1, the
 generalised 960 castling (the h1-rook stays put):
 
 #example(```typ
-#diagram(frc, at: "11w", size: 4cm)
+#diagram(frc, at: "11w")
 ```)
 
 // === Tournament tables =======================================================
@@ -1948,20 +1948,20 @@ appearance):
 
 #example(```typ
 #standings-table(gs, by: "player", caption: [Final standings.])
-```, stacked: true)
+```)
 
 `crosstable-table` renders the round-robin grid (it *requires* a complete
 round-robin and errors otherwise — use standings + progress for Swiss/league):
 
 #example(```typ
 #crosstable-table(gs, by: "player", caption: [Round-robin cross-table.])
-```, stacked: true)
+```)
 
 `progress-table` shows the round-by-round running score (needs the `Round` tag):
 
 #example(```typ
 #progress-table(gs, by: "player", caption: [Round-by-round progress.])
-```, stacked: true)
+```)
 
 Each renderer takes `caption` (used by refs and the outline), `title` (a heading
 above the table), `supplement`, and `lang`. The compute functions (`standings`,
@@ -2010,7 +2010,7 @@ The default standings table again, for comparison:
 
 #example(```typ
 #standings-table(gs, by: "player", caption: [Default styling.])
-```, stacked: true)
+```)
 
 A single header rule instead of a full grid, with a shaded header row:
 
@@ -2020,14 +2020,14 @@ A single header rule instead of a full grid, with a shaded header row:
   grid: "header-rule", header-fill: "gray",
   caption: [Header rule + shaded header.],
 )
-```, stacked: true)
+```)
 
 Zebra body rows on a crosstable (note the self/self diagonal keeps its own
 light-blue tint so it stays legible):
 
 #example(```typ
 #crosstable-table(gs, by: "player", body-fill: "zebra", caption: [Zebra body rows.])
-```, stacked: true)
+```)
 
 A left-aligned table (the caption stays centered) with a bold caption, and
 `highlight-winners` turned off so the winner's name and points are no longer
@@ -2039,7 +2039,7 @@ bolded:
   table-align: left, caption-bold: true, highlight-winners: false,
   caption: [Left-aligned, bold caption, no winner highlight.],
 )
-```, stacked: true)
+```)
 
 #block(inset: (left: 1em))[_Note: `table-align` moves the table itself; the
 caption always stays centered at full page width. Aligning the caption to a
@@ -2142,7 +2142,6 @@ set once above vs. passed to one diagram:
 #diagram(
   "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR",
   light: rgb("#eeeed2"), dark: rgb("#769656"),
-  size: 4cm,
 )
 ```)
 
@@ -2258,6 +2257,47 @@ never carry a move-quality badge, a `last-move` marking, or a move's `%cal` /
 `%csl` annotations (@move-markings, @position-provenance) — there is no move
 left to badge, mark, or annotate. Keep handing `board` / `diagram` the *game*
 itself, with `at:`, to keep that information available.
+
+== Two different things are called "variant"<two-variants>
+
+The word *variant* appears in two places that have nothing to do with each
+other, and both can say `"standard"` while meaning quite different things. It is
+worth ten seconds to separate them.
+
+#table(
+  columns: (1fr, 2.6fr),
+  inset: 5pt, align: left + horizon, stroke: 0.5pt + rgb("#d9d9d2"),
+  table.header([], [*what it says*]),
+  [a position's \ `variant` field], [The *vocabulary of pieces and board*: which
+    kinds exist, which letters denote them, and how many files and ranks there
+    are. `"standard"` means the six western pieces on 8#sym.times\8. A custom
+    value comes from `define-variant` (@fairy-pieces) and is a *drawing*
+    vocabulary only — no rules, no legality.],
+  [`game-variant(g)`], [What the PGN `Variant` *tag* declares about the game:
+    `"chess960"` or `"standard"` (@chess960). This is about the *starting
+    position and castling*, not about which pieces exist. It is not an engine
+    switch — Chess960 runs on the same rules engine as standard chess.],
+)
+
+They are independent, so a game can be one thing on one axis and another on the
+other. A Chess960 game is the clearest case:
+
+```typ
+#let g = game(read("chess960.pgn"))
+#game-variant(g)                          // "chess960" -- the game's rules
+#position(to-fen(g, at: "1w")).variant    // "standard" -- its pieces and board
+```
+
+Both answers are right. Chess960 shuffles the back rank and generalises
+castling, but it is played with ordinary pieces on an ordinary board, so the
+*position* is standard while the *game* is not. Conversely, a board of fairy
+pieces has a non-standard `variant` on the position and is not a "game" in this
+sense at all — it has no PGN behind it.
+
+The short version: the position's `variant` answers *what can stand on this
+board*, and `game-variant` answers *what kind of game this PGN describes*.
+
+== Naming conventions
 
 Two naming conventions follow from the same shapes:
 
