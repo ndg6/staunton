@@ -540,8 +540,7 @@ palette: the hue always comes from your `color-theme`. Each square's overlay is
 rotated/mirrored by a per-square orientation (and marble alternates between two
 artworks), so the texture doesn't read as one obviously repeating tile.
 
-To pattern the dark squares only — which is what `"wood"` did before 1.0.0 —
-set `pattern-light: false`:
+To pattern the dark squares only, set `pattern-light: false`:
 
 #example(```typ
 #board(

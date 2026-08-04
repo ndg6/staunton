@@ -42,7 +42,7 @@
 
 #import "coords.typ": file-letter, parse-square, is-dark-square, _square-index
 #import "pieces.typ": square-piece
-#import "style.typ": default-style, style-state, border-brown, border-creme, border-saddle, border-dark, border-dark-label, _expand-themes, _adjust-color-pair, _html-target
+#import "style.typ": default-board-style, board-style-state, border-brown, border-creme, border-saddle, border-dark, border-dark-label, _expand-themes, _adjust-color-pair, _html-target
 
 #let default-board-size = 6.4cm
 
@@ -556,7 +556,7 @@
     // Per-call `color-theme` / `board-theme` are expanded here, same as the
     // defaults setters (see `_expand-themes` in style.typ) -- an explicit
     // individual field in THIS call must win over a theme in THIS call.
-    let st = default-style + style-state.get() + _expand-themes(overrides.named())
+    let st = default-board-style + board-style-state.get() + _expand-themes(overrides.named())
     // Apply the `brightness`/`contrast` lightness nudges once, here, to the
     // final resolved `light`/`dark` pair -- everything downstream (checker,
     // labels, border band) reads `st.light`/`st.dark` and must see the

@@ -111,8 +111,7 @@
   pattern: none,          // none | "stripes" | "marble" | "wood"
   // Whether a material `pattern` is also drawn on LIGHT squares. Default `true`
   // (both square colors patterned, so a wood board reads as inlaid light and
-  // dark timber). Set `false` to pattern dark squares only -- which is what
-  // "wood" did before 1.0.0, so this is the opt-out for that older look.
+  // dark timber). Set `false` to pattern dark squares only.
   // No effect on "stripes", which is dark-only by construction.
   pattern-light: true,    // bool
   // Lightness nudges applied to the theme's resolved `light`/`dark` pair
@@ -808,11 +807,3 @@
 /// -> content
 #let set-piece-set(spec) = board-style-state.update(s => s + (piece-set: spec))
 
-/// Build a style-overrides dict (just sugar around named arguments).
-#let chess-style(..fields) = fields.named()
-
-// ---- back-compat aliases --------------------------------------------------
-// Pre-split names kept so existing importers (board.typ) and tests keep working.
-#let default-style = default-board-style
-#let style-state = board-style-state
-#let style-keys = board-style-keys + diagram-style-keys

@@ -39,7 +39,8 @@
 // in, so a wrapper here would resolve relative to this library, not your
 // document. Read in your own file instead:  game(read("game.pgn")).
 #import "src/style.typ": (
-  default-style, style-state, style-keys, set-chess-defaults, set-piece-set, chess-style,
+  set-chess-defaults, set-piece-set,
+  board-style-state as _board-style-state,
   default-board-style, default-diagram-style, board-style-keys, diagram-style-keys,
   board-non-default-keys,
   diagram-style-state, set-board-defaults, set-diagram-defaults,
@@ -339,7 +340,7 @@
   // skip the (attack-ray) detection work entirely unless the resolved `check`
   // flag (per-call override ⊕ document default ⊕ built-in default) is true.
   if "check-square" not in ov {
-    let check-on = ov.at("check", default: style-state.get().at("check", default: default-style.check))
+    let check-on = ov.at("check", default: _board-style-state.get().at("check", default: default-board-style.check))
     if check-on {
       let apos = _analyzable-position(pos)
       if apos != none {

@@ -140,7 +140,7 @@
 }
 
 // --- 5. per-call layer ---------------------------------------------------------
-// `board()` resolves `default-style + style-state.get() + _expand-themes(overrides)`
+// `board()` resolves `default-board-style + board-style-state.get() + _expand-themes(overrides)`
 // (see render-board in src/board.typ) -- i.e. the SAME `_expand-themes` call this
 // file already unit-tests above, applied to the per-call overrides dict. We cannot
 // observe the resolved style from outside `render-board` (it never escapes the
