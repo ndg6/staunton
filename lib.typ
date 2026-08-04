@@ -259,7 +259,10 @@
 // queryable (`query(selector(rect))` errors), and a `diagrams: true` notation
 // result is a context closure whose equality ignores captured values, so
 // "annotations appear once, not twice" cannot be asserted downstream of here.
-#let _apply-origin(ov, mv-context, process) = {
+// `last-move`/`last-move-color` are the RESOLVED style values (board default ⊕
+// document default ⊕ per-call override), passed in rather than read from state
+// here -- this function stays pure/context-free, exactly like `process`.
+#let _apply-origin(ov, mv-context, process, last-move: none, last-move-color: auto) = {
   if mv-context == none { return ov }
   let ov = ov
   if process {
@@ -270,6 +273,18 @@
   // The badge is NOT gated by `annotations`: that switch governs %cal/%csl
   // comment processing, and a quality mark is a property of the move itself.
   if mv-context.quality != none { ov.insert("move-quality-mark", mv-context.quality) }
+  // Auto-mark the move that produced this position. `last-move-color: auto`
+  // is passed straight through as the entry's `color:` -- `_resolve-anno-color`
+  // treats `auto` as "use the arrow/highlight default base", which is exactly
+  // the shared visual language this is meant to match.
+  if last-move == "arrow" {
+    ov.insert("arrows", ov.at("arrows", default: ())
+      + ((from: mv-context.from, to: mv-context.to, color: last-move-color),))
+  } else if last-move == "squares" {
+    // `shape` deliberately omitted so the document's `highlight-shape` applies.
+    ov.insert("highlight", ov.at("highlight", default: ())
+      + ((square: mv-context.from, color: last-move-color), (square: mv-context.to, color: last-move-color)))
+  }
   ov
 }
 
@@ -314,9 +329,9 @@
 // context through incorrectly (or drop it): the same call a test makes IS the
 // call production makes. Returns a dict so a test can read `.position`/`.ov`
 // without depending on tuple order.
-#let _resolve-draw(source, at, ov, process) = {
+#let _resolve-draw(source, at, ov, process, last-move: none, last-move-color: auto) = {
   let (position, mv-context) = _resolve-at-source(source, at)
-  (position: position, ov: _apply-origin(ov, mv-context, process))
+  (position: position, ov: _apply-origin(ov, mv-context, process, last-move: last-move, last-move-color: last-move-color))
 }
 
 // Shared board renderer: the actual draw, with the in-check auto-fill and the
@@ -330,7 +345,16 @@
   let process = if annotations != auto { annotations } else {
     (default-pgn-style + pgn-style-state.get()).annotations
   }
-  let resolved = _resolve-draw(source, at, ov, process)
+  // `last-move`/`last-move-color` need `board-style-state`, which requires this
+  // context -- resolved here, exactly like `process`, and threaded through as
+  // plain values so `_apply-origin` stays pure.
+  // No `_expand-themes(..)` here, unlike the parallel resolution in
+  // render-board: `color-theme-keys` (style.typ) is only `light`/`dark`/
+  // `pattern`/`brightness`/`contrast`, so no theme can contribute a
+  // `last-move`/`last-move-color` policy key. Revisit if that ever changes.
+  let lm-style = default-board-style + _board-style-state.get() + ov
+  let resolved = _resolve-draw(source, at, ov, process,
+    last-move: lm-style.last-move, last-move-color: lm-style.last-move-color)
   let pos = resolved.position
   let ov = resolved.ov
   let b = _to-board(pos)

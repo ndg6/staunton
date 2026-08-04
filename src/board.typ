@@ -330,12 +330,27 @@
   (offset: m + w / 2, side: side, radius: radius, width: w)
 }
 
-// A straight arrow: a shaft plus a filled triangular head, from
-// (fx,fy) to (tx,ty) in board-canvas coordinates. Drawn by `place`ing at the
-// origin and giving absolute vertex coordinates, so it composes with the rest of
-// the canvas. The head scales with the square `sq`; the shaft width is
-// `shaft-w` (a length, or `auto` -> proportional to `sq`). Zero-length skipped.
-#let _arrow-shape(fx, fy, tx, ty, sq, color, shaft-w) = {
+// A straight arrow: a shaft plus a filled head, from (fx,fy) to (tx,ty) in
+// board-canvas coordinates. Drawn by `place`ing at the origin and giving
+// absolute vertex coordinates, so it composes with the rest of the canvas. The
+// head scales with the square `sq`; the shaft width is `shaft-w` (a length, or
+// `auto` -> proportional to `sq`). Zero-length skipped.
+//
+// `tip` selects the head shape:
+//   * "triangle" -- a plain 3-point head (the pre-2.0 look). The shaft ends a
+//     hair short of the head's base (`* 0.96`) rather than exactly at it, to
+//     avoid an antialiasing seam.
+//   * "hook" -- a barbed 4-point head (tip, base+perp, notch, base-perp) whose
+//     rear boundary is a V pointing FORWARD. The shaft must stop at that
+//     notch, not at the base: stopping at the base leaves the barb's wedge
+//     unfilled and the tip reads visibly detached from the shaft.
+//
+// `fade` (`none` or a ratio) replaces the plain stroke paint with a
+// `gradient.linear` along the shaft when set -- a SINGLE stroked line, never
+// stacked segments (measured: 48 segments costs 1.4-1.9x compile time for an
+// indistinguishable result). The ratio is the tail's opacity relative to the
+// head's; the shaft never fully disappears.
+#let _arrow-shape(fx, fy, tx, ty, sq, color, shaft-w, tip, fade) = {
   let dx = (tx - fx) / 1pt
   let dy = (ty - fy) / 1pt
   let len = calc.sqrt(dx * dx + dy * dy)
@@ -348,17 +363,45 @@
   // spans several squares, so at 10% it reads as a hairline rather than a
   // pointer. Deliberately NOT kept in step with them.
   let sw = _resolve-square-dim(shaft-w, sq, 15%)
-  let bx = tx - ux * head-len   // base of the head (shaft stops here)
+  let bx = tx - ux * head-len   // base of the head
   let by = ty - uy * head-len
   let px = -uy                  // unit perpendicular
   let py = ux
-  place(dx: 0pt, dy: 0pt, line(start: (fx, fy), end: (bx, by), stroke: sw + color))
-  place(dx: 0pt, dy: 0pt, polygon(
-    fill: color,
-    (tx, ty),
-    (bx + px * head-hw, by + py * head-hw),
-    (bx - px * head-hw, by - py * head-hw),
-  ))
+  let paint = if fade == none { color } else {
+    let ang = calc.atan2(ux, uy)
+    gradient.linear(
+      (color.transparentize(100% - fade), 0%),
+      (color, 55%),
+      (color, 100%),
+      angle: ang,
+      space: rgb,
+    )
+  }
+  if tip == "hook" {
+    let notch-frac = 0.42
+    let nx = tx - ux * head-len * notch-frac
+    let ny = ty - uy * head-len * notch-frac
+    place(dx: 0pt, dy: 0pt, line(start: (fx, fy), end: (nx, ny), stroke: sw + paint))
+    place(dx: 0pt, dy: 0pt, polygon(
+      fill: color,
+      (tx, ty),
+      (bx + px * head-hw, by + py * head-hw),
+      (nx, ny),
+      (bx - px * head-hw, by - py * head-hw),
+    ))
+  } else if tip == "triangle" {
+    let sx = tx - ux * head-len * 0.96
+    let sy = ty - uy * head-len * 0.96
+    place(dx: 0pt, dy: 0pt, line(start: (fx, fy), end: (sx, sy), stroke: sw + paint))
+    place(dx: 0pt, dy: 0pt, polygon(
+      fill: color,
+      (tx, ty),
+      (bx + px * head-hw, by + py * head-hw),
+      (bx - px * head-hw, by - py * head-hw),
+    ))
+  } else {
+    panic("arrow-tip must be \"triangle\" or \"hook\"; got " + repr(tip))
+  }
 }
 
 // Draw one highlight inside the board canvas at screen offset (dx, dy). Stroke
@@ -576,6 +619,19 @@
     let themes = ("square", "brown", "creme", "dark", "light", "wood", "marble")
     assert(themes.contains(st.border-theme), message: "border-theme must be one of " + repr(themes) + "; got " + repr(st.border-theme))
     assert(type(st.pattern-light) == bool, message: "pattern-light must be a boolean; got " + repr(st.pattern-light))
+    let tips = ("triangle", "hook")
+    assert(tips.contains(st.arrow-tip), message: "arrow-tip must be one of " + repr(tips) + "; got " + repr(st.arrow-tip))
+    let last-moves = (none, "arrow", "squares")
+    assert(last-moves.contains(st.last-move), message: "last-move must be one of " + repr(last-moves) + "; got " + repr(st.last-move))
+    // `100% - fade` feeds straight into `.transparentize(..)` in `_arrow-shape`,
+    // which OPACIFIES on a negative argument -- an out-of-range ratio would
+    // silently INVERT the fade (more opaque at the tail than the head) rather
+    // than error. `0%` is rejected too: that would make the tail fully
+    // transparent, contradicting "never fully disappears" (see this key's doc
+    // comment in style.typ). `str(type(..)) == "ratio"` because `type(x) ==
+    // "ratio"` is always false -- `type()` returns a `type` value, not a string.
+    assert(st.arrow-fade == none or (str(type(st.arrow-fade)) == "ratio" and st.arrow-fade > 0% and st.arrow-fade <= 100%),
+      message: "arrow-fade must be `none` or a ratio in (0%, 100%]; got " + repr(st.arrow-fade))
 
     let labels = st.labels
     let orient = if flip { "black" } else { "white" }
@@ -704,17 +760,30 @@
           }
         }
         // arrows: on top of the pieces. Each entry is a dict
-        // (from:, to:, color:) or a tuple ("f3","e5") / ("f3","e5", color).
+        // (from:, to:, color:, tip:, fade:) or a tuple ("f3","e5") / ("f3","e5", color).
+        // `tip`/`fade` (dict entries only) override the board-level `arrow-tip`/
+        // `arrow-fade` for that one arrow.
         for a in st.arrows {
           let fsq = if type(a) == dictionary { a.from } else { a.at(0) }
           let tsq = if type(a) == dictionary { a.to } else { a.at(1) }
           let rawcol = if type(a) == dictionary { a.at("color", default: auto) } else if a.len() > 2 { a.at(2) } else { auto }
+          let atip = if type(a) == dictionary { a.at("tip", default: st.arrow-tip) } else { st.arrow-tip }
+          // Validated here (not just at the board-level `st.arrow-tip`/
+          // `st.arrow-fade` asserts above), so a bad per-entry override is
+          // blamed on the ENTRY's `tip:`/`fade:` -- the key the caller actually
+          // wrote -- rather than surfacing as an `_arrow-shape` panic naming
+          // `arrow-tip`, which the caller never touched.
+          assert(atip == "triangle" or atip == "hook",
+            message: "an arrow entry's `tip:` must be \"triangle\" or \"hook\"; got " + repr(atip))
+          let afade = if type(a) == dictionary { a.at("fade", default: st.arrow-fade) } else { st.arrow-fade }
+          assert(afade == none or (str(type(afade)) == "ratio" and afade > 0% and afade <= 100%),
+            message: "an arrow entry's `fade:` must be `none` or a ratio in (0%, 100%]; got " + repr(afade))
           let acol = _resolve-anno-color(rawcol, st.annotation-colors, arrow-default)
           let fp = parse-square(fsq, cols: cols, rows: rows)
           let tp = parse-square(tsq, cols: cols, rows: rows)
           let fo = _screen(fp.col, fp.row, sq, orient, cols, rows)
           let to = _screen(tp.col, tp.row, sq, orient, cols, rows)
-          _arrow-shape(fo.dx + sq / 2, fo.dy + sq / 2, to.dx + sq / 2, to.dy + sq / 2, sq, acol, st.arrow-width)
+          _arrow-shape(fo.dx + sq / 2, fo.dy + sq / 2, to.dx + sq / 2, to.dy + sq / 2, sq, acol, st.arrow-width, atip, afade)
         }
         if st.border != none {
           place(rect(width: bw, height: bh, fill: none, stroke: st.border))

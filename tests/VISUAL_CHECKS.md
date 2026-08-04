@@ -37,7 +37,25 @@ Then open the PDFs below and check the noted property. (The expected-*fail* test
       overrides row shows a fat `20%` cross and a fixed `1pt` circle.
       *(This sheet hid a cross-on-the-wrong-square bug that compiled green.)*
 - [ ] `board/arrows/arrows.pdf` — arrows run centre-to-centre, scale with the
-      board (shaft ~15% of the square), and flip with it; colors/widths as labelled.
+      board (shaft ~15% of the square), and flip with it; colors/widths as
+      labelled. Since 2.0.0 the default tip is a barbed **"hook"** head (not the
+      old plain triangle) — every arrow on this sheet (and on every other sheet
+      below that draws one) should read as a hook by default. The **arrow tip**
+      section shows the `"hook"` default next to `arrow-tip: "triangle"` (the old
+      look) and a per-arrow `tip:` override (a triangle board with one arrow
+      forced back to hook) — confirm the three read as visibly different head
+      shapes and the override lands on the right arrow only. The **arrow fade**
+      section shows a solid shaft next to `arrow-fade: 20%` (the shaft visibly
+      lightens toward the tail, staying strongest at the head) and a per-arrow
+      `fade: 60%` override (that one arrow fades noticeably more than its
+      sibling on the same board).
+- [ ] `board/arrows/last_move_render.pdf` — `last-move` as drawn, from a real
+      game move (`3... a6`). `"arrow"` draws one arrow e5→a6; `"squares"`
+      highlights e5 and a6 instead (as plain filled squares — the document's
+      `highlight-shape` default — not a hard-coded shape); the custom
+      `last-move-color: green` section recolors that arrow; the `diagram`
+      section shows the same arrow inside a figure; the last section (no
+      `last-move` set) shows neither an arrow nor a highlight on the same move.
 - [ ] `board/labeling/label_modes.pdf`, `border_themes.pdf`, `onsquare_corners.pdf`,
       `onsquare_fullwidth.pdf` — files/ranks in the right gutter/corner, themed
       bands correct, labels legible and not clashing with pieces. In

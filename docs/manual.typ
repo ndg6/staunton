@@ -420,7 +420,16 @@ the point of the Ruy Lopez.
 ```, stacked: true)
 
 That is the whole workflow: set the look once, then alternate text with
-`board` / `diagram` calls as the game unfolds. Everything else in this manual —
+`board` / `diagram` calls as the game unfolds. A common addition to that first
+`set-chess-defaults` / `set-board-defaults` call is `last-move: "arrow"`,
+which then marks every later game-drawn position automatically, with no
+per-diagram bookkeeping:
+
+```typ
+#set-board-defaults(last-move: "arrow")
+```
+
+Everything else in this manual —
 styling, PGN annotations, tournament tables, localization, Chess960, HTML
 export — is optional depth on top of these same few calls, not additional steps
 you have to take.
@@ -580,6 +589,55 @@ lines between the squares.
 )
 ```, stacked: true)
 
+`arrow-tip` chooses the head shape: `"hook"` (the default), a barbed head whose
+wings sweep back to points, or `"triangle"`, a plain solid triangle. Set it per
+call, or document-wide with `set-board-defaults`:
+
+#example(```typ
+#board(
+  "8/8/8/8/8/8/8/8",
+  arrows: (("a1", "a8"),),
+  arrow-tip: "hook",
+  size: 3cm,
+)
+#board(
+  "8/8/8/8/8/8/8/8",
+  arrows: (("a1", "a8"),),
+  arrow-tip: "triangle",
+  size: 3cm,
+)
+```, stacked: true)
+
+`arrow-fade`, `none` by default, fades the shaft toward its *tail* — the ratio
+is the tail's opacity *relative to the head's*, so it composes correctly with
+`arrow-transparency` and with any custom arrow color. The accepted range is
+`(0%, 100%]`: the shaft never fades all the way to nothing, because on a chess
+board the tail is information — it is the move's origin square.
+
+#example(```typ
+#board(
+  "8/8/8/8/8/8/8/8",
+  arrows: (("a1", "h8"),),
+  arrow-fade: 20%,
+  size: 4cm,
+)
+```)
+
+Both settings can also be overridden per arrow, by using the dict form with
+`tip:` and/or `fade:` — the board-level `arrow-tip` / `arrow-fade` still apply
+to every other arrow that does not specify its own:
+
+#example(```typ
+#board(
+  "8/8/8/8/8/8/8/8",
+  arrows: (
+    (from: "a1", to: "a8", color: "G"),
+    (from: "h1", to: "h8", color: "R", tip: "triangle", fade: 20%),
+  ),
+  size: 4cm,
+)
+```)
+
 == Move Markings<move-markings>
 
 Two optional markings annotate the *move* rather than arbitrary squares. Both are
@@ -619,6 +677,35 @@ programmatically, wears a good-move badge on `f7`:
   check: true, move-quality: true, size: 4cm,
 )
 ```)
+
+`last-move` marks the move that produced the drawn position, either as an
+arrow (`"arrow"`, one arrow from the origin square to the destination) or as
+two squares (`"squares"`, highlighted via `highlight-shape` — so a document
+that set `highlight-shape: "frame"` gets framed last-move squares and stays
+visually coherent). The two presentations are mutually exclusive; the default
+is `none`, off. `last-move-color`, `auto` by default, resolves to the same
+base color `arrows` / `highlight` already use, or set it explicitly.
+
+`last-move` follows the same rule as the badge above: it is tied to a *move*,
+so it marks something only when the board was drawn from a
+#link(<position-provenance>)[game with `at:`] — `board(g, at: "12w")` or
+`diagram(g, at: "12w")`, including at ply 0, the position before any move. A
+board built from a FEN, a squares dict, or an `apply` result has no move
+behind it and gets nothing: not an error, not a warning, silently nothing. You
+remain free to add `arrows:` / `highlight:` by hand on such a board — that is
+unaffected. Standard chess only, like the badge above.
+
+#example(```typ
+#let g = game("1. e4 e5 2. Nf3 Nc6 3. Bb5 a6")
+#diagram(g, at: "3w", last-move: "arrow", size: 3.6cm)
+#diagram(g, at: "3w", last-move: "squares", size: 3.6cm)
+```, stacked: true)
+
+Unlike `arrows` / `highlight`, `last-move` is a *policy*, not position data, so
+it can be set document-wide with `set-board-defaults(last-move: "arrow")` —
+every later board or diagram drawn from a game with `at:` then carries the
+arrow automatically. A per-call `last-move: none` switches it back off for one
+board.
 
 == Coordinates and Non-Square Boards<coordinates>
 
@@ -1325,7 +1412,9 @@ which move with `at:`:
 - the caption "Position after 24. Nf3";
 - the move's `%cal` / `%csl` #link(<pgn-annotations>)[drawing annotations]
   (when the `annotations` switch is on);
-- its #link(<move-markings>)[move-quality badge].
+- its #link(<move-markings>)[move-quality badge];
+- its #link(<move-markings>)[`last-move` marking], an arrow or a pair of
+  highlighted squares.
 
 `at:` takes the same locators as everything else — a mainline `"24w"` /
 `"24b"`, or a variation path dict — and works on `board` as well as `diagram`,
@@ -1339,7 +1428,7 @@ Pull the FEN at that same locator with `to-fen(g, at: loc)` and rebuild a *bare*
 position from it with `position(fen)` — an *ordinary* position, identical to one
 built by `position` directly or advanced with the #link(<engine>)[engine]'s
 `apply`. It carries no move, so drawing it gives you the board and nothing else:
-no caption, no roster line, no annotations, no badge.
+no caption, no roster line, no annotations, no badge, no `last-move` marking.
 
 #example(```typ
 // the same squares, drawn WITHOUT the move: no badge, no annotations
@@ -2126,10 +2215,10 @@ game-drawn board can badge and annotate. What *does* discard the move is
 serialising back down to a bare position: pulling the FEN with
 `to-fen(g, at: ..)` and rebuilding it with `position(fen)`, or handing `board` /
 `diagram` a bare position directly. That position carries no move, so it can
-never carry a move-quality badge or a move's `%cal` / `%csl` annotations
-(@move-markings, @position-provenance) — there is no move left to badge or
-annotate. Keep handing `board` / `diagram` the *game* itself, with `at:`, to
-keep that information available.
+never carry a move-quality badge, a `last-move` marking, or a move's `%cal` /
+`%csl` annotations (@move-markings, @position-provenance) — there is no move
+left to badge, mark, or annotate. Keep handing `board` / `diagram` the *game*
+itself, with `at:`, to keep that information available.
 
 Two naming conventions follow from the same shapes:
 
@@ -2224,6 +2313,10 @@ setters reject them), though their *styling* options can.
   raw("frame-radius"), raw("auto"), [frame outer corner radius; `auto` → 22% of the square (ratio / length accepted)],
   [`arrow-color` / `arrow-transparency`], [green, `35%`], [default arrow color and its transparency],
   raw("arrow-width"), raw("auto"), [arrow shaft width; `auto` → 15% of the square (ratio / length accepted)],
+  raw("arrow-tip"), raw("\"hook\""), [arrow head style: `"hook"` (barbed) or `"triangle"`; overridable per arrow with `tip:`],
+  raw("arrow-fade"), raw("none"), [`none` or a ratio in `(0%, 100%]`: fades the shaft toward its tail, relative to the head's opacity; overridable per arrow with `fade:`],
+  raw("last-move"), raw("none"), [`none` / `"arrow"` / `"squares"`: auto-mark the move that produced a game position drawn with `at:` — see @move-markings],
+  raw("last-move-color"), raw("auto"), [`last-move` color; `auto` → the same default base `arrows` / `highlight` use],
   raw("check"), raw("false"), [in-check glow on the checked king (auto-located for standard positions)],
   [`check-color` / `check-square`], [pure red / `none`], [glow color; square to glow (`none` → auto-located)],
   raw("move-quality"), raw("false"), [move-quality badge on the last move's destination],

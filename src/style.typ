@@ -159,11 +159,24 @@
   frame-width: auto,          // frame stroke width;   auto -> 10% of the square
   frame-margin: auto,         // frame inset from the border; auto -> 3% of the square
   frame-radius: auto,         // frame outer corner radius; auto -> 22% of the square
-  arrows: (),                 // array of arrows, each `(from, to, color)` e.g. ("f3","e5","G")
+  arrows: (),                 // array of arrows, each `(from, to, color)` e.g. ("f3","e5","G"), or a
+                              // dict `(from:, to:, color:, tip:, fade:)` -- `tip`/`fade` override the
+                              // board-level `arrow-tip`/`arrow-fade` for that one arrow.
   arrow-color: default-highlight-base,  // default arrow color (opaque base)
   arrow-transparency: 35%,    // applied to the default arrow color (thin lines need to stay clearly visible)
   arrow-width: auto,          // shaft width; auto -> 15% of the square (ratio / length also accepted).
                               // Deliberately heavier than the 10% marks: a shaft spans several squares.
+  arrow-tip: "hook",          // head style: "triangle" | "hook" (a barbed head; the default look)
+  arrow-fade: none,           // none | ratio -- fades the shaft toward its TAIL; the ratio is the
+                              // tail's opacity RELATIVE TO the head's (never fully disappears)
+  // Auto-mark the move that produced a position drawn from a GAME via `at:`
+  // (see `_apply-origin` in lib.typ); `none` for anything with no move behind
+  // it (a bare FEN, a hand-built position, a game drawn without `at:`), which
+  // stays free. "arrow" draws one from->to arrow; "squares" highlights both
+  // squares (via `highlight-shape`, not hard-coded "filled"). Mutually
+  // exclusive by construction -- an enum, not a set.
+  last-move: none,            // none | "arrow" | "squares"
+  last-move-color: auto,      // auto -> the same default base arrows/highlights already use
   // In-check indicator. A radial glow (color -> transparent) on the
   // king that is in check, drawn under the piece. `check` gates it; `check-color`
   // is the glow's inner color. `check-square` is the marked square, auto-filled
