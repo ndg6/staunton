@@ -355,7 +355,12 @@ diagrams and tables only reach an HTML target from 0.15 onwards. Paged output
 
 In every framed example, the left side is *the code you type* and the right side
 is *exactly what it renders* — the manual compiles its own examples, so the two
-can never disagree.
+can never disagree.#footnote[
+  Where the code is long or the output is wide, the example is _stacked_ instead:
+  the code on top, the rendering underneath, each across the full width. Nothing
+  else changes — it is the same code and the same rendering, only laid out
+  vertically.
+]
 
 == The Name
 
@@ -503,6 +508,183 @@ in play instead of fighting it, and needs no separate palette of its own:
   size: 3.8cm,
 )
 ```)
+
+== Highlights
+
+`highlight` marks squares; each entry is a square name (drawn with
+`highlight-shape`, default `"filled"`), a `(square, color)` pair, or a dict
+`(square: .., shape: .., color: ..)` where `shape` is `"filled"`, `"cross"`,
+`"circle"`, or `"frame"`. By convention a *cross* marks an empty square;
+`"frame"` carries no such convention — it hugs the square border and leaves
+the centre clear, so unlike `"cross"` it reads fine over an occupied square
+too. `"frame"` reproduces the rounded square highlight used by ChessBase
+@chessbase-annotations.#footnote[*staunton* is not affiliated with or
+endorsed by ChessBase; the name is used only to identify the source of the
+look.]
+
+#example(```typ
+#board(
+  "8/8/8/4p3/4P3/8/8/8",
+  highlight: (
+    (square: "e4", shape: "frame"),
+    (square: "e5", shape: "circle"),
+    (square: "d5", shape: "cross"),
+  ),
+  size: 4cm,
+)
+```)
+
+Each shape's *color* and *geometry* are settable, and there are three places to
+set them. A `color:` on the entry itself wins, and applies to that square only.
+Otherwise the shape's own default applies: `cross-color`, `circle-color` or
+`frame-color` — set per call, or document-wide via `set-board-defaults`, or
+inside a reusable `board-theme` (@themes). The stroke weight and inset follow the same
+pattern (`cross-width` / `circle-width` / `frame-width`, `cross-margin` /
+`circle-margin` / `frame-margin`, and `frame-radius` for the frame's corner),
+each taking `auto`, a ratio of the square, or an absolute length. See @board-options
+for the full list and defaults.
+
+#example(```typ
+#board(
+  "8/8/8/4p3/4P3/8/8/8",
+  highlight: (
+    (square: "e4", shape: "frame", color: blue),  // this square only
+    (square: "e5", shape: "frame"),               // uses frame-color
+    (square: "d5", shape: "cross"),               // uses cross-color
+  ),
+  frame-color: purple,   // per call; set-board-defaults takes it too
+  frame-width: 14%,      // ratio of the square (auto = 10%)
+  size: 4cm,
+)
+```)
+
+A `(square, color)` pair is the short form when every mark is the same shape: it
+sets the color and leaves the shape to `highlight-shape`, so
+`highlight: (("e4", orange),)` with `highlight-shape: "frame"` gives an orange
+frame. That is also the form PGN `%csl` produces — which means
+`highlight-shape` decides how imported square annotations are drawn.
+
+== Arrows and the Grid
+
+As the name suggests `arrows` draws arrows on the board; each entry is a `(from, to)` or `(from, to, color)` tuple, or a dict `(from: .., to: .., color: ..)`. A missing color uses `arrow-color`.
+Arrows scale with the board and flip with it. A `grid: true` overlay draws thin
+lines between the squares.
+
+#example(```typ
+#board(
+  "r1bqkb1r/pppp1ppp/2n2n2/4p3/2B1P3/5N2/PPPP1PPP/RNBQK2R",
+  grid: true,
+  highlight: ("f7",),
+  arrows: (("c4", "f7"), ("f3", "e5", rgb(0, 70, 160, 200))),
+  size: 4.4cm,
+)
+```, stacked: true)
+
+== Move Markings<move-markings>
+
+Two optional markings annotate the *move* rather than arbitrary squares. Both are
+*off by default* and their colors are settable per call or via
+`set-board-defaults`.
+
+`check: true` draws a radial glow (`check-color`, default pure red, fading to
+transparent) *under* the king that is in check; the whole glow, including its
+darkening, derives from `check-color`, so setting it to another color reproduces
+the same glow in that color. The glow's profile — its radial extent and its
+darkening-as-it-fades stops — reproduces Lichess's board CSS @lichess-boards.
+On a standard position the checked king is located
+automatically — you only flip the switch (see the combined example below).
+
+`move-quality: true` draws a small disc near the *upper-right* of the last move's
+destination square, carrying its assessment: `!` / `!!` (good, blue), `?` / `??`
+(bad, red), `!?` / `?!` (interesting, green), text always white. The disc clears the
+piece and spills slightly into the neighbours; recolor the categories with
+`move-quality-colors`.
+
+A badge is tied to a *move*, so it appears only when you
+#link(<position-provenance>)[draw a game with `at:`] — `board(g, at: "24w")` or
+`diagram(g, at: "24w")`. The badge lands on the move's destination square.
+A FEN or a hand-built position has no move
+attached, so it cannot carry a badge, and
+setting `move-quality-mark` yourself is an error. The assessment is read
+identically whether written as a literal `?!` suffix, a PGN NAG, or set with
+`with-nags`. Here the mate `4.Qxf7#` glows on the Black king and, tagged `!`
+programmatically, wears a good-move badge on `f7`:
+
+#example(```typ
+#let g = game(
+  "1. e4 e5 2. Qh5 Nc6 3. Bc4 Nf6?? 4. Qxf7# 1-0",
+)
+#diagram(
+  with-nags(g, nags: ("4w": "!")), at: "4w",
+  check: true, move-quality: true, size: 4cm,
+)
+```)
+
+== Coordinates and Non-Square Boards<coordinates>
+
+At least in standard western chess, files run `a`, `b`, … and ranks `1`, `2`, …; `a1` is the dark square in the lower-left corner, `h8` the upper-right. Square names are case-insensitive
+(`"E4"` = `"e4"`).
+
+But boards are *not* tied to an 8×8 layout. A `position` built from the string
+form (@positions)
+counts its own columns and rows, and the renderer draws whatever geometry
+it is given — files and ranks extend as far as the board needs, and the cells stay
+square while the board itself becomes rectangular:
+
+#example(```typ
+#board(
+  position(
+    "r..k.r",
+    "pp..pp",
+    "......",
+    "RN..KR",
+  ),
+  size: 4cm,
+)
+```)
+
+The string form is the convenient route because it states the geometry by being
+that shape. You can also set `cols:` / `rows:` on `position(..)` directly — which
+is how a squares dict reaches a non-8×8 board — or let a custom `variant` carry
+the geometry for you (@fairy-pieces). A FEN is the one input that cannot: the
+format is 8×8 by definition.
+
+== Sizing
+
+The default board size suits an A4 two-column layout. A board reads the available
+space at its insertion point via `layout`, so it adapts to any column or page size
+without being told the geometry, and shrinks to fit if asked for more than fits.
+`size` may be a `length`, a `ratio` of the available width, or `auto`:
+
+#example(```typ
+#board(
+  "8/8/8/3k4/3K4/8/8/8",
+  size: 60%, // of the available width
+)
+```)
+
+== Colors
+
+`light` and `dark` set the two square colors:
+
+
+
+#example(```typ
+#board(
+  "8/8/8/3qk3/3QK3/8/8/8",
+  light: rgb("#eeeed2"),
+  dark: rgb("#769656"),
+  size: 3.8cm,
+)
+```)
+
+These two are the *base* colors, and they are the only ones you ever state
+outright. Everything else that touches square color works *on top of* them
+rather than replacing them: `brightness` and `contrast` shift and spread the
+pair, and a `pattern` (stripes, marble, wood) is an overlay painted over the
+result. So a board's final look is `light` / `dark` as the foundation, adjusted
+and then painted over — which is exactly what a theme packages up for you
+(@themes).
 
 == Color and Board Themes <themes>
 
@@ -743,166 +925,6 @@ directly as a `color-theme`/`board-theme` field (e.g.
 `color-theme: (base: "dutch-gray")`, skipping the constructor call) does not
 support it and raises "unknown color theme option".
 
-== Highlights
-
-`highlight` marks squares; each entry is a square name (drawn with
-`highlight-shape`, default `"filled"`), a `(square, color)` pair, or a dict
-`(square: .., shape: .., color: ..)` where `shape` is `"filled"`, `"cross"`,
-`"circle"`, or `"frame"`. By convention a *cross* marks an empty square;
-`"frame"` carries no such convention — it hugs the square border and leaves
-the centre clear, so unlike `"cross"` it reads fine over an occupied square
-too. `"frame"` reproduces the rounded square highlight used by ChessBase
-@chessbase-annotations.#footnote[*staunton* is not affiliated with or
-endorsed by ChessBase; the name is used only to identify the source of the
-look.]
-
-#example(```typ
-#board(
-  "8/8/8/4p3/4P3/8/8/8",
-  highlight: (
-    (square: "e4", shape: "frame"),
-    (square: "e5", shape: "circle"),
-    (square: "d5", shape: "cross"),
-  ),
-  size: 4cm,
-)
-```)
-
-Each shape's *color* and *geometry* are settable, and there are three places to
-set them. A `color:` on the entry itself wins, and applies to that square only.
-Otherwise the shape's own default applies: `cross-color`, `circle-color` or
-`frame-color` — set per call, or document-wide via `set-board-defaults`, or
-inside a reusable `board-theme`. The stroke weight and inset follow the same
-pattern (`cross-width` / `circle-width` / `frame-width`, `cross-margin` /
-`circle-margin` / `frame-margin`, and `frame-radius` for the frame's corner),
-each taking `auto`, a ratio of the square, or an absolute length. See @board-options
-for the full list and defaults.
-
-#example(```typ
-#board(
-  "8/8/8/4p3/4P3/8/8/8",
-  highlight: (
-    (square: "e4", shape: "frame", color: blue),  // this square only
-    (square: "e5", shape: "frame"),               // uses frame-color
-    (square: "d5", shape: "cross"),               // uses cross-color
-  ),
-  frame-color: purple,   // per call; set-board-defaults takes it too
-  frame-width: 14%,      // ratio of the square (auto = 10%)
-  size: 4cm,
-)
-```)
-
-A `(square, color)` pair is the short form when every mark is the same shape: it
-sets the color and leaves the shape to `highlight-shape`, so
-`highlight: (("e4", orange),)` with `highlight-shape: "frame"` gives an orange
-frame. That is also the form PGN `%csl` produces — which means
-`highlight-shape` decides how imported square annotations are drawn.
-
-== Arrows and the Grid
-
-As the name suggests `arrows` draws arrows on the board; each entry is a `(from, to)` or `(from, to, color)` tuple, or a dict `(from: .., to: .., color: ..)`. A missing color uses `arrow-color`.
-Arrows scale with the board and flip with it. A `grid: true` overlay draws thin
-lines between the squares.
-
-#example(```typ
-#board(
-  "r1bqkb1r/pppp1ppp/2n2n2/4p3/2B1P3/5N2/PPPP1PPP/RNBQK2R",
-  grid: true,
-  highlight: ("f7",),
-  arrows: (("c4", "f7"), ("f3", "e5", rgb(0, 70, 160, 200))),
-  size: 4.4cm,
-)
-```, stacked: true)
-
-== Move Markings<move-markings>
-
-Two optional markings annotate the *move* rather than arbitrary squares. Both are
-*off by default* and their colors are settable per call or via
-`set-board-defaults`.
-
-`check: true` draws a radial glow (`check-color`, default pure red, fading to
-transparent) *under* the king that is in check; the whole glow, including its
-darkening, derives from `check-color`, so setting it to another color reproduces
-the same glow in that color. The glow's profile — its radial extent and its
-darkening-as-it-fades stops — reproduces Lichess's board CSS @lichess-boards.
-On a standard position the checked king is located
-automatically — you only flip the switch (see the combined example below).
-
-`move-quality: true` draws a small disc near the *upper-right* of the last move's
-destination square, carrying its assessment: `!` / `!!` (good, blue), `?` / `??`
-(bad, red), `!?` / `?!` (interesting, green), text always white. The disc clears the
-piece and spills slightly into the neighbours; recolor the categories with
-`move-quality-colors`.
-
-A badge is tied to a *move*, so it appears only when you
-#link(<position-provenance>)[draw a game with `at:`] — `board(g, at: "24w")` or
-`diagram(g, at: "24w")`. The badge lands on the move's destination square.
-A FEN or a hand-built position has no move
-attached, so it cannot carry a badge, and
-setting `move-quality-mark` yourself is an error. The assessment is read
-identically whether written as a literal `?!` suffix, a PGN NAG, or set with
-`with-nags`. Here the mate `4.Qxf7#` glows on the Black king and, tagged `!`
-programmatically, wears a good-move badge on `f7`:
-
-#example(```typ
-#let g = game(
-  "1. e4 e5 2. Qh5 Nc6 3. Bc4 Nf6?? 4. Qxf7# 1-0",
-)
-#diagram(
-  with-nags(g, nags: ("4w": "!")), at: "4w",
-  check: true, move-quality: true, size: 4cm,
-)
-```)
-
-== Coordinates and Non-Square Boards
-
-At least in standard western chess, files run `a`, `b`, … and ranks `1`, `2`, …; `a1` is the dark square in the lower-left corner, `h8` the upper-right. Square names are case-insensitive
-(`"E4"` = `"e4"`).
-
-But boards are *not* tied to an 8×8 layout. A `position` built from the string form (@positions)
-counts its own columns and rows, and the renderer draws whatever geometry
-it is given — files and ranks extend as far as the board needs, and the cells stay
-square while the board itself becomes rectangular:
-
-#example(```typ
-#board(
-  position(
-    "r..k.r",
-    "pp..pp",
-    "......",
-    "RN..KR",
-  ),
-  size: 4cm,
-)
-```)
-
-== Sizing
-
-The default board size suits an A4 two-column layout. A board reads the available
-space at its insertion point via `layout`, so it adapts to any column or page size
-without being told the geometry, and shrinks to fit if asked for more than fits.
-`size` may be a `length`, a `ratio` of the available width, or `auto`:
-
-#example(```typ
-#board(
-  "8/8/8/3k4/3K4/8/8/8",
-  size: 60%, // of the available width
-)
-```)
-
-== Colors
-
-`light` and `dark` set the two square colors:
-
-#example(```typ
-#board(
-  "8/8/8/3qk3/3QK3/8/8/8",
-  light: rgb("#eeeed2"),
-  dark: rgb("#769656"),
-  size: 3.8cm,
-)
-```)
-
 == Flip
 
 `flip: true` shows the board from Black's side; labels, highlights and arrows all
@@ -1025,8 +1047,11 @@ or misnamed file fails with Typst's own “file not found”, naming the exact p
 === Non-standard pieces<fairy-pieces>
 
 Beyond the six western pieces you can define *your own* kinds — non-standard
-pieces, also known as _fairy_ pieces, such as the alfil, dabbaba or ferz — and
-place them on a board, mixed with the standard pieces if you like. The support is
+pieces, also known as _fairy_ pieces — the _alfil_ (a diagonal jumper, progenitor
+of the bishop), the _ferz_ (one square diagonally, progenitor of the queen), or
+the _dabbaba_ (a two-square orthogonal jumper; see the
+#link("https://www.chessvariants.com/piececlopedia.dir/dabbabah.html")[Piececlopedia])
+— and place them on a board, mixed with the standard pieces if you like. The support is
 deliberately limited to *drawing*: there is no FEN, PGN, move generation or
 legality for custom kinds. You place them by hand — a squares dict or the string
 form — and render them; that is all.
@@ -1052,6 +1077,7 @@ an existing one (case selects color, exactly as for the standard pieces):
   abbr:  (a: "alfil", d: "dabbaba", f: "ferz"),   // letters must not overlap
 )
 ```
+Note: `extends` defaults to `none` in case your fairy piece set starts from scratch (you wouldn't use `with-fallback` in that case).
 
 Now `position(.., variant: fairy)` understands `A`/`a`, `D`/`d` and `F`/`f` in
 both the squares-dict and string forms, right beside the standard `K`, `P`, ….
@@ -1164,7 +1190,7 @@ abbreviation, or a bare letter (UPPER = white, lower = black):
   )),
   size: 4cm,
 )
-```, ratio: 0.7)
+```, stacked: true)
 
 The *string form* reads like the board itself — first line is the TOP rank, `.`
 is empty. Pass it as a raw block, as below — the most legible, least error-prone
@@ -1195,6 +1221,14 @@ that aren't a valid piece abbreviation or `.`:
 ```
 
 The `cols` / `rows` are counted from the string form (otherwise the 8×8 default).
+This is what makes a board that is *not* 8×8 possible, and the string form is
+the only input that works the geometry out for you: give it four rows of six
+characters and you get a 6×4 board, no further arguments. The other two routes
+require you to say so explicitly — pass `cols:` / `rows:` alongside a squares
+dict, or use a `variant` that carries its own geometry (@fairy-pieces). A *FEN*
+is the one form that can never be non-8×8: 8×8 is built into the format. See
+#link(<coordinates>)[Coordinates and Non-Square Boards] for how such a board is
+drawn and how its squares are named.
 
 // === Games (PGN) =============================================================
 
@@ -1216,13 +1250,38 @@ same input: PGN text whose tag roster is optional, so bare movetext works too.
 Read an external file with `read` in your own file, or pass an inline raw
 block.
 
+The input need not come from a `.pgn` file at all. Anything that yields movetext
+will do — a string you typed by hand, a game copied out of a database, the output
+of another tool, a fragment assembled in your own code. There is one precaution
+for material that is not in English: the piece letters are *localized* in most of
+the chess world, so tell the reader which language it is in with `lang:`. Spanish
+writes the knight `C` and the bishop `A`; Russian writes them `К` and `С` in
+Cyrillic:
+
+#example(```typ
+#let es = game("1. e4 e5 2. Cf3 Cc6 3. Ab5 *", lang: "es")
+#let ru = game("1. e4 e5 2. Кf3 Кc6 3. Сb5 *", lang: "ru")
+#mainline(es).join(" ") \
+#mainline(ru).join(" ")
+```, stacked: true)
+
+Both read back as the same moves, because the language is resolved *at input
+time*: the letters are converted once to canonical English SAN, and nothing
+downstream of that — the engine, FEN export, `mainline`, `notation` — ever sees
+the source language again. Which language the moves are *printed* in is a wholly
+separate choice, made later with `set-lang` or `notation(.., lang: ..)`
+(@language). You can therefore read a Spanish game and typeset it in German.
+Omitting `lang:` on non-English input is the error to watch for: the letters are
+then taken as English and either denote the wrong piece or fail outright.
+
 Games are separated by a *tag roster* or by a *result token* (`1-0`, `0-1`,
 `1/2-1/2`, `*`) — blank lines are *not* a separator. Real PGN files carry both,
-which is why `games(..)` is the strongly preferred reader for them. Paste bare
-movetext for several games yourself without either separator, and *reading*
-still succeeds — parsing is lazy (more on that below), so nothing checks the
-move numbers yet — but the games were never actually separated: `games(..)`
-reads it back as a single game whose movetext runs both games together. The
+which is why `games(..)` is the strongly preferred reader for them. 
+
+*Caveat:* paste bare movetext for several games yourself without either separator,
+and *reading* still succeeds — parsing is lazy (more on that below), so nothing
+checks the move numbers yet — but the games are never actually separated: `games(..)`
+reads it back as a single game whose movetext runs *both* games together. The
 error surfaces *later*, the moment that movetext is actually used (e.g.
 `board(g, at: ..)` or `mainline(g)`): move numbers that stop increasing are
 rejected, naming both remedies (a result token or a roster), rather than
@@ -1303,7 +1362,9 @@ To address a move *inside a variation* (a PGN 'Recursive Annotation Variantion' 
 `(line: (..hops..), at: "<final move>")`. Each hop is `(at: "<move>", into: <n>)`
 — branch off at mainline move `at`, descending `into` that move's variation
 number `n` (*0-based*: `0` is the first variation recorded at that move, `1` the
-second, …). The top-level `at` is where you stop within the line you reached:
+second, …). `into` is *optional* and defaults to `0`, so a move carrying just one
+variation — or any case where you want the first one — needs only `(at: "1w")`.
+The top-level `at` is where you stop within the line you reached:
 
 #example(```typ
 #let g = game(
@@ -1316,13 +1377,13 @@ second, …). The top-level `at` is where you stop within the line you reached:
   at: (line: ((at: "1w", into: 0),), at: "2w"),
   size: 3.4cm,
 )
-```)
+```, stacked: true)
 
 Two easy traps:
 
 - *The trailing comma.* A single-hop path is written `((at: "1w", into: 0),)` —
-  the comma makes it a one-element *array* of hops. Without it, Typst reads a lone
-  parenthesised dict and the locator is malformed.
+  the comma makes it a one-element *array* of hops. Without it, Typst reads it as a lone
+  parenthesised dict and the locator is deemed malformed.
 - *Mainline is the fast path.* The string form (equivalently an empty
   `line: ()`) indexes a memoised list of mainline positions, so many diagrams off
   one game stay cheap; the path form is walked move by move.
@@ -1973,7 +2034,7 @@ themselves are not. Finally, `supplement` / `outline-title` live in *both* the
 diagram and table buckets; the umbrella routes them to *diagram*, so use
 `set-table-defaults` for the table ones.
 
-== Language
+== Language<language>
 
 Package *staunton* supports localisation of text-related output. At the moment we support seven different languages; apart from the standard English, we offer German, French, Spanish, Italian, Portuguese, and Russian. We can easily extend the list of supported languages by adding new translation files.
 
@@ -2295,9 +2356,17 @@ module — e.g. `#import "@preview/staunton:1.1.0/src/coords.typ": square-name` 
 with the understanding that it carries no stability promise.
 
 == Tournament data
-The `*-table` functions in #link(<tournament-tables>)[Tournament Tables] render standings,
-cross-tables and progress grids. These return the underlying *data* instead, so
-you can lay it out yourself.
+The `*-table` functions in #link(<tournament-tables>)[Tournament Tables] do two
+things at once: they compute the standings (or cross-table, or progress grid)
+from your results, and they render that as a finished table. The three functions
+here stop after the first half — they return the computed *data*, as plain arrays
+and dicts, and draw nothing.
+
+Reach for them when the built-in table is not the table you want: your own column
+set, your own house styling, a chart instead of a grid, or a number pulled into
+running prose ("#emph[after round 7 she led by a full point]"). You take the data
+and build the output yourself with Typst's own `table`, or whatever else suits.
+If the built-in table already does what you need, you do not need these at all.
 #show-fns((
   ("/src/tournament.typ", "standings"),
   ("/src/tournament.typ", "crosstable"),
