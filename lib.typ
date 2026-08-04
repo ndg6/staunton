@@ -5,8 +5,8 @@
 //   position model  : fen.typ
 //   rules engine    : engine.typ  (pseudo-legal -> legality filter)
 //   SAN             : san.typ
-//   PGN parsing     : pgn.typ     (Phase A: cheap, no engine)
-//   navigation      : game.typ    (Phase B: engine on demand)
+//   PGN parsing     : pgn.typ     (cheap, no engine)
+//   navigation      : game.typ    (engine on demand)
 //   presentation    : style.typ + board.typ
 // All front doors (FEN strings, manual pieces, PGN games) funnel into one
 // renderer + one #figure wrapper.
@@ -20,7 +20,7 @@
 #import "src/coords.typ": parse-square, is-dark-square, square-name as _square-name, _index-of-locator, _locator-of-index, _default-start
 #import "src/pieces.typ": piece-content, svg-piece-set, named-piece-set, with-fallback
 #import "src/variants.typ": variant-spec as _variant-spec, char-to-piece as _char-to-piece, define-variant
-// `parse-fen` is NOT public API in 2.0.0 -- `position(fen)` is the one spelling
+// `parse-fen` is NOT public API -- `position(fen)` is the one spelling
 // (it auto-detects a FEN by the "/" and delegates here). It keeps an underscore
 // alias because lib and src both still need it internally: src/ cannot call
 // `position`, which lives here, without a circular import.
@@ -199,10 +199,8 @@
   )
 }
 
-// `chess960-start(n)` was removed in 2.0.0: it was exactly
-// `position(chess960-start-fen(n))`, and two spellings for one outcome is the
-// redundancy this release exists to remove. `chess960-start-fen` stays -- it is
-// the one that carries Scharnagl's numbering.
+// `chess960-start-fen(n)` carries Scharnagl's numbering; build the position
+// directly with `position(chess960-start-fen(n))`.
 
 // Normalise the many accepted `source` forms into (squares, cols, rows) for
 // rendering. The geometry comes from the position model: a FEN
@@ -362,22 +360,16 @@
   _render-board(b.squares, flip: flip, cols: b.cols, rows: b.rows, ..ov)
 }
 
-/// Draw a bare board — no caption, no figure — the variant-agnostic drawing
-/// primitive that every diagram builds on, and the everyday entry point. The
-/// variant (if any) rides on `source`; nothing here restricts it — a fairy or
-/// non-standard position is legitimate input to the renderer, unlike to the
-/// rules engine.
+/// Draw a bare board — no caption, no figure. When `source` is a game drawn
+/// via `at:`, the board keeps that move, so its `%cal` / `%csl` annotations and
+/// its move-quality badge become available — both are off by default and are
+/// drawn once enabled. A FEN string, a
+/// hand-built position, or a plain position has no such history and is drawn
+/// plain.
 ///
 /// - source (str, dictionary): the position to draw — a *FEN string*, a
 ///   *position* dict (from `position`), a bare *squares* dict
 ///   (`(e1: "K", …)`), or a *game* (from `game` / `games`), paired with `at:`.
-/// When `source` is a game drawn via `at:`, the board remembers that move: its
-/// `%cal` / `%csl` annotations and its move-quality badge are drawn
-/// automatically. A FEN string, a hand-built position, or a plain position
-/// (such as one built from a FEN) has no such history and is drawn
-/// plain — the game itself must be handed to `board`/`diagram` with `at:` for
-/// the badge and annotations to appear.
-///
 /// - flip (bool): show the board from Black's side. Per-call only — never a
 ///   document default.
 /// - annotations (auto, bool): process the source position's `%cal` / `%csl`
@@ -449,11 +441,8 @@
 // off by default (`move-quality: false`, src/style.typ), so for most documents
 // the caption is the only place a grade appears at all.
 //
-// Since 2.0.0 this is also more consistent than it used to be. The caption was
-// previously built from the raw `san`, which carried a literal `??` suffix but
-// never a `$4` NAG — so "3... Nf6??" captioned with the glyph while the
-// equivalent "3... Nf6 $4" captioned without it. Both spellings now normalise to
-// the same NAG (Phase A), so both caption identically.
+// Both a literal "??" suffix in `san` and an equivalent `$4` NAG normalize to
+// the same NAG, so both caption identically.
 #let _pgn-caption(locator, san, quality, lang) = {
   let at = if type(locator) == str { locator } else { locator.at("at") }
   let color = at.slice(at.len() - 1)
@@ -514,15 +503,15 @@
   figure(body, kind: chess-kind, supplement: supp, caption: below, ..((outlined: below != none) + fig-args))
 }
 
-/// A board wrapped in a `#figure` — the variant-agnostic diagram, and the
-/// everyday entry point. Draws an
-/// automatic "White – Black (Year)" line above when both players are known, and a
-/// default caption below for a FEN source ("White to move" / "Black to move").
+/// A board wrapped in a `#figure`. Draws an automatic "White – Black (Year)"
+/// line above when both players are known, and a default caption below for a
+/// FEN source ("White to move" / "Black to move").
 ///
-/// When `source` is a game drawn via `at:`, the diagram remembers that move: the
-/// players and year default to the game's roster tags, the caption defaults to
-/// "Position after 24. Nf3", and the move's `%cal` / `%csl` annotations and
-/// quality badge are drawn.
+/// When `source` is a game drawn via `at:`, the diagram keeps that move: the
+/// players and year default to the game's roster tags, and the caption defaults
+/// to "Position after 24. Nf3". The move's `%cal` / `%csl` annotations and
+/// quality badge become available too — both are off by default and are drawn
+/// once enabled.
 ///
 /// - source (str, dictionary): a FEN string, a position dict, a bare board
 ///   dict, or a *game* (from `game` / `games`), paired with `at:`.
@@ -610,8 +599,7 @@
 /// game — splice a `diagram` into the flow after each move whose comment
 /// carries a diagram marker (ChessBase `#` / `#[caption]`, Scid `[d]` / `[D]`,
 /// `\diagram`, `%%diagram`). Embedded diagrams are made in a context, so they are
-/// not individually referenceable. The variant-agnostic formatter, and the
-/// everyday entry point.
+/// not individually referenceable.
 ///
 /// - source (dictionary, str, array): a parsed *game*, a *move-text string*, or a
 ///   *SAN array*.

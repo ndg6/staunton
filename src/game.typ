@@ -1,5 +1,5 @@
 // ===========================================================================
-// Game navigation (Phase B: engine resolution, on demand).
+// Game navigation (engine resolution, on demand).
 //
 // Turns a parsed `game` (from pgn.typ) into positions. This is where the engine
 // actually runs -- only when a diagram asks for a position, so a tournament
@@ -64,11 +64,8 @@
 /// The chess variant of a game, recognised from the PGN `Variant` tag:
 /// `"chess960"` for `[Variant "Chess960"]` / `[Variant "Fischerrandom"]` (and
 /// spelling/spacing variants like `"Fischer Random"`), otherwise `"standard"`.
-/// Chess960 games share the standard rules engine — only the start position and
-/// (generalised) castling differ — so this is for the caller's benefit: with no
-/// variant-named entry points, `game-variant` is the only way to tell a Chess960
-/// game from a standard one (e.g. to caption or label it accordingly), not an
-/// engine switch.
+/// Not an engine switch — Chess960 games use the same rules engine; only the
+/// start position and (generalised) castling differ.
 ///
 /// - game (dictionary): a parsed game (from `game`).
 /// -> str
@@ -274,7 +271,7 @@
 }
 
 // ---------------------------------------------------------------------------
-// Move record (2.0.0 Phase D / §2.4)
+// Move record
 //
 // `move-at` is the single public MOVE RECORD, the union of what the movetext
 // node (`move-node`) and the engine (via `_resolved-move`) each know about a
@@ -453,8 +450,7 @@
 ///
 /// With `at` omitted, the moves are appended to the *end of the mainline*,
 /// continuing the game. The game's `result` (if decisive) is preserved
-/// unchanged, since it is a game-level token rendered after the moves, not
-/// part of the movetext.
+/// unchanged.
 ///
 /// Legality is checked only if you later navigate into the line (e.g. by
 /// drawing `board(game, at: ..)` on that variation, or on the continuation).

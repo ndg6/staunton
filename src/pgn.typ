@@ -279,11 +279,9 @@
 /// even for a single game — use `game(input)` when you know there is exactly one.
 ///
 /// Games are separated by a *tag roster* or by a *result token* (`1-0`, `0-1`,
-/// `1/2-1/2`, `*`); blank lines are not separators. Real PGN carries both, so
-/// `games` is the right entry point for it. Movetext pasted from a web page
-/// often carries neither, and two such games run together read as one legal
-/// line — so a game whose move numbers stop increasing is rejected rather than
-/// silently merged. Give each game a result token or a roster.
+/// `1/2-1/2`, `*`); blank lines are not separators. A game whose move numbers
+/// stop increasing is rejected rather than silently merged into the next one
+/// — give each game a result token or a roster.
 ///
 /// - input (str, content): the PGN source — a string, or a raw block
 ///   (```` ```…``` ````) / `#raw(..)`.

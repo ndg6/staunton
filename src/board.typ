@@ -344,9 +344,9 @@
   let uy = dy / len
   let head-len = sq * 0.36
   let head-hw = sq * 0.20
-  // Arrows keep the older, heavier 15%: the highlight MARKS were thinned to 10%
-  // (1.1.0) but an arrow shaft spans several squares, so at 10% it reads as a
-  // hairline rather than a pointer. Deliberately NOT kept in step with them.
+  // Arrows keep a heavier 15% than the highlight MARKS' 10%: an arrow shaft
+  // spans several squares, so at 10% it reads as a hairline rather than a
+  // pointer. Deliberately NOT kept in step with them.
   let sw = _resolve-square-dim(shaft-w, sq, 15%)
   let bx = tx - ux * head-len   // base of the head (shaft stops here)
   let by = ty - uy * head-len

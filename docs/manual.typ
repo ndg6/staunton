@@ -362,6 +362,64 @@ can never disagree.
 Typst package *staunton* is named in honour of *Howard Staunton* (c. 1810–1874): a leading chess master of his day, organiser of the first international tournament (London, 1851), a chess author and publisher, and the namesake of the standardised *Staunton pattern* chessmen —
 still the tournament standard.
 
+// === Common publishing tasks =================================================
+
+= Common Publishing Tasks
+
+The rest of this manual is long because *staunton* is flexible, not because
+using it takes a lot of work. Colors, board themes, borders, highlights,
+arrows, tournament tables, seven languages, HTML export — those chapters exist
+so a template author can reach for them *when needed*, not because an ordinary
+document needs all of them. Underneath, *staunton* is a small building block for
+chess-publishing templates, and most documents use only a handful of calls, in
+the same order every time. This chapter walks that ordinary path once, start to
+finish, as a single running example.
+
+== Set your look once
+
+Most documents settle on one board size and one pair of colors, used
+everywhere. Set them once, near the top of your document, and every later
+`board` and `diagram` picks them up automatically:
+
+```typ
+#set-chess-defaults(size: 4.2cm, light: rgb("#eeeed2"), dark: rgb("#769656"))
+```
+
+That is `set-chess-defaults` — the umbrella setter (@document-style covers the
+rest of what it can do, and its narrower siblings like `set-board-defaults`,
+should you ever want to set only the board bucket). One call here is all most
+documents need.
+
+== Write, and draw as you go
+
+From here it is just ordinary writing, with a game imported once and a board or
+diagram dropped in wherever the position matters. Import a PGN game and draw a
+position from it with `at:`:
+
+#example(```typ
+#let g = game("1. e4 e5 2. Nf3 Nc6 3. Bb5 a6 4. Ba4 Nf6 5. O-O Be7 1-0")
+
+This is the Ruy Lopez, reaching:
+
+#board(g, at: "5w")
+```)
+
+Refer to individual moves in your prose with `notation`, and drop in a full
+`diagram` — captioned and referenceable — wherever it earns one:
+
+#example(```typ
+White's #notation(g, from: "3w", to: "3w") pressures the knight defending e5,
+the point of the Ruy Lopez.
+
+#diagram(g, at: "5w", caption: [Position after White castles.])
+```, stacked: true)
+
+That is the whole workflow: set the look once, then alternate text with
+`board` / `diagram` calls as the game unfolds. Everything else in this manual —
+styling, PGN annotations, tournament tables, localization, Chess960, HTML
+export — is optional depth on top of these same few calls, not additional steps
+you have to take.
+
 // === The board ===============================================================
 
 = The Board<board>
@@ -386,6 +444,15 @@ see @fairy-pieces) from the same call. Use `board` inline in text or inside your
 The rest of this chapter covers the board's drawing options: labels, highlights,
 arrows, the grid, coordinates, size, colors, orientation, and piece sets — all of
 which a `diagram` accepts too.
+
+One `source` form is worth flagging early, because nothing warns you either way:
+`board(g, at: "24w")` — a *game* drawn via `at:` — knows which move produced the
+position, so it *can* draw that move's `%cal` / `%csl` annotations and a
+move-quality badge, *once you turn them on* (both are off by default —
+@move-markings). `board(fen)` or `board(position(..))` — a bare position — has
+no move behind it, so it *never* can, however you configure it. Neither is
+wrong; they are just two different starting points. See @types for the full
+picture of how a position, a game and a move relate.
 
 == Labels
 
@@ -1148,7 +1215,25 @@ There are two readers, differing only in how many games they return.
 `games(..)` always returns an *array*, however many it finds. Both accept the
 same input: PGN text whose tag roster is optional, so bare movetext works too.
 Read an external file with `read` in your own file, or pass an inline raw
-block. The examples below assume a single parsed game is in scope:
+block.
+
+Games are separated by a *tag roster* or by a *result token* (`1-0`, `0-1`,
+`1/2-1/2`, `*`) — blank lines are *not* a separator. Real PGN files carry both,
+which is why `games(..)` is the strongly preferred reader for them. Paste bare
+movetext for several games yourself without either separator, and *reading*
+still succeeds — parsing is lazy (more on that below), so nothing checks the
+move numbers yet — but the games were never actually separated: `games(..)`
+reads it back as a single game whose movetext runs both games together. The
+error surfaces *later*, the moment that movetext is actually used (e.g.
+`board(g, at: ..)` or `mainline(g)`): move numbers that stop increasing are
+rejected, naming both remedies (a result token or a roster), rather than
+silently drawing or listing a merged, illegal line.
+
+#example(```typ
+#games("1. e4 e5 2. Nf3 1-0 1. d4 d5 2. c4 *").map(g => g.result)
+```, stacked: true)
+
+The examples below assume a single parsed game is in scope:
 
 ```typ
 #let g = game(read("game.pgn"))
@@ -1174,9 +1259,9 @@ for a position. So a tournament file read only for results and never tokenises m
 === Drawing a move, not just a position<position-provenance>
 
 A *position* is only ever pieces on squares. It does not know which move
-produced it — and in staunton 2.0.0 it deliberately never carries that
-knowledge around. So when you want the move itself to show, hand `board` or
-`diagram` the *game*, and say which move with `at:`:
+produced it — it deliberately never carries that knowledge around. So when you
+want the move itself to show, hand `board` or `diagram` the *game*, and say
+which move with `at:`:
 
 - the players and year, from the game's roster, as the info line;
 - the caption "Position after 24. Nf3";
@@ -1954,6 +2039,48 @@ useful secondary format that will improve as Typst's own HTML support matures.
 // === API Reference ===========================================================
 
 #part[API Reference] <api-reference>
+
+= Working with staunton's Types<types>
+
+Three data shapes recur throughout this manual. Each is an ordinary Typst
+dictionary — none of them is a special type Typst itself knows about — but
+keeping the three apart clears up which functions can and cannot supply what.
+
+#table(
+  columns: (1fr, 2.6fr, 2.6fr),
+  inset: 5pt, align: left + horizon, stroke: 0.5pt + rgb("#d9d9d2"),
+  table.header([*type*], [*holds*], [*from*]),
+  [*position*], [squares on a board — pieces, turn, castling rights, … — and
+    nothing else. No move history.], [`position(..)`; a FEN string; `play(..)`;
+    `apply(..)`; `to-fen(..)` + `position(..)`],
+  [*game*], [a roster (player tags), the full movetext tree, and a result. Every
+    position in it is reachable by locator.], [`game(..)` / `games(..)` parse
+    PGN text],
+  [*move*], [one move's SAN, its NAGs/comments, and the two squares it moved
+    between.], [`move-at(game, at: ..)`],
+)
+
+`board(g, at: ..)` / `diagram(g, at: ..)` resolve the position *and* fetch the
+move record side by side — the move is not lost there, which is exactly why a
+game-drawn board can badge and annotate. What *does* discard the move is
+serialising back down to a bare position: pulling the FEN with
+`to-fen(g, at: ..)` and rebuilding it with `position(fen)`, or handing `board` /
+`diagram` a bare position directly. That position carries no move, so it can
+never carry a move-quality badge or a move's `%cal` / `%csl` annotations
+(@move-markings, @position-provenance) — there is no move left to badge or
+annotate. Keep handing `board` / `diagram` the *game* itself, with `at:`, to
+keep that information available.
+
+Two naming conventions follow from the same shapes:
+
+- `play(source, moves: ..)` is *position → position* — it plays moves onto a
+  position and returns a plain position, with no roster or history attached.
+  `with-line(game, moves: ..)` is *game → game* — it returns a new game with the
+  line added, roster and all.
+- among the game builders, the `with-` prefix means "returns a *game*":
+  `with-nags`, `with-comments` and `with-line` each take a game and return a
+  new one, never mutating the source. (The prefix is not universal across the
+  whole package — `with-fallback` composes a *piece-set* loader, not a game.)
 
 = Common Parameters
 

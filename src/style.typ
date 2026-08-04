@@ -617,10 +617,10 @@
 /// Expand `board-theme` / `color-theme` keys in a style layer into the fields
 /// they contribute, per the precedence rule (later wins):
 ///   board-theme's fields  <  explicit color-theme  <  explicit individual fields
-/// Pure and side-effect free (no `context`, no state reads), so it is
-/// independently testable. The theme keys themselves are removed from the
-/// result; every OTHER key in `layer` passes through untouched (and, being
-/// explicit individual fields, wins over both theme layers).
+/// Pure and side-effect free (no `context`, no state reads). The theme keys
+/// themselves are removed from the result; every OTHER key in `layer` passes
+/// through untouched (and, being explicit individual fields, wins over both
+/// theme layers).
 ///
 /// - layer (dictionary): a style layer that may contain `board-theme` and/or
 ///   `color-theme`.
