@@ -5,4 +5,4 @@
 #let pos = position((e1: "K", e8: "k"), variant: "standard")
 // force a non-standard variant on the position dict to hit the engine guard
 #let variant-pos = pos + (variant: "xiangqi")
-#let _ = play(variant-pos, "Ke2")
+#let _ = play(variant-pos, moves: "Ke2")

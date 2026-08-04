@@ -1,12 +1,12 @@
 // cross-table (round-robin only) and progress (round by
 // round), for player and team entities.
-#import "/lib.typ": parse-pgn, crosstable, crosstable-table, progress, progress-table
+#import "/lib.typ": games, crosstable, crosstable-table, progress, progress-table
 
 #set page(width: auto, height: auto, margin: 1cm)
 #set text(font: "Libertinus Serif", size: 10pt)
 
 // player round-robin, with rounds
-#let rr = parse-pgn(```
+#let rr = games(```
 [White "A"][Black "B"][Round "1"][Result "1-0"] 1-0
 [White "C"][Black "D"][Round "1"][Result "1-0"] 1-0
 [White "A"][Black "C"][Round "2"][Result "1-0"] 1-0
@@ -30,7 +30,7 @@
 #assert(pg.cells.at(3).map(c => c.score) == (0.0, 0.0, 0.0), message: "D scored 0 each round")
 
 // --- team cross-table + progress (2 teams meet in R1 and R2) ---
-#let tm = parse-pgn(```
+#let tm = games(```
 [White "P1"][Black "P2"][WhiteTeam "Alpha"][BlackTeam "Beta"][Round "1.1"][Result "1-0"] 1-0
 [White "P3"][Black "P4"][WhiteTeam "Beta"][BlackTeam "Alpha"][Round "1.2"][Result "1-0"] 1-0
 [White "P1"][Black "P2"][WhiteTeam "Alpha"][BlackTeam "Beta"][Round "2.1"][Result "1-0"] 1-0

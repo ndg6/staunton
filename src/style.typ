@@ -111,8 +111,7 @@
   pattern: none,          // none | "stripes" | "marble" | "wood"
   // Whether a material `pattern` is also drawn on LIGHT squares. Default `true`
   // (both square colors patterned, so a wood board reads as inlaid light and
-  // dark timber). Set `false` to pattern dark squares only -- which is what
-  // "wood" did before 1.0.0, so this is the opt-out for that older look.
+  // dark timber). Set `false` to pattern dark squares only.
   // No effect on "stripes", which is dark-only by construction.
   pattern-light: true,    // bool
   // Lightness nudges applied to the theme's resolved `light`/`dark` pair
@@ -160,11 +159,24 @@
   frame-width: auto,          // frame stroke width;   auto -> 10% of the square
   frame-margin: auto,         // frame inset from the border; auto -> 3% of the square
   frame-radius: auto,         // frame outer corner radius; auto -> 22% of the square
-  arrows: (),                 // array of arrows, each `(from, to, color)` e.g. ("f3","e5","G")
+  arrows: (),                 // array of arrows, each `(from, to, color)` e.g. ("f3","e5","G"), or a
+                              // dict `(from:, to:, color:, tip:, fade:)` -- `tip`/`fade` override the
+                              // board-level `arrow-tip`/`arrow-fade` for that one arrow.
   arrow-color: default-highlight-base,  // default arrow color (opaque base)
   arrow-transparency: 35%,    // applied to the default arrow color (thin lines need to stay clearly visible)
   arrow-width: auto,          // shaft width; auto -> 15% of the square (ratio / length also accepted).
                               // Deliberately heavier than the 10% marks: a shaft spans several squares.
+  arrow-tip: "hook",          // head style: "triangle" | "hook" (a barbed head; the default look)
+  arrow-fade: none,           // none | ratio -- fades the shaft toward its TAIL; the ratio is the
+                              // tail's opacity RELATIVE TO the head's (never fully disappears)
+  // Auto-mark the move that produced a position drawn from a GAME via `at:`
+  // (see `_apply-origin` in lib.typ); `none` for anything with no move behind
+  // it (a bare FEN, a hand-built position, a game drawn without `at:`), which
+  // stays free. "arrow" draws one from->to arrow; "squares" highlights both
+  // squares (via `highlight-shape`, not hard-coded "filled"). Mutually
+  // exclusive by construction -- an enum, not a set.
+  last-move: none,            // none | "arrow" | "squares"
+  last-move-color: auto,      // auto -> the same default base arrows/highlights already use
   // In-check indicator. A radial glow (color -> transparent) on the
   // king that is in check, drawn under the piece. `check` gates it; `check-color`
   // is the glow's inner color. `check-square` is the marked square, auto-filled
@@ -181,11 +193,12 @@
   // Move-quality indicator. A small badge on the destination square
   // of the last move, colored by the move's assessment. `move-quality` gates it;
   // `move-quality-mark` is the data `(square: "e5", symbol: "!!")`. Because a badge
-  // is tied to a MOVE, it is derived and injected ONLY by `diagram-after` (from the
-  // move's quality NAG / literal suffix) -- never settable on a bare position, and
-  // never on an empty square. Per-category backgrounds are settable; text is white.
+  // is tied to a MOVE, it is derived and injected ONLY by `board`/`diagram` when
+  // handed a game via `at:` (from the move's quality NAG / literal suffix) --
+  // never settable on a bare position, and never on an empty square. Per-category
+  // backgrounds are settable; text is white.
   move-quality: false,        // show the move-quality badge
-  move-quality-mark: none,    // (square: <name>, symbol: <! ? !! ?? !? ?!>) — internal, set by diagram-after only
+  move-quality-mark: none,    // (square: <name>, symbol: <! ? !! ?? !? ?!>) — internal, set by `board`/`diagram`'s `at:` resolution only
   move-quality-colors: (
     good: rgb("#4b8fd1"),        // ! !!   (light blue)
     bad: rgb("#c0392b"),         // ? ??   (red)
@@ -274,7 +287,8 @@
 // Board options that are inherently *position-specific* and therefore make no
 // sense as document-wide defaults (a single default would stamp the SAME squares
 // on every later board). `highlight` / `arrows` are per-CALL board arguments;
-// `move-quality-mark` is derived from a game move by `diagram-after`. All three
+// `move-quality-mark` is derived from a game move by `board`/`diagram`'s `at:`
+// resolution. All three
 // stay valid where they belong (see `board` / `diagram`); the defaults setters
 // reject them.
 #let board-non-default-keys = ("highlight", "arrows", "move-quality-mark")
@@ -290,7 +304,7 @@
 #let _reject-non-default-board(f) = {
   for k in f.keys() {
     assert(not board-non-default-keys.contains(k),
-      message: "`" + k + "` is position-specific and cannot be a document default; pass `highlight` / `arrows` per call, and let `diagram-after` supply the move-quality badge")
+      message: "`" + k + "` is position-specific and cannot be a document default; pass `highlight` / `arrows` per call, and let `board`/`diagram`'s `at:` supply the move-quality badge")
   }
 }
 
@@ -615,10 +629,10 @@
 /// Expand `board-theme` / `color-theme` keys in a style layer into the fields
 /// they contribute, per the precedence rule (later wins):
 ///   board-theme's fields  <  explicit color-theme  <  explicit individual fields
-/// Pure and side-effect free (no `context`, no state reads), so it is
-/// independently testable. The theme keys themselves are removed from the
-/// result; every OTHER key in `layer` passes through untouched (and, being
-/// explicit individual fields, wins over both theme layers).
+/// Pure and side-effect free (no `context`, no state reads). The theme keys
+/// themselves are removed from the result; every OTHER key in `layer` passes
+/// through untouched (and, being explicit individual fields, wins over both
+/// theme layers).
 ///
 /// - layer (dictionary): a style layer that may contain `board-theme` and/or
 ///   `color-theme`.
@@ -640,7 +654,7 @@
 /// Set default *board* style fields for all subsequent boards and diagrams
 /// (document-order state, like a Typst `#set`). `flip` is rejected (per-diagram
 /// only), as are the position-specific `highlight` / `arrows` (per-call only) and
-/// `move-quality-mark` (supplied by `diagram-after`).
+/// `move-quality-mark` (supplied by `board`/`diagram`'s `at:` resolution).
 ///
 /// - ..fields (arguments): named board style options (`size`, `light`, `dark`,
 ///   `labels`, `label-mode`, `piece-set`, …), plus `color-theme` / `board-theme`;
@@ -806,11 +820,3 @@
 /// -> content
 #let set-piece-set(spec) = board-style-state.update(s => s + (piece-set: spec))
 
-/// Build a style-overrides dict (just sugar around named arguments).
-#let chess-style(..fields) = fields.named()
-
-// ---- back-compat aliases --------------------------------------------------
-// Pre-split names kept so existing importers (board.typ) and tests keep working.
-#let default-style = default-board-style
-#let style-state = board-style-state
-#let style-keys = board-style-keys + diagram-style-keys

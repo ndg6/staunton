@@ -39,6 +39,15 @@ Artifacts land in `bench/out/` (gitignored — regeneratable, and traces are hug
   diagrams. Drives the second document-level differential in `run-bench.sh`;
   the "real document with many diagrams" target for drawing optimisations.
 - `trace_one.typ` — single game, the tractable `--timings` target.
+- `arrow_cost.typ` — arrow DRAWING-cost comparison (prompt 54). 32 boards ×
+  `--input n=<arrows per board>`, every (from, to) pair distinct so memoisation
+  cannot collapse the work. `--input arm=` picks the implementation:
+  `0` no arrows (baseline), `a` today (line + triangle head), `b` barbed head
+  with a 48-segment fade, `c` barbed head with a gradient-stroke fade,
+  `d` barbed head solid (isolates head cost from fade cost), `e` as `c` with
+  the gradient angle rounded, `q` diagnostic with one shared gradient.
+  Subtract the `0` arm to get the arrow-only cost. Not wired into
+  `run-bench.sh` — it answers a one-off design question, not a regression.
 
 ## Measurement discipline (read before trusting a delta)
 

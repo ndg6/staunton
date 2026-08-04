@@ -6,15 +6,15 @@
 //  * a variation attaches to its move, and a comment after the ')' attaches to
 //  that same (pre-variation) move;
 //  * the final move is flushed even with NO trailing result token.
-#import "/lib.typ": parse-pgn, movetext, mainline
+#import "/lib.typ": game, movetext, mainline
 
 #set page(width: auto, height: auto, margin: 1cm)
 
 // Note: no trailing result token -> the last move (Nf3) must still appear.
-#let g = parse-pgn(```
+#let g = game(```
 [White "Tree"] [Black "Test"]
 {opening note} 1. e4 {good} {center} e5 $1 2. Nf3 (2. Bc4 Bc5) {develop}
-```).first()
+```)
 
 #let nodes = movetext(g)
 

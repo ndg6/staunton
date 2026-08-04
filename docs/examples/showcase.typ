@@ -6,8 +6,8 @@
 //
 // Compile with the package root:  typst compile --root . examples/showcase.typ
 #import "/lib.typ": (
-  parse-pgn, diagram-after, board, diagram, diagram-outline,
-  mainline, game-result, position-after, play, set-chess-defaults, starting-fen,
+  game, games, board, diagram, diagram-outline,
+  mainline, game-result, play, set-chess-defaults, starting-fen,
   color-theme, standings-table,
 )
 
@@ -24,18 +24,18 @@
 // --- synthetic games (inline; legal textbook lines, fictional players) ---
 
 // A complete Giuoco Piano (~29 plies), used for most of the position diagrams.
-#let g-main = parse-pgn(```
+#let g-main = game(```
 [White "Alice"] [Black "Bob"] [Event "Synthetic Open"] [Result "1/2-1/2"]
 1. e4 e5 2. Nf3 Nc6 3. Bc4 Bc5 4. c3 Nf6 5. d4 exd4 6. cxd4 Bb4+
 7. Bd2 Bxd2+ 8. Nbxd2 d5 9. exd5 Nxd5 10. Qb3 Nce7 11. O-O O-O
 12. Rfe1 c6 13. a4 Qb6 14. Qxb6 Nxb6 15. Bb3 1/2-1/2
-```).first()
+```)
 
 // A 7-ply miniature ("Scholar's mate") - short, decisive, ends in checkmate.
-#let g-mate = parse-pgn(```
+#let g-mate = game(```
 [White "Carol"] [Black "Dan"] [Event "Synthetic Blitz"] [Result "1-0"]
 1. e4 e5 2. Bc4 Bc5 3. Qh5 Nf6 4. Qxf7# 1-0
-```).first()
+```)
 
 // Locator for the final mainline position of a game (move number + side).
 #let final-locator(game) = {
@@ -65,14 +65,14 @@
 
 = Diagrams from a game (auto captions, different piece sets)
 
-`diagram-after` pulls the roster and the last move into the labels automatically.
+`diagram(g, at: ..)` pulls the roster and the last move into the labels automatically.
 Each diagram below uses a different bundled piece set.
 
 #grid(
   columns: 2,
   gutter: 14pt,
-  diagram-after(g-main, "8w", size: 5cm, piece-set: "merida"),
-  diagram-after(g-main, final-locator(g-main), size: 5cm, piece-set: "cburnett"),
+  diagram(g-main, at: "8w", size: 5cm, piece-set: "merida"),
+  diagram(g-main, at: final-locator(g-main), size: 5cm, piece-set: "cburnett"),
 )
 
 = Label modes and orientation
@@ -83,10 +83,10 @@ The same final position drawn three ways, plus flipped to Black's view.
   columns: 4,
   gutter: 8pt,
   align: bottom + center,
-  board(position-after(g-main, final-locator(g-main)), size: 3.2cm, label-mode: "on-square"),
-  board(position-after(g-main, final-locator(g-main)), size: 3.2cm, label-mode: "outside"),
-  board(position-after(g-main, final-locator(g-main)), size: 3.2cm, label-mode: "border"),
-  board(position-after(g-main, final-locator(g-main)), size: 3.2cm, label-mode: "border", flip: true),
+  board(g-main, at: final-locator(g-main), size: 3.2cm, label-mode: "on-square"),
+  board(g-main, at: final-locator(g-main), size: 3.2cm, label-mode: "outside"),
+  board(g-main, at: final-locator(g-main), size: 3.2cm, label-mode: "border"),
+  board(g-main, at: final-locator(g-main), size: 3.2cm, label-mode: "border", flip: true),
   [on-square], [outside], [border], [border, flipped],
 )
 
@@ -97,8 +97,8 @@ The position right before the final blow, and the checkmate itself:
 #grid(
   columns: 2,
   gutter: 14pt,
-  diagram-after(g-mate, "3b", size: 5cm),
-  diagram-after(g-mate, final-locator(g-mate), size: 5cm, piece-set: "merida"),
+  diagram(g-mate, at: "3b", size: 5cm),
+  diagram(g-mate, at: final-locator(g-mate), size: 5cm, piece-set: "merida"),
 )
 
 = A "what-if" line that does not exist in any game
@@ -107,7 +107,7 @@ The position right before the final blow, and the checkmate itself:
 for the start) and returns the resulting position, without mutating anything.
 
 #diagram(
-  play(starting-fen, "1. e4 e5 2. Nf3 Nc6 3. Bc4 Bc5 4. b4"),
+  play(starting-fen, moves: "1. e4 e5 2. Nf3 Nc6 3. Bc4 Bc5 4. b4"),
   size: 5cm,
   caption: [The Evans Gambit after 4.b4, built with `play`.],
 )
@@ -117,7 +117,7 @@ for the start) and returns the resulting position, without mutating anything.
 Explicit arrows (tuple / dict forms), square highlights, and the optional grid:
 
 #board(
-  position-after(g-main, "6w"),
+  g-main, at: "6w",
   size: 6cm,
   grid: true,
   highlight: ("e4", "e5"),
@@ -126,11 +126,11 @@ Explicit arrows (tuple / dict forms), square highlights, and the optional grid:
 
 PGN `{[%cal …]}` / `{[%csl …]}` annotations are picked up automatically:
 
-#let annotated = parse-pgn(```
+#let annotated = game(```
 [White "Demo"] [Black "Annotations"]
 1. e4 e5 2. Nf3 {[%cal Gf3e5,Bf1c4] [%csl Re5]} Nc6 *
-```).first()
-#diagram-after(annotated, "2w", size: 6cm)
+```)
+#diagram(annotated, at: "2w", size: 6cm)
 
 = Document-wide styling
 
@@ -138,8 +138,8 @@ PGN `{[%cal …]}` / `{[%csl …]}` annotations are picked up automatically:
 After `set-chess-defaults`, subsequent diagrams inherit the green theme:
 
 #grid(columns: 2, gutter: 14pt,
-  diagram-after(g-main, "10w", size: 4.5cm),
-  diagram-after(g-main, "14w", size: 4.5cm),
+  diagram(g-main, at: "10w", size: 4.5cm),
+  diagram(g-main, at: "14w", size: 4.5cm),
 )
 
 = Themed boards  (reusable `color-theme` / `board-theme`, patterns, material borders)
@@ -150,18 +150,18 @@ here, but equally valid as document-wide defaults through `set-board-defaults`.
 
 #grid(
   columns: 3, gutter: 10pt, align: horizon,
-  board(position-after(g-main, "8w"), size: 3.6cm,
+  board(g-main, at: "8w", size: 3.6cm,
     color-theme: "marine"),
-  board(position-after(g-main, "8w"), size: 3.6cm,
+  board(g-main, at: "8w", size: 3.6cm,
     color-theme: color-theme(light: rgb("#d9b98a"), dark: rgb("#6b4a2f"), pattern: "wood")),
-  board(position-after(g-main, "8w"), size: 3.6cm,
+  board(g-main, at: "8w", size: 3.6cm,
     label-mode: "border", border-theme: "marble",
     color-theme: color-theme(base: "emerald", pattern: "marble", brightness: -15%, contrast: 30%)),
 )
 
 = Tournament-table styling  (zebra rows, winner highlighting, and more)
 
-#let mini = parse-pgn(```
+#let mini = games(```
 [White "Alice"][Black "Bob"][Result "1-0"][Round "1"]
 1. e4 e5 2. Nf3 Nc6 3. Bb5 1-0
 [White "Carol"][Black "Dan"][Result "0-1"][Round "1"]

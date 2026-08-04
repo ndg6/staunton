@@ -71,3 +71,99 @@
 #let lang-piece-chars(call-lang) = {
   notation-langs.at(resolve-lang(call-lang), default: notation-langs.en)
 }
+
+// Reverse of `notation-langs.at(lang)`: SAN letter -> piece kind, sorted longest
+// letter first so a multi-cluster letter (Russian king "Кр") is tried before a
+// shorter one it starts with (knight "К") -- derived, never a second hand-written
+// table. `lang` must already be a known code (see `normalize-san`).
+#let _lang-letter-kinds(lang) = {
+  let chars = notation-langs.at(lang)
+  let pairs = chars.pairs().map(p => (p.at(1), p.at(0)))
+  pairs.sorted(key: p => -p.at(0).clusters().len())
+}
+
+// Unicode chess figurines (both colour sets) -> the canonical English SAN
+// letter, pawn glyphs mapping to "" since SAN never writes a pawn letter.
+// Language-neutral by construction, so this is looked up ONCE, before any
+// per-`lang` letter table -- see the trap called out in `normalize-san`.
+#let _figurine-glyphs = (
+  "\u{2654}": "K", "\u{2655}": "Q", "\u{2656}": "R", "\u{2657}": "B", "\u{2658}": "N", "\u{2659}": "",
+  "\u{265A}": "K", "\u{265B}": "Q", "\u{265C}": "R", "\u{265D}": "B", "\u{265E}": "N", "\u{265F}": "",
+)
+
+/// Convert one SAN token written in `lang` into canonical English SAN: the
+/// leading piece letter and any promotion letter (after `=`) are translated via
+/// `notation-langs`; everything else (files, ranks, `x`, `O-O`/`O-O-O`, check/mate,
+/// glyph suffixes) is language-independent and passes through untouched.
+///
+/// A leading Unicode figurine (either colour set, e.g. `"♘f3"`, `"♞c6"`) is
+/// resolved straight to its English letter and is a TERMINAL branch: the
+/// per-`lang` letter lookup below is skipped entirely for that token, because
+/// English letters collide across languages (Spanish/French/Italian/
+/// Portuguese `"R"` is a king, not a rook) -- translating the figurine and
+/// then still running the language pass would silently turn rooks into kings.
+/// A figurine pawn glyph is stripped rather than translated, since SAN never
+/// writes a pawn letter. This figurine handling applies for every `lang`,
+/// including `"en"`, since figurines are language-neutral and `"en"` is the
+/// default.
+///
+/// - san (str): a SAN token in the given language, e.g. `"Sf3"` (German).
+/// - lang (str): the source language code (must be a key of `notation-langs`).
+/// -> str
+#let normalize-san(san, lang) = {
+  assert(
+    notation-langs.keys().contains(lang),
+    message: "unknown language code \"" + lang + "\"; supported: " + notation-langs.keys().join(", "),
+  )
+
+  let s = san
+  let cs = s.clusters()
+
+  // Leading figurine glyph: language-neutral, terminal (see docstring).
+  let leading-is-figurine = cs.len() > 0 and _figurine-glyphs.keys().contains(cs.at(0))
+  if leading-is-figurine {
+    s = _figurine-glyphs.at(cs.at(0)) + cs.slice(1).join("")
+  }
+
+  // Promotion figurine after "=" -- independent of the leading glyph (a plain
+  // pawn move can still promote to a figurine piece), so checked regardless.
+  if s.contains("=") {
+    let parts = s.split("=")
+    if parts.len() == 2 and parts.at(1).len() > 0 {
+      let pc = parts.at(1).clusters()
+      if _figurine-glyphs.keys().contains(pc.at(0)) {
+        s = parts.at(0) + "=" + _figurine-glyphs.at(pc.at(0)) + pc.slice(1).join("")
+      }
+    }
+  }
+
+  if leading-is-figurine { return s }
+  if lang == "en" { return s }
+  let kinds = _lang-letter-kinds(lang)
+
+  // leading piece letter
+  cs = s.clusters()
+  for (letter, kind) in kinds {
+    let lc = letter.clusters()
+    if cs.len() >= lc.len() and cs.slice(0, lc.len()) == lc {
+      s = notation-langs.en.at(kind) + cs.slice(lc.len()).join("")
+      break
+    }
+  }
+
+  // promotion letter after "="
+  if s.contains("=") {
+    let parts = s.split("=")
+    if parts.len() == 2 and parts.at(1).len() > 0 {
+      let pc = parts.at(1).clusters()
+      let letter = pc.at(0)
+      for (l, kind) in kinds {
+        if kind != "king" and l == letter {
+          s = parts.at(0) + "=" + notation-langs.en.at(kind) + pc.slice(1).join("")
+          break
+        }
+      }
+    }
+  }
+  s
+}

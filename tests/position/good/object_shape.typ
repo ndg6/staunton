@@ -1,7 +1,7 @@
 // the position object shape after reshaping: it now carries
 // `variant`, `cols`, `rows`, and a `squares` dict (renamed from `board`). All
 // constructors (array, squares dict, FEN) yield the same shape.
-#import "/lib.typ": position, parse-fen, starting-fen, board
+#import "/lib.typ": position, starting-fen, board
 
 #set page(width: auto, height: auto, margin: 1cm)
 
@@ -26,7 +26,7 @@
 #assert(pd.squares.at("e4").kind == "pawn", message: "dict form keeps the squares")
 
 // FEN now exposes squares + variant + geometry.
-#let pf = parse-fen(starting-fen)
+#let pf = position(starting-fen)
 #assert(pf.squares.at("e1") == (kind: "king", color: "white"), message: "FEN -> squares")
 #assert(pf.variant == "standard" and pf.cols == 8 and pf.rows == 8, message: "FEN geometry")
 

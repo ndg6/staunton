@@ -14,16 +14,17 @@
 //   * a parsed game            -> its mainline SAN;
 //   * a move-text string       -> tokenised with `_split-movetext`;
 //   * a SAN array              -> used directly.
-// `from`/`to` are diagram-after-style mainline locators ("12w"/"12b"), inclusive;
+// `from`/`to` are mainline locators ("12w"/"12b"), like `_position-after`'s, inclusive;
 // defaults are first/last move. (Variation-line ranges are not supported yet.)
 // ===========================================================================
 
 #import "san.typ": _split-movetext
-#import "pgn.typ": movetext
+#import "pgn.typ": movetext, _split-quality-suffix
 #import "i18n.typ": notation-langs, lang-piece-chars
-#import "game.typ": mainline, game-result
-#import "annotations.typ": interpret-comment, nag-symbol
+#import "game.typ": mainline, game-result, game-start, _ply-of
+#import "annotations.typ": interpret-comment, nag-symbol, glyph-to-nag
 #import "style.typ": default-pgn-style, pgn-style-state
+#import "coords.typ": _movenum-of-ply, _ply-is-white, _default-start
 
 // The only uppercase letters that denote a piece in SAN -> kind. Files (a-h),
 // ranks, "x", "+", "#", "O-O" and NAGs are never piece letters and pass through.
@@ -35,15 +36,6 @@
 // (Some fonts render the outline glyphs lighter than the solid ones.)
 #let _fig-white = (king: "\u{2654}", queen: "\u{2655}", rook: "\u{2656}", bishop: "\u{2657}", knight: "\u{2658}")
 #let _fig-black = (king: "\u{265A}", queen: "\u{265B}", rook: "\u{265C}", bishop: "\u{265D}", knight: "\u{265E}")
-
-// "12w" -> ply 23 ; "12b" -> ply 24 (same convention as game.typ locators).
-#let _ply-of(loc) = {
-  assert(type(loc) == str and loc.len() >= 2, message: "notation: bad move locator: " + repr(loc))
-  let color = loc.slice(loc.len() - 1)
-  let num = int(loc.slice(0, loc.len() - 1))
-  if color == "w" { 2 * num - 1 } else if color == "b" { 2 * num }
-  else { panic("notation: move locator must end in 'w' or 'b': " + loc) }
-}
 
 // One piece letter rendered as the language letter, or the color-aware figurine
 // glyph (`white` selects the outline vs solid set).
@@ -78,13 +70,21 @@
   out
 }
 
-// Wrap a SAN string into a minimal move node (no nags/comments).
-#let _bare-node(san) = (san: san, nags: (), comment-after: none)
+// Wrap a SAN string into a minimal move node (no comments). Normalises a
+// trailing move-quality glyph exactly like the parsed-game path (pgn.typ's
+// `_split-quality-suffix`), so a string/array SAN source and a parsed game
+// produce the same clean `san` + `nags` for visually identical input -- the
+// `nags:` gate on `notation()` then applies uniformly regardless of source.
+#let _bare-node(san) = {
+  let split = _split-quality-suffix(san)
+  let code = glyph-to-nag.at(split.suffix, default: none)
+  (san: split.san, nags: if code != none { (code,) } else { () }, comment-after: none)
+}
 
 // Resolve a source + from/to into (nodes, lo, hi) inclusive node indices. A game
 // yields its real move nodes (carrying nags/comments); a SAN string/array yields
 // bare nodes (so nags/comments are simply empty there).
-#let _resolve-line(source, from, to) = {
+#let _resolve-line(source, from, to, start: _default-start) = {
   for loc in (from, to) {
     if loc != none and type(loc) != str {
       panic("notation: variation-line ranges are not supported yet; use mainline locators like \"12w\"")
@@ -93,11 +93,11 @@
   let nodes = if type(source) == str { _split-movetext(source).map(_bare-node) }
     else if type(source) == array {
       // A SAN array must hold move strings. The classic slip is passing
-      // `parse-pgn(..)` (an ARRAY of games) instead of one game -- catch it with a
-      // clear message pointing at `.first()`, rather than crashing deep inside.
+      // `games(..)` (an ARRAY of games) instead of one game -- catch it with a
+      // clear message pointing at `game(..)`, rather than crashing deep inside.
       if source.any(e => type(e) != str) {
         let looks-like-games = source.any(e => type(e) == dictionary and "movetext-raw" in e)
-        panic("notation: a SAN array must contain move strings, but got a non-string element" + if looks-like-games { " -- this looks like the array of games from `parse-pgn`; did you forget `.first()`?" } else { "" })
+        panic("notation: a SAN array must contain move strings, but got a non-string element" + if looks-like-games { " -- this looks like the array from `games(..)`; did you mean `game(..)` for a single game?" } else { "" })
       }
       source.map(_bare-node)
     }
@@ -109,8 +109,8 @@
       panic("notation: source must be a game, a SAN move-text string, or a SAN array")
     }
   if nodes.len() == 0 { return (nodes: (), lo: 0, hi: -1) }
-  let lo = if from == none { 0 } else { _ply-of(from) - 1 }
-  let hi = if to == none { nodes.len() - 1 } else { _ply-of(to) - 1 }
+  let lo = if from == none { 0 } else { _ply-of(from, start: start) - 1 }
+  let hi = if to == none { nodes.len() - 1 } else { _ply-of(to, start: start) - 1 }
   assert(lo >= 0 and lo < nodes.len(), message: "notation: `from` locator out of range")
   assert(hi >= lo and hi < nodes.len(), message: "notation: `to` locator out of range, or before `from`")
   (nodes: nodes, lo: lo, hi: hi)
@@ -120,10 +120,10 @@
 // `ply` is 1-based (ply 1 = White's 1st move); `force` re-shows the move number
 // even for a Black move (after a run start, a variation, or a comment).
 #let _move-token(node, ply, force, opts) = {
-  let white = calc.odd(ply)
+  let white = _ply-is-white(ply, start: opts.start)
   let num = ""
   if opts.move-numbers {
-    let movenum = int((ply + 1) / 2)
+    let movenum = _movenum-of-ply(ply, start: opts.start)
     // White: "24."; a forced Black move (run start / after a variation or comment):
     // "24...". `opts.spaced` (default) then adds a space before the SAN -> "24. Nf3"
     // / "24... Nf6"; dense mode omits it -> "24.Nf3" / "24...Nf6".
@@ -228,7 +228,7 @@
 // here, only the hops matter) or the bare hops array. Each hop `(at:, into:)`
 // descends into that move's variation `into`. Returns `(nodes, start-ply)`; the
 // sub-line's first move is at ply = the branch ply (the annotated move's ply).
-#let _resolve-variation-line(game, path) = {
+#let _resolve-variation-line(game, path, start: _default-start) = {
   assert(
     type(game) == dictionary and "movetext-raw" in game,
     message: "notation: `line:` needs a parsed game (variations live only in games)",
@@ -239,11 +239,11 @@
   let line = movetext(game)
   let branch-ply = 1
   for hop in hops {
-    let target = _ply-of(hop.at("at"))
+    let target = _ply-of(hop.at("at"), start: start)
     let k = target - branch-ply
     assert(k >= 0 and k < line.len(), message: "notation: `line:` hop out of range at " + hop.at("at"))
     let vars = line.at(k).at("variations", default: ())
-    let into = hop.at("into")
+    let into = hop.at("into", default: 0)
     assert(into < vars.len(), message: "notation: no variation #" + str(into) + " at move " + hop.at("at"))
     line = vars.at(into)
     branch-ply = target
@@ -254,7 +254,7 @@
 /// Render move notation from a game (mainline), a move-text string, or a SAN
 /// array. `from`/`to` are inclusive mainline locators ("12w"/"12b"); omit for the
 /// whole line. `line` addresses a specific *variation* to render on its own
-/// (a path locator / hops array like `diagram-after`'s; `from`/`to`/`result` do not
+/// (a path locator / hops array like `_position-after`'s; `from`/`to`/`result` do not
 /// apply). Options: `figurine` (glyphs instead of letters), `lang`
 /// (`auto` -> the document language via `set-lang`; a code like "de"; or the
 /// string "auto" to follow `#set text(lang: ..)`; unknown -> en),
@@ -267,6 +267,10 @@
 /// string; otherwise (including a bold mainline) it is content.
 #let notation(source, from: none, to: none, line: none, figurine: false, lang: auto, nags: auto, comments: auto, variations: auto, variation-style: "inline", bold-mainline: auto, move-numbers: true, spaced: auto, result: false) = {
   assert(variation-style in ("inline", "block"), message: "notation: variation-style must be \"inline\" or \"block\"; got " + repr(variation-style))
+  // A game's own starting move/side (a `[FEN]` start need not be move 1, White
+  // to move -- see `game-start`); a bare SAN string/array numbers from 1, White,
+  // same as ever.
+  let numbering-start = if type(source) == dictionary and "movetext-raw" in source { game-start(source) } else { _default-start }
   // Which nodes to render: a mainline slice, or a variation sub-line addressed by
   // `line`. `start-ply` is the ply of the first rendered node.
   let nodes = ()
@@ -275,13 +279,13 @@
   let start-ply = 1
   let tail = none
   if line != none {
-    let v = _resolve-variation-line(source, line)   // (nodes, start-ply)
+    let v = _resolve-variation-line(source, line, start: numbering-start)   // (nodes, start-ply)
     nodes = v.nodes
     hi = v.nodes.len() - 1
     start-ply = v.start-ply
     // `result` is a game-level token -- not appended to a variation.
   } else {
-    let r = _resolve-line(source, from, to)
+    let r = _resolve-line(source, from, to, start: numbering-start)
     nodes = r.nodes
     lo = r.lo
     hi = r.hi
@@ -291,7 +295,7 @@
   let mk-opts = (chars, rn, rc, rv, rb, rs) => (
     figurine: figurine, chars: chars, move-numbers: move-numbers,
     nags: rn, comments: rc, variations: rv, bold-mainline: rb,
-    variation-style: variation-style, indent: 1.2em, spaced: rs,
+    variation-style: variation-style, indent: 1.2em, spaced: rs, start: numbering-start,
   )
   // `lang: auto` (the VALUE) consults the document `set-lang` setting; `lang:
   // "auto"` follows `#set text(lang:)`; an explicit code needs no document state.

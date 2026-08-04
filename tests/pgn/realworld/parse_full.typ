@@ -1,15 +1,15 @@
 // the full real-world tournament PGN (848 KB, with complete
 // movetext incl. long {[%evp ...]} eval profiles).
 //
-// parse-pgn is now LAZY in the movetext: it eagerly extracts the roster + each
+// games() is now LAZY in the movetext: it eagerly extracts the roster + each
 // game's verbatim movetext substring, but builds the move TREE only on demand
 // via `movetext(game)`. So this whole-file parse is fast (roster scan only); the
 // per-game tree is exercised by touching ONE game below.
-#import "/lib.typ": parse-pgn, games-by-event, mainline, movetext
+#import "/lib.typ": games, games-by-event, mainline, movetext
 
 #set page(width: auto, height: auto, margin: 1cm)
 
-#let all = parse-pgn(read("/tests/pgn/realworld/real_tournament.pgn"))
+#let all = games(read("/tests/pgn/realworld/real_tournament.pgn"))
 #assert(all.len() == 375, message: "expected 375 games, got " + str(all.len()))
 #assert(games-by-event(all).keys().len() == 4, message: "four divisions")
 

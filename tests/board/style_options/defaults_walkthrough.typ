@@ -7,34 +7,34 @@
 // NOT every board option is a legal default: the position-specific ones
 // (`board-non-default-keys`) are rejected by the setters — `highlight` / `arrows`
 // are per-CALL only (different squares per diagram), and `move-quality-mark` is
-// derived from a game move by `diagram-after`. So this sheet:
+// derived from a game move by `diagram(.., at: ..)`. So this sheet:
 //   * sets the highlight/arrow *styling* (colors, shapes, widths) as defaults, but
 //     passes the `highlight` / `arrows` LIST per call (as it must be);
 //   * shows `move-quality` + `move-quality-colors` as defaults, but lets
-//     `diagram-after` supply the badge's mark from a NAG-annotated game.
+//     `diagram(.., at: ..)` supply the badge's mark from a NAG-annotated game.
 // The erroring of `set-board-defaults(highlight:/arrows:/move-quality-mark: ..)` is
 // covered by failed_options/.
 //
 // Claude owns the asserts (the settable / rejected key contract + the derived
 // mark); the user eyeballs the rendered options — see tests/VISUAL_CHECKS.md.
 #import "/lib.typ": (
-  board, diagram-after, parse-pgn, to-fen, with-nags,
+  board, diagram, game, to-fen, with-nags,
   set-board-defaults, default-board-style, board-style-keys, board-non-default-keys,
 )
 #import "/src/game.typ": move-quality-mark
 
 // --- the NAG-annotated game (literal quality suffixes) ---------------------
 // 1.e4! e5? 2.Nf3!! Nc6?? ...  — a badge sits on each graded move's destination.
-#let game = parse-pgn("1. e4! e5? 2. Nf3!! Nc6?? 3. Bb5!? a6?!").first()
+#let g = game("1. e4! e5? 2. Nf3!! Nc6?? 3. Bb5!? a6?!")
 // A separate line whose mate leaves the Black king in check (for `check:`), with a
 // programmatic `!` on the mating move so it also carries a good-move badge.
 #let mate = with-nags(
-  parse-pgn("1. e4 e5 2. Qh5 Nc6 3. Bc4 Nf6?? 4. Qxf7# 1-0").first(),
-  ("4w": "!"),
+  game("1. e4 e5 2. Qh5 Nc6 3. Bc4 Nf6?? 4. Qxf7# 1-0"),
+  nags: ("4w": "!"),
 )
 
-#let main-fen  = to-fen(game, locator: "2b")   // open position after 2...Nc6??
-#let mate-fen  = to-fen(mate, locator: "4w")    // 4.Qxf7#  — Black king in check
+#let main-fen  = to-fen(g, at: "2b")   // open position after 2...Nc6??
+#let mate-fen  = to-fen(mate, at: "4w")    // 4.Qxf7#  — Black king in check
 
 // --- machine-checkable contract --------------------------------------------
 // The three position-specific keys are rejected by the setters (see the guard in
@@ -63,7 +63,7 @@
   assert(not board-non-default-keys.contains(k), message: "should be per-call: " + k)
 }
 // The badge marks are derived from the game, not hand-fed.
-#assert.eq(move-quality-mark(game, "2b"), (square: "c6", symbol: "??"))
+#assert.eq(move-quality-mark(g, "2b"), (square: "c6", symbol: "??"))
 #assert.eq(move-quality-mark(mate, "4w"), (square: "f7", symbol: "!"))
 
 #set page(width: 15cm, height: auto, margin: 1.2cm)
@@ -205,22 +205,22 @@ Colors, shapes and widths are document defaults; the squares are not, so the
 = Move-quality badge  (switch + colors are defaults; the MARK comes from the game)
 `move-quality: true` and `move-quality-colors` are legitimate document defaults, but
 the badge's *mark* is move-specific, so `move-quality-mark` is *not* a default —
-`diagram-after` derives it from the graded move. (`highlight` / `arrows` /
+`diagram(.., at: ..)` derives it from the graded move. (`highlight` / `arrows` /
 `move-quality-mark` all error in the setters; see failed_options/.)
 
 #set-board-defaults(..base)
 #set-board-defaults(move-quality: true)
 Default badge colors, from the game — red `??` on c6 (`2...Nc6??`):
-#diagram-after(game, "2b", caption: none, game-info: none, size: 3cm)
+#diagram(g, at: "2b", caption: none, game-info: none, size: 3cm)
 
 #set-board-defaults(move-quality-colors: (good: navy, bad: fuchsia, interesting: olive))
 After `set-board-defaults(move-quality-colors: (bad: fuchsia, ..))` — same board, fuchsia disc:
-#diagram-after(game, "2b", caption: none, game-info: none, size: 3cm)
+#diagram(g, at: "2b", caption: none, game-info: none, size: 3cm)
 
 Combined with the glow, on the mate — a `!` badge on f7 and the auto-located king glow:
 #set-board-defaults(..base)
 #set-board-defaults(check: true, move-quality: true)
-#diagram-after(mate, "4w", caption: none, game-info: none, size: 3cm)
+#diagram(mate, at: "4w", caption: none, game-info: none, size: 3cm)
 
 = Unicode glyph fallback  (`piece-set: "unicode"` + its fallback-only options)
 #demo("set-board-defaults(\n  piece-set: \"unicode\", baseline-inset: 0.12,\n  white-fill: rgb(\"#f7f7f7\"), black-fill: black,\n)",
@@ -228,7 +228,7 @@ Combined with the glow, on the mate — a `!` badge on f7 and the auto-located k
   white-fill: rgb("#f7f7f7"), black-fill: black)
 
 // `annotation-colors` (PGN %cal/%csl color-letter -> color) only takes effect when a
-// GAME's drawn annotations are rendered (diagram-after / notation), not on a bare
+// GAME's drawn annotations are rendered (diagram(.., at: ..) / notation), not on a bare
 // `board`, so it has no isolated board to show here — it is asserted settable
 // above and eyeballed in tests/pgn/annotations/.
 

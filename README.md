@@ -2,31 +2,31 @@
 
 **Publish chess with [Typst](https://typst.app).** staunton goes beyond 
 board drawings and turns games and positions into publication-quality
-**diagrams**, **move notation**, and **tournament tables** — all referenceable `#figure`s.
+**diagrams**, **move notation**, and **tournament tables** — all as referenceable `#figure`s.
 A move generator in pure Typst reads **FEN** and **PGN**, and everything is
 localized to seven languages.
 
-Requires **Typst 0.14.2+**. HTML export is the one exception — it builds on
-compiler features added in 0.15, so it needs **0.15+**; paged output (PDF, PNG,
-SVG) and every other feature work on 0.14.2.
+Requires **Typst 0.14.2+** with HTML export as the only exception — it builds on
+compiler features added in 0.15, so it needs **0.15+** whereas paged output (PDF, PNG,
+SVG) and every other feature work already on 0.14.2.
 
-## A game, published
+## A game, published-
 
 Install the package, parse a PGN, and drop a captioned diagram of any position —
 the players, the year, and the move just played are filled in automatically:
 
 ```typ
-#import "@preview/staunton:1.1.0": parse-pgn, diagram-after, notation, standings-table
+#import "@preview/staunton:1.1.0": game, diagram, notation, standings-table
 
-#let opera = parse-pgn(```
+#let opera = game(```
 [White "Morphy"] [Black "Allies"] [Date "1858"]
 1. e4 e5 2. Nf3 d6 3. d4 Bg4 4. dxe5 Bxf3 5. Qxf3 dxe5 6. Bc4 Nf6 7. Qb3 Qe7
 8. Nc3 c6 9. Bg5 b5 10. Nxb5 cxb5 11. Bxb5+ Nbd7 12. O-O-O Rd8 13. Rxd7 Rxd7
 14. Rd1 Qe6 15. Bxd7+ Nxd7 16. Qb8+ Nxb8 17. Rd8# 1-0
-```).first()
+```)
 
 // The final position: roster → info line, last move → caption, check → king glow.
-#diagram-after(opera, "17w", check: true)
+#diagram(opera, at: "17w", check: true)
 ```
 
 ![Morphy – Allies (1858): the final mate, the black king glowing, captioned "Position after 17. Rd8#"](https://raw.githubusercontent.com/ndg6/staunton/v1.1.0/docs/img/showcase-diagram.png)
@@ -37,7 +37,7 @@ Numbered movetext with figurine glyphs, inline **variations**, NAGs and comments
 localized to the document language — output no board-only package produces:
 
 ```typ
-#let g = parse-pgn("1. e4 e5 2. Nf3 Nc6 3. Bb5 a6 4. Ba4 Nf6 5. O-O Be7 (5... Nxe4!? 6. d4 b5) 6. Re1 b5 7. Bb3 d6 *").first()
+#let g = game("1. e4 e5 2. Nf3 Nc6 3. Bb5 a6 4. Ba4 Nf6 5. O-O Be7 (5... Nxe4!? 6. d4 b5) 6. Re1 b5 7. Bb3 d6 *")
 
 #notation(g, figurine: true, variations: true, nags: true)
 ```
@@ -50,7 +50,7 @@ Standings, cross-tables and progress tables straight from the games' result tags
 with Buchholz / Sonneborn-Berger tie-breaks:
 
 ```typ
-#let games = parse-pgn(```
+#let gs = games(```
 [White "Carlsen"][Black "Nakamura"][Result "1-0"][Round "1"] 1-0
 [White "Caruana"][Black "Nepomniachtchi"][Result "1/2-1/2"][Round "1"] 1/2-1/2
 [White "Carlsen"][Black "Caruana"][Result "1/2-1/2"][Round "2"] 1/2-1/2
@@ -59,7 +59,7 @@ with Buchholz / Sonneborn-Berger tie-breaks:
 [White "Nakamura"][Black "Caruana"][Result "0-1"][Round "3"] 0-1
 ```)
 
-#standings-table(games, caption: [Final standings])
+#standings-table(gs, caption: [Final standings])
 ```
 
 ![A final-standings table: rank, player, played, +/=/−, points, Buchholz and Sonneborn-Berger tie-breaks](https://raw.githubusercontent.com/ndg6/staunton/v1.1.0/docs/img/showcase-table.png)
@@ -70,9 +70,9 @@ with Buchholz / Sonneborn-Berger tie-breaks:
 and a `!` / `?` grade becomes a move-quality badge — composited onto the board:
 
 ```typ
-#let g = parse-pgn("1. e4 e5 2. Nf3! {[%cal Gf3e5,Rf1c4][%csl Ge5]} Nc6 *").first()
+#let g = game("1. e4 e5 2. Nf3! {[%cal Gf3e5,Rf1c4][%csl Ge5]} Nc6 *")
 
-#diagram-after(g, "2w", annotations: true, move-quality: true)
+#diagram(g, at: "2w", annotations: true, move-quality: true)
 ```
 
 ![Board after 2.Nf3 with a green and a red arrow, a highlighted square, and a blue “!” badge](https://raw.githubusercontent.com/ndg6/staunton/v1.1.0/docs/img/showcase-annotations.png)
@@ -127,7 +127,9 @@ or a squares dict:
 
 - **PGN engine** — parse multi-game files, navigate the mainline and (nested)
   **variations** by locator, play "what-if" lines, and export FEN, all on a
-  pure-Typst legal-move engine (lazy parsing stays fast on large files).
+  pure-Typst legal-move engine (lazy parsing stays fast on large files). Reads
+  movetext written with **Unicode figurines** or **localized piece letters**, so
+  games copied straight out of Informator-style and non-English sources.
 - **Notation** — numbered movetext, inline/indented variations, figurine glyphs,
   NAGs, comments, and diagrams **embedded at markers**; localized piece letters.
 - **Tournament tables** — standings, cross-tables and progress (player or team),
@@ -135,13 +137,16 @@ or a squares dict:
   options (rule presets, header / body fills including zebra rows, alignment,
   winner highlighting) settable per call or document-wide.
 - **Annotations & markings** — `%cal` / `%csl` arrows and highlights from PGN, an
-  in-check glow, and move-quality badges; add NAGs / comments / variations to a
-  game programmatically, then render it like any parsed one.
+  in-check glow, move-quality badges, and an optional **last-move** marking
+  (arrow or squares); add NAGs / comments / variations to a game
+  programmatically, then render it like any parsed one. Every automatic marking
+  comes from the game you pass, so a bare position is never marked.
 - **Styling** — reusable `color-theme` / `board-theme` values (11 built-ins each,
   derivable from one another), brightness / contrast adjustment, square patterns
-  (stripes, marble, wood), seven `"border"`-mode band looks including wood and
-  marble material frames, six label placements, flip, piece sets, grid;
-  proportional highlights (filled / cross / circle / frame) and arrows;
+  (stripes, marble, wood), seven `"border"`-mode band looks including "wood" and
+  "marble" material patterns, six label placements, flip, piece sets, grid;
+  proportional highlights (filled / cross / circle / frame); arrows with a
+  barbed or triangular tip and an optional fade along the shaft;
   size-adaptive layout.
 - **Bring-your-own & fairy pieces** — any downloaded set via a `piece-set` loader
   (`named-piece-set` / `svg-piece-set`), plus non-standard kinds and whole variants
@@ -175,13 +180,14 @@ typst compile --root . docs/examples/showcase.typ showcase.pdf
 | area | entry points |
 |---|---|
 | diagrams | `diagram`, `board` |
-| positions | `position`, `parse-fen`, `to-fen`, `starting-fen`, `chess960-start`, `chess960-start-fen` |
-| games (PGN) | `parse-pgn`, `movetext`, `mainline`, `diagram-after`, `position-after`, `play`, `game-start`, `game-variant` |
-| annotate / build | `with-nags`, `with-comments`, `with-variation` |
+| positions | `position`, `play`, `to-fen`, `starting-fen`, `chess960-start-fen` |
+| games (PGN) | `game`, `games`, `movetext`, `mainline`, `move-at`, `game-start`, `game-result`, `game-variant` |
+| annotate / build | `with-nags`, `with-comments`, `with-line` |
 | notation | `notation` |
 | tables | `standings-table`, `crosstable-table`, `progress-table`, `games-by-event` (+ compute: `standings`, `crosstable`, `progress`) |
 | outlines | `diagram-outline`, `table-outline`, `outlines` |
 | themes | `color-theme`, `board-theme` |
+| pieces & variants | `define-variant`, `named-piece-set`, `svg-piece-set`, `with-fallback`, `piece-content`, `parse-square`, `is-dark-square` |
 | engine | `legal-moves`, `apply`, `in-check`, `move-to-san` |
 | defaults | `set-chess-defaults`, `set-board-defaults`, `set-diagram-defaults`, `set-table-defaults`, `set-pgn-defaults`, `set-lang`, `set-piece-set` |
 
@@ -230,23 +236,77 @@ The runner walks every `.typ` under `tests/`; a file with a `// EXPECT: <substr>
 header must error with that message, any other must compile. Files/dirs prefixed
 `_` (shared fixtures) are skipped; `docs/examples/*.typ` are compiled too.
 
-## Roadmap
-
-- **Tournament tables**: read results from non-PGN sources (JSON / structured
-  input), so standings can be published without a PGN at all.
-- A **`table-theme(..)` value object**, bundling the table styling fields the way
-  `color-theme` / `board-theme` bundle the board ones.
-- Engine **performance** (the narrow `legal-moves` / `apply` seam can swap to WASM).
-- An opt-in **show-rule hook** for styling staunton's own figure captions
-  (supplement, alignment) — currently only possible as a snippet in your own
-  document, because a rule installed from inside the package would break
-  `@` cross-references.
-
 ## Changelog
 
 <!-- RELEASE NOTE (not user-facing): the top changelog section is the version
      currently in development. Keep its heading version-only (e.g. "### 0.3.0") —
      never add "(unreleased)" or similar to user-visible text. -->
+
+### 2.0.0
+
+**Breaking.** 2.0.0 is a large-scale redesigns of the game / PGN surface around
+two rules: 
+- there is **one** way to do each thing, and 
+- a move is something you *pass*, not something smuggled inside a value. Every rename
+  below is a hard break — no aliases were kept.
+
+- **Parsing**: `parse-pgn(x)` becomes **`games(x)`**, or **`game(x)`** when you
+  expect exactly one (it errors if the input holds more). `parse-fen(x)` becomes
+  **`position(x)`**, which auto-detects a FEN. `chess960-start(n)` becomes
+  `position(chess960-start-fen(n))`.
+- **Drawing a move**: `diagram-after(g, "17w")` becomes
+  **`diagram(g, at: "17w")`**, and `board` accepts the same pair. Previously a
+  position carried a hidden payload describing the move that produced it; it no
+  longer does, so positions are uniform whatever built them. The consequence is
+  the point of the release: the move-quality badge and `%cal` / `%csl`
+  annotations are available **only** when you hand over the game together with
+  `at:`. A bare position — from a FEN, a squares dict, or `apply` — has no move
+  behind it and is never badged or annotated.
+- **`position-after` is now internal.** It returned a bare position, silently
+  discarding the move, which made `diagram(position-after(g, L))` quietly lose
+  its badge and annotations. Pass the game with `at:` instead.
+- **Named arguments throughout**: the positional locator / payload forms are
+  gone. `to-fen(source, at: ..)`, `play(source, moves: ..)`,
+  `with-nags(game, nags: ..)`, `with-comments(game, comments: ..)`.
+- **One move accessor**: `move-san` and `move-node` are removed in favour of
+  **`move-at(game, at: ..)`**, which returns the whole record — SAN, NAGs,
+  comments, variations, and the resolved `from` / `to` / `piece` / `capture` /
+  `promotion`.
+- **Engine moves carry square names**: `legal-moves(pos).first()` is now
+  `(from: "g1", to: "f3", ..)` rather than `(col, row)` tuples. `apply` and
+  `move-to-san` speak the same shape.
+- **`with-variation` becomes `with-line`**, and it now does two jobs:
+  `with-line(g, at: "3w", moves: ..)` branches a variation as before, while
+  `with-line(g, moves: ..)` *continues* the mainline — playing out a mate the
+  source game stopped short of, which previously had no API at all.
+- **Locators** honour a game's own starting move number (a game beginning at
+  move 24 is addressed `"24w"`, not `"1w"`), and `into` is optional in a path
+  hop, defaulting to the first variation.
+- **Multi-game text**: a result token (`1-0`, `0-1`, `1/2-1/2`, `*`) now ends a
+  game, so files without a tag roster between games split correctly. Movetext
+  whose move numbers go backwards is rejected rather than silently merged.
+- **Removed, having been public by accident**: `chess-style`, `style-keys`,
+  `default-style`, `style-state` — re-exported but documented nowhere.
+
+New in the same release:
+
+- **Arrow styling.** `arrow-tip` can appear as `"triangle"` or `"hook"`, a barbed head
+  whose wings sweep back to points; **`"hook"` is the new default**, so existing
+  arrows change appearance. `arrow-fade` fades a shaft toward its tail to a
+  given opacity, relative to the head's, and both are settable per arrow via
+  `tip:` / `fade:` in an arrow entry.
+- **`last-move`** marks the move that produced the drawn position — `"arrow"`
+  draws it, `"squares"` marks the two squares — and like every other automatic
+  marking it needs a game plus `at:`; a bare position gets nothing. Off by
+  default, settable document-wide.
+- **Figurine notation as input.** `game` / `games` accept movetext written with
+  Unicode chess figurines (U+2654–U+265F, either colour set), as Chess Informator
+  and many other publications typeset it. No `lang:` is needed — figurines are
+  language-neutral, which is why publications use them.
+- **Localized movetext as input**: `game(text, lang: "de")` reads German, French,
+  Spanish, Italian, Portuguese or Russian piece letters and normalizes them to
+  standard SAN, so the reading language and the printing language are
+  independent.
 
 ### 1.1.0
 

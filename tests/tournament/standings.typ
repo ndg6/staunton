@@ -1,13 +1,13 @@
 // standings tables. Compute (`standings`) returns sorted
 // records; `standings-table` renders a #table. Player and team entities; Buchholz
 // / Sonneborn-Berger tie-breaks; sort = score desc, ties by first appearance.
-#import "/lib.typ": parse-pgn, standings, standings-table, games-by-event
+#import "/lib.typ": games, standings, standings-table, games-by-event
 
 #set page(width: auto, height: auto, margin: 1cm)
 #set text(font: "Libertinus Serif", size: 10pt)
 
 // --- player single round-robin: A>all, B>{C,D}, C>D ---
-#let rr = parse-pgn(```
+#let rr = games(```
 [White "A"][Black "B"][Result "1-0"] 1-0
 [White "A"][Black "C"][Result "1-0"] 1-0
 [White "A"][Black "D"][Result "1-0"] 1-0
@@ -26,7 +26,7 @@
 #assert(sp.at(0).wins == 3 and sp.at(3).losses == 3, message: "W/L counts")
 
 // --- draws and a tie broken by first appearance ---
-#let dr = parse-pgn(```
+#let dr = games(```
 [White "X"][Black "Y"][Result "1/2-1/2"] 1/2-1/2
 [White "Y"][Black "X"][Result "1/2-1/2"] 1/2-1/2
 ```)
@@ -35,7 +35,7 @@
 #assert(sd.at(0).rank == 1 and sd.at(1).rank == 1, message: "equal score -> shared rank")
 
 // --- team: 2 teams, 2 rounds, 2 boards. R1 drawn 1-1, R2 Alpha wins 1.5-0.5 ---
-#let tm = parse-pgn(```
+#let tm = games(```
 [White "P1"][Black "P2"][WhiteTeam "Alpha"][BlackTeam "Beta"][Round "1.1"][Result "1-0"] 1-0
 [White "P3"][Black "P4"][WhiteTeam "Beta"][BlackTeam "Alpha"][Round "1.2"][Result "1-0"] 1-0
 [White "P1"][Black "P2"][WhiteTeam "Alpha"][BlackTeam "Beta"][Round "2.1"][Result "1-0"] 1-0
@@ -49,7 +49,7 @@
 #assert(st.at(0).wins == 1 and st.at(0).draws == 1, message: "Alpha match record")
 
 // --- games-by-event splits a multi-division list ---
-#let multi = parse-pgn(```
+#let multi = games(```
 [Event "Div A"][White "A1"][Black "A2"][Result "1-0"] 1-0
 [Event "Div B"][White "B1"][Black "B2"][Result "0-1"] 0-1
 [Event "Div A"][White "A3"][Black "A1"][Result "1/2-1/2"] 1/2-1/2

@@ -42,7 +42,7 @@
 
 #import "coords.typ": file-letter, parse-square, is-dark-square, _square-index
 #import "pieces.typ": square-piece
-#import "style.typ": default-style, style-state, border-brown, border-creme, border-saddle, border-dark, border-dark-label, _expand-themes, _adjust-color-pair, _html-target
+#import "style.typ": default-board-style, board-style-state, border-brown, border-creme, border-saddle, border-dark, border-dark-label, _expand-themes, _adjust-color-pair, _html-target
 
 #let default-board-size = 6.4cm
 
@@ -330,12 +330,27 @@
   (offset: m + w / 2, side: side, radius: radius, width: w)
 }
 
-// A straight arrow: a shaft plus a filled triangular head, from
-// (fx,fy) to (tx,ty) in board-canvas coordinates. Drawn by `place`ing at the
-// origin and giving absolute vertex coordinates, so it composes with the rest of
-// the canvas. The head scales with the square `sq`; the shaft width is
-// `shaft-w` (a length, or `auto` -> proportional to `sq`). Zero-length skipped.
-#let _arrow-shape(fx, fy, tx, ty, sq, color, shaft-w) = {
+// A straight arrow: a shaft plus a filled head, from (fx,fy) to (tx,ty) in
+// board-canvas coordinates. Drawn by `place`ing at the origin and giving
+// absolute vertex coordinates, so it composes with the rest of the canvas. The
+// head scales with the square `sq`; the shaft width is `shaft-w` (a length, or
+// `auto` -> proportional to `sq`). Zero-length skipped.
+//
+// `tip` selects the head shape:
+//   * "triangle" -- a plain 3-point head (the pre-2.0 look). The shaft ends a
+//     hair short of the head's base (`* 0.96`) rather than exactly at it, to
+//     avoid an antialiasing seam.
+//   * "hook" -- a barbed 4-point head (tip, base+perp, notch, base-perp) whose
+//     rear boundary is a V pointing FORWARD. The shaft must stop at that
+//     notch, not at the base: stopping at the base leaves the barb's wedge
+//     unfilled and the tip reads visibly detached from the shaft.
+//
+// `fade` (`none` or a ratio) replaces the plain stroke paint with a
+// `gradient.linear` along the shaft when set -- a SINGLE stroked line, never
+// stacked segments (measured: 48 segments costs 1.4-1.9x compile time for an
+// indistinguishable result). The ratio is the tail's opacity relative to the
+// head's; the shaft never fully disappears.
+#let _arrow-shape(fx, fy, tx, ty, sq, color, shaft-w, tip, fade) = {
   let dx = (tx - fx) / 1pt
   let dy = (ty - fy) / 1pt
   let len = calc.sqrt(dx * dx + dy * dy)
@@ -344,21 +359,49 @@
   let uy = dy / len
   let head-len = sq * 0.36
   let head-hw = sq * 0.20
-  // Arrows keep the older, heavier 15%: the highlight MARKS were thinned to 10%
-  // (1.1.0) but an arrow shaft spans several squares, so at 10% it reads as a
-  // hairline rather than a pointer. Deliberately NOT kept in step with them.
+  // Arrows keep a heavier 15% than the highlight MARKS' 10%: an arrow shaft
+  // spans several squares, so at 10% it reads as a hairline rather than a
+  // pointer. Deliberately NOT kept in step with them.
   let sw = _resolve-square-dim(shaft-w, sq, 15%)
-  let bx = tx - ux * head-len   // base of the head (shaft stops here)
+  let bx = tx - ux * head-len   // base of the head
   let by = ty - uy * head-len
   let px = -uy                  // unit perpendicular
   let py = ux
-  place(dx: 0pt, dy: 0pt, line(start: (fx, fy), end: (bx, by), stroke: sw + color))
-  place(dx: 0pt, dy: 0pt, polygon(
-    fill: color,
-    (tx, ty),
-    (bx + px * head-hw, by + py * head-hw),
-    (bx - px * head-hw, by - py * head-hw),
-  ))
+  let paint = if fade == none { color } else {
+    let ang = calc.atan2(ux, uy)
+    gradient.linear(
+      (color.transparentize(100% - fade), 0%),
+      (color, 55%),
+      (color, 100%),
+      angle: ang,
+      space: rgb,
+    )
+  }
+  if tip == "hook" {
+    let notch-frac = 0.42
+    let nx = tx - ux * head-len * notch-frac
+    let ny = ty - uy * head-len * notch-frac
+    place(dx: 0pt, dy: 0pt, line(start: (fx, fy), end: (nx, ny), stroke: sw + paint))
+    place(dx: 0pt, dy: 0pt, polygon(
+      fill: color,
+      (tx, ty),
+      (bx + px * head-hw, by + py * head-hw),
+      (nx, ny),
+      (bx - px * head-hw, by - py * head-hw),
+    ))
+  } else if tip == "triangle" {
+    let sx = tx - ux * head-len * 0.96
+    let sy = ty - uy * head-len * 0.96
+    place(dx: 0pt, dy: 0pt, line(start: (fx, fy), end: (sx, sy), stroke: sw + paint))
+    place(dx: 0pt, dy: 0pt, polygon(
+      fill: color,
+      (tx, ty),
+      (bx + px * head-hw, by + py * head-hw),
+      (bx - px * head-hw, by - py * head-hw),
+    ))
+  } else {
+    panic("arrow-tip must be \"triangle\" or \"hook\"; got " + repr(tip))
+  }
 }
 
 // Draw one highlight inside the board canvas at screen offset (dx, dy). Stroke
@@ -462,6 +505,26 @@
   ))
 }
 
+// Does a badge symbol fit inside its disc at the badge font size? Extracted so
+// the fit is machine-checkable: `_draw-move-quality` draws into a `place`, and a
+// rendered board is not queryable, so this is the only seam where "the glyph
+// stays inside the circle" can be asserted. Must be called in a `context`.
+// Returns the bounding box as fractions of the disc: (width-frac, corner-frac),
+// both of which must stay < 1.
+// The badge font size, as a multiple of the disc radius. ONE definition, used by
+// both the drawing code and the fit check — they must not each carry their own
+// copy. They did at first, and the fit test was consequently blind to the thing
+// it existed to guard: doubling the DRAWN size left `badge_fit.typ` green,
+// because it went on measuring its own `r * 1.2`.
+#let _MQ-FONT-RATIO = 1.2
+
+#let _mq-fits(r, symbol) = {
+  let m = measure(text(size: r * _MQ-FONT-RATIO, weight: "bold", symbol))
+  let half-diag = calc.sqrt(
+    (m.width / 2 / 1pt) * (m.width / 2 / 1pt) + (m.height / 2 / 1pt) * (m.height / 2 / 1pt))
+  (width-frac: m.width / (2 * r), corner-frac: half-diag * 1pt / r)
+}
+
 // Move-quality symbol -> category. The six recognised glyphs only.
 #let _mq-category(symbol) = {
   if symbol == "!" or symbol == "!!" { "good" }
@@ -475,14 +538,20 @@
 // belonging to that square) while still spilling over the top-right edge into the
 // neighbours. Prompt 28 enlarged the disc (r ≈ 0.28·sq) and moved the centre off
 // the bare corner. `colors` is the per-category background map; the symbol text is
-// always white. Two-glyph symbols ("!!") shrink to fit. Drawn on top of
-// everything. The corner is orientation-agnostic (always screen upper-right),
-// matching the Lichess look under a flip.
+// always white. Drawn on top of everything. The corner is orientation-agnostic
+// (always screen upper-right), matching the Lichess look under a flip.
+//
+// ONE font size for all six symbols. Two-glyph symbols used to shrink to
+// `r * 0.85`, which was unnecessary and made "!!"/"??" read lighter than "!"/"?"
+// — a difference in emphasis the glyphs do not mean. Measured at that ratio, the
+// WIDEST symbol ("??") spans 51.6% of the disc's diameter, its bounding-box
+// corner reaching 64.5% of the radius: it fits with room to spare, and a font
+// would have to be nearly twice as wide to overflow. `_mq-fits` pins that.
 #let _draw-move-quality(dx, dy, sq, symbol, colors) = {
   let bg = colors.at(_mq-category(symbol))
   let r = sq * 0.28
   let inset = r * 0.5   // pull the centre down-and-left, into the move's square
-  let fs = if symbol.clusters().len() >= 2 { r * 0.85 } else { r * 1.2 }
+  let fs = r * _MQ-FONT-RATIO
   // box top-left so the disc centre lands at (dx + sq - inset, dy + inset)
   place(dx: dx + sq - inset - r, dy: dy + inset - r, box(width: 2 * r, height: 2 * r, {
     place(circle(radius: r, fill: bg, stroke: none))
@@ -530,7 +599,7 @@
     // Per-call `color-theme` / `board-theme` are expanded here, same as the
     // defaults setters (see `_expand-themes` in style.typ) -- an explicit
     // individual field in THIS call must win over a theme in THIS call.
-    let st = default-style + style-state.get() + _expand-themes(overrides.named())
+    let st = default-board-style + board-style-state.get() + _expand-themes(overrides.named())
     // Apply the `brightness`/`contrast` lightness nudges once, here, to the
     // final resolved `light`/`dark` pair -- everything downstream (checker,
     // labels, border band) reads `st.light`/`st.dark` and must see the
@@ -550,6 +619,19 @@
     let themes = ("square", "brown", "creme", "dark", "light", "wood", "marble")
     assert(themes.contains(st.border-theme), message: "border-theme must be one of " + repr(themes) + "; got " + repr(st.border-theme))
     assert(type(st.pattern-light) == bool, message: "pattern-light must be a boolean; got " + repr(st.pattern-light))
+    let tips = ("triangle", "hook")
+    assert(tips.contains(st.arrow-tip), message: "arrow-tip must be one of " + repr(tips) + "; got " + repr(st.arrow-tip))
+    let last-moves = (none, "arrow", "squares")
+    assert(last-moves.contains(st.last-move), message: "last-move must be one of " + repr(last-moves) + "; got " + repr(st.last-move))
+    // `100% - fade` feeds straight into `.transparentize(..)` in `_arrow-shape`,
+    // which OPACIFIES on a negative argument -- an out-of-range ratio would
+    // silently INVERT the fade (more opaque at the tail than the head) rather
+    // than error. `0%` is rejected too: that would make the tail fully
+    // transparent, contradicting "never fully disappears" (see this key's doc
+    // comment in style.typ). `str(type(..)) == "ratio"` because `type(x) ==
+    // "ratio"` is always false -- `type()` returns a `type` value, not a string.
+    assert(st.arrow-fade == none or (str(type(st.arrow-fade)) == "ratio" and st.arrow-fade > 0% and st.arrow-fade <= 100%),
+      message: "arrow-fade must be `none` or a ratio in (0%, 100%]; got " + repr(st.arrow-fade))
 
     let labels = st.labels
     let orient = if flip { "black" } else { "white" }
@@ -678,17 +760,30 @@
           }
         }
         // arrows: on top of the pieces. Each entry is a dict
-        // (from:, to:, color:) or a tuple ("f3","e5") / ("f3","e5", color).
+        // (from:, to:, color:, tip:, fade:) or a tuple ("f3","e5") / ("f3","e5", color).
+        // `tip`/`fade` (dict entries only) override the board-level `arrow-tip`/
+        // `arrow-fade` for that one arrow.
         for a in st.arrows {
           let fsq = if type(a) == dictionary { a.from } else { a.at(0) }
           let tsq = if type(a) == dictionary { a.to } else { a.at(1) }
           let rawcol = if type(a) == dictionary { a.at("color", default: auto) } else if a.len() > 2 { a.at(2) } else { auto }
+          let atip = if type(a) == dictionary { a.at("tip", default: st.arrow-tip) } else { st.arrow-tip }
+          // Validated here (not just at the board-level `st.arrow-tip`/
+          // `st.arrow-fade` asserts above), so a bad per-entry override is
+          // blamed on the ENTRY's `tip:`/`fade:` -- the key the caller actually
+          // wrote -- rather than surfacing as an `_arrow-shape` panic naming
+          // `arrow-tip`, which the caller never touched.
+          assert(atip == "triangle" or atip == "hook",
+            message: "an arrow entry's `tip:` must be \"triangle\" or \"hook\"; got " + repr(atip))
+          let afade = if type(a) == dictionary { a.at("fade", default: st.arrow-fade) } else { st.arrow-fade }
+          assert(afade == none or (str(type(afade)) == "ratio" and afade > 0% and afade <= 100%),
+            message: "an arrow entry's `fade:` must be `none` or a ratio in (0%, 100%]; got " + repr(afade))
           let acol = _resolve-anno-color(rawcol, st.annotation-colors, arrow-default)
           let fp = parse-square(fsq, cols: cols, rows: rows)
           let tp = parse-square(tsq, cols: cols, rows: rows)
           let fo = _screen(fp.col, fp.row, sq, orient, cols, rows)
           let to = _screen(tp.col, tp.row, sq, orient, cols, rows)
-          _arrow-shape(fo.dx + sq / 2, fo.dy + sq / 2, to.dx + sq / 2, to.dy + sq / 2, sq, acol, st.arrow-width)
+          _arrow-shape(fo.dx + sq / 2, fo.dy + sq / 2, to.dx + sq / 2, to.dy + sq / 2, sq, acol, st.arrow-width, atip, afade)
         }
         if st.border != none {
           place(rect(width: bw, height: bh, fill: none, stroke: st.border))

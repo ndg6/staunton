@@ -31,6 +31,19 @@
 )
 #let nag-symbol(n) = nag-symbols.at(n, default: "$" + n)
 
+// ---- move-quality glyph <-> NAG code ---------------------------------------
+// The six move-quality codes ($1..$6), and their glyph reversed out of
+// nag-symbols above -- the ONE table both directions derive from, so a SAN
+// suffix glyph ("Nf3!"), an explicit "$1", and a programmatic "!" all resolve
+// to the same stored code everywhere (pgn.typ's parser, game.typ's badge,
+// notation.typ's bare-SAN path, and `with-nags`'s glyph input).
+#let quality-nag-codes = ("1", "2", "3", "4", "5", "6")
+#let glyph-to-nag = {
+  let m = (:)
+  for code in quality-nag-codes { m.insert(nag-symbols.at(code), code) }
+  m
+}
+
 // ---- comment interpretation -----------------------------------------------
 /// Interpret a PGN move comment: extract a diagram marker, `%cal` arrows, `%csl`
 /// highlights, and the remaining prose. Returns `(diagram, arrows, highlights,

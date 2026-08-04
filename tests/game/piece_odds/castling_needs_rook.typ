@@ -16,18 +16,18 @@
 
 // (a) Positive control: rook PRESENT (standard start) -> exactly one king-side castle
 //     is offered. Proves the castle detector actually fires, so the 0s below matter.
-#let withRook = play("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1", opening)
+#let withRook = play("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1", moves: opening)
 #assert(kingcastles(withRook).len() == 1, message: "control: rook present but O-O not offered: " + repr(kingcastles(withRook)))
 
 // (b) The Lichess odds FEN (rights correctly show no white `K`): O-O is not offered
 //     because the right is absent.
-#let odds = play("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBN1 w Qkq - 0 1", opening)
+#let odds = play("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBN1 w Qkq - 0 1", moves: opening)
 #assert(kingcastles(odds).len() == 0, message: "odds: O-O offered without the h1 rook: " + repr(kingcastles(odds)))
 
 // (c) Stronger guard: SAME board, but a FEN that WRONGLY keeps `K` though h1 is empty.
 //     The engine must ignore the stale right and re-derive legality from the board
 //     (src/engine.typ `_castle-ok`), so O-O is still refused.
-#let oddsStale = play("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBN1 w KQkq - 0 1", opening)
+#let oddsStale = play("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBN1 w KQkq - 0 1", moves: opening)
 #assert(kingcastles(oddsStale).len() == 0, message: "odds: engine trusted a stale `K` right and offered O-O: " + repr(kingcastles(oddsStale)))
 
 = Rook-odds: king-side castling requires the rook to actually be present

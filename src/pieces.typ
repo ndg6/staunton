@@ -171,12 +171,11 @@
   box(width: sq, height: sq, align(center + horizon, art))
 }
 
-/// Build a `piece-set` loader from a caller-supplied file reader and a *filename
-/// pattern*, so a downloaded/self-made set loads without prescribing one fixed
-/// naming scheme. You supply only *how to read a file* (which must be authored in
-/// YOUR document so paths resolve against your project root — see square-piece)
-/// and the `pattern` your set follows; the helper substitutes it per `(color,
-/// kind)`. This is the convenient way to load a custom set, including fairy sets.
+/// Build a `piece-set` loader from a caller-supplied file reader and a
+/// *filename pattern*. You supply *how to read a file* (must be authored in
+/// YOUR document so paths resolve against your project root — see
+/// square-piece) and the `pattern` your set follows; the helper substitutes
+/// it per `(color, kind)`.
 ///
 /// Pattern placeholders (we prescribe the *vocabulary*, not the layout):
 /// / `{kind}`: long kind name — `"king"`, `"alfil"`.
@@ -241,8 +240,7 @@
 
 /// Compose a custom-kind `loader` with a fallback `base` piece-set, so ONE
 /// `piece-set` can draw a mixed board (standard pieces + fairy pieces). Standard
-/// kinds are drawn from `base`; every other kind is delegated to `loader`. This is
-/// the ergonomic answer to "standard king/pawn alongside alfil/dabbaba/ferz".
+/// kinds are drawn from `base`; every other kind is delegated to `loader`.
 ///
 /// ```typ
 /// #let art = with-fallback(named-piece-set(

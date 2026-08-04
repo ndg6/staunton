@@ -5,7 +5,7 @@
 // same global setting.
 #import "/lib.typ": (
   set-lang, set-diagram-defaults, set-table-defaults,
-  diagram, standings-table, parse-pgn, starting-fen, notation,
+  diagram, standings-table, games, game, starting-fen, notation,
   default-diagram-style, diagram-style-state, default-table-style, table-style-state,
 )
 // ui-string / resolve-lang are internal (not part of the public lib surface);
@@ -67,7 +67,7 @@
 
 // ---- per-call supplement override reaches the figure (plain content) ----
 #diagram(starting-fen, size: 2cm, caption: [x], supplement: [Stellung]) <d-pc>
-#let rr = parse-pgn(```
+#let rr = games(```
 [White "A"][Black "B"][Result "1-0"] 1-0
 [White "A"][Black "C"][Result "1-0"] 1-0
 [White "B"][Black "C"][Result "1-0"] 1-0
@@ -96,7 +96,7 @@
   assert(ui-string(auto, "table-outline-title") == "Tabellenverzeichnis", message: "set-lang(de) -> table outline title")
 }
 // notation's default lang now follows the global setting (auto): N -> S, B -> L.
-#let g = parse-pgn("[White \"A\"][Black \"B\"] 1. e4 e5 2. Nf3 Nc6 3. Bb5 a6 *").first()
+#let g = game("[White \"A\"][Black \"B\"] 1. e4 e5 2. Nf3 Nc6 3. Bb5 a6 *")
 #assert(notation(g, lang: "de", nags: false, comments: false, diagrams: false, bold-mainline: false, spaced: true, variations: false) == "1. e4 e5 2. Sf3 Sc6 3. Lb5 a6", message: "explicit de notation")
 #context {
   // the auto/default path returns content; render it and confirm it carries the

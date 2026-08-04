@@ -37,7 +37,25 @@ Then open the PDFs below and check the noted property. (The expected-*fail* test
       overrides row shows a fat `20%` cross and a fixed `1pt` circle.
       *(This sheet hid a cross-on-the-wrong-square bug that compiled green.)*
 - [ ] `board/arrows/arrows.pdf` — arrows run centre-to-centre, scale with the
-      board (shaft ~15% of the square), and flip with it; colors/widths as labelled.
+      board (shaft ~15% of the square), and flip with it; colors/widths as
+      labelled. Since 2.0.0 the default tip is a barbed **"hook"** head (not the
+      old plain triangle) — every arrow on this sheet (and on every other sheet
+      below that draws one) should read as a hook by default. The **arrow tip**
+      section shows the `"hook"` default next to `arrow-tip: "triangle"` (the old
+      look) and a per-arrow `tip:` override (a triangle board with one arrow
+      forced back to hook) — confirm the three read as visibly different head
+      shapes and the override lands on the right arrow only. The **arrow fade**
+      section shows a solid shaft next to `arrow-fade: 20%` (the shaft visibly
+      lightens toward the tail, staying strongest at the head) and a per-arrow
+      `fade: 60%` override (that one arrow fades noticeably more than its
+      sibling on the same board).
+- [ ] `board/arrows/last_move_render.pdf` — `last-move` as drawn, from a real
+      game move (`3... a6`). `"arrow"` draws one arrow e5→a6; `"squares"`
+      highlights e5 and a6 instead (as plain filled squares — the document's
+      `highlight-shape` default — not a hard-coded shape); the custom
+      `last-move-color: green` section recolors that arrow; the `diagram`
+      section shows the same arrow inside a figure; the last section (no
+      `last-move` set) shows neither an arrow nor a highlight on the same move.
 - [ ] `board/labeling/label_modes.pdf`, `border_themes.pdf`, `onsquare_corners.pdf`,
       `onsquare_fullwidth.pdf` — files/ranks in the right gutter/corner, themed
       bands correct, labels legible and not clashing with pieces. In
@@ -72,7 +90,14 @@ Then open the PDFs below and check the noted property. (The expected-*fail* test
         reads as a soft vignette/glow rather than stone — that construction was
         tried and rejected.
 - [ ] `board/markings/move_quality_render.pdf` — the badge as drawn, four
-      sections. (1) **All six symbols** on `board`: `!` `!!` share one colour
+      sections. Since 2.0.0 all six glyphs render at ONE font size — the
+      two-glyph ones (`!!` `??` `!?` `?!`) used to shrink and read visibly
+      lighter than `!` `?`, which implied an emphasis difference the glyphs do
+      not carry. Check the doubles are the SAME weight as the singles and still
+      sit comfortably inside their disc (the fit is asserted by
+      `board/markings/badge_fit.typ`; this is the "does it look right" half).
+      Note the boards on this sheet are small — judge glyph size on a
+      full-size diagram, not here. (1) **All six symbols** on `board`: `!` `!!` share one colour
       (good), `?` `??` a second (bad), `!?` `?!` a third (interesting); every
       disc sits on the SAME square (e4), top-right corner, on top of the piece.
       (2) **`diagram` vs `board`** with `!!` — the *board area* must be identical
@@ -205,7 +230,7 @@ Then open the PDFs below and check the noted property. (The expected-*fail* test
       and the Unicode glyph fallback. Note the **highlight/arrow *styling*** sections:
       the fill/circle/cross/frame colors and the teal arrow are set as *defaults*, while the
       `highlight:` / `arrows:` **list** is passed **per call** (it is per-call only).
-      The **move-quality** section uses `diagram-after` (i.e. a game-derived
+      The **move-quality** section uses `diagram(.., at: ..)` (i.e. a game-derived
       position, not a bare board): with
       `move-quality: true` set as a default the badge is a red `??` disc on c6, then
       recolored fuchsia by `set-board-defaults(move-quality-colors: ..)`, then a `!`
@@ -219,13 +244,13 @@ Then open the PDFs below and check the noted property. (The expected-*fail* test
       each appear a single time, not doubled. Spliced boards carry **no
       "A – B" roster line** above them (`game-info: none`: the reader is already
       inside this game's movetext).
-      The **last section only** (`move-quality` on) shows the prompt-49 badge: a
+      The **last section only** (`move-quality` on) shows the badge: a
       blue `!` disc on **f3**, from the literal `!` on `2. Nf3!`. It must be
       absent from every earlier section — `move-quality` defaults OFF and
       `notation` does not turn it on, so an embedded diagram is badge-free unless
       the document asks for badges. (Both halves matter: a badge in the earlier
-      sections means the gate leaks; no badge in the last one means provenance is
-      not reaching the spliced board.)
+      sections means the gate leaks; no badge in the last one means the game's
+      move context is not reaching the spliced board.)
 - [ ] `notation/notation.pdf` — figurines, localized piece letters, NAG glyphs,
       and `from`/`to` slices read correctly.
 - [ ] `pgn/realworld/two_knights_variations.pdf` — inline variations numbered
@@ -238,7 +263,7 @@ Then open the PDFs below and check the noted property. (The expected-*fail* test
       `outlines/outline.pdf`, `refs/diagram_refs.pdf` — game-info line, captions,
       outline entries, and cross-references resolve. Caption wording (0.2.2): a FEN
       diagram reads "White to move" / "Black to move" (no move number); a
-      `diagram-after` reads "Position after 24. Nf3" / "Position after 24... Nf6".
+      `diagram(.., at: ..)` reads "Position after 24. Nf3" / "Position after 24... Nf6".
       In particular for the
       automatic year: the dated PGN diagram shows "Morphy – Allies (1858)"; the
       no-Date PGN diagram shows "Morphy – Allies" with *no* "(year)"; and the
@@ -313,11 +338,12 @@ These are not under `tests/out/`; build them separately.
         PGN's green `f3→e5` arrow and red `e5` highlight **together with** a
         programmatic `b1→c3` arrow and a circle on `d4` on one board.
 - [ ] `docs/manual.pdf` — the new *Chess960 / Fischer Random* chapter (after *Games*):
-      - *Boards and start positions*: `diagram(chess960-start(356))` draws a
-        valid non-standard back rank (bishops on opposite colors, king between the rooks).
+      - *Boards and start positions*: `diagram(position(chess960-start-fen(356)))`
+        draws a valid non-standard back rank (bishops on opposite colors, king
+        between the rooks).
       - *X-FEN castling*: the `to-fen(frc, "10b")` output line reads
         `…/2BNK1RR w Gkq - 4 11` (the `Gkq`, not `KQkq`).
-      - *Games*: `game-variant(frc)` prints `chess960`; the `diagram-after(frc, "11w")`
+      - *Games*: `game-variant(frc)` prints `chess960`; the `diagram(frc, at: "11w")`
         board shows the white king on g1 and a rook on f1 (with the other rook still on h1).
 - [ ] `docs/manual.pdf` structure & cross-refs — the *Document-Wide Defaults* chapter
       (formerly "Document-Wide Style") covers the five default buckets; the canonical

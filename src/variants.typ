@@ -110,13 +110,13 @@
 }
 
 /// Define a reusable custom variant — the named-argument sugar over the inline
-/// spec dict (see `variant-spec`). It validates *eagerly* (so a bad letter or an
-/// overlap errors at the definition, not at first use) and returns the canonical,
-/// normalised spec, which you bind once and pass as `variant:`.
+/// spec dict (see `variant-spec`). Validates *eagerly* (a bad letter or an
+/// overlap errors at the definition, not at first use) and returns the
+/// canonical, normalized spec.
 ///
-/// Typst has no mutable global registry that a position parser could read, so a
-/// custom variant is a *value*, not a string key: bind it and reuse it. (Built-in
-/// variants such as `"standard"` are still referred to by name.)
+/// A custom variant is a *value*, not a string key: bind it once and pass it
+/// as `variant:`. Built-in variants such as `"standard"` are still referred to
+/// by name.
 ///
 /// ```typ
 /// #let fairy = define-variant("Fairy demo",

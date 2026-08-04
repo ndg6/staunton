@@ -10,7 +10,7 @@
 // A move that matches more than one is ambiguous -> hard error.
 // ===========================================================================
 
-#import "coords.typ": parse-square, square-name, file-letters, rank-digits
+#import "coords.typ": parse-square, file-letters, rank-digits
 #import "engine.typ": legal-moves, apply, in-check
 #import "fen.typ": parse-fen, starting-fen
 
@@ -91,9 +91,9 @@
 
   let cand = legal.filter(m =>
     m.piece == piece
-      and m.to.at(0) == dsq.col and m.to.at(1) == dsq.row
-      and (from-file == none or m.from.at(0) == from-file)
-      and (from-rank == none or m.from.at(1) == from-rank)
+      and m.to == dest
+      and (from-file == none or file-letters.position(x => x == m.from.slice(0, 1)) == from-file)
+      and (from-rank == none or int(m.from.slice(1)) - 1 == from-rank)
   )
   // a non-promotion SAN must not match promotion moves, and vice versa
   cand = if promo == none {
@@ -140,9 +140,9 @@
   } else if move.piece == "pawn" {
     san = ""
     if move.capture != none {
-      san += square-name(move.from.at(0), move.from.at(1)).slice(0, 1) + "x"
+      san += move.from.slice(0, 1) + "x"
     }
-    san += square-name(move.to.at(0), move.to.at(1))
+    san += move.to
     if move.kind == "promotion" {
       san += "=" + _piece-letter(move.promotion).clusters().at(0)
     }
@@ -153,17 +153,17 @@
     )
     let disambig = ""
     if others.len() > 0 {
-      let same-file = others.filter(m => m.from.at(0) == move.from.at(0)).len() > 0
-      let same-rank = others.filter(m => m.from.at(1) == move.from.at(1)).len() > 0
+      let same-file = others.filter(m => m.from.slice(0, 1) == move.from.slice(0, 1)).len() > 0
+      let same-rank = others.filter(m => m.from.slice(1) == move.from.slice(1)).len() > 0
       if not same-file {
-        disambig = file-letters.at(move.from.at(0))
+        disambig = move.from.slice(0, 1)
       } else if not same-rank {
-        disambig = rank-digits.at(move.from.at(1))
+        disambig = move.from.slice(1)
       } else {
-        disambig = file-letters.at(move.from.at(0)) + rank-digits.at(move.from.at(1))
+        disambig = move.from
       }
     }
-    san = letter + disambig + (if move.capture != none { "x" } else { "" }) + square-name(move.to.at(0), move.to.at(1))
+    san = letter + disambig + (if move.capture != none { "x" } else { "" }) + move.to
   }
 
   let opponent = if color == "white" { "black" } else { "white" }
@@ -177,7 +177,7 @@
 // Tokenize free move text into a flat SAN list. Drops move numbers ("3." /
 // "3..." and glued "3.e4" / "3...Nf6") and result tokens ("1-0", "*", ...).
 // Comments {..}, NAGs ($n) and variations (..) are NOT supported here -- they
-// raise an error (use `parse-pgn` for full PGN movetext).
+// raise an error (use `game` for full PGN movetext).
 #let _results = ("1-0", "0-1", "1/2-1/2", "*")
 #let _split-movetext(text) = {
   let out = ()
@@ -186,7 +186,7 @@
     if t == "" { continue }
     assert(
       not (t.contains("{") or t.contains("}") or t.contains("(") or t.contains(")") or t.starts-with(";") or t.starts-with("$")),
-      message: "play: comments, NAGs and variations are not supported in move text (use parse-pgn); got " + repr(t),
+      message: "play: comments, NAGs and variations are not supported in move text (use game()); got " + repr(t),
     )
     if _results.contains(t) { continue }
     if t.match(regex("^[0-9]+\.+$")) != none { continue }   // bare move number
@@ -208,11 +208,11 @@
 ///
 /// - source (none, str, dictionary): the starting point — `none` for the standard
 ///   start, a FEN string, or a position dict.
-/// - moves (str, content, array): move text (a string or a raw block; move
-///   numbers and a trailing result are tolerated and stripped), or an array of
-///   SAN tokens.
+/// - moves (str, content, array): a move-text string, a raw block, or an array
+///   of SAN strings — required.
 /// -> dictionary
-#let play(source, moves) = {
+#let play(source, moves: none) = {
+  assert(moves != none, message: "play: `moves` is required")
   let pos = if source == none { parse-fen(starting-fen) }
     else if type(source) == str { parse-fen(source) }
     else if type(source) == dictionary and "squares" in source { source }

@@ -5,8 +5,8 @@
 //   position model  : fen.typ
 //   rules engine    : engine.typ  (pseudo-legal -> legality filter)
 //   SAN             : san.typ
-//   PGN parsing     : pgn.typ     (Phase A: cheap, no engine)
-//   navigation      : game.typ    (Phase B: engine on demand)
+//   PGN parsing     : pgn.typ     (cheap, no engine)
+//   navigation      : game.typ    (engine on demand)
 //   presentation    : style.typ + board.typ
 // All front doors (FEN strings, manual pieces, PGN games) funnel into one
 // renderer + one #figure wrapper.
@@ -17,18 +17,19 @@
 // API are imported with an `_`-prefixed alias, so the clean name is absent from
 // this module's surface (Typst 0.15 has no real export privacy, so this is the
 // convention). Everything else stays reachable via a deep `src/...` import.
-#import "src/coords.typ": parse-square, is-dark-square, square-name as _square-name
+#import "src/coords.typ": parse-square, is-dark-square, square-name as _square-name, _index-of-locator, _locator-of-index, _default-start
 #import "src/pieces.typ": piece-content, svg-piece-set, named-piece-set, with-fallback
 #import "src/variants.typ": variant-spec as _variant-spec, char-to-piece as _char-to-piece, define-variant
-#import "src/fen.typ": parse-fen, starting-fen, position-fen as _position-fen
+// `parse-fen` is NOT public API -- `position(fen)` is the one spelling
+// (it auto-detects a FEN by the "/" and delegates here). It keeps an underscore
+// alias because lib and src both still need it internally: src/ cannot call
+// `position`, which lives here, without a circular import.
+#import "src/fen.typ": parse-fen as _parse-fen, starting-fen, position-fen as _position-fen
 #import "src/chess960.typ": chess960-start-fen
 #import "src/engine.typ": legal-moves, apply, in-check, checked-king-square as _checked-king-square
 #import "src/san.typ": play, move-to-san
-#import "src/pgn.typ": parse-pgn, movetext
-// `_position-at` is game.typ's provenance-free position lookup: `to-fen` only
-// wants the squares, so it must not pay for provenance it discards. It keeps its
-// underscore, which is also lib's marker for "not public API".
-#import "src/game.typ": mainline, position-after, _position-at, game-result, move-san, move-node, with-nags, with-comments, with-variation, game-start, game-variant
+#import "src/pgn.typ": games, game, movetext
+#import "src/game.typ": mainline, _position-after, move-at, game-result, with-nags, with-comments, with-line, game-start, game-variant
 // The text core lives in src/notation.typ; lib defines `notation` on top so
 // it can also embed diagrams (which needs the lib-level `diagram`).
 #import "src/notation.typ": notation as _notation-text
@@ -36,9 +37,10 @@
 // NOTE on reading external files: there is intentionally no `read-pgn(path)`
 // wrapper. Typst's `read` resolves paths relative to the file the call appears
 // in, so a wrapper here would resolve relative to this library, not your
-// document. Read in your own file instead:  parse-pgn(read("game.pgn")).
+// document. Read in your own file instead:  game(read("game.pgn")).
 #import "src/style.typ": (
-  default-style, style-state, style-keys, set-chess-defaults, set-piece-set, chess-style,
+  set-chess-defaults, set-piece-set,
+  board-style-state as _board-style-state,
   default-board-style, default-diagram-style, board-style-keys, diagram-style-keys,
   board-non-default-keys,
   diagram-style-state, set-board-defaults, set-diagram-defaults,
@@ -121,7 +123,7 @@
 }
 
 /// Build a `position` — the data a board draws — from manual placement. (A single
-/// string containing `/` is treated as a FEN and delegated to `parse-fen`.)
+/// string containing `/` is treated as a FEN and delegated to the internal FEN parser.)
 /// Positional arguments place the pieces; named arguments set the metadata.
 ///
 /// Pieces are given as a *squares dict* — `(e1: "K", d8: (kind: "q", color:
@@ -142,14 +144,14 @@
   assert(pos.len() >= 1, message: "position(): expected at least one positional argument")
 
   // FEN auto-detect: a single string/raw positional that contains "/" is a FEN
-  // (rank separators), so delegate to parse-fen. This keeps position(fen),
+  // (rank separators), so delegate to the FEN parser. This keeps position(fen),
   // board(fen) and play(fen, ..) consistent. The string ROW form never
-  // uses "/", so there is no clash. (parse-fen sets turn/castling/etc itself.)
+  // uses "/", so there is no clash. (it sets turn/castling/etc itself.)
   if pos.len() == 1 {
     let p0 = pos.first()
     let fen-text = if type(p0) == str { p0 }
       else if type(p0) == content and p0.func() == raw { p0.text } else { none }
-    if fen-text != none and fen-text.contains("/") { return parse-fen(fen-text) }
+    if fen-text != none and fen-text.contains("/") { return _parse-fen(fen-text) }
   }
 
   let squares = (:)
@@ -198,14 +200,8 @@
   )
 }
 
-/// The Chess960 / Fischer Random starting *position* for a position number
-/// (0–959), via Scharnagl's numbering scheme — a ready-to-draw position (feed it
-/// to `board` / `diagram`, or `to-fen` it). `518` is the
-/// standard start. The companion `chess960-start-fen` returns the FEN string.
-///
-/// - n (int): the position number, 0–959.
-/// -> dictionary
-#let chess960-start(n) = parse-fen(chess960-start-fen(n))
+// `chess960-start-fen(n)` carries Scharnagl's numbering; build the position
+// directly with `position(chess960-start-fen(n))`.
 
 // Normalise the many accepted `source` forms into (squares, cols, rows) for
 // rendering. The geometry comes from the position model: a FEN
@@ -213,7 +209,7 @@
 // a bare squares dict defaults to standard 8x8.
 #let _to-board(source) = {
   if type(source) == str {
-    let p = parse-fen(source)
+    let p = _parse-fen(source)
     (squares: p.squares, cols: p.cols, rows: p.rows)
   } else if type(source) == dictionary and "squares" in source {
     (squares: source.squares, cols: source.at("cols", default: 8), rows: source.at("rows", default: 8))
@@ -239,7 +235,7 @@
 // non-standard variant deliberately return `none`, so the in-check glow never
 // fires on fairy/variant boards.
 #let _analyzable-position(source) = {
-  let pos = if type(source) == str { parse-fen(source) }
+  let pos = if type(source) == str { _parse-fen(source) }
     else if type(source) == dictionary and "squares" in source and "turn" in source { source }
     else { none }
   if pos == none { return none }
@@ -253,148 +249,189 @@
   pos
 }
 
-// The provenance a position carries when it came from a game move (see
-// `_origin-of` in src/game.typ), or `none` for a FEN string, a hand-built dict,
-// or an `apply` result. A malformed/forged `_origin` degrades to `none` rather
-// than panicking: this is an internal field, so the only way to see a broken one
-// is for someone to have built it by hand, and the right answer to that is "you
-// get no badge", not a crash.
-// Every key here is READ by some consumer: `_apply-origin` takes arrows /
-// highlights / quality, `diagram` takes tags, and `_pgn-caption` takes locator +
-// san. Validating a subset would let a partial dict past the gate only to die
-// later on a missing key — so the check must cover the whole contract, and any
-// new field added to `_origin-of` must be added here too.
-#let _origin-keys = ("arrows", "highlights", "locator", "quality", "san", "tags")
-
-#let _origin-in(source) = {
-  if type(source) != dictionary { return none }
-  let o = source.at("_origin", default: none)
-  if type(o) != dictionary { return none }
-  for k in _origin-keys { if k not in o { return none } }
-  o
-}
-
-// Fold a position's provenance into the resolved board overrides: the move's
-// %cal/%csl annotations (gated by `process`) and its move-quality badge.
+// Fold a move's context into the resolved board overrides: the move's %cal/%csl
+// annotations (gated by `process`) and its move-quality badge. `mv-context` is
+// `none` for a FEN string, a hand-built position, an `apply` result, or a game
+// drawn with no `at:` — anything with no move behind it.
 //
 // Deliberately PURE and context-free — the caller resolves `process` — because
 // this is the only machine-checkable seam for the merge. A rendered board is not
 // queryable (`query(selector(rect))` errors), and a `diagrams: true` notation
 // result is a context closure whose equality ignores captured values, so
 // "annotations appear once, not twice" cannot be asserted downstream of here.
-#let _apply-origin(ov, origin, process) = {
-  if origin == none { return ov }
+// `last-move`/`last-move-color` are the RESOLVED style values (board default ⊕
+// document default ⊕ per-call override), passed in rather than read from state
+// here -- this function stays pure/context-free, exactly like `process`.
+#let _apply-origin(ov, mv-context, process, last-move: none, last-move-color: auto) = {
+  if mv-context == none { return ov }
   let ov = ov
   if process {
-    // Explicit caller arrows first, derived ones appended — the order
-    // `diagram-after` has always used.
-    ov.insert("arrows", ov.at("arrows", default: ()) + origin.arrows)
-    ov.insert("highlight", ov.at("highlight", default: ()) + origin.highlights)
+    // Explicit caller arrows first, derived ones appended.
+    ov.insert("arrows", ov.at("arrows", default: ()) + mv-context.arrows)
+    ov.insert("highlight", ov.at("highlight", default: ()) + mv-context.highlights)
   }
   // The badge is NOT gated by `annotations`: that switch governs %cal/%csl
   // comment processing, and a quality mark is a property of the move itself.
-  if origin.quality != none { ov.insert("move-quality-mark", origin.quality) }
+  if mv-context.quality != none { ov.insert("move-quality-mark", mv-context.quality) }
+  // Auto-mark the move that produced this position. `last-move-color: auto`
+  // is passed straight through as the entry's `color:` -- `_resolve-anno-color`
+  // treats `auto` as "use the arrow/highlight default base", which is exactly
+  // the shared visual language this is meant to match.
+  if last-move == "arrow" {
+    ov.insert("arrows", ov.at("arrows", default: ())
+      + ((from: mv-context.from, to: mv-context.to, color: last-move-color),))
+  } else if last-move == "squares" {
+    // `shape` deliberately omitted so the document's `highlight-shape` applies.
+    ov.insert("highlight", ov.at("highlight", default: ())
+      + ((square: mv-context.from, color: last-move-color), (square: mv-context.to, color: last-move-color)))
+  }
   ov
 }
 
+// Resolve `source`/`at` into a `(position, context)` pair. `context` is the
+// move's record (`move-at`, see src/game.typ) when `source` is a
+// game and `at:` names a move — `none` otherwise. The context travels as its
+// own value alongside the position from here on; it is never attached TO the
+// position (a position dict never carries move data — that would let a
+// hand-built or forwarded position forge a badge it has no move behind).
+//
+// `_resolve-at-source` is also called directly by `diagram` (for the caption /
+// roster-tag defaults, which need the context before the drawing seam below
+// even runs) — that is a second CALL, not a second implementation of anything;
+// it is pure and idempotent, so calling it twice on the same `(source, at)`
+// just derives the same value twice.
+#let _resolve-at-source(source, at) = {
+  let is-game = type(source) == dictionary and "movetext-raw" in source
+  if at != none {
+    assert(is-game,
+      message: "`at:` requires a game — a position already identifies its own move; pass the game (not the position) together with `at:` to select a move within it")
+    (_position-after(source, at: at), move-at(source, at: at))
+  } else {
+    assert(not is-game,
+      message: "a game needs `at:` naming which move to draw (e.g. `board(game, at: \"12w\")` or `diagram(game, at: \"12w\")`)")
+    (source, none)
+  }
+}
+
+// Move-quality badges are tied to a MOVE. The legitimate way in is a game
+// handed to `board`/`diagram` with `at:` (folded in by `_resolve-draw`, via
+// `_board-internal`) — never a caller-supplied mark, which could badge an
+// arbitrary or empty square. Shared by `board` and `diagram`, which both call
+// `_board-internal` directly with their raw `source`/`at`.
+#let _assert-no-quality-mark(ov) = assert("move-quality-mark" not in ov,
+  message: "move-quality badges are derived from a game move; draw `board(game, at: locator)` (or `diagram(game, at: locator)`) and the badge comes with it (annotate the move with `with-nags` if the PGN has no `!`/`?`) — a bare position has no move to badge")
+
+// The ONE seam from `(source, at, ov)` to what actually reaches the renderer:
+// resolves `source`/`at` (`_resolve-at-source`) and folds the resulting move
+// context into `ov` (`_apply-origin`), in a single pure call. `_board-internal`
+// — the only production caller — routes through this rather than doing the
+// resolve-then-fold itself, so there is no second place that could thread the
+// context through incorrectly (or drop it): the same call a test makes IS the
+// call production makes. Returns a dict so a test can read `.position`/`.ov`
+// without depending on tuple order.
+#let _resolve-draw(source, at, ov, process, last-move: none, last-move-color: auto) = {
+  let (position, mv-context) = _resolve-at-source(source, at)
+  (position: position, ov: _apply-origin(ov, mv-context, process, last-move: last-move, last-move-color: last-move-color))
+}
+
 // Shared board renderer: the actual draw, with the in-check auto-fill and the
-// provenance fold. `ov` is the resolved override dict. Both `board` and (through
-// it) `diagram` funnel here, which is why provenance is consumed at this one
-// seam — every drawing entry point gets it, and none of them needs the game.
-#let _board-internal(source, flip, ov, annotations: auto) = context {
-  let b = _to-board(source)
-  // Local (re)binding: mutating the captured `ov` parameter directly is not
-  // allowed inside a `context` block, so shadow it with a local copy we can
-  // still `.insert()` into below.
-  let ov = ov
+// move-context fold. `ov` is the resolved override dict. Both `board` and
+// (through it) `diagram` funnel here, which is why `_resolve-draw` is called at
+// this one seam — every drawing entry point gets it, and none of them needs the
+// game itself beyond passing `source`/`at` through unresolved.
+#let _board-internal(source, at, flip, ov, annotations: auto) = context {
+  // `annotations` gates the %cal/%csl fold only (see `_apply-origin`); resolved
+  // here because it needs `pgn-style-state`, which requires this context.
+  let process = if annotations != auto { annotations } else {
+    (default-pgn-style + pgn-style-state.get()).annotations
+  }
+  // `last-move`/`last-move-color` need `board-style-state`, which requires this
+  // context -- resolved here, exactly like `process`, and threaded through as
+  // plain values so `_apply-origin` stays pure.
+  // No `_expand-themes(..)` here, unlike the parallel resolution in
+  // render-board: `color-theme-keys` (style.typ) is only `light`/`dark`/
+  // `pattern`/`brightness`/`contrast`, so no theme can contribute a
+  // `last-move`/`last-move-color` policy key. Revisit if that ever changes.
+  let lm-style = default-board-style + _board-style-state.get() + ov
+  let resolved = _resolve-draw(source, at, ov, process,
+    last-move: lm-style.last-move, last-move-color: lm-style.last-move-color)
+  let pos = resolved.position
+  let ov = resolved.ov
+  let b = _to-board(pos)
   // In-check auto-fill: locate the side-to-move king in check and pass
   // it as `check-square`, unless the caller set one. Computed only for analyzable
   // positions; the glow itself is still gated by the `check` style switch -- so
   // skip the (attack-ray) detection work entirely unless the resolved `check`
   // flag (per-call override ⊕ document default ⊕ built-in default) is true.
   if "check-square" not in ov {
-    let check-on = ov.at("check", default: style-state.get().at("check", default: default-style.check))
+    let check-on = ov.at("check", default: _board-style-state.get().at("check", default: default-board-style.check))
     if check-on {
-      let pos = _analyzable-position(source)
-      if pos != none {
-        let cs = _checked-king-square(pos)
+      let apos = _analyzable-position(pos)
+      if apos != none {
+        let cs = _checked-king-square(apos)
         if cs != none { ov.insert("check-square", cs) }
       }
     }
   }
   // Auto-seed the glyph fallback from a custom (fairy) variant's `glyphs:` map, so
-  // `board(fairy-pos, piece-set: "unicode")` (and the same via `diagram-after`)
-  // just works. A user-supplied `piece-glyphs` override wins per kind. Standard
-  // positions carry a string variant, so this is a no-op for them.
-  let v-glyphs = if type(source) == dictionary and "variant" in source and type(source.variant) == dictionary {
-    _variant-spec(source.variant).glyphs
+  // `board(fairy-pos, piece-set: "unicode")` just works. A user-supplied
+  // `piece-glyphs` override wins per kind. Standard positions carry a string
+  // variant, so this is a no-op for them.
+  let v-glyphs = if type(pos) == dictionary and "variant" in pos and type(pos.variant) == dictionary {
+    _variant-spec(pos.variant).glyphs
   } else { (:) }
   let merged = v-glyphs + ov.at("piece-glyphs", default: (:))
   if merged.len() > 0 { ov.insert("piece-glyphs", merged) }
-  // Provenance fold: a position that came from a game move brings that move's
-  // annotations and quality badge with it. Resolved here because this context
-  // already exists — the `annotations` switch needs `pgn-style-state`.
-  let origin = _origin-in(source)
-  if origin != none {
-    let process = if annotations != auto { annotations } else {
-      (default-pgn-style + pgn-style-state.get()).annotations
-    }
-    ov = _apply-origin(ov, origin, process)
-  }
   _render-board(b.squares, flip: flip, cols: b.cols, rows: b.rows, ..ov)
 }
 
-/// Draw a bare board — no caption, no figure — the variant-agnostic drawing
-/// primitive that every diagram builds on, and the everyday entry point. The
-/// variant (if any) rides on `source`; nothing here restricts it — a fairy or
-/// non-standard position is legitimate input to the renderer, unlike to the
-/// rules engine.
+/// Draw a bare board — no caption, no figure. When `source` is a game drawn
+/// via `at:`, the board keeps that move, so its `%cal` / `%csl` annotations and
+/// its move-quality badge become available — both are off by default and are
+/// drawn once enabled. A FEN string, a
+/// hand-built position, or a plain position has no such history and is drawn
+/// plain.
 ///
 /// - source (str, dictionary): the position to draw — a *FEN string*, a
-///   *position* dict (from `position` / `parse-fen`), or a bare *squares* dict
-///   (`(e1: "K", …)`).
-/// When `source` came from `position-after`, it remembers its move: the move's
-/// `%cal` / `%csl` annotations and its move-quality badge are drawn automatically.
-/// A FEN string or a hand-built position has no such history and is drawn plain.
-///
+///   *position* dict (from `position`), a bare *squares* dict
+///   (`(e1: "K", …)`), or a *game* (from `game` / `games`), paired with `at:`.
 /// - flip (bool): show the board from Black's side. Per-call only — never a
 ///   document default.
 /// - annotations (auto, bool): process the source position's `%cal` / `%csl`
 ///   comment annotations into arrows / highlights; `auto` consults
-///   `set-pgn-defaults` (off by default). No effect on a position without a game
-///   history.
+///   `set-pgn-defaults` (off by default). No effect without a game handed in
+///   via `at:`.
+/// - at (str, dictionary, none): when `source` is a *game*, which move to draw
+///   — a mainline `"12w"` / `"12b"` or a variation path dict. Required with a
+///   game; an error otherwise (a position already identifies its own move).
 /// - ..overrides (arguments): any board *style* option (`size`, `light`, `dark`,
 ///   `labels`, `label-mode`, `file-side`, `rank-side`, `piece-set`, `highlight`,
 ///   `arrows`, `grid`, …) — see #link(<board-options>)[Board style options].
 /// -> content
-#let board(source, flip: false, annotations: auto, ..overrides) = {
+#let board(source, flip: false, annotations: auto, at: none, ..overrides) = {
   let ov = overrides.named()
-  // Move-quality badges are tied to a MOVE. The legitimate way in is a position
-  // that PROVES it came from one (`position-after` provenance, folded in by
-  // `_board-internal`) — never a caller-supplied mark, which could badge an
-  // arbitrary or empty square.
-  assert("move-quality-mark" not in ov,
-    message: "move-quality badges are derived from a game move; draw `position-after(game, locator)` and the badge comes with it (annotate the move with `with-nags` if the PGN has no `!`/`?`) — a bare position has no move to badge")
-  // Fairy glyph-fallback seeding and the provenance fold both live in
-  // `_board-internal`, the shared seam.
-  _board-internal(source, flip, ov, annotations: annotations)
+  _assert-no-quality-mark(ov)
+  // `source`/`at` go down unresolved: `_board-internal` resolves them itself
+  // (via `_resolve-draw`), the one seam that also folds in the move context.
+  _board-internal(source, at, flip, ov, annotations: annotations)
 }
 
-/// Export a position as a FEN string — the inverse of `parse-fen`. Serialises
+/// Export a position as a FEN string — the inverse of `position(fen)`. Serialises
 /// either a *position* dict directly, or a *game* at a locator. Standard 8×8
 /// positions round-trip exactly.
 ///
-/// - source (dictionary): a *position* dict, or a *game* (from `parse-pgn`).
-/// - locator (str, dictionary): required when `source` is a game — which move's
+/// - source (dictionary): a *position* dict, or a *game* (from `game` / `games`).
+/// - at (str, dictionary): required when `source` is a game — which move's
 ///   position to serialise (a mainline `"12w"` or a path dict). Ignored for a
 ///   position.
 /// -> str
-#let to-fen(source, locator: none) = {
+#let to-fen(source, at: none) = {
   assert(type(source) == dictionary, message: "to-fen: expected a position or a game dict")
+  let loc = at
   if "squares" in source { return _position-fen(source) }
   if "movetext-raw" in source {
-    assert(locator != none, message: "to-fen: a game needs a locator (e.g. locator: \"12w\")")
-    return _position-fen(_position-at(source, locator))
+    assert(loc != none, message: "to-fen: a game needs a locator (e.g. at: \"12w\")")
+    return _position-fen(_position-after(source, at: loc))
   }
   panic("to-fen: source must be a position (has `squares`) or a game (has `movetext-raw`)")
 }
@@ -421,12 +458,23 @@
 // convention, language-neutral); the catalog `pgn-caption` closure supplies the
 // surrounding wording. Takes the locator and SAN straight from the position's
 // provenance, so no game is needed. Must be called inside a `context`.
-#let _pgn-caption(locator, san, lang) = {
+// The automatic "Position after 24. Nf3" caption. `quality` is the move's grade
+// symbol (`!`, `??`, …) or `none`; it is appended to the move so a graded move
+// reads "Position after 3... Nf6??".
+//
+// The grade belongs here and not only on the board: the move-quality BADGE is
+// off by default (`move-quality: false`, src/style.typ), so for most documents
+// the caption is the only place a grade appears at all.
+//
+// Both a literal "??" suffix in `san` and an equivalent `$4` NAG normalize to
+// the same NAG, so both caption identically.
+#let _pgn-caption(locator, san, quality, lang) = {
   let at = if type(locator) == str { locator } else { locator.at("at") }
   let color = at.slice(at.len() - 1)
   let num = at.slice(0, at.len() - 1)
   let prefix = if color == "w" { num + ". " } else { num + "... " }
-  (_ui-string(lang, "pgn-caption"))(prefix + san)
+  let grade = if quality != none { quality.symbol } else { "" }
+  (_ui-string(lang, "pgn-caption"))(prefix + san + grade)
 }
 
 // Year extracted from a PGN "Date" tag ("1972.07.11" -> "1972"). Takes the raw
@@ -438,11 +486,6 @@
   let m = d.match(regex("^(\d{4})"))
   if m != none { m.captures.at(0) } else { none }
 }
-
-// (`_pgn-annotations` used to live here: it derived a move's %cal/%csl for
-// `diagram-after` alone. Positions now carry that data themselves — see
-// `_origin-of` in src/game.typ and `_apply-origin` above — so every drawing entry
-// point gets it, not just the figure-producing one.)
 
 // Split a mixed named-argument dict three ways: board-style overrides, diagram-
 // style overrides, and leftover #figure arguments.
@@ -463,7 +506,7 @@
 // Assemble a #figure around already-drawn board content `drawn`. The diagram
 // style is read inside the figure BODY (a context), so the #figure itself stays
 // a real, referenceable element. `drawn` may itself be context content (e.g. a
-// pgn-gated board), which composes fine. Shared by `diagram` and `diagram-after`.
+// pgn-gated board), which composes fine.
 #let _assemble(drawn, white, black, year, game-info, below, diagram-ov, lang, fig-args) = {
   let body = context {
     let dst = default-diagram-style + diagram-style-state.get() + diagram-ov
@@ -485,19 +528,18 @@
   figure(body, kind: chess-kind, supplement: supp, caption: below, ..((outlined: below != none) + fig-args))
 }
 
-/// A board wrapped in a `#figure` — the variant-agnostic diagram, and the
-/// everyday entry point. Draws an
-/// automatic "White – Black (Year)" line above when both players are known, and a
-/// default caption below for a FEN source ("White to move" / "Black to move").
+/// A board wrapped in a `#figure`. Draws an automatic "White – Black (Year)"
+/// line above when both players are known, and a default caption below for a
+/// FEN source ("White to move" / "Black to move").
 ///
-/// When `source` came from `position-after`, it remembers its move: the players
-/// and year default to the game's roster tags, the caption defaults to
-/// "Position after 24. Nf3", and the move's `%cal` / `%csl` annotations and
-/// quality badge are drawn — all of which `diagram-after` is now just a shorthand
-/// for.
+/// When `source` is a game drawn via `at:`, the diagram keeps that move: the
+/// players and year default to the game's roster tags, and the caption defaults
+/// to "Position after 24. Nf3". The move's `%cal` / `%csl` annotations and
+/// quality badge become available too — both are off by default and are drawn
+/// once enabled.
 ///
-/// - source (str, dictionary): a FEN string, a position dict, or a bare board
-///   dict.
+/// - source (str, dictionary): a FEN string, a position dict, a bare board
+///   dict, or a *game* (from `game` / `games`), paired with `at:`.
 /// - white (auto, str, none): white player's name, for the automatic info line;
 ///   `auto` uses the source's game tags when it has any.
 /// - black (auto, str, none): black player's name.
@@ -511,6 +553,8 @@
 /// - flip (bool): show the board from Black's side (per-diagram only).
 /// - annotations (auto, bool): process the source position's `%cal` / `%csl`
 ///   annotations into arrows / highlights; `auto` consults `set-pgn-defaults`.
+/// - at (str, dictionary, none): when `source` is a *game*, which move to draw
+///   — see `board`'s `at:`. Required with a game; an error otherwise.
 /// - lang (auto, str): language for the supplement; `auto` follows the document.
 /// - ..args (arguments): board *style* options go to the renderer; anything else
 ///   is forwarded to `#figure` (e.g. `placement: top`).
@@ -525,16 +569,27 @@
   game-info: auto,
   flip: false,
   annotations: auto,
+  at: none,
   lang: auto,
   ..args,
 ) = {
+  // Resolved here (in ADDITION to `_board-internal`'s own resolution below) only
+  // for the caption / roster-tag defaults, which are decided before the drawing
+  // seam runs — see the comment on `_resolve-at-source`. `source`/`at` themselves
+  // are passed to `_board-internal` UNCHANGED so it can resolve (and fold the
+  // context into the overrides) itself; passing the resolved position down
+  // instead would make a game `source` fail `_board-internal`'s own resolution
+  // (a plain position paired with a still-non-none `at` looks like misuse).
+  let (_, mv-context) = _resolve-at-source(source, at)
   let (board-ov, diagram-ov, fig-args) = _split-args(args.named())
-  let origin = _origin-in(source)
-  let tags = if origin != none { origin.tags } else { (:) }
+  // `move-at` doesn't carry `tags` (a roster belongs to the game, not a move):
+  // read it straight from the game when `source` is one.
+  let is-game = type(source) == dictionary and "movetext-raw" in source
+  let tags = if is-game { source.at("tags", default: (:)) } else { (:) }
   let below = if caption != auto { caption }
-    else if origin != none { context _pgn-caption(origin.locator, origin.san, lang) }
+    else if mv-context != none { context _pgn-caption(mv-context.locator, mv-context.san, mv-context.quality, lang) }
     else if type(source) == str {
-      let pos = parse-fen(source)
+      let pos = _parse-fen(source)
       context _fen-caption(pos, lang)
     } else { none }
   // `auto` means "take it from the source's game history if it has one";
@@ -542,70 +597,20 @@
   let white = if white != auto { white } else { tags.at("White", default: none) }
   let black = if black != auto { black } else { tags.at("Black", default: none) }
   let year = if year != auto { year } else { _year-of(tags) }
-  let drawn = board(source, flip: flip, annotations: annotations, ..board-ov)
+  // Same guard `board` applies, then straight to the shared seam (see
+  // `_board-internal`) with the ORIGINAL `source`/`at` — not the resolved pair
+  // derived just above.
+  _assert-no-quality-mark(board-ov)
+  let drawn = _board-internal(source, at, flip, board-ov, annotations: annotations)
   _assemble(drawn, white, black, year, game-info, below, diagram-ov, lang, fig-args)
 }
 
-// Pure sugar since prompt 49: the position itself now carries the move's
-// provenance, so `diagram` derives the caption, the roster line, the annotations
-// and the quality badge from `source` alone. Kept because it reads well and is
-// the documented shorthand — but it must stay a THIN pass-through, returning
-// `diagram`'s bare `#figure` so `#diagram-after(..) <lbl>` remains referenceable
-// (wrapping the return in `context`/`align` would attach the label to the
-// wrapper; tests/pgn/annotations guards this).
-//
-// NOTE: this comment sits ABOVE the `///` docstring on purpose. `tidy` binds a
-// docstring to the definition IMMEDIATELY below it, so a plain `//` note wedged
-// between the two detaches it — and the manual's `show-fns` then fails with
-// "`diagram-after` not found in /lib.typ", which is a confusing way to learn it.
-/// A chess diagram for the position at `locator` within a parsed game — the
-/// shorthand for `diagram(position-after(game, locator))`, which is exactly what
-/// it does. Players and year default to the game's roster tags (so the info line
-/// is automatic) and the caption defaults to "Position after …" (the move
-/// played, e.g. "Position after 24. Nf3" / "Position after 24... Nf6").
-///
-/// When the resolved PGN-handling `annotations` switch is on, `%cal` / `%csl`
-/// drawing annotations in the move's comment become arrows / highlights, merged
-/// with any passed explicitly.
-///
-/// - game (dictionary): a parsed game (from `parse-pgn`).
-/// - locator (str, dictionary): which position — a mainline `"30w"` / `"30b"` or
-///   a variation path dict.
-/// - white (auto, str, none): white player; `auto` uses the game's `White` tag.
-/// - black (auto, str, none): black player; `auto` uses the `Black` tag.
-/// - year (auto, int, str, none): year; `auto` uses the `Date` tag.
-/// - caption (auto, content, none): `auto` is "Position after …".
-/// - annotations (auto, bool): process `%cal` / `%csl` into arrows / highlights;
-///   `auto` consults `set-pgn-defaults` (off by default).
-/// - flip (bool): show the board from Black's side.
-/// - game-info (auto, content, none): the above-board line (as for `diagram`).
-/// - lang (auto, str): language for the supplement; `auto` follows the document.
-/// - ..args (arguments): board *style* options and `#figure` arguments.
-/// -> content
-#let diagram-after(game, locator, white: auto, black: auto, year: auto, caption: auto, annotations: auto, flip: false, game-info: auto, lang: auto, ..args) = diagram(
-  position-after(game, locator),
-  white: white,
-  black: black,
-  year: year,
-  caption: caption,
-  game-info: game-info,
-  flip: flip,
-  annotations: annotations,
-  lang: lang,
-  ..args,
-)
-
-// Mainline locator "12w"/"12b" <-> 0-based ply index (ply = index+1; White's
-// move m is ply 2m-1). Used to slice the movetext into text runs for embedding.
-#let _index-of-loc(loc) = {
-  let color = loc.slice(loc.len() - 1)
-  let num = int(loc.slice(0, loc.len() - 1))
-  (if color == "w" { 2 * num - 1 } else { 2 * num }) - 1
-}
-#let _loc-of-index(i) = {
-  let ply = i + 1
-  str(int((ply + 1) / 2)) + (if calc.odd(ply) { "w" } else { "b" })
-}
+// Mainline locator "12w"/"12b" <-> 0-based ply index, relative to a game's own
+// starting move (`start`, a `game-start` dict; defaults to a standard game).
+// Used to slice the movetext into text runs for embedding (shared arithmetic
+// in coords.typ).
+#let _index-of-loc(loc, start: _default-start) = _index-of-locator(loc, start: start)
+#let _loc-of-index(i, start: _default-start) = _locator-of-index(i, start: start)
 
 // The text-only options forwarded to the notation core (i.e. minus the embedding
 // switches `diagrams` / `annotations`, handled here).
@@ -619,8 +624,7 @@
 /// game — splice a `diagram` into the flow after each move whose comment
 /// carries a diagram marker (ChessBase `#` / `#[caption]`, Scid `[d]` / `[D]`,
 /// `\diagram`, `%%diagram`). Embedded diagrams are made in a context, so they are
-/// not individually referenceable. The variant-agnostic formatter, and the
-/// everyday entry point.
+/// not individually referenceable.
 ///
 /// - source (dictionary, str, array): a parsed *game*, a *move-text string*, or a
 ///   *SAN array*.
@@ -663,8 +667,9 @@
       _notation-text(source, .._text-opts(named, all-opts))
     } else {
       let nodes = movetext(source)
-      let lo = if named.at("from", default: none) != none { _index-of-loc(named.from) } else { 0 }
-      let hi = if named.at("to", default: none) != none { _index-of-loc(named.to) } else { nodes.len() - 1 }
+      let numbering-start = game-start(source)
+      let lo = if named.at("from", default: none) != none { _index-of-loc(named.from, start: numbering-start) } else { 0 }
+      let hi = if named.at("to", default: none) != none { _index-of-loc(named.to, start: numbering-start) } else { nodes.len() - 1 }
       let process-anno = if named.at("annotations", default: auto) != auto { named.annotations } else { pg.annotations }
       let run-opts = _text-opts(named, ("figurine", "lang", "nags", "comments", "variations", "variation-style", "bold-mainline", "move-numbers", "spaced"))
 
@@ -673,17 +678,19 @@
       for idx in range(lo, hi + 1) {
         let info = _interpret-comment(nodes.at(idx).at("comment-after", default: none))
         if info.diagram != none {
-          parts.push(_notation-text(source, from: _loc-of-index(run-start), to: _loc-of-index(idx), result: false, ..run-opts))
+          parts.push(_notation-text(source, from: _loc-of-index(run-start, start: numbering-start), to: _loc-of-index(idx, start: numbering-start), result: false, ..run-opts))
           let cap = if info.diagram.caption == none { none } else { [#info.diagram.caption] }
-          // An embedded diagram is an ORDINARY diagram: the position's own
-          // provenance supplies the %cal/%csl and the quality badge, so nothing is
-          // re-derived here (deriving them again would DOUBLE the arrows). The one
-          // argument choice specific to this context is `game-info: none` — the
-          // reader is already inside this game's movetext, often several times per
-          // page, so repeating the roster line under each board is noise. It is a
-          // plain per-call argument any user could pass, not a privileged path.
+          // An embedded diagram is an ORDINARY diagram: handing `source` (the
+          // game) with `at:` gets the %cal/%csl and quality badge from `diagram`
+          // itself, so nothing is re-derived here (deriving them again would
+          // DOUBLE the arrows). The one argument choice specific to this context
+          // is `game-info: none` — the reader is already inside this game's
+          // movetext, often several times per page, so repeating the roster line
+          // under each board is noise. It is a plain per-call argument any user
+          // could pass, not a privileged path.
           parts.push(diagram(
-            position-after(source, _loc-of-index(idx)),
+            source,
+            at: _loc-of-index(idx, start: numbering-start),
             caption: cap,
             game-info: none,
             annotations: process-anno,
@@ -692,7 +699,7 @@
         }
       }
       if run-start <= hi {
-        parts.push(_notation-text(source, from: _loc-of-index(run-start), to: _loc-of-index(hi), result: false, ..run-opts))
+        parts.push(_notation-text(source, from: _loc-of-index(run-start, start: numbering-start), to: _loc-of-index(hi, start: numbering-start), result: false, ..run-opts))
       }
       let body = parts.map(c => [#c]).join()
       if named.at("result", default: false) { body = [#body #game-result(source)] }

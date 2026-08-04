@@ -12,10 +12,12 @@
 // detection, castling-through-check, and (later) mate/stalemate.
 //
 // A `move` is:
-//   (from: (col,row), to: (col,row), piece, color,
+//   (from: square-name, to: square-name, piece, color,
 //    capture: none|kind, kind: "normal"|"double-push"|"en-passant"
 //                              |"castle-k"|"castle-q"|"promotion",
 //    promotion: none|kind)
+// `from`/`to` are square names ("g1"), not (col,row) tuples — this is the
+// ONLY move shape, internal or public.
 // ===========================================================================
 
 #import "coords.typ": square-name, parse-square
@@ -30,7 +32,7 @@
 #let _other(color) = if color == "white" { "black" } else { "white" }
 
 #let _mv(fc, fr, tc, tr, piece, color, capture: none, kind: "normal", promotion: none) = (
-  from: (fc, fr), to: (tc, tr), piece: piece, color: color,
+  from: square-name(fc, fr), to: square-name(tc, tr), piece: piece, color: color,
   capture: capture, kind: kind, promotion: promotion,
 )
 
@@ -291,15 +293,21 @@
 #let apply(position, move) = {
   let board = position.squares
   let color = move.color
-  let (fc, fr) = move.from
-  let (tc, tr) = move.to
-  let from-name = square-name(fc, fr)
-  let to-name = square-name(tc, tr)
+  let from-name = move.from
+  let to-name = move.to
+  let from-sq = parse-square(from-name)
+  let to-sq = parse-square(to-name)
+  let (fc, fr) = (from-sq.col, from-sq.row)
+  let (tc, tr) = (to-sq.col, to-sq.row)
 
-  board.remove(from-name)
+  // NOTE: `dict.remove(k)` RETURNS the removed value, and a bare statement's
+  // value is joined into the enclosing block's result -- which silently merged
+  // the removed piece's `(kind, color)` into the position this function returns.
+  // Bind the results so nothing joins.
+  let _ = board.remove(from-name)
   if move.kind == "en-passant" {
     // captured pawn sits beside the destination, on the mover's origin rank
-    board.remove(square-name(tc, fr))
+    let _ = board.remove(square-name(tc, fr))
   }
 
   let cr = position.castling
@@ -310,7 +318,7 @@
     let side = if move.kind == "castle-k" { "king" } else { "queen" }
     let rf = cr.at(color + "-" + side, default: none)
     if rf == none or rf == true or rf == false { rf = if side == "king" { 7 } else { 0 } }
-    board.remove(square-name(rf, fr))
+    let _ = board.remove(square-name(rf, fr))
     board.insert(square-name(_KING-DEST.at(move.kind), fr), (kind: "king", color: color))
     board.insert(square-name(_ROOK-DEST.at(move.kind), fr), (kind: "rook", color: color))
   } else {

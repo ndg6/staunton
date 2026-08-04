@@ -9,7 +9,7 @@
 // short-cut), the same way bench/spassky_fischer.typ does for the 9-game set.
 //
 // NOT an asserting test; a benchmark input compiled by bench/run-bench.sh.
-#import "/lib.typ": parse-pgn, mainline, notation, diagram-after
+#import "/lib.typ": game, mainline, notation, diagram
 #set page(paper: "a4", margin: 2cm)
 #set text(size: 10pt)
 
@@ -27,22 +27,22 @@
 ]
 
 #for id in game-ids {
-  let game = parse-pgn(read(game-file(id))).first()
-  let tags = game.tags
-  let plies = mainline(game).len()
+  let g = game(read(game-file(id)))
+  let tags = g.tags
+  let plies = mainline(g).len()
 
   pagebreak(weak: true)
-  heading(level: 2)[#tags.at("White", default: "?") – #tags.at("Black", default: "?") · #game.result]
+  heading(level: 2)[#tags.at("White", default: "?") – #tags.at("Black", default: "?") · #g.result]
   [*Event:* #tags.at("Event", default: "?") · #tags.at("Opening", default: tags.at("ECO", default: "?")) · #plies plies]
 
   // Full move notation.
-  block(notation(game))
+  block(notation(g))
 
   // Board diagrams every 8 plies plus the final position.
   let marks = range(8, plies, step: 8) + (plies,)
   grid(
     columns: 3,
     gutter: 8pt,
-    ..marks.map(p => diagram-after(game, ply-locator(p), caption: "after ply " + str(p), size: 4cm)),
+    ..marks.map(p => diagram(g, at: ply-locator(p), caption: "after ply " + str(p), size: 4cm)),
   )
 }

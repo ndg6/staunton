@@ -4,7 +4,7 @@
 // from diagrams. The per-call `supplement` override is checked here; the
 // language-aware default + settability live in tests/i18n/i18n.typ.
 #import "/lib.typ": (
-  parse-pgn, standings-table, crosstable-table, diagram, starting-fen,
+  games, standings-table, crosstable-table, diagram, starting-fen,
   table-outline, outlines,
 )
 
@@ -14,7 +14,7 @@
 #set text(font: "Libertinus Serif", size: 10pt)
 #set heading(numbering: "1.")
 
-#let rr = parse-pgn(```
+#let rr = games(```
 [White "A"][Black "B"][Result "1-0"] 1-0
 [White "A"][Black "C"][Result "1-0"] 1-0
 [White "B"][Black "C"][Result "1-0"] 1-0

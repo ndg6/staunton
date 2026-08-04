@@ -1,4 +1,4 @@
-// EXPECT: `arrows` is position-specific and cannot be a document default; pass `highlight` / `arrows` per call, and let `diagram-after` supply the move-quality badge
+// EXPECT: `arrows` is position-specific and cannot be a document default; pass `highlight` / `arrows` per call, and let `board`/`diagram`'s `at:` supply the move-quality badge
 // set-board-defaults() - the RAW-DICT bypass: a hand-rolled dict passed directly
 // as `board-theme: (..)` (NOT built via the `board-theme(..)` constructor, which
 // would have caught this before it ever reached here) must still be validated at

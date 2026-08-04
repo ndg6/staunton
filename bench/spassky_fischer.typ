@@ -9,7 +9,7 @@
 //
 // This is NOT an asserting test; it is a benchmark input. It lives under bench/
 // and is compiled by bench/run-bench.sh, not by tests/run.sh.
-#import "/lib.typ": parse-pgn, mainline, notation, diagram-after
+#import "/lib.typ": game, mainline, notation, diagram
 #set page(paper: "a4", margin: 2cm)
 #set text(size: 10pt)
 
@@ -26,22 +26,22 @@
 ]
 
 #for r in rounds {
-  let game = parse-pgn(read(game-file(r))).first()
-  let tags = game.tags
-  let plies = mainline(game).len()
+  let g = game(read(game-file(r)))
+  let tags = g.tags
+  let plies = mainline(g).len()
 
   pagebreak(weak: true)
-  heading(level: 2)[Game #r: #tags.at("White", default: "?") – #tags.at("Black", default: "?") · #game.result]
+  heading(level: 2)[Game #r: #tags.at("White", default: "?") – #tags.at("Black", default: "?") · #g.result]
   [*Opening:* #tags.at("Opening", default: tags.at("ECO", default: "?")) · #plies plies]
 
   // Full move notation.
-  block(notation(game))
+  block(notation(g))
 
   // Board diagrams every 10 plies plus the final position.
   let marks = range(10, plies, step: 10) + (plies,)
   grid(
     columns: 3,
     gutter: 8pt,
-    ..marks.map(p => diagram-after(game, ply-locator(p), caption: "after ply " + str(p), size: 4cm)),
+    ..marks.map(p => diagram(g, at: ply-locator(p), caption: "after ply " + str(p), size: 4cm)),
   )
 }

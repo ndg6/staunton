@@ -91,23 +91,23 @@ echo
 echo "== drawing cost (document-level differential) =="
 NB="$OUT/_noboards.typ"
 cat > "$NB" <<'TYP'
-#import "/lib.typ": parse-pgn, mainline, notation
+#import "/lib.typ": game, mainline, notation
 #set page(paper: "a4", margin: 2cm)
 #set text(size: 10pt)
 #let rounds = (1, 3, 5, 6, 8, 10, 11, 13, 21)
 #let gf(r) = "/bench/spassky_fischer_1972/game_" + (if r < 10 {"0"} else {""}) + str(r) + ".pgn"
 #for r in rounds {
-  let game = parse-pgn(read(gf(r))).first()
+  let g = game(read(gf(r)))
   pagebreak(weak: true)
   heading(level: 2)[Game #r]
-  block(notation(game))
+  block(notation(g))
 }
 TYP
 t_note=$(min_ms "$NB" 0)
 t_full=$(min_ms bench/spassky_fischer.typ 0)
 # diagram count: every 10th ply plus the final, per game.
 ndia=$(typst eval --root "$ROOT" --input x=1 \
-  'import "/lib.typ": parse-pgn, mainline; (1,3,5,6,8,10,11,13,21).map(r => { let p = mainline(parse-pgn(read("/bench/spassky_fischer_1972/game_" + (if r < 10 {"0"} else {""}) + str(r) + ".pgn")).first()).len(); range(10, p, step: 10).len() + 1 }).sum()' 2>/dev/null)
+  'import "/lib.typ": game, mainline; (1,3,5,6,8,10,11,13,21).map(r => { let p = mainline(game(read("/bench/spassky_fischer_1972/game_" + (if r < 10 {"0"} else {""}) + str(r) + ".pgn"))).len(); range(10, p, step: 10).len() + 1 }).sum()' 2>/dev/null)
 [ -z "$ndia" ] && ndia="?"
 echo "  notation only : ${t_note} ms"
 echo "  full (+diagr) : ${t_full} ms   (${ndia} diagrams)"
@@ -126,22 +126,22 @@ echo
 echo "== drawing cost (document-level differential) — realworld_bulletin (dense) =="
 RWB="$OUT/_rw_noboards.typ"
 cat > "$RWB" <<'TYP'
-#import "/lib.typ": parse-pgn, mainline, notation
+#import "/lib.typ": game, mainline, notation
 #set page(paper: "a4", margin: 2cm)
 #set text(size: 10pt)
 #let game-ids = (1012928, 1125843, 1281900)
 #for id in game-ids {
-  let game = parse-pgn(read("/tests/pgn/realworld/game_" + str(id) + ".pgn")).first()
+  let g = game(read("/tests/pgn/realworld/game_" + str(id) + ".pgn"))
   pagebreak(weak: true)
   heading(level: 2)[Game #id]
-  block(notation(game))
+  block(notation(g))
 }
 TYP
 t_note=$(min_ms "$RWB" 0)
 t_full=$(min_ms bench/realworld_bulletin.typ 0)
 # diagram count: every 8th ply plus the final, per game.
 ndia=$(typst eval --root "$ROOT" --input x=1 \
-  'import "/lib.typ": parse-pgn, mainline; (1012928,1125843,1281900).map(id => { let p = mainline(parse-pgn(read("/tests/pgn/realworld/game_" + str(id) + ".pgn")).first()).len(); range(8, p, step: 8).len() + 1 }).sum()' 2>/dev/null)
+  'import "/lib.typ": game, mainline; (1012928,1125843,1281900).map(id => { let p = mainline(game(read("/tests/pgn/realworld/game_" + str(id) + ".pgn"))).len(); range(8, p, step: 8).len() + 1 }).sum()' 2>/dev/null)
 [ -z "$ndia" ] && ndia="?"
 echo "  notation only : ${t_note} ms"
 echo "  full (+diagr) : ${t_full} ms   (${ndia} diagrams)"

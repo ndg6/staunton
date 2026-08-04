@@ -6,13 +6,13 @@
 // complete, valid FEN" lands, the silent-default castling for the no-whitespace
 // case becomes KQkq (today the code defaults castling to "-"). This test only
 // checks that a space-free FEN is accepted; it does not pin the castling value.
-#import "/lib.typ": board, parse-fen, starting-fen
+#import "/lib.typ": board, position, starting-fen
 
 #set page(width: auto, height: auto, margin: 1cm)
 
 // Starting placement only, no spaces.
 #let placement = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR"
-#let pos = parse-fen(placement)
+#let pos = position(placement)
 #assert(pos.turn == "w", message: "side to move should default to white")
 #assert(pos.fullmove == 1, message: "fullmove should default to 1")
 
